@@ -1,0 +1,61 @@
+#!/bin/bash
+
+#===============================================================================
+# Autograder4Canvas - macOS App Launcher
+# This script runs from inside the .app bundle and finds resources there
+#===============================================================================
+
+# Get the Resources directory inside the .app bundle
+SCRIPT_PATH="$0"
+MACOS_DIR="$(dirname "$SCRIPT_PATH")"
+CONTENTS_DIR="$(dirname "$MACOS_DIR")"
+RESOURCES_DIR="$CONTENTS_DIR/Resources"
+
+# Verify Resources directory exists
+if [ ! -d "$RESOURCES_DIR" ]; then
+    osascript -e 'display alert "Error" message "Resources folder not found in app bundle. The app may be corrupted." as critical'
+    exit 1
+fi
+
+# Check for Python
+PYTHON_CMD=""
+if command -v python3 &> /dev/null; then
+    PYTHON_CMD="python3"
+elif command -v python &> /dev/null; then
+    VERSION=$(python --version 2>&1)
+    if [[ $VERSION == *"Python 3"* ]]; then
+        PYTHON_CMD="python"
+    fi
+fi
+
+if [ -z "$PYTHON_CMD" ]; then
+    osascript -e 'display alert "Python 3 Required" message "Autograder4Canvas requires Python 3.7 or higher.\n\nPlease install Python from python.org" as critical buttons {"Download Python", "Cancel"} default button "Download Python"'
+    BUTTON=$?
+    if [ $BUTTON -eq 0 ]; then
+        open "https://www.python.org/downloads/"
+    fi
+    exit 1
+fi
+
+# Find the launcher script in Resources
+LAUNCHER="$RESOURCES_DIR/run_autograder.py"
+
+if [ ! -f "$LAUNCHER" ]; then
+    # Fallback: look for any run_autograder*.py
+    LAUNCHER=$(ls "$RESOURCES_DIR"/run_autograder*.py 2>/dev/null | head -n 1)
+fi
+
+if [ -z "$LAUNCHER" ] || [ ! -f "$LAUNCHER" ]; then
+    osascript -e 'display alert "Error" message "Could not find run_autograder.py in app bundle. The app may be corrupted." as critical'
+    exit 1
+fi
+
+# Open Terminal and run the script
+# We use osascript to open Terminal because the app itself is a background process
+osascript << EOF
+tell application "Terminal"
+    activate
+    set newTab to do script "cd '$RESOURCES_DIR' && '$PYTHON_CMD' '$LAUNCHER'; echo ''; echo 'Press Enter to close...'; read"
+    set custom title of front window to "Autograder4Canvas"
+end tell
+EOF
