@@ -1,34 +1,39 @@
 [README.txt](https://github.com/user-attachments/files/24333327/README.txt)
----
+
 Autograder4Canvas
+===
 Universal Cross-Platform Edition
 Version 1.3
 
 
+
+
 ---
 DESCRIPTION
----
+===
 
 Automated grading tools for Canvas LMS including:
-  • Academic Dishonesty Detection
-  • Complete/Incomplete Assignment Grading
-  • Discussion Forum Grading
+- Academic Dishonesty Detection
+- Complete/Incomplete Assignment Grading
+- Discussion Forum Grading
+
 
 
 ---
 SYSTEM REQUIREMENTS
----
-  • Python 3.7 or higher
-  • Internet connection (for Canvas API access)
-  • Canvas API token (instructions provided below)
+===
+- Python 3.7 or higher
+- Internet connection (for Canvas API access)
+- Canvas API token (instructions provided below)
+
 
 
 ---
 INSTALLATION
----
+===
 
----
-macOS                                  
+
+macOS   
 ---
 1. Unzip the downloaded file
 2. Drag "CanvasAutograder.app" to your Applications folder
@@ -36,7 +41,8 @@ macOS
 (If blocked: Right-click → Open → "Open Anyway")
 
 
----
+
+
 WINDOWS
 ---
 1. Unzip the downloaded file
@@ -48,7 +54,8 @@ This installs the program to your AppData folder and creates a "Canvas Autograde
 To uninstall: Delete the Desktop shortcut and the folder at %LOCALAPPDATA%\CanvasAutograder
 
 
----
+
+
 LINUX
 ---
 1. Extract: tar -xzf CanvasAutograder-Linux-v*.tar.gz
@@ -56,8 +63,8 @@ LINUX
 3. Follow the prompts
 
 This installs to ~/.local/share/CanvasAutograder and creates:
- • Command: canvas-autograder (in ~/.local/bin)
- • App menu entry (in ~/.local/share/applications)
+- Command: canvas-autograder (in ~/.local/bin)
+- App menu entry (in ~/.local/share/applications)
 
 To uninstall:
   rm -rf ~/.local/share/CanvasAutograder
@@ -68,7 +75,7 @@ To uninstall:
 
 ---
 FIRST TIME SETUP
----
+===
 When you run the program for the FIRST TIME:
 
 1. It will check for Python 3 (if not installed, it will guide you)
@@ -79,9 +86,10 @@ When you run the program for the FIRST TIME:
 After the first run, the program starts much faster.
 
 
+
 ---
 GETTING YOUR CANVAS API TOKEN
----
+===
 1. Log in to Canvas
 2. Go to Account → Settings (click your profile picture → Settings)
 3. Scroll down to "Approved Integrations"
@@ -94,26 +102,37 @@ GETTING YOUR CANVAS API TOKEN
 ⚠️  KEEP YOUR TOKEN SECRET - it has access to your Canvas account!
 
 
+
 ---
 FOLDER STRUCTURE
----
+===
 CanvasAutograder/
-├── CanvasAutograder.app       ← macOS double-click app
-├── run_autograder.sh          ← Mac/Linux launcher
-├── run_autograder.bat         ← Windows launcher
-├── README.txt                 ← This file
-└── src/
-    ├── run_autograder.py      ← Main program
-    ├── requirements.txt       ← Python dependencies
-    └── Programs/
-        ├── Academic_Dishonesty_Check_v1-2.py
-        ├── Autograder_Complete-Incomplete_v1-2.py
-        └── Autograder_Discussion_Forum_v1-2.py
+
+├─ CanvasAutograder.app       ← macOS double-click app
+
+├─ run_autograder.sh          ← Mac/Linux launcher
+
+├─ run_autograder.bat         ← Windows launcher
+
+├─ README.txt                 ← This file
+
+└─ src/
+
+....├─ run_autograder.py      ← Main program
+
+....├─ requirements.txt       ← Python dependencies
+
+....└─ Programs/
+
+........├─ Academic_Dishonesty_Check_v1-2.py
+
+........├─ Autograder_Complete-Incomplete_v1-2.py
+........└─ Autograder_Discussion_Forum_v1-2.py
 
 
 ---
 OUTPUT FILES
----
+===
 All grading reports are saved to:
   ~/Documents/Grading_Rationales/
 
@@ -125,7 +144,7 @@ Organized by type:
 
 ---
 TROUBLESHOOTING
----
+===
 
 PYTHON NOT FOUND
   macOS:    brew install python3  (or download from python.org)
@@ -145,4 +164,4 @@ MODULE NOT FOUND
 
 ---
 © 2025 Autograder4Canvas Project
----
+
