@@ -1,0 +1,80 @@
+name: Test Windows Installer
+
+on:
+  push:
+    branches: [ main ]  # or your main branch
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # allows manual run from GitHub UI
+
+jobs:
+  test-windows:
+    runs-on: windows-latest  # ✅ Real Windows (2022/2019)
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # If your .exe is in a subfolder like distro/
+      - name: 📂 Find installer
+        run: |
+          Get-ChildItem -Path . -Filter "Autograder4Canvas-Windows-*.exe" -Recurse | ForEach-Object {
+            Write-Host "Found installer: $($_.FullName)"
+            echo "INSTALLER_PATH=$($_.FullName)" >> $env:GITHUB_ENV
+          }
+        shell: pwsh
+
+      - name: ⚠️ Fail if no installer found
+        run: |
+          if (-not $env:INSTALLER_PATH) {
+            Write-Error "No Windows installer found!"
+            exit 1
+          }
+        shell: pwsh
+
+      - name: 🚀 Run silent installer
+        run: |
+          Write-Host "Installing..."
+          & $env:INSTALLER_PATH /VERYSILENT
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Installer failed with exit code $LASTEXITCODE"
+            exit 1
+          }
+        shell: pwsh
+
+      - name: 🔍 Verify installation
+        run: |
+          # Inno Setup installs to %LOCALAPPDATA%\{AppName}
+          $installPath = "$env:LOCALAPPDATA\Autograder4Canvas"
+          if (-not (Test-Path $installPath)) {
+            Write-Error "Install directory not found: $installPath"
+            exit 1
+          }
+
+          # Check for main executable
+          $exePath = "$installPath\autograder4canvas.exe"
+          if (-not (Test-Path $exePath)) {
+            Write-Error "Executable not found: $exePath"
+            exit 1
+          }
+
+          # Check for data folder (from your utils.py)
+          $dataPath = "$env:LOCALAPPDATA\Autograder4Canvas"
+          if (-not (Test-Path $dataPath)) {
+            Write-Warning "Data folder missing (may be created on first run)"
+          }
+
+          Write-Host "✅ Installation verified at: $installPath"
+        shell: pwsh
+
+      - name: 🧪 Optional: Run the app once
+        run: |
+          & "$env:LOCALAPPDATA\Autograder4Canvas\autograder4canvas.exe" --version
+        shell: pwsh
+        # Ignore errors if --version isn't supported
+
+      - name: 🗑️ Clean up
+        run: |
+          Remove-Item -Recurse -Force "$env:LOCALAPPDATA\Autograder4Canvas" -ErrorAction SilentlyContinue
+          # Also remove start menu/desktop shortcuts if needed
+        shell: pwsh
