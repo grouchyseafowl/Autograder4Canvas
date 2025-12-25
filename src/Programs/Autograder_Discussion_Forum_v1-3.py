@@ -26,19 +26,51 @@ HEADERS = {
 # Grading thresholds
 MIN_WORD_COUNT = 50
 
+def get_config_dir() -> Path:
+    """Get the configuration directory for storing settings."""
+    system = platform.system()
+    
+    if system == "Windows":
+        base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+        config_dir = base / "CanvasAutograder"
+    elif system == "Darwin":
+        config_dir = Path.home() / "Library" / "Application Support" / "CanvasAutograder"
+    else:
+        config_dir = Path.home() / ".config" / "CanvasAutograder"
+    
+    return config_dir
+
+
 def get_output_base_dir() -> Path:
     """Get base output directory in a cross-platform way."""
     system = platform.system()
     
+    # Check for /output directory first (container/deployment environment)
     if os.path.isdir("/output"):
         return Path("/output")
     
+    # Check for custom output directory in JSON config (matches autograder_utils.py)
+    config_file = get_config_dir() / "settings.json"
+    if config_file.exists():
+        try:
+            import json
+            with open(config_file, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                if "output_directory" in config:
+                    custom_dir = Path(config["output_directory"])
+                    if custom_dir.exists() or custom_dir.parent.exists():
+                        custom_dir.mkdir(parents=True, exist_ok=True)
+                        return custom_dir
+        except Exception:
+            pass  # Fall through to default
+    
+    # Default location
     if system == "Windows":
         documents = Path(os.environ.get("USERPROFILE", Path.home())) / "Documents"
     else:
         documents = Path.home() / "Documents"
     
-    return documents / "Grading_Rationales"
+    return documents / "Autograder Rationales"
 
 
 def count_words(text: str) -> int:
@@ -460,28 +492,38 @@ def export_rationale(course_id: int, topic_id: int, topic_name: str,
     BASE_DIR = get_output_base_dir()
     
     OUTPUT_DIR = BASE_DIR / "Discussion Forums"
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    
+    try:
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        print(f"❌ Failed to create output directory: {e}")
+        return
+        
     output_path = OUTPUT_DIR / filename
     
     # Create student name mapping
     student_names = {s.get("user_id"): s.get("user", {}).get("name", f"User {s.get('user_id')}") 
                      for s in students}
     
-    with open(output_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=[
-            "Student Name", "User ID", "Grade", "Reason"
-        ])
-        writer.writeheader()
+    try:
+        with open(output_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=[
+                "Student Name", "User ID", "Grade", "Reason"
+            ])
+            writer.writeheader()
+            
+            for user_id, grade_info in student_grades.items():
+                writer.writerow({
+                    "Student Name": student_names.get(user_id, f"User {user_id}"),
+                    "User ID": user_id,
+                    "Grade": grade_info["grade"],
+                    "Reason": grade_info["reason"]
+                })
         
-        for user_id, grade_info in student_grades.items():
-            writer.writerow({
-                "Student Name": student_names.get(user_id, f"User {user_id}"),
-                "User ID": user_id,
-                "Grade": grade_info["grade"],
-                "Reason": grade_info["reason"]
-            })
-    
-    print(f"   ✅ Rationale exported: {output_path.name}")
+        print(f"   ✅ Rationale exported: {output_path.name}")
+            
+    except Exception as e:
+        print(f"❌ Error creating CSV file: {e}")
 
 
 def main():

@@ -1,0 +1,1018 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "2024-12-24",
+    "purpose": "Academic dishonesty detection markers for Canvas Autograder",
+    "notes": "Markers are organized by detection category, sophistication level of cheating attempt, and confidence weighting"
+  },
+
+  "detection_categories": {
+
+    "linguistic_patterns": {
+      "description": "Word choice, sentence structure, and stylistic markers",
+      
+      "ai_transition_phrases": {
+        "description": "Clichéd transitions overused by AI models",
+        "confidence": "medium",
+        "detection_level": "naive",
+        "markers": [
+          "it is important to note",
+          "it should be noted",
+          "it is worth noting",
+          "it is worth mentioning",
+          "it bears mentioning",
+          "in conclusion",
+          "to sum up",
+          "in summary",
+          "to summarize",
+          "all in all",
+          "furthermore",
+          "moreover",
+          "additionally",
+          "in addition",
+          "this essay will explore",
+          "this paper will examine",
+          "this section will discuss",
+          "as previously mentioned",
+          "as stated above",
+          "as discussed earlier",
+          "as noted above",
+          "on the one hand",
+          "on the other hand",
+          "conversely",
+          "however",
+          "firstly",
+          "secondly",
+          "thirdly",
+          "lastly",
+          "finally",
+          "in light of this",
+          "with this in mind",
+          "taking this into account",
+          "given the above",
+          "in this regard",
+          "to this end",
+          "by the same token",
+          "that being said",
+          "having said that",
+          "be that as it may",
+          "notwithstanding",
+          "nevertheless",
+          "nonetheless"
+        ],
+        "threshold": {
+          "count": 3,
+          "per_words": 500,
+          "flag_message": "Excessive AI-typical transitions ({count} instances)"
+        }
+      },
+
+      "hedge_phrases": {
+        "description": "Overly cautious language typical of AI trying to avoid definitive statements",
+        "confidence": "medium",
+        "detection_level": "naive",
+        "markers": [
+          "it can be argued that",
+          "it could be said that",
+          "one might argue",
+          "it is possible that",
+          "arguably",
+          "presumably",
+          "ostensibly",
+          "it appears that",
+          "it seems that",
+          "tends to suggest",
+          "may or may not",
+          "to some extent",
+          "in some ways",
+          "it is generally accepted",
+          "it is widely believed",
+          "some scholars suggest",
+          "many experts believe",
+          "research suggests",
+          "studies indicate",
+          "evidence suggests",
+          "it has been suggested",
+          "one could argue",
+          "it might be said",
+          "perhaps",
+          "potentially",
+          "conceivably"
+        ],
+        "threshold": {
+          "count": 4,
+          "per_words": 500,
+          "flag_message": "Excessive hedging language ({count} instances)"
+        }
+      },
+
+      "inflated_vocabulary": {
+        "description": "Unnecessarily complex words where simpler alternatives exist",
+        "confidence": "medium",
+        "detection_level": "naive_to_intermediate",
+        "markers": [
+          {"inflated": "utilize", "simple": "use"},
+          {"inflated": "demonstrate", "simple": "show"},
+          {"inflated": "individuals", "simple": "people"},
+          {"inflated": "commence", "simple": "start/begin"},
+          {"inflated": "terminate", "simple": "end"},
+          {"inflated": "endeavor", "simple": "try"},
+          {"inflated": "facilitate", "simple": "help"},
+          {"inflated": "implement", "simple": "do/carry out"},
+          {"inflated": "ascertain", "simple": "find out"},
+          {"inflated": "optimal", "simple": "best"},
+          {"inflated": "subsequent", "simple": "next/later"},
+          {"inflated": "prior to", "simple": "before"},
+          {"inflated": "in order to", "simple": "to"},
+          {"inflated": "due to the fact that", "simple": "because"},
+          {"inflated": "at this point in time", "simple": "now"},
+          {"inflated": "in the event that", "simple": "if"},
+          {"inflated": "for the purpose of", "simple": "to/for"},
+          {"inflated": "with regard to", "simple": "about"},
+          {"inflated": "in reference to", "simple": "about"},
+          {"inflated": "pertaining to", "simple": "about"},
+          {"inflated": "endeavoring", "simple": "trying"},
+          {"inflated": "methodology", "simple": "method"},
+          {"inflated": "functionality", "simple": "function"},
+          {"inflated": "utilizing", "simple": "using"},
+          {"inflated": "prioritize", "simple": "focus on"},
+          {"inflated": "leverage", "simple": "use"},
+          {"inflated": "synergy", "simple": "working together"},
+          {"inflated": "paradigm", "simple": "model/pattern"},
+          {"inflated": "holistic", "simple": "whole/complete"},
+          {"inflated": "multifaceted", "simple": "complex"},
+          {"inflated": "aforementioned", "simple": "mentioned"},
+          {"inflated": "henceforth", "simple": "from now on"},
+          {"inflated": "whereby", "simple": "by which"},
+          {"inflated": "thereof", "simple": "of that"},
+          {"inflated": "therein", "simple": "in that"},
+          {"inflated": "wherein", "simple": "in which"}
+        ],
+        "threshold": {
+          "count": 5,
+          "per_words": 500,
+          "flag_message": "Vocabulary inflation detected ({count} unnecessarily complex words)"
+        }
+      },
+
+      "generic_filler_phrases": {
+        "description": "Vague phrases that add no specific meaning",
+        "confidence": "medium",
+        "detection_level": "naive",
+        "markers": [
+          "many things",
+          "various aspects",
+          "in today's society",
+          "in today's world",
+          "in modern society",
+          "in contemporary society",
+          "throughout history",
+          "since the beginning of time",
+          "since the dawn of time",
+          "it can be said",
+          "some people believe",
+          "it is believed that",
+          "one could argue",
+          "studies show",
+          "research indicates",
+          "experts say",
+          "it has been shown",
+          "this shows that",
+          "this proves that",
+          "this demonstrates that",
+          "overall",
+          "basically",
+          "essentially",
+          "a variety of",
+          "a number of",
+          "plays a crucial role",
+          "plays a vital role",
+          "plays an important role",
+          "of paramount importance",
+          "of great significance",
+          "in the grand scheme of things",
+          "at the end of the day",
+          "when all is said and done",
+          "the fact of the matter is",
+          "needless to say",
+          "it goes without saying",
+          "as everyone knows",
+          "as we all know"
+        ],
+        "threshold": {
+          "count": 3,
+          "per_words": 500,
+          "flag_message": "Generic filler phrases detected ({count} instances)"
+        }
+      },
+
+      "false_balance_markers": {
+        "description": "Phrases suggesting artificial even-handedness typical of AI",
+        "confidence": "medium",
+        "detection_level": "naive_to_intermediate",
+        "markers": [
+          "both sides",
+          "both perspectives",
+          "different viewpoints",
+          "various opinions",
+          "while some argue",
+          "others contend",
+          "there are arguments for and against",
+          "proponents argue",
+          "opponents counter",
+          "supporters claim",
+          "critics argue",
+          "on one side",
+          "on the other side",
+          "there are merits to both",
+          "each perspective has value",
+          "both camps",
+          "the debate continues",
+          "opinions are divided",
+          "views differ on",
+          "there is no consensus"
+        ],
+        "threshold": {
+          "count": 3,
+          "per_words": 500,
+          "flag_message": "Artificial balance/neutrality language ({count} instances)"
+        }
+      },
+
+      "ai_conclusion_patterns": {
+        "description": "Formulaic conclusion structures",
+        "confidence": "high",
+        "detection_level": "naive",
+        "markers": [
+          "in conclusion, it is clear that",
+          "to conclude, we can see that",
+          "in summary, this essay has shown",
+          "to sum up, the evidence suggests",
+          "ultimately, it is important to",
+          "in the final analysis",
+          "all things considered",
+          "taking everything into account",
+          "weighing all the factors",
+          "considering all aspects",
+          "this essay has explored",
+          "this paper has examined",
+          "this analysis has demonstrated",
+          "as this essay has shown",
+          "as demonstrated above",
+          "as the evidence shows",
+          "the foregoing discussion",
+          "the preceding analysis"
+        ],
+        "threshold": {
+          "count": 2,
+          "per_words": 300,
+          "flag_message": "Formulaic AI-style conclusion"
+        }
+      }
+    },
+
+    "structural_patterns": {
+      "description": "Document structure and organizational markers",
+
+      "perfect_paragraph_structure": {
+        "description": "Unnaturally uniform paragraph lengths and structures",
+        "confidence": "medium",
+        "detection_level": "naive_to_intermediate",
+        "checks": [
+          {
+            "name": "uniform_paragraph_length",
+            "description": "All paragraphs within 20% of average length",
+            "flag_message": "Suspiciously uniform paragraph lengths"
+          },
+          {
+            "name": "topic_sentence_pattern",
+            "description": "Every paragraph starts with a clear topic sentence",
+            "flag_message": "Unnaturally consistent topic sentence placement"
+          },
+          {
+            "name": "three_point_structure",
+            "description": "Body paragraphs consistently make exactly 3 points",
+            "flag_message": "Formulaic 3-point paragraph structure throughout"
+          }
+        ]
+      },
+
+      "sentence_complexity_uniformity": {
+        "description": "Lack of natural variation in sentence complexity",
+        "confidence": "high",
+        "detection_level": "intermediate",
+        "checks": [
+          {
+            "name": "sentence_length_variance",
+            "description": "Standard deviation of sentence length is unusually low",
+            "threshold": "std_dev < 5 words",
+            "flag_message": "Abnormally uniform sentence lengths"
+          },
+          {
+            "name": "clause_complexity_consistency",
+            "description": "Every sentence has similar subordinate clause patterns",
+            "flag_message": "Unnatural consistency in sentence complexity"
+          }
+        ]
+      },
+
+      "perfect_flow_indicators": {
+        "description": "Unnaturally smooth transitions between all ideas",
+        "confidence": "medium",
+        "detection_level": "intermediate",
+        "checks": [
+          {
+            "name": "transition_density",
+            "description": "Every paragraph connected by explicit transition",
+            "flag_message": "Excessive explicit transitions (natural writing has implicit flow)"
+          },
+          {
+            "name": "no_abrupt_shifts",
+            "description": "Complete absence of natural topic jumps or tangents",
+            "flag_message": "Unnaturally linear thought progression"
+          }
+        ]
+      },
+
+      "complete_sentence_ratio": {
+        "description": "Ratio of grammatically complete sentences",
+        "confidence": "medium",
+        "detection_level": "intermediate",
+        "threshold": {
+          "percentage": 80,
+          "flag_message": "Suspiciously polished ({percentage}% complete sentences)"
+        },
+        "notes": "Natural student writing includes fragments, run-ons, and stylistic incomplete sentences"
+      }
+    },
+
+    "authenticity_markers": {
+      "description": "Markers of genuine human writing that are typically absent in AI text",
+
+      "personal_voice_indicators": {
+        "description": "First-person and experiential language",
+        "confidence": "high",
+        "detection_level": "all_levels",
+        "positive_markers": [
+          "\\bi\\s",
+          "\\bmy\\b",
+          "\\bme\\b",
+          "\\bmine\\b",
+          "\\bwe\\b",
+          "\\bour\\b",
+          "\\bus\\b",
+          "\\bmyself\\b",
+          "as a\\b",
+          "being a\\b",
+          "growing up",
+          "when i was",
+          "i remember",
+          "i think",
+          "i believe",
+          "i feel",
+          "in my experience",
+          "in my opinion",
+          "from my perspective",
+          "personally",
+          "to me"
+        ],
+        "absence_flag": "Lacks personal/embodied language",
+        "notes": "Absence is suspicious for reflective or personal response assignments"
+      },
+
+      "emotional_vulnerability": {
+        "description": "Authentic emotional expression",
+        "confidence": "high",
+        "detection_level": "all_levels",
+        "positive_markers": [
+          "i feel",
+          "i felt",
+          "i was",
+          "i struggled",
+          "i realized",
+          "i noticed",
+          "confused",
+          "frustrated",
+          "excited",
+          "surprised",
+          "shocked",
+          "angry",
+          "anxious",
+          "nervous",
+          "scared",
+          "afraid",
+          "worried",
+          "relieved",
+          "proud",
+          "ashamed",
+          "embarrassed",
+          "it hurt",
+          "i cried",
+          "i laughed",
+          "overwhelmed",
+          "grateful",
+          "thankful",
+          "disappointed",
+          "hopeful",
+          "conflicted",
+          "torn",
+          "uncertain"
+        ],
+        "absence_flag": "No emotional/vulnerable language",
+        "notes": "Particularly relevant for reflections, personal essays, and response papers"
+      },
+
+      "specific_details": {
+        "description": "Concrete, specific examples vs. generic statements",
+        "confidence": "high",
+        "detection_level": "intermediate_to_advanced",
+        "checks": [
+          {
+            "name": "proper_noun_density",
+            "description": "Use of specific names, places, dates",
+            "low_threshold": "< 1 per 200 words",
+            "flag_message": "Lacks specific names, places, or dates"
+          },
+          {
+            "name": "numeric_specificity",
+            "description": "Use of specific numbers vs. vague quantities",
+            "examples_vague": ["many", "some", "a lot", "numerous", "several"],
+            "examples_specific": ["17", "about 3 hours", "twice a week"],
+            "flag_message": "Uses only vague quantities, no specific numbers"
+          },
+          {
+            "name": "anecdote_presence",
+            "description": "Personal stories with sensory details",
+            "flag_message": "No personal anecdotes or specific examples"
+          }
+        ]
+      },
+
+      "natural_imperfection_markers": {
+        "description": "Signs of authentic human writing process",
+        "confidence": "medium",
+        "detection_level": "intermediate_to_advanced",
+        "positive_markers": [
+          {
+            "type": "self_correction",
+            "patterns": ["i mean", "actually", "well,", "or rather", "let me rephrase"],
+            "description": "Mid-thought corrections"
+          },
+          {
+            "type": "uncertainty_expression",
+            "patterns": ["i'm not sure", "i don't know", "maybe", "i guess", "i think maybe"],
+            "description": "Genuine uncertainty (vs. hedge phrases)"
+          },
+          {
+            "type": "informal_interjections",
+            "patterns": ["honestly", "frankly", "look,", "okay so", "right?"],
+            "description": "Conversational markers"
+          },
+          {
+            "type": "tangential_thoughts",
+            "patterns": ["by the way", "on a side note", "speaking of which", "this reminds me"],
+            "description": "Natural thought associations"
+          }
+        ],
+        "absence_flag": "Writing is too polished - lacks natural human imperfections"
+      }
+    },
+
+    "copy_paste_indicators": {
+      "description": "Technical markers of copy-pasted content",
+
+      "formatting_anomalies": {
+        "description": "Formatting inconsistencies from external sources",
+        "confidence": "high",
+        "detection_level": "all_levels",
+        "markers": [
+          {
+            "name": "multiple_consecutive_spaces",
+            "pattern": "  +",
+            "description": "Two or more consecutive spaces",
+            "flag_message": "Multiple consecutive spaces detected"
+          },
+          {
+            "name": "mixed_quote_styles",
+            "patterns": ["\"", "\"", "\"", "'", "'", "'"],
+            "description": "Mix of straight and curly quotes",
+            "flag_message": "Inconsistent quotation mark styles"
+          },
+          {
+            "name": "invisible_characters",
+            "description": "Zero-width spaces, non-breaking spaces, etc.",
+            "flag_message": "Hidden/invisible characters detected"
+          },
+          {
+            "name": "tab_space_mixing",
+            "description": "Mix of tabs and spaces for indentation",
+            "flag_message": "Mixed tab/space formatting"
+          },
+          {
+            "name": "unusual_line_breaks",
+            "description": "Line breaks in unexpected places",
+            "flag_message": "Unusual line break patterns"
+          },
+          {
+            "name": "encoding_artifacts",
+            "patterns": ["â€™", "â€œ", "â€", "Ã", "Â"],
+            "description": "Character encoding conversion artifacts",
+            "flag_message": "Text encoding artifacts detected"
+          }
+        ]
+      },
+
+      "metadata_inconsistencies": {
+        "description": "File metadata that doesn't match claimed authorship",
+        "confidence": "very_high",
+        "detection_level": "all_levels",
+        "checks": [
+          {
+            "name": "author_mismatch",
+            "description": "Document author doesn't match student name",
+            "flag_message": "Document metadata shows different author"
+          },
+          {
+            "name": "creation_time_suspicious",
+            "description": "Document created very close to submission time",
+            "flag_message": "Document created within minutes of submission"
+          },
+          {
+            "name": "editing_time_minimal",
+            "description": "Total editing time implausibly short for document length",
+            "flag_message": "Total editing time too short for document length"
+          }
+        ]
+      }
+    },
+
+    "sophisticated_evasion_detection": {
+      "description": "Markers for detecting advanced AI-assisted cheating attempts",
+
+      "artificial_error_patterns": {
+        "description": "Deliberately introduced errors that don't match natural patterns",
+        "confidence": "high",
+        "detection_level": "advanced",
+        "markers": [
+          {
+            "name": "random_typo_distribution",
+            "description": "Typos distributed too evenly or randomly",
+            "natural_pattern": "Typos cluster near complex words, sentence ends, or during fast typing",
+            "artificial_pattern": "Typos appear randomly regardless of word complexity",
+            "flag_message": "Typo distribution pattern appears artificial"
+          },
+          {
+            "name": "inconsistent_error_types",
+            "description": "Mix of error types that don't match a single writer",
+            "natural_pattern": "Writers tend to make consistent types of errors",
+            "artificial_pattern": "Random mix: sometimes 'there/their', sometimes perfect; random comma errors",
+            "flag_message": "Inconsistent error patterns - doesn't match single writer"
+          },
+          {
+            "name": "sophisticated_vocabulary_with_basic_errors",
+            "description": "Complex vocabulary alongside elementary mistakes",
+            "example": "Using 'multifaceted' correctly but misspelling 'because'",
+            "flag_message": "Vocabulary sophistication doesn't match error level"
+          },
+          {
+            "name": "perfect_structure_with_surface_errors",
+            "description": "Flawless organization but superficial typos",
+            "flag_message": "Document structure too perfect despite surface-level errors"
+          }
+        ]
+      },
+
+      "voice_inconsistency": {
+        "description": "Shifts in writing voice suggesting multiple sources",
+        "confidence": "high",
+        "detection_level": "advanced",
+        "markers": [
+          {
+            "name": "formality_shifts",
+            "description": "Abrupt changes between formal and informal register",
+            "flag_message": "Inconsistent formality level throughout document"
+          },
+          {
+            "name": "vocabulary_level_shifts",
+            "description": "Sudden changes in vocabulary sophistication",
+            "flag_message": "Vocabulary complexity varies unnaturally"
+          },
+          {
+            "name": "sentence_pattern_shifts",
+            "description": "Different sections have different syntactic patterns",
+            "flag_message": "Writing style changes between sections"
+          },
+          {
+            "name": "pronoun_consistency",
+            "description": "Shifts between I/we/one/you without purpose",
+            "flag_message": "Inconsistent pronoun usage"
+          }
+        ]
+      },
+
+      "simulated_student_voice_detection": {
+        "description": "Detecting AI prompted to 'write like a student'",
+        "confidence": "medium",
+        "detection_level": "advanced",
+        "markers": [
+          {
+            "name": "performative_informality",
+            "description": "Informal language that feels forced or unnatural",
+            "examples": ["like, you know", "basically", "stuff like that"],
+            "natural_vs_artificial": "Natural informality flows; artificial feels inserted",
+            "flag_message": "Informal language appears performative/inserted"
+          },
+          {
+            "name": "stereotype_student_phrases",
+            "description": "Clichéd 'student-like' expressions",
+            "examples": [
+              "as a college student",
+              "being a student myself",
+              "from a student perspective",
+              "we students",
+              "in my college experience"
+            ],
+            "flag_message": "Uses stereotypical 'student' self-references"
+          },
+          {
+            "name": "fake_struggle_narrative",
+            "description": "Artificial descriptions of difficulty",
+            "examples": [
+              "i found this topic challenging at first",
+              "after struggling to understand",
+              "this was difficult for me to grasp initially"
+            ],
+            "flag_message": "Generic struggle narrative without specific details"
+          },
+          {
+            "name": "missing_course_specifics",
+            "description": "References to class without specific details",
+            "examples": ["as we discussed in class", "according to our readings", "the professor mentioned"],
+            "flag_message": "References class/readings without specific content"
+          }
+        ]
+      },
+
+      "prompted_imperfection_detection": {
+        "description": "Detecting AI prompted to include errors",
+        "confidence": "medium",
+        "detection_level": "very_advanced",
+        "markers": [
+          {
+            "name": "error_clustering_artificial",
+            "description": "Errors appear in clusters suggesting batch insertion",
+            "flag_message": "Error clustering pattern appears artificial"
+          },
+          {
+            "name": "error_type_too_varied",
+            "description": "Too many different error types for one writer",
+            "flag_message": "Error variety exceeds natural single-author pattern"
+          },
+          {
+            "name": "errors_dont_affect_meaning",
+            "description": "All errors are cosmetic, none affect comprehension",
+            "natural_pattern": "Real errors sometimes create ambiguity",
+            "flag_message": "All errors are surface-level with no meaning impact"
+          },
+          {
+            "name": "comma_splice_perfection",
+            "description": "Comma splices that are too 'clean'",
+            "flag_message": "Comma splices appear deliberately constructed"
+          }
+        ]
+      }
+    },
+
+    "cross_submission_analysis": {
+      "description": "Patterns detected across multiple submissions",
+
+      "self_plagiarism": {
+        "description": "Student reusing their own AI-generated content",
+        "confidence": "high",
+        "detection_level": "intermediate",
+        "markers": [
+          {
+            "name": "phrase_repetition",
+            "threshold": "3+ unique phrases repeated across assignments",
+            "flag_message": "Repeated phrases across multiple submissions"
+          },
+          {
+            "name": "structural_templates",
+            "description": "Same paragraph structure across different assignments",
+            "flag_message": "Identical structural template reused"
+          },
+          {
+            "name": "vocabulary_fingerprint",
+            "description": "Unusual words appearing across multiple submissions",
+            "flag_message": "Distinctive vocabulary pattern across submissions"
+          }
+        ]
+      },
+
+      "cross_student_similarity": {
+        "description": "Multiple students using same AI prompt/output",
+        "confidence": "very_high",
+        "detection_level": "all_levels",
+        "markers": [
+          {
+            "name": "phrase_matching",
+            "threshold": "5+ word sequences matching between students",
+            "flag_message": "Matching phrases with another student"
+          },
+          {
+            "name": "structural_matching",
+            "description": "Same organizational structure between students",
+            "flag_message": "Document structure matches another student"
+          },
+          {
+            "name": "error_matching",
+            "description": "Same unusual errors appearing in multiple submissions",
+            "flag_message": "Identical errors found in multiple submissions"
+          }
+        ]
+      },
+
+      "temporal_consistency": {
+        "description": "Writing quality consistency over time",
+        "confidence": "high",
+        "detection_level": "intermediate",
+        "markers": [
+          {
+            "name": "sudden_quality_jump",
+            "description": "Dramatic improvement without apparent cause",
+            "flag_message": "Sudden unexplained improvement in writing quality"
+          },
+          {
+            "name": "inconsistent_skill_level",
+            "description": "Quality varies dramatically between assignments",
+            "flag_message": "Writing quality inconsistent across assignments"
+          },
+          {
+            "name": "vocabulary_expansion_implausible",
+            "description": "Vocabulary sophistication increases too quickly",
+            "flag_message": "Vocabulary sophistication increase implausibly rapid"
+          }
+        ]
+      }
+    },
+
+    "ai_specific_content_patterns": {
+      "description": "Content patterns specific to AI generation",
+
+      "chatgpt_specific": {
+        "description": "Patterns specific to ChatGPT outputs",
+        "confidence": "high",
+        "detection_level": "naive_to_intermediate",
+        "markers": [
+          "delve into",
+          "crucial to understand",
+          "it's important to recognize",
+          "let's explore",
+          "let's examine",
+          "let's discuss",
+          "let's consider",
+          "key takeaway",
+          "key point",
+          "in essence",
+          "at its core",
+          "when it comes to",
+          "the reality is",
+          "the truth is",
+          "the fact remains",
+          "a testament to",
+          "serves as a reminder",
+          "a prime example",
+          "a perfect example",
+          "it's worth exploring",
+          "warrants attention",
+          "deserves consideration",
+          "merits discussion"
+        ]
+      },
+
+      "claude_specific": {
+        "description": "Patterns more common in Claude outputs",
+        "confidence": "medium",
+        "detection_level": "intermediate",
+        "markers": [
+          "i'd be happy to",
+          "let me",
+          "here's",
+          "i should note",
+          "it's worth noting",
+          "that said",
+          "with that in mind"
+        ],
+        "notes": "Less distinctive as these are also common in human writing"
+      },
+
+      "list_generation_patterns": {
+        "description": "AI tendency to structure as lists",
+        "confidence": "medium",
+        "detection_level": "naive",
+        "markers": [
+          {
+            "name": "numbered_lists_overuse",
+            "description": "Excessive use of numbered lists in prose assignments",
+            "flag_message": "Excessive numbered list usage"
+          },
+          {
+            "name": "bullet_point_prose",
+            "description": "Prose that reads like expanded bullet points",
+            "flag_message": "Writing has bullet-point structure in prose form"
+          },
+          {
+            "name": "exactly_n_points",
+            "description": "Consistently exactly 3, 5, or 7 points",
+            "flag_message": "Suspiciously consistent point counts"
+          }
+        ]
+      },
+
+      "knowledge_cutoff_indicators": {
+        "description": "References suggesting AI knowledge limitations",
+        "confidence": "high",
+        "detection_level": "all_levels",
+        "markers": [
+          {
+            "name": "vague_recent_references",
+            "description": "Vague references to recent events",
+            "examples": ["in recent years", "recently", "in the modern era"],
+            "flag_message": "Vague temporal references instead of specific dates"
+          },
+          {
+            "name": "outdated_information",
+            "description": "Information that's out of date",
+            "flag_message": "Contains outdated information"
+          },
+          {
+            "name": "hedged_current_events",
+            "description": "Overly cautious statements about current events",
+            "flag_message": "Unusually hedged statements about recent events"
+          }
+        ]
+      }
+    },
+
+    "assignment_type_specific": {
+      "description": "Markers that apply differently based on assignment type",
+
+      "personal_reflection": {
+        "required_authenticity_markers": [
+          "first_person_pronouns",
+          "specific_personal_examples",
+          "emotional_language",
+          "temporal_specificity",
+          "sensory_details"
+        ],
+        "high_suspicion_if_absent": true,
+        "notes": "Reflections should be highly personal; AI struggles with authentic personal voice"
+      },
+
+      "analytical_essay": {
+        "suspicious_patterns": [
+          "perfect_paragraph_structure",
+          "excessive_transitions",
+          "false_balance",
+          "no_original_argument"
+        ],
+        "notes": "Should have a clear thesis and original analysis, not just summary"
+      },
+
+      "research_paper": {
+        "suspicious_patterns": [
+          "vague_citations",
+          "no_specific_quotes",
+          "sources_dont_exist",
+          "misattributed_quotes"
+        ],
+        "notes": "AI often fabricates or misattributes sources"
+      },
+
+      "discussion_post": {
+        "suspicious_patterns": [
+          "no_reference_to_classmates",
+          "no_reference_to_specific_readings",
+          "generic_agreement",
+          "no_questions"
+        ],
+        "notes": "Should engage with specific class content and peers"
+      },
+
+      "creative_writing": {
+        "suspicious_patterns": [
+          "cliche_descriptions",
+          "no_unique_voice",
+          "predictable_plot",
+          "generic_characters"
+        ],
+        "notes": "AI creative writing often feels generic and predictable"
+      }
+    }
+  },
+
+  "detection_strategies": {
+    "naive_user_detection": {
+      "description": "Student copies AI output directly with no modifications",
+      "difficulty": "easy",
+      "primary_markers": [
+        "ai_transition_phrases",
+        "hedge_phrases",
+        "perfect_paragraph_structure",
+        "complete_sentence_ratio",
+        "absence_of_personal_voice",
+        "chatgpt_specific_phrases"
+      ],
+      "confidence_threshold": "2+ strong markers"
+    },
+
+    "intermediate_user_detection": {
+      "description": "Student makes light edits to AI output",
+      "difficulty": "medium",
+      "primary_markers": [
+        "structural_perfection_despite_surface_edits",
+        "voice_inconsistency",
+        "vocabulary_sophistication_mismatch",
+        "copy_paste_indicators",
+        "missing_specific_details"
+      ],
+      "confidence_threshold": "3+ markers with pattern consistency"
+    },
+
+    "advanced_user_detection": {
+      "description": "Student prompts AI to write like a student or include errors",
+      "difficulty": "hard",
+      "primary_markers": [
+        "artificial_error_patterns",
+        "performative_informality",
+        "fake_struggle_narrative",
+        "error_distribution_analysis",
+        "cross_submission_inconsistency"
+      ],
+      "confidence_threshold": "Pattern analysis across multiple dimensions",
+      "notes": "Requires holistic analysis; no single marker is definitive"
+    },
+
+    "very_advanced_user_detection": {
+      "description": "Student heavily rewrites AI output or uses AI for brainstorming only",
+      "difficulty": "very_hard",
+      "primary_markers": [
+        "cross_assignment_vocabulary_analysis",
+        "sudden_skill_jumps",
+        "writing_fingerprint_comparison",
+        "temporal_consistency_analysis"
+      ],
+      "confidence_threshold": "Longitudinal analysis required",
+      "notes": "May produce false negatives; focus on clear cases"
+    }
+  },
+
+  "scoring_weights": {
+    "description": "Relative weights for different marker categories",
+    "copy_paste_indicators": 1.5,
+    "ai_specific_phrases": 1.2,
+    "structural_perfection": 1.0,
+    "missing_authenticity": 1.3,
+    "artificial_errors": 1.4,
+    "cross_submission_similarity": 2.0,
+    "voice_inconsistency": 1.1
+  },
+
+  "false_positive_considerations": {
+    "description": "Factors that might cause false positives",
+    "high_achieving_students": {
+      "notes": "Strong writers may naturally have polished prose",
+      "mitigation": "Compare against student's historical work"
+    },
+    "esl_students": {
+      "notes": "May use translation tools legitimately or have learned formal phrases",
+      "mitigation": "Consider consistent voice despite formal language"
+    },
+    "students_with_writing_support": {
+      "notes": "Writing center or tutor assistance is legitimate",
+      "mitigation": "Look for complete voice change vs. guided improvement"
+    },
+    "neurodivergent_students": {
+      "notes": "May have very consistent or very inconsistent patterns naturally",
+      "mitigation": "Establish baseline from multiple submissions"
+    }
+  },
+
+  "implementation_notes": {
+    "regex_patterns": {
+      "word_boundary": "\\b{word}\\b",
+      "case_insensitive": true,
+      "multiline": true
+    },
+    "thresholds": {
+      "review_recommended": "3+ low-confidence flags OR 1+ high-confidence flag",
+      "high_suspicion": "5+ flags across categories OR 2+ high-confidence flags",
+      "definite_review": "Cross-student similarity OR metadata mismatch"
+    },
+    "output_format": {
+      "flag_levels": ["info", "warning", "alert"],
+      "include_evidence": true,
+      "include_suggestions": true
+    }
+  }
+}

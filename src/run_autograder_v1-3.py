@@ -25,11 +25,11 @@ try:
     HAS_UTILS = True
 except ImportError:
     HAS_UTILS = False
-    # Fallback subdirectory names
+    # Fallback subdirectory names (must match autograder_utils.py SUBDIRS)
     SUBDIRS = {
         "Academic_Dishonesty": "Academic Dishonesty Reports",
-        "Discussion_Forum": "Discussion Grades",
-        "Complete-Incomplete": "Assignment Grades",
+        "Discussion_Forum": "Discussion Forums",
+        "Complete-Incomplete": "Complete-Incomplete Assignments",
     }
 
 # === CONFIGURATION ===
@@ -479,11 +479,55 @@ def create_virtual_environment():
         print(f"❌ Failed to create virtual environment: {e}")
         sys.exit(1)
 
+def check_dependencies_installed():
+    """Check if required dependencies are already installed."""
+    if not REQUIREMENTS_FILE.exists():
+        return False
+    
+    pip_exe = get_venv_pip()
+    python_exe = get_venv_python()
+    
+    if not pip_exe.exists() or not python_exe.exists():
+        return False
+    
+    try:
+        # Read requirements
+        with open(REQUIREMENTS_FILE, 'r') as f:
+            requirements = [line.strip().split('==')[0].split('>=')[0].split('[')[0] 
+                          for line in f if line.strip() and not line.startswith('#')]
+        
+        # Check if each package is installed
+        result = subprocess.run(
+            [str(pip_exe), "list", "--format=freeze"],
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode != 0:
+            return False
+        
+        installed = {line.split('==')[0].lower() for line in result.stdout.strip().split('\n') if '==' in line}
+        
+        for req in requirements:
+            if req.lower() not in installed:
+                return False
+        
+        return True
+        
+    except Exception:
+        return False
+
+
 def install_dependencies():
-    """Install required dependencies."""
+    """Install required dependencies if not already installed."""
     if not REQUIREMENTS_FILE.exists():
         print(f"❌ requirements.txt not found at: {REQUIREMENTS_FILE}")
         sys.exit(1)
+    
+    # Check if dependencies are already installed
+    if check_dependencies_installed():
+        print("✅ Dependencies already installed")
+        return
     
     print("📦 Installing dependencies...")
     
@@ -534,13 +578,13 @@ def get_script_type_info():
         "Discussion_Forum": {
             "display": "Discussion Forum Autograder",
             "pattern": "*Discussion*Forum*.py",
-            "subdir": SUBDIRS.get("Discussion_Forum", "Discussion Grades"),
+            "subdir": SUBDIRS.get("Discussion_Forum", "Discussion Forums"),
             "subdir_key": "Discussion_Forum"
         },
         "Complete-Incomplete": {
             "display": "Complete/Incomplete Autograder",
             "pattern": "*Complete*Incomplete*.py",
-            "subdir": SUBDIRS.get("Complete-Incomplete", "Assignment Grades"),
+            "subdir": SUBDIRS.get("Complete-Incomplete", "Complete-Incomplete Assignments"),
             "subdir_key": "Complete-Incomplete"
         }
     }
@@ -557,7 +601,8 @@ def find_scripts():
             found_scripts[script_type] = {
                 "path": matches[0],
                 "display": info["display"],
-                "subdir": info["subdir"]
+                "subdir": info["subdir"],
+                "subdir_key": info["subdir_key"]  # Include subdir_key for cleanup identification
             }
     
     if not found_scripts:
