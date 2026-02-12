@@ -1,0 +1,94 @@
+# Autograder4Canvas
+
+A Canvas LMS integration tool for community college instructors to streamline grading workflows with ethics-first design principles.
+
+## Features
+
+- **Academic Dishonesty Detection** - Linguistic pattern analysis to support learning conversations (not surveillance)
+- **Complete/Incomplete Grading** - Automated evaluation of submission completeness
+- **Discussion Forum Grading** - Batch grading of Canvas discussion posts
+- **Automation Engine** - Schedule and automate grading workflows
+
+## Download
+
+### Pre-built Applications
+
+Download the latest release for your platform:
+
+- **macOS**: [Autograder4Canvas.app](#) (Coming soon)
+- **Windows**: [Autograder4Canvas.exe](#) (Coming soon)
+- **Linux**: [Autograder4Canvas.tar.gz](#) (Coming soon)
+
+### Installation
+
+**macOS:**
+1. Download `Autograder4Canvas.app`
+2. Move to Applications folder
+3. Right-click and select "Open" (first time only, to bypass Gatekeeper)
+
+**Windows:**
+1. Download `Autograder4Canvas.exe`
+2. Run the installer
+3. Follow the installation wizard
+
+**Linux:**
+1. Download `Autograder4Canvas.tar.gz`
+2. Extract: `tar -xzf Autograder4Canvas.tar.gz`
+3. Run install script: `./install.sh`
+
+## Quick Start
+
+1. **Get your Canvas API token:**
+   - Log into Canvas → Account → Settings → New Access Token
+
+2. **Launch Autograder4Canvas**
+
+3. **Enter your Canvas API token** when prompted
+
+4. **Select your grading tool:**
+   - Academic Dishonesty Check
+   - Complete/Incomplete Grading
+   - Discussion Forum Grading
+   - Automation Setup
+
+5. **Follow the on-screen prompts** to select your course and assignment
+
+## Documentation
+
+- [User Guide](src/docs/USER_GUIDE.md) - Detailed usage instructions
+- [Automation Guide](AUTOMATION_README.md) - Set up automated grading workflows
+- [Academic Dishonesty Check README](Academic_Dishonety_check_README.txt) - Ethical considerations and usage
+
+## Core Values
+
+This tool is designed with **ethics-first principles**:
+
+- ✅ **Student dignity & agency** - Students are knowledge creators, not potential cheaters
+- ✅ **Educational equity** - Accounts for ELLs, first-gen students, neurodivergent learners
+- ✅ **Data sovereignty** - Processes locally only, never stores student work
+- ✅ **Transparency** - Human judgment over algorithmic "accuracy"
+- ✅ **Bias awareness** - Makes detection biases visible
+
+**The Academic Dishonesty Check is a conversation starter, not a verdict.**
+
+## Requirements
+
+- Canvas LMS account with API access
+- Internet connection for Canvas API calls
+- Python 3.7+ (bundled in pre-built apps)
+
+## Building from Source
+
+See [Development Guide](docs/INTEGRATION_GUIDE.md) for build instructions.
+
+## Support
+
+For questions or issues, please [open an issue](https://github.com/yourusername/Autograder4Canvas/issues) on GitHub.
+
+## License
+
+GNU GPL v2 - See LICENSE file for details
+
+## Credits
+
+Built by a community college instructor for educators teaching humanities and social sciences.

@@ -1,0 +1,160 @@
+name: Build Executables
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags (e.g., v1.0.0)
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r src/requirements.txt
+          pip install pyinstaller
+
+      - name: Build macOS app
+        run: |
+          pyinstaller --name "Autograder4Canvas" \
+            --windowed \
+            --icon "build/mac/Autograder4Canvas.app/Contents/Resources/AppIcon.icns" \
+            --add-data "src:src" \
+            --add-data "src/Programs:Programs" \
+            --add-data "src/config:config" \
+            --add-data "src/modules:modules" \
+            --add-data "src/docs:docs" \
+            --osx-bundle-identifier "com.autograder4canvas.app" \
+            src/run_autograder_v1-3.py
+
+      - name: Create DMG
+        run: |
+          # Install create-dmg
+          brew install create-dmg
+
+          # Create DMG
+          create-dmg \
+            --volname "Autograder4Canvas" \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon-size 100 \
+            --app-drop-link 600 185 \
+            "Autograder4Canvas-macOS.dmg" \
+            "dist/Autograder4Canvas.app"
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Autograder4Canvas-macOS
+          path: Autograder4Canvas-macOS.dmg
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r src/requirements.txt
+          pip install pyinstaller
+
+      - name: Build Windows exe
+        run: |
+          pyinstaller --name "Autograder4Canvas" `
+            --onefile `
+            --windowed `
+            --icon "build/windows/Autograder4Canvas/icon.ico" `
+            --add-data "src;src" `
+            --add-data "src/Programs;Programs" `
+            --add-data "src/config;config" `
+            --add-data "src/modules;modules" `
+            --add-data "src/docs;docs" `
+            src/run_autograder_v1-3.py
+
+      - name: Create installer (optional)
+        run: |
+          # You can add NSIS or Inno Setup here for a proper installer
+          # For now, we'll just zip the executable
+          Compress-Archive -Path dist/Autograder4Canvas.exe -DestinationPath Autograder4Canvas-Windows.zip
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Autograder4Canvas-Windows
+          path: Autograder4Canvas-Windows.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r src/requirements.txt
+          pip install pyinstaller
+
+      - name: Build Linux binary
+        run: |
+          pyinstaller --name "Autograder4Canvas" \
+            --onefile \
+            --add-data "src:src" \
+            --add-data "src/Programs:Programs" \
+            --add-data "src/config:config" \
+            --add-data "src/modules:modules" \
+            --add-data "src/docs:docs" \
+            src/run_autograder_v1-3.py
+
+      - name: Create tarball
+        run: |
+          mkdir -p Autograder4Canvas-Linux
+          cp dist/Autograder4Canvas Autograder4Canvas-Linux/
+          cp build/linux/Autograder4Canvas/install.sh Autograder4Canvas-Linux/
+          tar -czf Autograder4Canvas-Linux.tar.gz Autograder4Canvas-Linux/
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Autograder4Canvas-Linux
+          path: Autograder4Canvas-Linux.tar.gz
+
+  create-release:
+    needs: [build-macos, build-windows, build-linux]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            Autograder4Canvas-macOS/Autograder4Canvas-macOS.dmg
+            Autograder4Canvas-Windows/Autograder4Canvas-Windows.zip
+            Autograder4Canvas-Linux/Autograder4Canvas-Linux.tar.gz
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
