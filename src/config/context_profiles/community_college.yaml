@@ -1,0 +1,130 @@
+# Community College Context Profile
+# Version 2.0.0
+# Population-aware adjustments to prevent false positives
+# for diverse student populations.
+
+profile_id: community_college
+profile_name: "Community College Context"
+description: |
+  Adjustments for community college populations which typically include:
+  - 40-60% ESL learners
+  - 50-70% first-generation college students
+  - 70%+ working students
+  - Wide range of academic preparation levels
+  - Students from developmental English pathways
+  
+  These adjustments reduce false positives while maintaining
+  detection of genuine academic dishonesty.
+
+demographics:
+  esl_learners:
+    percentage: 45
+    description: "Students whose first language is not English"
+    implications:
+      - "Formal transitions may be taught structures, not AI markers"
+      - "Thesaurus use is legitimate language learning"
+      - "Grammar checker use is often required/encouraged"
+      - "Article and preposition errors indicate human authorship"
+      
+  first_generation:
+    percentage: 60
+    description: "First in family to attend college"
+    implications:
+      - "May follow rigid essay formulas from developmental courses"
+      - "Less familiarity with 'authentic academic voice' expectations"
+      - "May have learned that 'good writing' means avoiding 'I'"
+      
+  working_students:
+    percentage: 75
+    description: "Students working while enrolled"
+    implications:
+      - "Time constraints affect submission quality"
+      - "May submit less polished work due to scheduling"
+      - "Consider timing flexibility when discussing concerns"
+      
+  developmental_english:
+    percentage: 40
+    description: "Completed or concurrent developmental English"
+    implications:
+      - "Five-paragraph essay structure is explicitly taught"
+      - "Transition phrases are drilled as 'good writing'"
+      - "Formulaic structure reflects instruction, not AI"
+
+marker_adjustments:
+  ai_transitions:
+    multiplier: 0.7
+    rationale: |
+      ESL students learn formal transitions as 'academic English.'
+      Phrases like 'furthermore' and 'in conclusion' are explicitly
+      taught in ESL and developmental English courses.
+      
+  inflated_vocabulary:
+    multiplier: 0.67
+    rationale: |
+      Thesaurus and dictionary use is legitimate for language learners.
+      Words like 'utilize' may reflect translation tools or vocabulary
+      expansion efforts, not AI generation.
+      
+  grammatical_perfection:
+    multiplier: 0.3
+    rationale: |
+      Grammar checkers (Grammarly, etc.) are widely used and often
+      required by instructors. Perfect grammar is not evidence of AI.
+      
+  personal_voice_markers:
+    multiplier: 0.8
+    rationale: |
+      Cultural and linguistic factors affect personal voice expression.
+      Some cultures discourage first-person academic writing.
+      ESL students may have learned to avoid 'I' statements.
+      
+  formal_essay_structure:
+    multiplier: 0.5
+    rationale: |
+      Rigid five-paragraph structure is taught in developmental English.
+      Following this formula is instruction compliance, not AI use.
+
+threshold_adjustments:
+  # Higher thresholds = less likely to flag
+  flag_concern_level: 4.0  # (vs 3.0 standard)
+  peer_comparison_percentile: 95  # (vs 90 standard)
+  minimum_word_count_for_analysis: 100
+  
+  rationale: |
+    Community college populations have higher rates of legitimate
+    variation in writing style. Higher thresholds reduce false positives
+    while still catching genuine outliers.
+
+positive_indicators:
+  # These ERROR patterns actually indicate human authorship
+  esl_error_patterns:
+    description: "Errors that AI doesn't make"
+    patterns:
+      - "Article errors (the/a/an misuse)"
+      - "Preposition errors (interested ON, good IN)"
+      - "Word form errors (importancy, educative)"
+      - "Subject-verb agreement with collective nouns"
+    interpretation: |
+      These errors indicate human authorship because:
+      1. AI language models don't make these mistakes
+      2. They reflect L1 transfer from non-English languages
+      3. They show authentic language learning process
+
+instructor_guidance:
+  before_flagging:
+    - "Consider student's ESL status if known"
+    - "Check if patterns match taught structures from developmental English"
+    - "Look for ESL error patterns as positive authenticity indicators"
+    - "Review student's previous submissions for baseline comparison"
+    
+  conversation_approach:
+    - "Frame as 'I want to understand your process' not accusation"
+    - "Ask about specific moments, details, or experiences"
+    - "Offer revision opportunity focused on learning objectives"
+    - "Consider scheduling flexibility for working students"
+    
+  false_positive_check:
+    - "Does this student have an ESL background?"
+    - "Did they take developmental English courses?"
+    - "Are the 'AI patterns' things taught in those courses?"
+    - "Do error patterns suggest human authorship?"

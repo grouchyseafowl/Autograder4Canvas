@@ -1,0 +1,165 @@
+# Institution Profile Template
+# Version 2.0.0
+# Customize this file for your institution's specific context
+# Save as your_institution.yaml in config/context_profiles/
+
+# ============================================================
+# INSTRUCTIONS
+# ============================================================
+# 1. Copy this file and rename it (e.g., "my_college.yaml")
+# 2. Fill in your institution's demographic data
+# 3. Adjust marker weights based on your population
+# 4. Set appropriate thresholds
+# 5. Place in config/context_profiles/
+# ============================================================
+
+profile_id: your_institution  # Change this
+institution_type: community_college  # Options: community_college, four_year, university, other
+version: "2.0.0"
+
+# ============================================================
+# DEMOGRAPHICS
+# ============================================================
+# These percentages help the system understand your population.
+# Estimate based on institutional data or reasonable assumptions.
+
+demographics:
+  esl_percentage: 0  # % of students for whom English is not first language
+  first_gen_percentage: 0  # % first-generation college students
+  working_students_percentage: 0  # % working 20+ hours/week
+  returning_adult_percentage: 0  # % students 25+
+  developmental_english_percentage: 0  # % who took developmental English
+
+# ============================================================
+# MARKER ADJUSTMENTS
+# ============================================================
+# Adjust weights for markers based on your population.
+# Values < 1.0 REDUCE suspicion (use for patterns that are
+# legitimate in your context).
+# Values > 1.0 INCREASE suspicion.
+
+marker_adjustments:
+  ai_transitions:
+    multiplier: 1.0  # Reduce if high ESL (they learn these in class)
+    rationale: ""
+    
+  inflated_vocabulary:
+    multiplier: 1.0  # Reduce if high ESL (thesaurus use is legitimate)
+    rationale: ""
+    
+  grammatical_perfection:
+    multiplier: 1.0  # Reduce if grammar checkers are required/encouraged
+    rationale: ""
+    
+  formal_essay_structure:
+    multiplier: 1.0  # Reduce if formulaic structure taught in dev English
+    rationale: ""
+    
+  generic_phrases:
+    multiplier: 1.0  # May not need adjustment
+    rationale: ""
+
+# ============================================================
+# THRESHOLD ADJUSTMENTS
+# ============================================================
+# Higher thresholds = fewer false positives but may miss some cases.
+# For populations with high ESL/first-gen, use higher thresholds.
+
+threshold_adjustments:
+  flag_concern_level: 3.0
+  # Standard: 3.0
+  # Community college with high ESL: 4.0
+  # Recommended: Higher for diverse populations
+  
+  outlier_percentile: 90
+  # Standard: 90 (flags top 10%)
+  # Community college: 95 (flags top 5%)
+  # Recommended: Higher for diverse populations
+
+# ============================================================
+# ESL POSITIVE INDICATORS
+# ============================================================
+# These error patterns are POSITIVE indicators of human authorship.
+# AI doesn't make these mistakes. Their presence REDUCES concern.
+
+esl_positive_indicators:
+  description: "Errors that suggest human (ESL) writer, not AI"
+  
+  error_patterns:
+    # Article errors
+    - "Missing articles (a/an/the)"
+    - "'A' before vowel sounds"
+    - "Unnecessary articles with uncountable nouns"
+    
+    # Preposition errors  
+    - "'Depend of' instead of 'depend on'"
+    - "'Arrive to' instead of 'arrive at'"
+    - "Redundant prepositions (discuss about, emphasize on)"
+    
+    # Word form errors
+    - "Noun/verb/adjective confusion (importancy, educative)"
+    - "False cognates from L1"
+    
+    # Other L1 transfer patterns
+    - "Word order errors"
+    - "Verb tense inconsistency"
+    - "Plural/singular confusion"
+  
+  interpretation: |
+    These errors are POSITIVE indicators. AI doesn't make them.
+    If you see formal vocabulary WITH these errors, it's likely
+    an ESL student using a thesaurus, not AI.
+
+# ============================================================
+# INSTRUCTOR GUIDANCE
+# ============================================================
+# Notes and reminders for instructors using this profile.
+
+instructor_guidance:
+  key_principles:
+    - "This tool is a conversation starter, not a verdict"
+    - "Context matters: same pattern can be legitimate or concerning"
+    - "When in doubt, have a conversation with the student"
+    - "Errors can be POSITIVE indicators of human work"
+    
+  population_notes: |
+    Add specific notes about your student population here.
+    For example:
+    - "Many students work full-time and may use AI assistance for time management"
+    - "High percentage of returning adults who may write more formally"
+    - "Students often transfer from institutions with different writing conventions"
+    
+  local_context: |
+    Add any institution-specific context:
+    - Required tools (Grammarly, etc.)
+    - Writing center policies
+    - Developmental education pathways
+    - Cultural considerations
+
+# ============================================================
+# COURSE-SPECIFIC OVERRIDES (Optional)
+# ============================================================
+# You can create course-specific profiles that inherit from this
+# institutional profile but override certain settings.
+
+course_overrides_example:
+  ENGL101:
+    marker_adjustments:
+      formal_essay_structure:
+        multiplier: 0.3  # Very low - this is what we teach
+    notes: "First-semester composition - formulaic structure is the goal"
+    
+  PHIL200:
+    threshold_adjustments:
+      flag_concern_level: 2.5  # Lower threshold - expect more authentic voice
+    notes: "Ethics course requires personal engagement"
+
+# ============================================================
+# VALIDATION CHECKLIST
+# ============================================================
+# Before deploying, verify:
+# [ ] Demographics reflect actual institutional data
+# [ ] Marker adjustments have clear rationales
+# [ ] Thresholds appropriate for population
+# [ ] Instructor guidance is specific and useful
+# [ ] Profile has been tested with sample submissions

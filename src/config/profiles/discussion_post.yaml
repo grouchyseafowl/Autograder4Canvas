@@ -1,0 +1,165 @@
+# Discussion Post Assignment Profile
+# Version 2.0.0
+# Profile for online discussion forum posts
+
+profile_id: discussion_post
+profile_name: "Discussion Forum Post"
+version: "2.0.0"
+effective_date: "2025-12-26"
+
+description: |
+  Profile for online discussion forum posts that should demonstrate
+  engagement with course readings and/or classmate contributions.
+  Informal voice is appropriate; high formality is suspicious.
+
+learning_objectives:
+  primary:
+    - "Engage with assigned readings"
+    - "Participate in academic conversation"
+    - "Respond thoughtfully to classmates"
+  secondary:
+    - "Develop ideas through dialogue"
+    - "Practice synthesizing perspectives"
+
+detection_approach: "engagement_detection"
+detection_explanation: |
+  Discussion posts should show ENGAGEMENT—with readings, with 
+  classmates, with specific ideas. High formality and generic
+  content both suggest lack of genuine participation.
+  
+  Key question: "Did this student actually participate in the
+  conversation, or just submit something?"
+
+weight_priorities:
+  ai_transitions:
+    multiplier: 1.3
+    rationale: "Formal transitions unusual in discussion posts"
+  generic_phrases:
+    multiplier: 1.4
+    rationale: "Generic content defeats purpose of discussion"
+  personal_voice:
+    multiplier: 1.2
+    rationale: "Some personal voice expected in discussions"
+  engagement_markers:
+    multiplier: 2.0
+    rationale: "Must engage with readings or classmates"
+  formality_markers:
+    multiplier: 1.5
+    rationale: "Excessive formality is suspicious"
+
+engagement_markers:
+  reading_engagement:
+    description: "Evidence of reading the assigned material"
+    patterns:
+      - pattern: "in the reading"
+        weight: -0.3
+      - pattern: "the author (says|argues|claims)"
+        regex: true
+        weight: -0.4
+      - pattern: "on page"
+        weight: -0.5
+      - pattern: "in chapter"
+        weight: -0.4
+      - pattern: "the article mentions"
+        weight: -0.3
+      - pattern: "I noticed that"
+        weight: -0.3
+        
+  classmate_engagement:
+    description: "Evidence of reading classmate posts"
+    patterns:
+      - pattern: "I agree with [A-Z][a-z]+"
+        regex: true
+        weight: -0.5
+      - pattern: "[A-Z][a-z]+('s| 's) point about"
+        regex: true
+        weight: -0.5
+      - pattern: "building on what"
+        weight: -0.4
+      - pattern: "like [A-Z][a-z]+ said"
+        regex: true
+        weight: -0.4
+      - pattern: "responding to"
+        weight: -0.3
+
+formality_red_flags:
+  description: "Overly formal patterns unusual in discussions"
+  patterns:
+    - pattern: "This essay will explore"
+      weight: 0.8
+      note: "Essay language in discussion post"
+    - pattern: "In conclusion"
+      weight: 0.5
+      note: "Formal conclusion unusual in posts"
+    - pattern: "It is important to note"
+      weight: 0.6
+    - pattern: "Throughout history"
+      weight: 0.6
+    - pattern: "One might argue"
+      weight: 0.4
+
+concern_indicators:
+  high_concern:
+    - "Could be posted to any discussion on any topic"
+    - "No reference to specific reading content"
+    - "No reference to any classmate"
+    - "Reads like a formal essay, not a post"
+    - "Generic philosophical statements"
+    
+  moderate_concern:
+    - "Mentions topic but not specific reading details"
+    - "Formal tone but some personal elements"
+    - "References 'the reading' without specifics"
+    
+  low_concern:
+    - "Engages with material but uses some formal language"
+    - "Clear personal voice with minor generic elements"
+
+example_indicators:
+  authentic:
+    - "I was really struck by the passage where..."
+    - "Maria made a great point about..."
+    - "This reminded me of when I..."
+    - "I'm not sure I agree with the author because..."
+    - "Has anyone else noticed that...?"
+    
+  concerning:
+    - "Throughout history, this topic has been important"
+    - "It is crucial to understand that..."
+    - "This reading explores the theme of..."
+    - "In conclusion, learning is valuable"
+    - "Many scholars have discussed this issue"
+
+conversation_starters:
+  high_concern:
+    - "What specifically in the reading prompted this response?"
+    - "Can you point to a passage that you found interesting?"
+    - "How does this connect to what your classmates said?"
+    
+  moderate_concern:
+    - "What part of the reading stood out to you most?"
+    - "Did anyone's post change how you saw this?"
+
+verification_questions:
+  - "What was the main argument of the reading?"
+  - "Which classmate's post did you find most interesting?"
+  - "What question do you still have after the reading?"
+  - "How did your thinking change after the discussion?"
+
+instructor_notes:
+  key_principles:
+    - "Discussion posts should sound like POSTS, not essays"
+    - "Engagement with specifics is the key indicator"
+    - "High formality is itself a red flag"
+    - "Look for references to readings AND classmates"
+    
+  batch_analysis_note: |
+    When analyzing discussion posts in batch:
+    - First post in thread can't reference classmates
+    - Later posts SHOULD reference earlier ones
+    - Adjust expectations based on post order
+    
+  pedagogical_approach:
+    - "Ask what they found most interesting in the reading"
+    - "Have them summarize a classmate's point"
+    - "Request they add a specific reference"

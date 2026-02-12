@@ -2,6 +2,7 @@
 REM ===============================================================================
 REM                        CANVAS AUTOGRADER LAUNCHER
 REM                             Windows Version
+REM                               Version 1.3+
 REM ===============================================================================
 
 setlocal enabledelayedexpansion
@@ -11,26 +12,33 @@ cd /d "%~dp0"
 
 echo.
 echo ========================================
-echo       Canvas Autograder Launcher
+echo    Canvas Autograder
 echo ========================================
 echo.
 
 REM Check for Python
 call :check_python
-if errorlevel 1 goto :eof
+if errorlevel 1 goto :python_not_found
 
-REM Find the launcher script
+REM Find the launcher script in src/
 call :find_launcher
-if errorlevel 1 goto :eof
+if errorlevel 1 goto :error_exit
 
 echo.
 echo Starting Canvas Autograder...
+echo The program will guide you through any remaining setup.
 echo.
 
 REM Run the launcher
 %PYTHON_CMD% "%LAUNCHER%"
 
-echo.
+REM Check exit code
+if errorlevel 1 (
+    echo.
+    echo [WARNING] Program exited with an error
+    echo.
+)
+
 pause
 goto :eof
 
@@ -66,41 +74,87 @@ if %errorlevel% equ 0 (
     exit /b 0
 )
 
+REM Python not found
+exit /b 1
+
+:python_not_found
 echo [ERROR] Python 3 not found!
 echo.
-echo Please install Python 3.7 or higher:
+echo Autograder4Canvas requires Python 3.7 or higher.
 echo.
-echo   1. Download from: https://www.python.org/downloads/
-echo   2. Run the installer
-echo   3. IMPORTANT: Check "Add Python to PATH" during installation
+echo Please install Python:
 echo.
-echo After installing, close and reopen this window.
+echo   Download from: https://www.python.org/downloads/
 echo.
-pause
+echo   IMPORTANT: During installation, check "Add Python to PATH"
+echo.
+echo Options:
+echo   [1] Open Python download page in browser
+echo   [2] Exit and install manually
+echo.
+
+set /p choice="Choose option (1 or 2, default=2): "
+if "%choice%"=="" set choice=2
+
+if "%choice%"=="1" (
+    echo.
+    echo Opening Python download page in your browser...
+    start https://www.python.org/downloads/
+    echo.
+    echo After installing Python:
+    echo   1. Make sure to check "Add Python to PATH" during installation
+    echo   2. Complete the installation
+    echo   3. Close and reopen this window
+    echo   4. Run this program again
+    echo.
+    pause
+) else (
+    echo.
+    echo Please install Python 3.7+ and run this program again.
+    echo.
+    pause
+)
 exit /b 1
 
 :find_launcher
-REM Look for src/run_autograder.py
-set LAUNCHER=src\run_autograder.py
+REM Look for any run_autograder*.py in src/ directory (version-agnostic)
+set LAUNCHER=
+set NEWEST_VERSION=
 
-if exist "%LAUNCHER%" (
-    echo [OK] Found launcher: %LAUNCHER%
-    exit /b 0
+REM Check if src directory exists
+if not exist "%~dp0src\" (
+    echo [ERROR] src\ directory not found!
+    echo.
+    echo Expected location: src\run_autograder*.py
+    echo Current directory: %cd%
+    echo.
+    goto :eof
 )
 
-REM Fallback: look for any run_autograder*.py in src/
-for %%f in (src\run_autograder*.py) do (
+REM Find all run_autograder*.py files and get the newest
+for %%f in ("%~dp0src\run_autograder*.py") do (
     if exist "%%f" (
         set LAUNCHER=%%f
-        echo [OK] Found launcher: !LAUNCHER!
-        exit /b 0
+        REM Keep last one found (works for simple version ordering)
     )
 )
 
-echo [ERROR] Launcher script not found!
-echo.
-echo Expected: src\run_autograder.py
-echo Current directory: %cd%
-echo.
+if "%LAUNCHER%"=="" (
+    echo [ERROR] Launcher script not found!
+    echo.
+    echo Expected location: src\run_autograder*.py
+    echo Current directory: %cd%
+    echo.
+    echo Make sure the src\ directory contains the main Python script.
+    echo.
+    exit /b 1
+)
+
+REM Extract just the filename for display
+for %%f in ("%LAUNCHER%") do set LAUNCHER_NAME=%%~nxf
+echo [OK] Found launcher: !LAUNCHER_NAME!
+exit /b 0
+
+:error_exit
 pause
 exit /b 1

@@ -1,0 +1,124 @@
+# Environment variables and secrets
+.env
+.env.*
+*.env
+.autograder_config/
+
+# Canvas API credentials and config
+canvas_config.json
+canvas_credentials.*
+course_config.json
+api_tokens.*
+*.local.*
+*-local.*
+config.local.*
+settings.local.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.manifest
+*.spec
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Distribution files
+distro/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# Build artifacts
+*.dmg
+*.tar.gz
+*.zip
+Autograder4CanvasInstallers.zip
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+*.db
+
+# Testing and debugging
+debug_wrapper.sh
+test_*.sh
+devo/
+claude/
+archive/
+test_data/
+sample_submissions/
+submissions/
+
+# Build and deployment
+build.sh
+run_automation_wrapper.sh
+setup_automation.sh
+
+# Personal development notes
+TESTING_AND_DEBUGGING.md
+IMPLEMENTATION_VERIFICATION.md
+CHANGELOG_IMPROVEMENTS.md
+RECENT_IMPROVEMENTS.md
+PROJECT.md
+COMMAND_REFERENCE.txt
+
+# Documentation (generated)
+*.pdf

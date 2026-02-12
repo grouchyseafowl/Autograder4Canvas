@@ -1,0 +1,200 @@
+# Notes / Brainstorming Assignment Profile
+# Version 2.0.0
+# Profile for early-stage informal writing
+
+profile_id: notes_brainstorm
+profile_name: "Notes / Brainstorming / Outlines"
+version: "2.0.0"
+effective_date: "2025-12-26"
+
+description: |
+  Profile for informal early-stage writing: notes, brainstorming,
+  outlines, free-writing, and preliminary idea exploration. Polish
+  is NOT expected and may actually be suspicious.
+
+learning_objectives:
+  primary:
+    - "Generate and explore ideas freely"
+    - "Practice pre-writing strategies"
+  secondary:
+    - "Develop comfort with messy thinking"
+    - "Separate generating from editing"
+
+detection_approach: "polish_detection_inverse"
+detection_explanation: |
+  For notes and brainstorming, we INVERT normal detection logic.
+  Rough, fragmentary, incomplete writing is EXPECTED. Too much
+  polish suggests the student may have used AI to generate ideas
+  they should be developing themselves.
+  
+  Key question: "Is this actually brainstorming, or is it a finished
+  product disguised as notes?"
+
+weight_priorities:
+  polish_markers:
+    multiplier: 3.0
+    rationale: "Polish is highly suspicious for notes"
+  ai_transitions:
+    multiplier: 2.0
+    rationale: "Formal transitions inappropriate for brainstorming"
+  complete_sentences:
+    multiplier: 1.5
+    rationale: "Notes should have fragments and incomplete thoughts"
+  perfect_structure:
+    multiplier: 2.5
+    rationale: "Organized structure suspicious for brainstorming"
+  personal_voice:
+    multiplier: 0.3
+    rationale: "Voice not developed yet in brainstorming"
+
+expected_characteristics:
+  positive_indicators:
+    description: "What good notes/brainstorming looks like"
+    examples:
+      - "Bullet points and fragments"
+      - "Questions and uncertainties"
+      - "Arrows, connections, crossed-out text"
+      - "Ideas without full development"
+      - "Self-directed comments (TODO, need to check, maybe?)"
+      - "Inconsistent capitalization and punctuation"
+      - "Rough organization or no organization"
+      
+  suspicious_indicators:
+    description: "Warning signs in 'brainstorming'"
+    examples:
+      - "Complete, polished paragraphs"
+      - "Consistent formatting throughout"
+      - "Formal transitions"
+      - "Fully developed arguments"
+      - "Perfect grammar and spelling"
+      - "Clear introduction and conclusion"
+
+authenticity_markers:
+  process_indicators:
+    description: "Signs of genuine pre-writing"
+    patterns:
+      - pattern: "\\?"
+        weight: -0.3
+        note: "Questions indicate exploration"
+      - pattern: "maybe|perhaps|possibly"
+        regex: true
+        weight: -0.2
+        note: "Uncertainty language"
+      - pattern: "TODO|need to|check this"
+        regex: true
+        weight: -0.5
+        note: "Self-directed notes"
+      - pattern: "\\.\\.\\."
+        weight: -0.3
+        note: "Trailing thoughts"
+      - pattern: "or|/"
+        weight: -0.1
+        note: "Alternatives being considered"
+        
+  fragment_indicators:
+    description: "Incomplete thoughts (positive)"
+    check_for:
+      - "Sentences without verbs"
+      - "Bullet points"
+      - "Short phrases"
+      - "Single words as list items"
+
+polish_detection:
+  suspicious_patterns:
+    - pattern: "In conclusion"
+      weight: 1.5
+      note: "Conclusions inappropriate for notes"
+    - pattern: "Furthermore|Moreover|Additionally"
+      regex: true
+      weight: 1.2
+      note: "Formal transitions unusual in brainstorming"
+    - pattern: "As [A-Z][a-z]+ argues"
+      regex: true
+      weight: 1.0
+      note: "Formal citation in notes is unusual"
+    - pattern: "\\. [A-Z][a-z]+ \\. [A-Z][a-z]+"
+      regex: true
+      weight: 0.5
+      note: "Multiple complete sentences in sequence"
+
+concern_indicators:
+  high_concern:
+    - "Fully polished paragraphs labeled as 'notes'"
+    - "Complete essay structure in 'brainstorming'"
+    - "Zero rough edges or incomplete thoughts"
+    - "Professional formatting in preliminary work"
+    
+  moderate_concern:
+    - "Mix of rough and polished sections"
+    - "Some formal transitions in otherwise rough notes"
+    - "Ideas fully developed but structure rough"
+    
+  low_concern:
+    - "Appropriately rough and fragmentary"
+    - "Questions and uncertainties present"
+    - "Obvious work-in-progress characteristics"
+
+example_indicators:
+  authentic_notes:
+    text: |
+      - theme of identity??
+      - check chapter 4 again
+      - maybe contrast with previous reading
+      - grandmother story connects somehow
+      - TODO find quote about memory
+      - this part confusing - ask in class
+    analysis: |
+      ✓ Bullet points, not paragraphs
+      ✓ Questions and uncertainties
+      ✓ Self-directed reminders (TODO, check)
+      ✓ Incomplete thoughts
+      ✓ No formal structure
+      
+  suspicious_notes:
+    text: |
+      The theme of identity in this chapter is multifaceted
+      and merits careful consideration. Furthermore, the author's
+      use of memory as a narrative device demonstrates the
+      complexity of personal experience. In examining these
+      elements, it is important to note the connection to
+      larger themes of belonging.
+    analysis: |
+      ✗ Complete, polished paragraphs
+      ✗ Formal transitions ("Furthermore", "In examining")
+      ✗ AI marker phrases ("merits careful consideration")
+      ✗ No rough edges or incomplete thoughts
+      🚩 This is NOT brainstorming
+
+verification_questions:
+  - "Can you walk me through how you came up with these ideas?"
+  - "What were you uncertain about when brainstorming?"
+  - "What would you develop further from these notes?"
+  - "Did you write this all at once or over time?"
+
+conversation_starters:
+  high_concern:
+    - "These notes are very polished for brainstorming. Can you tell me about your process?"
+    - "I'm seeing complete paragraphs rather than rough ideas. How did you approach this?"
+    - "Walk me through how these ideas developed."
+    
+  clarification:
+    - "What stage of thinking does this represent?"
+    - "What questions do you still have about your topic?"
+
+instructor_notes:
+  key_principles:
+    - "Notes should look ROUGH, not polished"
+    - "Polish in notes is more suspicious than in final drafts"
+    - "Students may not understand what 'brainstorming' means"
+    - "Consider teaching brainstorming strategies explicitly"
+    
+  pedagogical_approach:
+    - "Model what brainstorming looks like"
+    - "Emphasize that rough is okay (even preferred)"
+    - "Grade for process, not polish"
+    - "Make notes low-stakes to encourage roughness"
+    
+  false_positive_awareness:
+    - "Some students naturally organize their thoughts"
+    - "Typed notes may look more polished than handwritten"
+    - "ELL students may over-formalize everything"

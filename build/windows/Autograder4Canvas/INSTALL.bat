@@ -1,96 +1,94 @@
 @echo off
-REM ===============================================================================
-REM                    CANVAS AUTOGRADER INSTALLER - Windows
-REM ===============================================================================
-
 setlocal enabledelayedexpansion
 
-echo.
 echo ========================================
-echo   Autograder4Canvas Installer
+echo    Autograder4Canvas Installer
 echo ========================================
 echo.
 
-REM Set install location
+:: Set install location
 set "INSTALL_DIR=%LOCALAPPDATA%\Autograder4Canvas"
 
 echo This will install Autograder4Canvas to:
 echo   %INSTALL_DIR%
 echo.
-echo And create a launcher on your Desktop.
-echo.
 set /p CONFIRM="Continue? (Y/N): "
 if /i not "%CONFIRM%"=="Y" (
     echo Installation cancelled.
-    pause
-    exit /b 0
+    goto :END
 )
 
 echo.
 echo Installing...
 
-REM Create install directory
-if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
+:: Get the directory where this installer is located
+set "SOURCE_DIR=%~dp0"
+
+:: Create install directory
 if not exist "%INSTALL_DIR%\Programs" mkdir "%INSTALL_DIR%\Programs"
+if not exist "%INSTALL_DIR%\config" mkdir "%INSTALL_DIR%\config"
+if not exist "%INSTALL_DIR%\modules" mkdir "%INSTALL_DIR%\modules"
+if not exist "%INSTALL_DIR%\docs" mkdir "%INSTALL_DIR%\docs"
 
-REM Copy files
+:: Copy files
 echo   Copying program files...
-copy /Y "%~dp0src\run_autograder.py" "%INSTALL_DIR%\" >nul
-copy /Y "%~dp0src\requirements.txt" "%INSTALL_DIR%\" >nul
-copy /Y "%~dp0src\Programs\*.py" "%INSTALL_DIR%\Programs\" >nul
-if exist "%~dp0icon.ico" copy /Y "%~dp0icon.ico" "%INSTALL_DIR%\" >nul
+copy "%SOURCE_DIR%src\run_autograder.py" "%INSTALL_DIR%\" >nul
+copy "%SOURCE_DIR%src\requirements.txt" "%INSTALL_DIR%\" >nul
+if exist "%SOURCE_DIR%src\autograder_utils.py" copy "%SOURCE_DIR%src\autograder_utils.py" "%INSTALL_DIR%\" >nul
+copy "%SOURCE_DIR%src\Programs\*.py" "%INSTALL_DIR%\Programs\" >nul
 
-REM Create the launcher batch file in install directory (hidden)
+:: Copy v2 files
+if exist "%SOURCE_DIR%src\config" (
+    echo   Copying v2 config files...
+    xcopy /E /I /Y "%SOURCE_DIR%src\config" "%INSTALL_DIR%\config" >nul
+)
+if exist "%SOURCE_DIR%src\modules" (
+    echo   Copying v2 modules...
+    xcopy /E /I /Y "%SOURCE_DIR%src\modules" "%INSTALL_DIR%\modules" >nul
+)
+if exist "%SOURCE_DIR%src\docs" (
+    echo   Copying documentation...
+    xcopy /E /I /Y "%SOURCE_DIR%src\docs" "%INSTALL_DIR%\docs" >nul
+)
+
+:: Copy icon if it exists
+if exist "%SOURCE_DIR%icon.ico" copy "%SOURCE_DIR%icon.ico" "%INSTALL_DIR%\" >nul
+
+:: Create launcher batch file
 echo   Creating launcher...
-set "LAUNCHER_SCRIPT=%INSTALL_DIR%\launch.bat"
-
 (
 echo @echo off
 echo cd /d "%INSTALL_DIR%"
-echo.
-echo REM Check for Python
-echo where python ^>nul 2^>^&1
-echo if %%errorlevel%% equ 0 ^(
-echo     python run_autograder.py
-echo ^) else ^(
-echo     where py ^>nul 2^>^&1
-echo     if %%errorlevel%% equ 0 ^(
-echo         py run_autograder.py
-echo     ^) else ^(
-echo         echo Python not found. Please install Python 3.7+ from python.org
-echo         pause
-echo         exit /b 1
-echo     ^)
-echo ^)
+echo python run_autograder.py %%*
 echo pause
-) > "%LAUNCHER_SCRIPT%"
+) > "%INSTALL_DIR%\Autograder4Canvas.bat"
 
-REM Create desktop shortcut with icon using PowerShell
-echo   Creating desktop shortcut...
-set "DESKTOP=%USERPROFILE%\Desktop"
-set "SHORTCUT=%DESKTOP%\Autograder4Canvas.lnk"
-set "ICON_PATH=%INSTALL_DIR%\icon.ico"
+:: Create Start Menu shortcut using PowerShell
+echo   Creating Start Menu shortcut...
+set "SHORTCUT=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Autograder4Canvas.lnk"
+powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%SHORTCUT%'); $s.TargetPath = '%INSTALL_DIR%\Autograder4Canvas.bat'; $s.WorkingDirectory = '%INSTALL_DIR%'; if (Test-Path '%INSTALL_DIR%\icon.ico') { $s.IconLocation = '%INSTALL_DIR%\icon.ico' }; $s.Save()"
 
-powershell -Command ^
-  "$ws = New-Object -ComObject WScript.Shell; ^
-   $s = $ws.CreateShortcut('%SHORTCUT%'); ^
-   $s.TargetPath = '%LAUNCHER_SCRIPT%'; ^
-   $s.WorkingDirectory = '%INSTALL_DIR%'; ^
-   if (Test-Path '%ICON_PATH%') { $s.IconLocation = '%ICON_PATH%' }; ^
-   $s.Save()"
+:: Create Desktop shortcut
+echo   Creating Desktop shortcut...
+set "DESKTOP_SHORTCUT=%USERPROFILE%\Desktop\Autograder4Canvas.lnk"
+powershell -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('%DESKTOP_SHORTCUT%'); $s.TargetPath = '%INSTALL_DIR%\Autograder4Canvas.bat'; $s.WorkingDirectory = '%INSTALL_DIR%'; if (Test-Path '%INSTALL_DIR%\icon.ico') { $s.IconLocation = '%INSTALL_DIR%\icon.ico' }; $s.Save()"
 
 echo.
 echo ========================================
-echo   Installation Complete!
+echo    Installation Complete!
 echo ========================================
 echo.
 echo Program installed to: %INSTALL_DIR%
-echo Desktop shortcut created: %SHORTCUT%
 echo.
-echo You can now double-click "Autograder4Canvas" on your Desktop.
+echo You can now run Autograder4Canvas by:
+echo   1. Clicking the Desktop shortcut
+echo   2. Finding it in the Start Menu
 echo.
-echo To uninstall, simply delete:
+echo To uninstall, delete:
+echo   - %INSTALL_DIR%
 echo   - The Desktop shortcut
-echo   - The folder: %INSTALL_DIR%
+echo   - The Start Menu shortcut
 echo.
+
+:END
 pause

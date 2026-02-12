@@ -37,16 +37,12 @@ if [ -z "$PYTHON_CMD" ]; then
     exit 1
 fi
 
-# Find the launcher script in Resources
-LAUNCHER="$RESOURCES_DIR/run_autograder.py"
-
-if [ ! -f "$LAUNCHER" ]; then
-    # Fallback: look for any run_autograder*.py
-    LAUNCHER=$(ls "$RESOURCES_DIR"/run_autograder*.py 2>/dev/null | head -n 1)
-fi
+# Find the launcher script in Resources (version-agnostic)
+# Look for any run_autograder*.py and get the newest version
+LAUNCHER=$(ls -1 "$RESOURCES_DIR"/run_autograder*.py 2>/dev/null | sort -V | tail -n 1)
 
 if [ -z "$LAUNCHER" ] || [ ! -f "$LAUNCHER" ]; then
-    osascript -e 'display alert "Error" message "Could not find run_autograder.py in app bundle. The app may be corrupted." as critical'
+    osascript -e 'display alert "Error" message "Could not find run_autograder*.py in app bundle. The app may be corrupted." as critical'
     exit 1
 fi
 

@@ -1,0 +1,161 @@
+# Personal Reflection Assignment Profile
+# Version 2.0.0
+# Complete pedagogical framework for analyzing personal reflection assignments
+
+profile_id: personal_reflection
+profile_name: "Personal Reflection / Response Paper"
+version: "2.0.0"
+effective_date: "2025-12-26"
+
+description: |
+  Profile for personal essays, reflections, response papers, and other
+  assignments requiring authentic personal voice and genuine engagement
+  with course material through the lens of personal experience.
+
+learning_objectives:
+  primary:
+    - "Develop authentic personal voice in academic context"
+    - "Connect course material to lived experience"
+    - "Practice reflective thinking and self-awareness"
+  secondary:
+    - "Engage meaningfully with assigned readings"
+    - "Demonstrate intellectual processing, not just reporting"
+
+detection_approach: "absence_detection"
+detection_explanation: |
+  For personal reflections, we focus on what's MISSING rather than
+  just what's present. A reflection without personal markers is
+  concerning regardless of whether it has AI markers.
+  
+  The question is: "Did this student engage with the actual purpose
+  of this assignment - developing their authentic voice?"
+
+weight_priorities:
+  # Higher weights for markers that matter most for this type
+  personal_voice_markers:
+    multiplier: 2.0
+    rationale: "Core learning objective - most important marker"
+  specific_details:
+    multiplier: 2.0
+    rationale: "Specific details indicate authentic experience"
+  emotional_language:
+    multiplier: 1.5
+    rationale: "Emotional engagement shows genuine reflection"
+  ai_transitions:
+    multiplier: 1.3
+    rationale: "Formal transitions are inappropriate for personal writing"
+  generic_phrases:
+    multiplier: 1.5
+    rationale: "Generic content defeats purpose of personal reflection"
+  sensory_language:
+    multiplier: 1.3
+    rationale: "Sensory details indicate authentic memory"
+
+minimum_authenticity_score: 4.0
+minimum_authenticity_explanation: |
+  A personal reflection scoring below 4.0 on authenticity markers
+  indicates the student has not engaged with the assignment's purpose.
+  This may be AI use, but it may also be misunderstanding the assignment.
+
+concern_indicators:
+  high_concern:
+    - "No first-person pronouns in 300+ word submission"
+    - "No named people, places, or specific times"
+    - "Multiple AI transition phrases in personal context"
+    - "Could be submitted for any prompt without changes"
+    - "Discusses topic 'in general' without personal angle"
+    
+  moderate_concern:
+    - "First-person present but vague experiences"
+    - "Named course material but no personal connection"
+    - "Some specific details but generic emotional language"
+    - "Mixes personal and impersonal sections"
+    
+  low_concern:
+    - "Clear personal voice with some formal elements"
+    - "Specific experiences with some generic transitions"
+    - "Strong authenticity markers with minor concerns"
+
+example_indicators:
+  authentic:
+    - "I remember my grandmother's kitchen smelled like cinnamon"
+    - "When I read Morrison's passage about memory, I thought about..."
+    - "My friend Sarah asked me why I was crying"
+    - "Last summer at my job at Safeway..."
+    - "I felt embarrassed because everyone was watching"
+    
+  concerning:
+    - "Throughout history, people have experienced loss"
+    - "It is important to note that grief affects everyone"
+    - "Family relationships play a crucial role in society"
+    - "Studies show that personal experiences shape identity"
+    - "In conclusion, reflection is a valuable practice"
+
+conversation_starters:
+  high_concern:
+    - "Can you walk me through how you approached this reflection?"
+    - "I'd love to hear more about the specific experience you're writing about."
+    - "This discusses [topic] in general terms - can you tell me about a specific moment you experienced this?"
+    - "How would you describe this experience to a close friend?"
+    - "What reading or discussion specifically prompted these thoughts?"
+    
+  moderate_concern:
+    - "Your reflection covers the topic well - can you add a specific personal example?"
+    - "I'd like to hear more about what you personally thought or felt."
+    - "How did this connect to something specific in your own life?"
+    
+  for_revision:
+    - "Think of one specific moment - what did you see, hear, or feel?"
+    - "Who was there? What did they say?"
+    - "What specifically in the reading made you think of this?"
+
+revision_guidance:
+  concrete_actions:
+    - "Add 2-3 specific sensory details from your actual experience"
+    - "Include at least one specific person, place, or time from your life"
+    - "Remove generic statements that could apply to anyone"
+    - "Write one paragraph about a specific moment, not the topic in general"
+    - "Replace 'people feel' with 'I felt' and describe why"
+    
+  self_check_questions:
+    - "Could anyone have written this, or is it clearly MINE?"
+    - "Have I named specific people, places, or times?"
+    - "Can the reader see, hear, or feel what I experienced?"
+    - "Does this show what I ACTUALLY thought, not what I 'should' think?"
+
+verification_questions:
+  # Questions instructor can ask to verify authenticity
+  general:
+    - "What specific moment prompted this reflection?"
+    - "Can you describe what you actually saw or heard?"
+    - "Who else was there? What did they say?"
+    - "How did your thinking change as you wrote?"
+    
+  reading_connection:
+    - "Which specific passage connected to your experience?"
+    - "Can you show me the part of the reading you're responding to?"
+    - "What word or phrase in the reading stood out to you?"
+    
+  process_questions:
+    - "How long did you work on this?"
+    - "Did you write any rough notes first?"
+    - "What did you cut or change from earlier drafts?"
+
+instructor_notes:
+  key_principles:
+    - "Absence of personal voice is AS concerning as presence of AI markers"
+    - "Look for specific sensory details and named individuals/places"
+    - "Generic reflections that could apply to anyone are concerning"
+    - "The issue is engagement with learning objectives, not just 'cheating'"
+    
+  false_positive_awareness:
+    - "Some students struggle with personal writing due to trauma"
+    - "Cultural backgrounds may discourage personal disclosure"
+    - "ESL students may avoid first-person due to learned rules"
+    - "Consider offering alternative assignments when appropriate"
+    
+  pedagogical_approach:
+    - "Frame concerns as 'not yet meeting learning objectives'"
+    - "Offer revision opportunity before any accusation"
+    - "Focus on what the assignment is trying to teach"
+    - "Use verification questions to assess authentic engagement"

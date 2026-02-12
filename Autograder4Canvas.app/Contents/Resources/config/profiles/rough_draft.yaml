@@ -1,0 +1,175 @@
+# Rough Draft Assignment Profile
+# Version 2.0.0
+# Profile for first drafts and early writing stages
+
+profile_id: rough_draft
+profile_name: "Rough Draft / First Draft"
+version: "2.0.0"
+effective_date: "2025-12-26"
+
+description: |
+  Profile for rough drafts, first drafts, and early-stage writing
+  where polish and perfection are NOT expected. Too-perfect drafts
+  are themselves suspicious.
+
+learning_objectives:
+  primary:
+    - "Practice writing process (not just product)"
+    - "Develop ideas before polishing"
+    - "Show authentic revision trajectory"
+  secondary:
+    - "Overcome perfectionism"
+    - "Separate generating from editing"
+
+detection_approach: "polish_detection"
+detection_explanation: |
+  For rough drafts, we INVERT the usual logic. Rough edges,
+  incomplete thoughts, and minor errors are EXPECTED and even
+  positive. Excessive polish is the red flag.
+  
+  Key question: "Is this actually a rough draft, or a finished
+  product mislabeled as a draft?"
+
+weight_priorities:
+  ai_transitions:
+    multiplier: 0.6
+    rationale: "Some formal language may appear in drafts"
+  polish_markers:
+    multiplier: 2.5
+    rationale: "Polish itself is suspicious in drafts"
+  perfect_grammar:
+    multiplier: 2.0
+    rationale: "Perfect grammar unusual in rough drafts"
+  complete_structure:
+    multiplier: 1.8
+    rationale: "Fully formed structure suspicious"
+  personal_voice:
+    multiplier: 0.5
+    rationale: "Voice may not be developed yet"
+
+polish_markers:
+  description: "Indicators of excessive polish for a 'draft'"
+  patterns:
+    - pattern: "polished_paragraph_structure"
+      type: algorithmic
+      weight: 1.0
+      note: "Every paragraph has topic sentence + support + conclusion"
+    - pattern: "no_fragments_or_incomplete"
+      type: algorithmic  
+      weight: 0.8
+      note: "Real drafts often have incomplete thoughts"
+    - pattern: "consistent_formatting"
+      type: algorithmic
+      weight: 0.5
+      note: "Perfect formatting unusual in draft stage"
+      
+  transition_polish:
+    description: "Fully polished transitions unusual in drafts"
+    patterns:
+      - pattern: "Furthermore"
+        weight: 0.4
+      - pattern: "In conclusion"
+        weight: 0.6
+      - pattern: "To summarize"
+        weight: 0.6
+      - pattern: "As demonstrated above"
+        weight: 0.5
+
+authenticity_markers:
+  description: "Signs of genuine draft work (POSITIVE)"
+  patterns:
+    - pattern: "\\[.*\\]"
+      regex: true
+      weight: -0.5
+      note: "Bracketed notes to self"
+    - pattern: "TODO|FIXME|NEED TO"
+      regex: true
+      weight: -0.6
+      note: "Explicit revision markers"
+    - pattern: "I'm not sure if|maybe I should"
+      regex: true
+      weight: -0.4
+      note: "Uncertainty expressed"
+    - pattern: "\\?\\?\\?"
+      weight: -0.5
+      note: "Placeholder markers"
+    - pattern: "something like|sort of|kind of"
+      weight: -0.3
+      note: "Approximation language"
+
+error_tolerance:
+  description: "Errors that are NORMAL in drafts"
+  expected:
+    - "Typos and spelling errors"
+    - "Incomplete sentences"
+    - "Rough transitions"
+    - "Repetitive phrasing"
+    - "Inconsistent formatting"
+  interpretation: |
+    These 'errors' are POSITIVE indicators of authentic draft work.
+    A draft without rough edges may not be an authentic draft.
+
+concern_indicators:
+  high_concern:
+    - "Draft reads as polished final product"
+    - "Perfect grammar and punctuation throughout"
+    - "Fully formed five-paragraph structure"
+    - "No revision markers, notes, or rough sections"
+    - "Consistent formal register throughout"
+    
+  moderate_concern:
+    - "Mostly polished with few rough sections"
+    - "Strong structure but some incomplete thoughts"
+    - "Polish level inconsistent (some sections too clean)"
+    
+  low_concern:
+    - "Appropriate roughness with clear ideas"
+    - "Some polish but authentic draft markers present"
+
+comparison_with_final:
+  description: |
+    IMPORTANT: Compare drafts with final versions when available.
+    
+    Signs of authentic revision process:
+    - Structural changes between drafts
+    - Added/removed paragraphs
+    - Refined thesis
+    - Improved transitions
+    - Fixed errors identified in draft
+    
+    Signs of inauthentic process:
+    - Draft and final nearly identical
+    - Only surface changes (typos, minor wording)
+    - 'Draft' is actually cleaner than 'final'
+    - No substantive revision visible
+
+conversation_starters:
+  high_concern:
+    - "This looks quite polished for a first draft. Can you tell me about your process?"
+    - "What do you plan to revise before the final version?"
+    - "Where do you feel this draft needs the most work?"
+    - "What sections were you most unsure about?"
+    
+  for_verification:
+    - "Show me your notes or outline"
+    - "What changed from your first ideas?"
+    - "What parts did you struggle with?"
+
+instructor_notes:
+  key_principles:
+    - "Rough drafts should LOOK rough"
+    - "Polish is the red flag here, not errors"
+    - "Compare drafts to finals when possible"
+    - "Perfect drafts → perfect finals is suspicious"
+    
+  common_explanations:
+    - "Student may misunderstand 'rough draft'"
+    - "Perfectionism may prevent rough submission"
+    - "ESL students may over-edit everything"
+    - "Consider explicit instruction on what 'rough' means"
+    
+  pedagogical_approach:
+    - "Clarify expectations for draft submissions"
+    - "Model what a good rough draft looks like"
+    - "Grade for process, not polish"
+    - "Make drafts low-stakes to encourage roughness"

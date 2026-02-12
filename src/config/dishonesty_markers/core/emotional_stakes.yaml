@@ -1,0 +1,340 @@
+# Emotional Stakes Markers - Human Presence Detection
+# Version 2.1.0
+# Category: Human presence (positive indicators)
+# Purpose: Detect evidence of personal investment, emotional engagement, and stakes
+
+metadata:
+  marker_id: emotional_stakes
+  version: "2.1.0"
+  effective_date: "2025-12-27"
+  category: required_presence
+  weight_in_human_presence: 0.20
+  pedagogical_context: |
+    Emotional stakes markers indicate personal investment in ideas and topics.
+    These are POSITIVE indicators showing the writer cares about the content.
+
+    IMPORTANT: Emotional expression varies across cultures, genders, and individuals.
+    System recognizes multiple forms: explicit emotion, action-oriented emotion,
+    intellectual passion, and collective stakes.
+
+markers:
+  personal_connection:
+    description: "Explicit statements of personal relevance or connection"
+    patterns:
+      - pattern: "(This|That) (matters|is important) to me because"
+        regex: true
+        weight: 0.9
+        note: "Direct personal stakes"
+      - pattern: "I care (deeply )?about this because"
+        regex: true
+        weight: 0.9
+      - pattern: "(This|That) (affects|impacts) me (personally|directly)"
+        regex: true
+        weight: 0.8
+      - pattern: "This is personal (to me|for me)"
+        regex: true
+        weight: 0.9
+      - pattern: "As someone who (has|is)"
+        regex: true
+        weight: 0.7
+      - pattern: "This hits (close to )?home"
+        regex: true
+        weight: 0.8
+      - pattern: "I (know|understand) this (experience|feeling)"
+        regex: true
+        weight: 0.7
+      - pattern: "(This|It) reminds me of (my|when I)"
+        regex: true
+        weight: 0.7
+      - pattern: "Speaking from (my )?experience"
+        regex: true
+        weight: 0.8
+
+  emotional_language:
+    description: "Appropriate emotional expression related to content"
+    patterns:
+      - pattern: "(I|It) makes me (angry|frustrated|sad|disappointed|hopeful)"
+        regex: true
+        weight: 0.8
+        note: "Explicit emotional response"
+      - pattern: "I (feel|felt) (strongly|deeply) about"
+        regex: true
+        weight: 0.7
+      - pattern: "This (angers|frustrates|upsets|encourages|inspires) me"
+        regex: true
+        weight: 0.8
+      - pattern: "I'm (passionate|concerned|worried|hopeful|excited) about"
+        regex: true
+        weight: 0.7
+      - pattern: "(I was|I felt|It made me) (shocked|surprised|moved|disturbed)"
+        regex: true
+        weight: 0.7
+      - pattern: "I can't help but (feel|think)"
+        regex: true
+        weight: 0.6
+      - pattern: "It's (heartbreaking|inspiring|infuriating|encouraging)"
+        regex: true
+        weight: 0.7
+      - pattern: "This breaks my heart"
+        weight: 0.8
+      - pattern: "This gives me hope"
+        weight: 0.7
+
+  stakes_articulation:
+    description: "Explaining why something matters"
+    patterns:
+      - pattern: "(This|That) matters because"
+        regex: true
+        weight: 0.7
+        note: "Explicit stakes"
+      - pattern: "(This|That|It) (is|matters|is important) because"
+        regex: true
+        weight: 0.6
+      - pattern: "The stakes (are|here are)"
+        regex: true
+        weight: 0.8
+      - pattern: "What's at stake"
+        weight: 0.8
+      - pattern: "Why (this|that) matters"
+        regex: true
+        weight: 0.7
+      - pattern: "The (implications|consequences) (are|could be)"
+        regex: true
+        weight: 0.6
+      - pattern: "(This|That) has real( world)? (consequences|implications)"
+        regex: true
+        weight: 0.7
+      - pattern: "(People's|Lives) (are|hang in)"
+        regex: true
+        weight: 0.8
+      - pattern: "This (affects|impacts) real people"
+        regex: true
+        weight: 0.7
+
+  discomfort_naming:
+    description: "Acknowledging emotional difficulty or discomfort"
+    patterns:
+      - pattern: "This is (hard|difficult|uncomfortable) to"
+        regex: true
+        weight: 0.7
+        note: "Naming discomfort"
+      - pattern: "I'm (uncomfortable|uneasy) with"
+        regex: true
+        weight: 0.7
+      - pattern: "This makes me uncomfortable"
+        weight: 0.7
+      - pattern: "It's painful to (acknowledge|admit|see)"
+        regex: true
+        weight: 0.8
+      - pattern: "I (don't want|hate) to (admit|acknowledge)"
+        regex: true
+        weight: 0.7
+      - pattern: "It's unsettling"
+        weight: 0.6
+      - pattern: "I'm troubled by"
+        weight: 0.7
+      - pattern: "This (sits|doesn't sit) (well|right) with me"
+        regex: true
+        weight: 0.7
+
+  relational_thinking:
+    description: "Considering impact on others, community, relationships"
+    patterns:
+      - pattern: "This (affects|impacts|hurts) (people|communities|families)"
+        regex: true
+        weight: 0.7
+        note: "Relational concern"
+      - pattern: "I (think|worry) about (people|those) who"
+        regex: true
+        weight: 0.7
+      - pattern: "(Our|My) community"
+        regex: true
+        weight: 0.6
+      - pattern: "(We|People) (need|deserve)"
+        regex: true
+        weight: 0.6
+        note: "Collective stakes"
+      - pattern: "What about (those|people) who"
+        regex: true
+        weight: 0.6
+      - pattern: "This (leaves|abandons|ignores) (people|communities)"
+        regex: true
+        weight: 0.7
+      - pattern: "I think about my (family|community|children)"
+        regex: true
+        weight: 0.8
+      - pattern: "For (my|our) (children|future|community)"
+        regex: true
+        weight: 0.7
+
+  resistance_pushback:
+    description: "Emotional resistance based on experience or values"
+    patterns:
+      - pattern: "I (can't|won't) accept"
+        regex: true
+        weight: 0.7
+        note: "Pushback from conviction"
+      - pattern: "This (doesn't|can't) be (right|true|acceptable)"
+        regex: true
+        weight: 0.7
+      - pattern: "I (refuse|reject) (to|the idea)"
+        regex: true
+        weight: 0.7
+      - pattern: "This (violates|contradicts) my (values|beliefs|experience)"
+        regex: true
+        weight: 0.8
+      - pattern: "I take issue with"
+        weight: 0.6
+      - pattern: "This goes against"
+        weight: 0.6
+      - pattern: "I'm (not okay|not comfortable) with"
+        regex: true
+        weight: 0.6
+      - pattern: "Something (feels|seems) (wrong|off) about"
+        regex: true
+        weight: 0.6
+
+  hope_investment:
+    description: "Expressing hope, aspiration, or investment in change"
+    patterns:
+      - pattern: "I hope (that|we can)"
+        regex: true
+        weight: 0.6
+        note: "Future-oriented investment"
+      - pattern: "I want to (see|believe|hope)"
+        regex: true
+        weight: 0.6
+      - pattern: "We (can|could|should|must|need to)"
+        regex: true
+        weight: 0.5
+        note: "Action-oriented hope"
+      - pattern: "I (dream|imagine) (of|a world)"
+        regex: true
+        weight: 0.7
+      - pattern: "(Maybe|Perhaps) (we|things) (can|could)"
+        regex: true
+        weight: 0.5
+      - pattern: "There (has to be|must be) a way"
+        regex: true
+        weight: 0.6
+      - pattern: "I'm (hopeful|optimistic) (that|about)"
+        regex: true
+        weight: 0.6
+      - pattern: "This gives me hope"
+        weight: 0.7
+
+  intellectual_passion:
+    description: "Strong engagement with ideas themselves"
+    patterns:
+      - pattern: "(I'm|I am) (fascinated|intrigued|captivated) by"
+        regex: true
+        weight: 0.6
+        note: "Intellectual excitement"
+      - pattern: "What (really )?(interests|fascinates|intrigues) me"
+        regex: true
+        weight: 0.6
+      - pattern: "I (love|am drawn to) (this|the) (idea|concept)"
+        regex: true
+        weight: 0.6
+      - pattern: "This is (compelling|powerful|striking)"
+        regex: true
+        weight: 0.5
+      - pattern: "I can't stop thinking about"
+        weight: 0.7
+      - pattern: "This (challenges|pushes|forces) me"
+        regex: true
+        weight: 0.6
+      - pattern: "I'm (drawn|compelled)"
+        regex: true
+        weight: 0.5
+
+scoring:
+  method: "presence_score"
+  interpretation:
+    below_2: "Little emotional engagement evident"
+    2_to_5: "Some emotional connection detected"
+    5_to_8: "Moderate emotional investment"
+    above_8: "Strong personal stakes and emotional engagement"
+
+cultural_awareness:
+  note: |
+    Emotional expression varies significantly across cultures and identities:
+
+    EXPLICIT emotion (more common in some contexts):
+    - "I feel angry about..."
+    - "This breaks my heart"
+
+    IMPLICIT/ACTION-ORIENTED emotion (more common in others):
+    - "We need to change this" (emotion through action)
+    - "This cannot continue" (emotion through conviction)
+
+    COLLECTIVE emotion (valued in many non-Western cultures):
+    - "Our community needs..."
+    - "We must consider..."
+
+    INTELLECTUAL passion (sometimes preferred over personal emotion):
+    - "This is compelling because..."
+    - "The implications are significant..."
+
+    GENDERED differences:
+    - Women/femme students may use more explicit emotional language
+    - Masculine-socialized students may use action-oriented language
+    - Both are valid forms of emotional engagement
+
+    System recognizes ALL these forms equally.
+
+context_adjustments:
+  personal_reflection:
+    weight_multiplier: 1.4
+    rationale: "Personal stakes central to reflection"
+  discussion_post:
+    weight_multiplier: 1.2
+    rationale: "Informal contexts encourage emotional engagement"
+  analytical_essay:
+    weight_multiplier: 0.8
+    rationale: "May emphasize analytical distance"
+  research_paper:
+    weight_multiplier: 0.7
+    rationale: "Academic register may limit emotional expression"
+  argument_essay:
+    weight_multiplier: 1.1
+    rationale: "Stakes often part of argumentation"
+
+instructor_guidance:
+  high_score_interpretation:
+    - "Student is personally invested in the topic"
+    - "Emotional engagement evident (positive indicator)"
+    - "Shows why the topic matters to them"
+    - "Multiple forms of emotional investment detected"
+  low_score_interpretation:
+    - "May prefer analytical distance (cultural/individual preference)"
+    - "Some topics don't evoke personal connection"
+    - "Academic register may limit emotional expression"
+    - "Low emotion + high contextual grounding = likely analytical style"
+    - "Low emotion + low contextual grounding = more concerning"
+  verification_approaches:
+    - "Ask why this topic matters to the student"
+    - "Discuss their personal connection to the material"
+    - "Explore how the topic relates to their experience or values"
+    - "Ask about their investment in the issue"
+
+detection_notes:
+  strongest_signals:
+    - "Personal connection explicitly stated with specifics"
+    - "Stakes articulated with real-world implications"
+    - "Discomfort named in relation to difficult material"
+    - "Resistance/pushback from lived experience"
+  combinations_that_matter:
+    - "Personal connection + stakes articulation = strong investment"
+    - "Emotional language + relational thinking = community grounding"
+    - "Discomfort naming + resistance = authentic grappling"
+  absence_not_suspicious:
+    - "Some students prefer analytical distance"
+    - "Cultural differences in emotional expression"
+    - "Some topics don't evoke personal connection"
+    - "Evaluate in combination with other categories"
+  cultural_competency:
+    - "Recognize action-oriented emotion ('We must...')"
+    - "Credit collective stakes ('Our community...')"
+    - "Value intellectual passion alongside personal emotion"
+    - "Don't privilege Western individual emotional expression"

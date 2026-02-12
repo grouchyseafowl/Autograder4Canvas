@@ -1,0 +1,285 @@
+# Productive Messiness Markers - Human Presence Detection
+# Version 2.1.0
+# Category: Human presence (positive indicators)
+# Purpose: Detect evidence that writing is thinking-in-progress, not pre-polished output
+
+metadata:
+  marker_id: productive_messiness
+  version: "2.1.0"
+  effective_date: "2025-12-27"
+  category: required_presence
+  weight_in_human_presence: 0.10
+  pedagogical_context: |
+    Productive messiness markers indicate writing as thinking-in-progress.
+    These are POSITIVE indicators showing genuine cognitive work, not lack of skill.
+
+    IMPORTANT: Messiness paired with engagement = human thinking.
+    Messiness without engagement = just poor writing (not necessarily human or AI).
+
+markers:
+  self_correction:
+    description: "Visible revision of thinking within the text"
+    patterns:
+      - pattern: "Actually, I think"
+        weight: 0.8
+        note: "Explicit revision language"
+      - pattern: "Wait, that's not quite right"
+        weight: 0.9
+      - pattern: "Let me rephrase that"
+        weight: 0.7
+      - pattern: "No, what I mean is"
+        weight: 0.8
+      - pattern: "On second thought"
+        weight: 0.7
+      - pattern: "I thought.{0,50}but actually"
+        regex: true
+        weight: 0.9
+        note: "Contradiction then resolution"
+      - pattern: "A better way to say this"
+        weight: 0.6
+      - pattern: "More accurately"
+        weight: 0.6
+      - pattern: "To put it more clearly"
+        weight: 0.6
+      - pattern: "What I really mean is"
+        weight: 0.7
+      - pattern: "Or rather"
+        weight: 0.6
+      - pattern: "\\bWell, actually\\b"
+        regex: true
+        weight: 0.6
+
+  genuine_hedging:
+    description: "Authentic uncertainty with reasoning, not AI hedging"
+    patterns:
+      - pattern: "I think.{0,30}because"
+        regex: true
+        weight: 0.6
+        note: "Uncertainty with reasoning"
+      - pattern: "It seems like.{0,30}although"
+        regex: true
+        weight: 0.6
+      - pattern: "Maybe.{0,30}but I'm not (entirely )?sure"
+        regex: true
+        weight: 0.7
+      - pattern: "I'm not entirely sure, but my understanding is"
+        weight: 0.7
+      - pattern: "This could mean.{0,30}or it could mean"
+        regex: true
+        weight: 0.8
+        note: "Competing interpretations acknowledged"
+      - pattern: "I see it two ways"
+        weight: 0.7
+      - pattern: "I'm not sure (how|why|whether)"
+        regex: true
+        weight: 0.6
+      - pattern: "I could be wrong, but"
+        weight: 0.7
+      - pattern: "I might be misunderstanding"
+        weight: 0.7
+
+  false_starts:
+    description: "Sentences that begin one way and shift direction mid-thought"
+    patterns:
+      - pattern: "What I mean to say is"
+        weight: 0.7
+      - pattern: "well, actually, before I get to that"
+        weight: 0.8
+      - pattern: "The author argues.{0,30}- (well|actually)"
+        regex: true
+        weight: 0.7
+      - pattern: "Or I guess"
+        weight: 0.5
+      - pattern: "Or maybe"
+        weight: 0.5
+      - pattern: "I mean"
+        weight: 0.4
+        note: "Common false start marker"
+
+  circling_back:
+    description: "Returning to earlier points with new understanding"
+    patterns:
+      - pattern: "Going back to what I said earlier"
+        weight: 0.8
+        note: "Explicit return to earlier point"
+      - pattern: "This connects to my earlier point"
+        weight: 0.8
+      - pattern: "Remember when I mentioned"
+        weight: 0.7
+      - pattern: "Like I said before"
+        weight: 0.6
+      - pattern: "At the beginning I thought.{0,50}but (now|after)"
+        regex: true
+        weight: 0.9
+        note: "Synthesis across essay"
+      - pattern: "This brings me back to"
+        weight: 0.7
+      - pattern: "Which circles back to"
+        weight: 0.7
+      - pattern: "Connecting this to what I discussed earlier"
+        weight: 0.8
+
+  revision_thinking:
+    description: "Metacommentary about own writing and thinking"
+    patterns:
+      - pattern: "As I (said|mentioned|wrote) earlier"
+        regex: true
+        weight: 0.6
+      - pattern: "I realize I haven't explained"
+        weight: 0.7
+      - pattern: "Looking back at what I wrote"
+        weight: 0.7
+      - pattern: "Now I realize"
+        weight: 0.7
+      - pattern: "Initially I thought.{0,30}but"
+        regex: true
+        weight: 0.8
+        note: "Temporal markers of thought evolution"
+      - pattern: "After (reading|thinking|considering) more"
+        regex: true
+        weight: 0.7
+      - pattern: "I need to clarify"
+        weight: 0.6
+      - pattern: "Let me back up"
+        weight: 0.7
+      - pattern: "I'm getting ahead of myself"
+        weight: 0.7
+
+  awkward_genuine:
+    description: "Grammatically correct but not smooth (the way humans actually think)"
+    patterns:
+      - pattern: "\\bSo basically\\b"
+        regex: true
+        weight: 0.5
+        note: "Informal logic marker"
+      - pattern: "The thing is that"
+        weight: 0.5
+      - pattern: "What I'm getting at is"
+        weight: 0.6
+      - pattern: "The way I see it"
+        weight: 0.5
+      - pattern: "From my perspective anyway"
+        weight: 0.5
+      - pattern: "At least that's how I understand it"
+        weight: 0.6
+      - pattern: "if that makes sense"
+        weight: 0.6
+      - pattern: "does that make sense\\?"
+        regex: true
+        weight: 0.6
+
+  incomplete_synthesis:
+    description: "Ideas that don't quite come together perfectly (but show real thinking)"
+    patterns:
+      - pattern: "I see both sides but can't fully reconcile"
+        weight: 0.9
+        note: "Acknowledged tension without resolution"
+      - pattern: "This creates a paradox (that )?I'm still thinking through"
+        regex: true
+        weight: 0.9
+      - pattern: "These two ideas seem contradictory"
+        weight: 0.8
+      - pattern: "I (think|feel) this relates to.{0,40}though I'm not sure (how )?exactly"
+        regex: true
+        weight: 0.8
+        note: "Partial connections"
+      - pattern: "I'm still (working through|figuring out|grappling with)"
+        regex: true
+        weight: 0.7
+      - pattern: "I haven't quite figured out how"
+        weight: 0.8
+      - pattern: "There's (something|a tension) I can't fully resolve"
+        regex: true
+        weight: 0.8
+      - pattern: "I'm (torn|conflicted|unsure) about"
+        regex: true
+        weight: 0.6
+
+  visible_struggle:
+    description: "Explicit markers of working through difficulty"
+    patterns:
+      - pattern: "This is (hard|difficult|challenging|tricky) to"
+        regex: true
+        weight: 0.6
+      - pattern: "I'm struggling to (understand|explain|articulate)"
+        regex: true
+        weight: 0.7
+      - pattern: "I keep coming back to this question"
+        weight: 0.7
+      - pattern: "I'm trying to work out"
+        weight: 0.6
+      - pattern: "I can't quite put my finger on"
+        weight: 0.7
+      - pattern: "There's something (here|about this) that"
+        regex: true
+        weight: 0.5
+
+scoring:
+  method: "presence_score"
+  interpretation:
+    below_2: "Very polished - may be strong writer or AI"
+    2_to_4: "Some messiness detected"
+    4_to_7: "Moderate thinking-in-progress evident"
+    above_7: "Strong evidence of genuine cognitive work"
+
+critical_distinctions:
+  productive_vs_poor:
+    productive_messiness:
+      - "Shows thinking in progress"
+      - "Paired with engagement with ideas"
+      - "Reflects cognitive work, not lack of skill"
+      - "Self-aware and intentional"
+    poor_writing:
+      - "Random errors without pattern"
+      - "Lack of engagement with content"
+      - "Surface-level problems without depth"
+      - "No metacognitive awareness"
+
+context_adjustments:
+  rough_draft:
+    weight_multiplier: 1.5
+    rationale: "Messiness highly valued in drafts"
+  discussion_post:
+    weight_multiplier: 1.2
+    rationale: "More informal, thinking-in-progress expected"
+  personal_reflection:
+    weight_multiplier: 1.1
+    rationale: "Process thinking often visible"
+  research_paper:
+    weight_multiplier: 0.8
+    rationale: "More polish expected in final drafts"
+  honors:
+    weight_multiplier: 0.7
+    rationale: "Advanced writers may produce polished drafts"
+
+instructor_guidance:
+  high_score_interpretation:
+    - "Student is visibly working through ideas in the text"
+    - "Cognitive engagement evident through revision markers"
+    - "Self-correction and circling back show authentic thinking"
+  low_score_interpretation:
+    - "May be a strong, polished writer (not necessarily AI)"
+    - "Some students produce clean first drafts"
+    - "Consider assignment type and student skill level"
+    - "Low messiness + low contextual grounding = more concerning"
+    - "Low messiness + high contextual grounding = likely strong writer"
+  verification_approaches:
+    - "Ask student to explain their revision process"
+    - "Request to see earlier drafts or outlines"
+    - "Discuss a point where they changed their thinking"
+
+detection_notes:
+  scoring_logic:
+    - "Self-correction + circling back = very strong human signal"
+    - "Multiple forms of messiness across essay = thinking in progress"
+    - "Absence doesn't mean AI (polished writers exist)"
+    - "Must be paired with engagement (messiness alone isn't sufficient)"
+  caution:
+    - "Do NOT penalize polished writing"
+    - "Do NOT require students to perform struggle"
+    - "Do NOT conflate messiness with authenticity alone"
+  strongest_signals:
+    - "Explicit self-correction ('Actually, I think...')"
+    - "Circling back to earlier points with new understanding"
+    - "Acknowledged tensions without neat resolution"
+    - "Evolution of thinking visible across text"

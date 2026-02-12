@@ -1,0 +1,378 @@
+# Contextual Grounding Markers - Human Presence Detection
+# Version 2.1.0
+# Category: Human presence (positive indicators)
+# Purpose: Detect evidence from specific person in specific time/place/course
+# NOTE: This is the MOST IMPORTANT category - hardest for AI to fake
+
+metadata:
+  marker_id: contextual_grounding
+  version: "2.1.0"
+  effective_date: "2025-12-27"
+  category: required_presence
+  weight_in_human_presence: 0.35
+  priority: "CRITICAL"
+  pedagogical_context: |
+    Contextual grounding markers indicate participation in THIS specific course/context.
+    These are the STRONGEST indicators of human authorship because AI cannot fake:
+    - Specific class discussions from THIS course
+    - Unusual passages from THIS reading
+    - THIS assignment prompt details
+    - Events from THIS course timeframe
+
+    HIGHEST WEIGHT (35%) - Most difficult for AI to fake without course access.
+
+markers:
+  class_discussion_references:
+    description: "References to specific class discussions or lectures"
+    patterns:
+      - pattern: "In class (when|on|during) (we|the class)"
+        regex: true
+        weight: 1.5
+        note: "EXTREMELY difficult for AI - can be verified"
+      - pattern: "(During|In) (Monday|Tuesday|Wednesday|Thursday|Friday)'s (lecture|class|discussion)"
+        regex: true
+        weight: 1.5
+      - pattern: "When (Professor|Dr\\.|Prof\\.)"
+        regex: true
+        weight: 1.3
+      - pattern: "Our class (debate|discussion|conversation) about"
+        regex: true
+        weight: 1.4
+      - pattern: "In (our |the )?Zoom (breakout|meeting)"
+        regex: true
+        weight: 1.4
+      - pattern: "In (our |last )?class (meeting|session)"
+        regex: true
+        weight: 1.2
+      - pattern: "During (our )?group discussion"
+        regex: true
+        weight: 1.1
+      - pattern: "When we (talked|discussed|covered) (this |that )?in class"
+        regex: true
+        weight: 1.3
+      - pattern: "In week [0-9]+ (we|the lecture|class)"
+        regex: true
+        weight: 1.4
+        note: "Specific temporal reference to course"
+
+  course_material_references:
+    description: "References to specific course materials with details"
+    patterns:
+      - pattern: "(Our|The) textbook (on page|page|chapter) [0-9]+"
+        regex: true
+        weight: 1.5
+        note: "Verifiable specificity"
+      - pattern: "The (syllabus|assignment) (mentioned|said|asked)"
+        regex: true
+        weight: 1.3
+      - pattern: "In (the )?Canvas (module|page|assignment)"
+        regex: true
+        weight: 1.3
+      - pattern: "The (documentary|video|film) we watched (in|on)"
+        regex: true
+        weight: 1.4
+      - pattern: "The reading (from|for) (week|module|chapter) [0-9]+"
+        regex: true
+        weight: 1.3
+      - pattern: "The (article|chapter|reading) by [A-Z][a-z]+"
+        regex: true
+        weight: 1.0
+        note: "Specific author reference"
+      - pattern: "(On|From) page [0-9]+"
+        regex: true
+        weight: 1.2
+      - pattern: "In (chapter|section) [0-9]+"
+        regex: true
+        weight: 1.1
+
+  unusual_passage_engagement:
+    description: "Engaging with specific, non-famous parts of readings"
+    patterns:
+      - pattern: "(The|A) (footnote|endnote) (on page|in chapter)"
+        regex: true
+        weight: 1.6
+        note: "AI tends not to read footnotes"
+      - pattern: "In the (appendix|introduction) where"
+        regex: true
+        weight: 1.5
+      - pattern: "The (example|anecdote|story) (about|of) .{10,50} on page"
+        regex: true
+        weight: 1.4
+        note: "Specific example with page reference"
+      - pattern: "(The author|They) mention(s)?.{10,50}(in passing|briefly)"
+        regex: true
+        weight: 1.2
+        note: "Noticing non-central details"
+      - pattern: "In paragraph [0-9]+"
+        regex: true
+        weight: 1.3
+      - pattern: "(The data|Table|Figure) (on page|in)"
+        regex: true
+        weight: 1.3
+        note: "Engaging with specific data"
+
+  assignment_specific_engagement:
+    description: "Evidence of engaging with THIS assignment's specific requirements"
+    patterns:
+      - pattern: "The (assignment|prompt) (asked|required|wanted us)"
+        regex: true
+        weight: 1.4
+        note: "Explicit engagement with assignment"
+      - pattern: "For this (assignment|paper|essay)"
+        regex: true
+        weight: 1.0
+      - pattern: "(The question|You) asked (us to|about)"
+        regex: true
+        weight: 1.2
+      - pattern: "The (instructions|guidelines|rubric) (said|mentioned)"
+        regex: true
+        weight: 1.3
+      - pattern: "In responding to (the prompt|your question)"
+        regex: true
+        weight: 1.2
+      - pattern: "As (the assignment|you) (asked|requested)"
+        regex: true
+        weight: 1.1
+
+  temporal_grounding:
+    description: "References to specific time period of THIS course"
+    patterns:
+      - pattern: "(Last|This) (week|Monday|Tuesday|semester)"
+        regex: true
+        weight: 1.1
+        note: "Temporal specificity"
+      - pattern: "(Recently|Earlier this) (week|month|semester)"
+        regex: true
+        weight: 1.0
+      - pattern: "When we (covered|discussed) this (last week|earlier|recently)"
+        regex: true
+        weight: 1.2
+      - pattern: "(At the beginning|Start) of (the|this) (semester|course|class)"
+        regex: true
+        weight: 1.0
+      - pattern: "So far in (this|the) (course|class|semester)"
+        regex: true
+        weight: 1.0
+      - pattern: "Since (we started|the beginning of)"
+        regex: true
+        weight: 1.0
+
+  current_events_integration:
+    description: "Connecting course material to recent/current events"
+    patterns:
+      - pattern: "(This|Last) week.{0,50}(news|happened|event)"
+        regex: true
+        weight: 1.3
+        note: "Recent temporal reference verifiable"
+      - pattern: "(Recently|Lately|Right now)"
+        regex: true
+        weight: 0.8
+      - pattern: "In (the )?current (situation|context|climate)"
+        regex: true
+        weight: 0.9
+      - pattern: "With (what's happening|everything going on)"
+        regex: true
+        weight: 0.9
+      - pattern: "(Just|Only) (last|this) (week|month)"
+        regex: true
+        weight: 1.0
+      - pattern: "As (of|we speak|we write)"
+        regex: true
+        weight: 0.8
+
+  local_embodied_knowledge:
+    description: "References to specific places, bodies, lived experiences"
+    patterns:
+      - pattern: "Where I (live|work|grew up|am from)"
+        regex: true
+        weight: 1.0
+        note: "Embodied specificity"
+      - pattern: "In (my|our) (neighborhood|community|town|city)"
+        regex: true
+        weight: 0.9
+      - pattern: "At (my|the local) (job|workplace|school)"
+        regex: true
+        weight: 0.9
+      - pattern: "When I (was|worked|lived) (at|in)"
+        regex: true
+        weight: 0.8
+      - pattern: "I (see|notice|experience) this (at|in|when)"
+        regex: true
+        weight: 0.8
+      - pattern: "In my (daily life|experience|day-to-day)"
+        regex: true
+        weight: 0.7
+
+  learning_narrative:
+    description: "Chronological narrative of learning in THIS course"
+    patterns:
+      - pattern: "(Before|At the start of) this (course|class).{0,50}(I|my understanding)"
+        regex: true
+        weight: 1.3
+        note: "Evolution tied to THIS course"
+      - pattern: "(Through|After) (this course|these readings|our discussions)"
+        regex: true
+        weight: 1.2
+      - pattern: "Over the (course|semester|weeks)"
+        regex: true
+        weight: 1.0
+      - pattern: "(My understanding|I) (has|have) (changed|evolved|grown) (through|because of)"
+        regex: true
+        weight: 1.1
+      - pattern: "(Earlier|At first) in (the|this) (course|semester)"
+        regex: true
+        weight: 1.0
+      - pattern: "As (we've|we have) (progressed|moved|learned)"
+        regex: true
+        weight: 1.0
+
+  dialogue_with_materials:
+    description: "Active engagement showing real reading/viewing"
+    patterns:
+      - pattern: "(The author|They) (argue|claim|suggest).{0,50}(but|however|yet) I"
+        regex: true
+        weight: 1.1
+        note: "Active dialogue with text"
+      - pattern: "I (agree|disagree) with.{0,50}(when they|where they)"
+        regex: true
+        weight: 1.0
+      - pattern: "(Building on|Extending|Challenging).{0,50}'s (argument|idea)"
+        regex: true
+        weight: 1.1
+      - pattern: "(This|That) (connects|relates) to what.{0,50}(said|argued)"
+        regex: true
+        weight: 1.0
+      - pattern: "Unlike.{0,50}(who argues|who claims)"
+        regex: true
+        weight: 1.0
+        note: "Comparing sources"
+      - pattern: "While I (see|understand).{0,50}'s point"
+        regex: true
+        weight: 1.0
+
+  peer_interaction_references:
+    description: "References to interactions with other students"
+    patterns:
+      - pattern: "(My|A) classmate (said|mentioned|argued)"
+        regex: true
+        weight: 1.3
+        note: "Peer interaction in THIS course"
+      - pattern: "In our group (discussion|project|work)"
+        regex: true
+        weight: 1.2
+      - pattern: "(During|After) the (group|class) discussion"
+        regex: true
+        weight: 1.2
+      - pattern: "Another student (pointed out|mentioned|said)"
+        regex: true
+        weight: 1.1
+      - pattern: "(Someone|A student) in class"
+        regex: true
+        weight: 1.0
+      - pattern: "My (partner|group members)"
+        regex: true
+        weight: 1.0
+
+scoring:
+  method: "presence_score"
+  interpretation:
+    below_3: "Little evidence of course participation"
+    3_to_6: "Some contextual grounding detected"
+    6_to_10: "Moderate course-specific references"
+    above_10: "Strong evidence of participation in THIS specific course"
+
+priority_note: |
+  This category weighted MORE HEAVILY (35%) than others because it requires
+  actual participation in the course. AI cannot fake:
+  - Specific class discussions from THIS course (instructor can verify)
+  - Unusual passages from THIS reading (can verify quote on page)
+  - THIS assignment prompt details (can verify accuracy)
+  - Events from THIS course timeframe (temporal verification)
+
+validation_protocol:
+  instructor_verification:
+    - "Did we discuss this on that date?"
+    - "Is that quote actually on that page?"
+    - "Was that current event during our course?"
+    - "Is that what the assignment actually asked?"
+    - "Did a student say that in discussion?"
+  strongest_verifiable:
+    - "Specific class discussion dates and topics"
+    - "Page numbers with specific content"
+    - "Assignment-specific requirements"
+    - "Unusual (non-famous) passages quoted"
+
+context_adjustments:
+  discussion_post:
+    weight_multiplier: 1.3
+    rationale: "Discussion posts highly course-contextual"
+  reflection:
+    weight_multiplier: 1.2
+    rationale: "Reflections often reference course journey"
+  research_paper:
+    weight_multiplier: 1.1
+    rationale: "Should integrate course materials"
+  analytical_essay:
+    weight_multiplier: 1.2
+    rationale: "Analysis of course readings"
+  rough_draft:
+    weight_multiplier: 1.0
+    rationale: "All drafts should show course context"
+
+instructor_guidance:
+  high_score_interpretation:
+    - "Student shows clear participation in THIS course"
+    - "References can be verified against course materials and schedule"
+    - "Strongest indicator of genuine authorship"
+    - "Multiple forms of contextual grounding detected"
+  low_score_interpretation:
+    - "May indicate AI generation or lack of engagement"
+    - "Could also mean student didn't integrate course materials"
+    - "Low contextual + low other categories = CONCERNING"
+    - "Low contextual + high other categories = needs follow-up"
+  verification_approaches:
+    - "Ask student about specific class discussion they referenced"
+    - "Check if quoted passage is actually on cited page"
+    - "Verify temporal references (was that event during course?)"
+    - "Ask about the assignment requirement they mentioned"
+    - "Discuss the specific reading they engaged with"
+
+detection_notes:
+  critical_importance:
+    - "This category is THE most reliable indicator"
+    - "AI cannot fake specific course participation without access"
+    - "Even AI with course materials struggles with:
+        * Specific discussion dynamics
+        * Unusual passages (not famous quotes)
+        * Temporal evolution through semester
+        * Peer interaction details"
+  strongest_signals:
+    - "Class discussion on specific date about specific topic"
+    - "Page-number reference to non-central passage"
+    - "Assignment-specific engagement with actual requirements"
+    - "Learning narrative tied to THIS course progression"
+    - "Peer interaction references"
+  combinations_that_matter:
+    - "Class discussion + unusual passage + learning narrative = VERY STRONG"
+    - "Multiple temporal references tied to course = strong"
+    - "Assignment engagement + course materials = authentic"
+  absence_very_concerning:
+    - "Low contextual grounding is MORE concerning than other categories"
+    - "Writing disconnected from course context raises red flags"
+    - "Should prompt immediate verification conversation"
+  verification_power:
+    - "Instructor can VERIFY most of these markers"
+    - "This makes contextual grounding uniquely trustworthy"
+    - "False positives rare - students don't fake course context"
+
+cultural_competency:
+  note: |
+    Contextual grounding looks similar across cultures but may vary in:
+    - Directness of reference ("we discussed" vs. "it was mentioned")
+    - Formality (using professor's name vs. "the instructor")
+    - Personal vs. collective framing ("I learned" vs. "we learned")
+
+    All forms equally valid. System recognizes:
+    - Direct and indirect references
+    - Formal and informal language
+    - Individual and collective framing

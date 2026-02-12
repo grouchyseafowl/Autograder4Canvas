@@ -43,6 +43,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Create install directories
 mkdir -p "$INSTALL_DIR/Programs"
+mkdir -p "$INSTALL_DIR/config"
+mkdir -p "$INSTALL_DIR/modules"
+mkdir -p "$INSTALL_DIR/docs"
 mkdir -p "$BIN_DIR"
 mkdir -p "$DESKTOP_DIR"
 
@@ -50,7 +53,23 @@ mkdir -p "$DESKTOP_DIR"
 echo "  Copying program files..."
 cp "$SCRIPT_DIR/src/run_autograder.py" "$INSTALL_DIR/"
 cp "$SCRIPT_DIR/src/requirements.txt" "$INSTALL_DIR/"
+[ -f "$SCRIPT_DIR/src/autograder_utils.py" ] && cp "$SCRIPT_DIR/src/autograder_utils.py" "$INSTALL_DIR/"
 cp "$SCRIPT_DIR/src/Programs/"*.py "$INSTALL_DIR/Programs/"
+
+# Copy v2 files
+if [ -d "$SCRIPT_DIR/src/config" ]; then
+    echo "  Copying v2 config files..."
+    cp -R "$SCRIPT_DIR/src/config/"* "$INSTALL_DIR/config/"
+fi
+if [ -d "$SCRIPT_DIR/src/modules" ]; then
+    echo "  Copying v2 modules..."
+    cp -R "$SCRIPT_DIR/src/modules/"* "$INSTALL_DIR/modules/"
+fi
+if [ -d "$SCRIPT_DIR/src/docs" ]; then
+    echo "  Copying documentation..."
+    cp -R "$SCRIPT_DIR/src/docs/"* "$INSTALL_DIR/docs/"
+fi
+
 [ -f "$SCRIPT_DIR/icon.png" ] && cp "$SCRIPT_DIR/icon.png" "$INSTALL_DIR/"
 
 # Determine icon path for .desktop file

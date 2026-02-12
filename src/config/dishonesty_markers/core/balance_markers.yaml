@@ -1,0 +1,185 @@
+# Balance Markers Configuration
+# Version 2.0.0
+# Positive indicators of authentic intellectual engagement
+
+metadata:
+  marker_id: balance_markers
+  version: "2.0.0"
+  effective_date: "2025-12-26"
+  category: required_presence
+  pedagogical_context: |
+    These markers indicate AUTHENTIC intellectual engagement.
+    Their PRESENCE is positive evidence of genuine student work.
+    
+    AI tends toward confident, declarative statements. Real students
+    show uncertainty, qualification, and intellectual struggle.
+
+markers:
+  intellectual_uncertainty:
+    description: "Genuine uncertainty shows thinking in progress"
+    patterns:
+      - pattern: "I'm not sure"
+        weight: -0.5
+        note: "Negative weight = positive indicator"
+      - pattern: "I don't know if"
+        weight: -0.4
+      - pattern: "I'm still figuring out"
+        weight: -0.5
+      - pattern: "I think, but"
+        weight: -0.3
+      - pattern: "I might be wrong"
+        weight: -0.5
+      - pattern: "I'm confused about"
+        weight: -0.4
+      - pattern: "this is hard to explain"
+        weight: -0.3
+      - pattern: "I'm struggling with"
+        weight: -0.4
+
+  changed_thinking:
+    description: "Evidence of ideas evolving through writing"
+    patterns:
+      - pattern: "I used to think"
+        weight: -0.6
+      - pattern: "I changed my mind"
+        weight: -0.6
+      - pattern: "at first I thought"
+        weight: -0.5
+      - pattern: "but then I realized"
+        weight: -0.5
+      - pattern: "now I think"
+        weight: -0.4
+      - pattern: "looking back"
+        weight: -0.3
+      - pattern: "I was wrong about"
+        weight: -0.5
+
+  specific_questions:
+    description: "Real questions show engagement, not just knowledge display"
+    patterns:
+      - pattern: "I wonder if"
+        weight: -0.4
+      - pattern: "I want to know"
+        weight: -0.3
+      - pattern: "what I don't understand is"
+        weight: -0.5
+      - pattern: "this makes me question"
+        weight: -0.4
+      - pattern: "how does.*work\\?"
+        regex: true
+        weight: -0.3
+      - pattern: "why would"
+        weight: -0.2
+
+  personal_connections:
+    description: "Connections to personal experience (not generic)"
+    patterns:
+      - pattern: "this reminds me of when"
+        weight: -0.5
+      - pattern: "in my experience"
+        weight: -0.3
+      - pattern: "my (mom|dad|family|friend)"
+        regex: true
+        weight: -0.4
+      - pattern: "back in (high school|middle school)"
+        regex: true
+        weight: -0.4
+      - pattern: "when I was (younger|a kid)"
+        regex: true
+        weight: -0.4
+
+  intellectual_humility:
+    description: "Acknowledging limitations shows real thinking"
+    patterns:
+      - pattern: "I could be missing"
+        weight: -0.4
+      - pattern: "there's probably more to"
+        weight: -0.3
+      - pattern: "I haven't thought about"
+        weight: -0.4
+      - pattern: "that's a good point"
+        weight: -0.3
+      - pattern: "I didn't consider"
+        weight: -0.4
+      - pattern: "someone might disagree"
+        weight: -0.3
+
+  rough_edges:
+    description: "Incomplete thoughts show authentic drafting"
+    patterns:
+      - pattern: "or something like that"
+        weight: -0.3
+      - pattern: "I guess"
+        weight: -0.2
+      - pattern: "kind of like"
+        weight: -0.2
+      - pattern: "if that makes sense"
+        weight: -0.3
+      - pattern: "I don't have the right word"
+        weight: -0.4
+      - pattern: "it's hard to put into words"
+        weight: -0.4
+
+  personal_stance:
+    description: "Taking clear personal positions shows engagement"
+    patterns:
+      - pattern: "I believe"
+        weight: -0.3
+      - pattern: "I feel that"
+        weight: -0.3
+      - pattern: "in my opinion"
+        weight: -0.3
+      - pattern: "in my view"
+        weight: -0.3
+      - pattern: "personally"
+        weight: -0.2
+      - pattern: "to me"
+        weight: -0.2
+      - pattern: "from my perspective"
+        weight: -0.3
+
+interpretation:
+  high_presence:
+    description: "Many balance markers = likely authentic"
+    threshold: 3
+    conclusion: "Strong evidence of genuine intellectual engagement"
+    
+  low_presence:
+    description: "Few balance markers with high suspicious markers"
+    threshold: 0
+    conclusion: "Combined with suspicious markers, suggests AI or disengagement"
+    
+  note: |
+    Balance markers REDUCE concern scores. A text with high suspicious
+    markers BUT also high balance markers may still be authentic—
+    the student might have used AI for some parts while genuinely
+    engaging with others.
+
+context_adjustments:
+  personal_reflection:
+    weight_multiplier: 1.3
+    rationale: "Balance markers especially important in reflections"
+  analytical_essay:
+    weight_multiplier: 0.8
+    rationale: "Less personal uncertainty expected"
+  rough_draft:
+    weight_multiplier: 1.5
+    rationale: "Drafts should show thinking in progress"
+
+instructor_guidance:
+  interpretation: |
+    Balance markers are POSITIVE indicators. Their presence suggests:
+    1. Student is genuinely thinking through ideas
+    2. Student hasn't simply copied polished AI output
+    3. Intellectual honesty about uncertainty
+    
+    A paper with BOTH suspicious markers AND balance markers
+    may indicate partial AI use with genuine engagement—worth
+    a conversation, not automatic concern.
+    
+  conversation_approach: |
+    When you see balance markers alongside concerns:
+    "I noticed you expressed uncertainty about X. Can you tell me
+    more about what you're unsure of?"
+    
+    This validates genuine thinking while exploring the work.

@@ -1,0 +1,144 @@
+# Personal Voice Markers Configuration
+# Version 2.0.0
+# These are markers of authentic personal voice whose ABSENCE is suspicious
+# in personal reflection assignments.
+
+metadata:
+  marker_id: personal_voice_markers
+  version: "2.0.0"
+  effective_date: "2025-12-26"
+  category: required_presence
+  pedagogical_context: |
+    Personal reflections REQUIRE personal voice. Absence of these markers
+    indicates the student may not have engaged with the assignment's
+    actual purpose: developing their authentic academic voice.
+    
+    NOTE: This is "absence detection" - we're looking for what's MISSING,
+    not just what's present. A reflection without "I" statements is
+    almost certainly not authentic personal reflection.
+
+markers:
+  first_person_voice:
+    description: "Basic first-person pronouns and constructions"
+    required_minimum: 5  # Per 500 words
+    patterns:
+      - pattern: "\\bI\\s"
+        regex: true
+        weight: 0.3
+      - pattern: "\\bmy\\b"
+        regex: true
+        weight: 0.3
+      - pattern: "\\bme\\b"
+        regex: true
+        weight: 0.2
+      - pattern: "\\bmyself\\b"
+        regex: true
+        weight: 0.3
+      - pattern: "I realized"
+        weight: 0.5
+      - pattern: "I remember"
+        weight: 0.5
+      - pattern: "I noticed"
+        weight: 0.5
+      - pattern: "I felt"
+        weight: 0.6
+      - pattern: "I was"
+        weight: 0.3
+        
+  specific_details:
+    description: "Markers of specific, personal details (names, places, times)"
+    required_minimum: 2
+    patterns:
+      - pattern: "proper_noun_detection"
+        type: "algorithmic"
+        weight: 0.4
+        note: "Detect proper nouns - named people, places, specific times"
+      - pattern: "my mom|my dad|my mother|my father|my friend|my brother|my sister"
+        regex: true
+        weight: 0.5
+        note: "References to specific people in their life"
+      - pattern: "last year|last month|last week|when I was|years ago"
+        regex: true
+        weight: 0.4
+        note: "Temporal specificity"
+        
+  emotional_language:
+    description: "Authentic emotional expression"
+    required_minimum: 1
+    patterns:
+      - pattern: "I felt"
+        weight: 0.6
+      - pattern: "I was scared"
+        weight: 0.8
+      - pattern: "I cried"
+        weight: 0.9
+      - pattern: "I laughed"
+        weight: 0.7
+      - pattern: "it hurt"
+        weight: 0.8
+      - pattern: "I struggled"
+        weight: 0.7
+      - pattern: "I was confused"
+        weight: 0.6
+      - pattern: "I was frustrated"
+        weight: 0.7
+      - pattern: "I was excited"
+        weight: 0.6
+      - pattern: "I was nervous"
+        weight: 0.7
+      - pattern: "I was embarrassed"
+        weight: 0.8
+      - pattern: "I was proud"
+        weight: 0.7
+      - pattern: "I was relieved"
+        weight: 0.7
+
+  sensory_language:
+    description: "Concrete sensory details from experience"
+    required_minimum: 1
+    patterns:
+      - pattern: "I saw"
+        weight: 0.5
+      - pattern: "I heard"
+        weight: 0.5
+      - pattern: "I could hear"
+        weight: 0.5
+      - pattern: "I could see"
+        weight: 0.5
+      - pattern: "it smelled"
+        weight: 0.6
+      - pattern: "it tasted"
+        weight: 0.6
+      - pattern: "it felt like"
+        weight: 0.5
+
+scoring:
+  # How to calculate authenticity score
+  method: "presence_score"
+  minimum_acceptable: 4.0
+  interpretation:
+    below_2: "Very concerning - almost no personal markers"
+    2_to_4: "Low - minimal personal engagement"
+    4_to_6: "Moderate - some personal elements"
+    above_6: "Strong - clear personal voice present"
+
+context_adjustments:
+  esl:
+    weight_multiplier: 0.8
+    rationale: "Cultural differences in self-expression; may avoid 'I' statements"
+  analytical_essay:
+    weight_multiplier: 0.3
+    rationale: "Personal voice less expected in analytical writing"
+  personal_reflection:
+    weight_multiplier: 1.5
+    rationale: "Personal voice is the primary learning objective"
+
+instructor_guidance:
+  low_score_actions:
+    - "Ask student to describe a specific moment in detail"
+    - "Request revision with 3 sensory details added"
+    - "Have student describe what they saw, heard, or felt"
+  verification_questions:
+    - "Can you tell me more about [vague reference]?"
+    - "What specifically did you see/hear when that happened?"
+    - "Who was with you? What did they say?"

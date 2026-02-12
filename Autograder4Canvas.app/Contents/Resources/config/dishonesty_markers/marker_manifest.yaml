@@ -1,0 +1,122 @@
+# Marker Manifest
+# Version 2.0.0
+# Tracks installed markers, versions, and update information
+
+manifest_version: "2.0.0"
+last_updated: "2025-12-26"
+schema_version: "2.0"
+
+# Update configuration
+updates:
+  check_frequency: weekly
+  update_channel: stable
+  auto_update: false
+  notify_on_update: true
+
+# Installed core markers
+core_markers:
+  ai_transitions:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    category: suspicious_presence
+    checksum: null  # Will be computed on first load
+    
+  personal_voice_markers:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    category: required_presence
+    checksum: null
+    
+  generic_phrases:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    category: suspicious_presence
+    checksum: null
+    
+  hedge_phrases:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    category: suspicious_presence
+    checksum: null
+    
+  inflated_vocabulary:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    category: suspicious_presence
+    checksum: null
+    
+  citation_markers:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    category: mixed
+    checksum: null
+
+# Custom user markers (populated by user)
+custom_markers: {}
+
+# Installed profiles
+profiles:
+  personal_reflection:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    
+  analytical_essay:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    
+  discussion_post:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    
+  rough_draft:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    
+  research_paper:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+
+# Context profiles
+context_profiles:
+  community_college:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+
+# Marker categories
+categories:
+  suspicious_presence:
+    description: "Markers whose PRESENCE indicates concern"
+    markers:
+      - ai_transitions
+      - generic_phrases
+      - hedge_phrases
+      - inflated_vocabulary
+      
+  required_presence:
+    description: "Markers whose ABSENCE indicates concern"
+    markers:
+      - personal_voice_markers
+      
+  mixed:
+    description: "Markers with both positive and negative patterns"
+    markers:
+      - citation_markers
+
+# Deprecated markers (no longer used)
+deprecated: []
+
+# Notes
+notes: |
+  This manifest tracks all installed detection markers and their versions.
+  
+  Marker files are located in:
+  - Core markers: config/dishonesty_markers/core/
+  - Custom markers: config/dishonesty_markers/custom/
+  - Profiles: config/profiles/
+  - Context profiles: config/context_profiles/
+  
+  To add custom markers, create YAML files in the custom/ directory
+  following the schema of existing markers.
+  
+  Updates are checked weekly but not auto-installed to ensure
+  instructor review of any changes to detection patterns.

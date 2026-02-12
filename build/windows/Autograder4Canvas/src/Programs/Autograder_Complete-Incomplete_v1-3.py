@@ -27,19 +27,51 @@ HEADERS = {
 # Thresholds for grading (not AI detection)
 MIN_FILE_SIZE = 1024  # 1KB
 
+def get_config_dir() -> Path:
+    """Get the configuration directory for storing settings."""
+    system = platform.system()
+    
+    if system == "Windows":
+        base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+        config_dir = base / "CanvasAutograder"
+    elif system == "Darwin":
+        config_dir = Path.home() / "Library" / "Application Support" / "CanvasAutograder"
+    else:
+        config_dir = Path.home() / ".config" / "CanvasAutograder"
+    
+    return config_dir
+
+
 def get_output_base_dir() -> Path:
     """Get base output directory in a cross-platform way."""
     system = platform.system()
     
+    # Check for /output directory first (container/deployment environment)
     if os.path.isdir("/output"):
         return Path("/output")
     
+    # Check for custom output directory in JSON config (matches autograder_utils.py)
+    config_file = get_config_dir() / "settings.json"
+    if config_file.exists():
+        try:
+            import json
+            with open(config_file, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                if "output_directory" in config:
+                    custom_dir = Path(config["output_directory"])
+                    if custom_dir.exists() or custom_dir.parent.exists():
+                        custom_dir.mkdir(parents=True, exist_ok=True)
+                        return custom_dir
+        except Exception:
+            pass  # Fall through to default
+    
+    # Default location
     if system == "Windows":
         documents = Path(os.environ.get("USERPROFILE", Path.home())) / "Documents"
     else:
         documents = Path.home() / "Documents"
     
-    return documents / "Grading_Rationales"
+    return documents / "Autograder Rationales"
 
 
 def count_words(text: str) -> int:
@@ -186,16 +218,131 @@ def get_all_assignments(course_id: int) -> List[Dict]:
     data = response.json()
     return data if isinstance(data, list) else []
 
-def filter_complete_incomplete_assignments(assignments: List[Dict]) -> List[Dict]:
+def filter_complete_incomplete_assignments(assignments: List[Dict], include_no_deadline: bool = False, grade_future_submitted: bool = False) -> List[Dict]:
     """
-    Filter assignments to only those using complete/incomplete grading.
+    Filter assignments to only those using complete/incomplete grading with passed deadlines.
     Canvas indicates this with grading_type = "pass_fail"
+    
+    Args:
+        assignments: List of assignment dictionaries
+        include_no_deadline: Whether to include assignments without due dates
+        grade_future_submitted: Whether to include future assignments that have submissions
+    
+    Returns:
+        List of filtered assignments
     """
+    from datetime import datetime
+    import pytz
+    
     filtered = []
+    now = datetime.now(pytz.UTC)
+    
     for assignment in assignments:
         grading_type = assignment.get("grading_type", "")
-        if grading_type == "pass_fail":
-            filtered.append(assignment)
+        if grading_type != "pass_fail":
+            continue
+        
+        # Check due date
+        due_at = assignment.get("due_at")
+        
+        # If no due date, check user preference
+        if not due_at:
+            if include_no_deadline:
+                print(f"   ℹ️  Including '{assignment.get('name')}' (no due date set)")
+                filtered.append(assignment)
+            else:
+                print(f"   ⏭️  Skipping '{assignment.get('name')}' (no due date set)")
+            continue
+        
+        # Parse due date and compare with current time
+        try:
+            from dateutil import parser as date_parser
+            due_date = date_parser.isoparse(due_at)
+            # Ensure due_date is timezone-aware
+            if due_date.tzinfo is None:
+                due_date = pytz.UTC.localize(due_date)
+            
+            if now >= due_date:
+                # Deadline has passed - always include
+                filtered.append(assignment)
+            elif grade_future_submitted:
+                # Future deadline, but user wants to grade submitted work
+                time_remaining = due_date - now
+                days = time_remaining.days
+                hours = time_remaining.seconds // 3600
+                print(f"   ⚠️  Including '{assignment.get('name')}' (due in {days}d {hours}h)")
+                print(f"       Will only grade students who already submitted")
+                filtered.append(assignment)
+            else:
+                # Future deadline, skip
+                time_remaining = due_date - now
+                days = time_remaining.days
+                hours = time_remaining.seconds // 3600
+                print(f"   ⏭️  Skipping '{assignment.get('name')}' (due in {days}d {hours}h)")
+        except Exception as e:
+            print(f"   ⚠️  Could not parse due date for '{assignment.get('name')}': {e}")
+            print(f"       Skipping to be safe (cannot verify deadline has passed)")
+    
+    return filtered
+
+def filter_by_deadline(assignments: List[Dict], include_no_deadline: bool = False, grade_future_submitted: bool = False) -> List[Dict]:
+    """
+    Filter assignments to only those with passed deadlines.
+    
+    Args:
+        assignments: List of assignment dictionaries
+        include_no_deadline: Whether to include assignments without due dates
+        grade_future_submitted: Whether to include future assignments that have submissions
+    
+    Returns:
+        List of assignments with passed deadlines
+    """
+    from datetime import datetime
+    import pytz
+    
+    filtered = []
+    now = datetime.now(pytz.UTC)
+    
+    for assignment in assignments:
+        due_at = assignment.get("due_at")
+        
+        # If no due date, check user preference
+        if not due_at:
+            if include_no_deadline:
+                print(f"   ℹ️  Including '{assignment.get('name')}' (no due date set)")
+                filtered.append(assignment)
+            else:
+                print(f"   ⏭️  Skipping '{assignment.get('name')}' (no due date set)")
+            continue
+        
+        # Parse due date and compare with current time
+        try:
+            from dateutil import parser as date_parser
+            due_date = date_parser.isoparse(due_at)
+            # Ensure due_date is timezone-aware
+            if due_date.tzinfo is None:
+                due_date = pytz.UTC.localize(due_date)
+            
+            if now >= due_date:
+                # Deadline has passed - always include
+                filtered.append(assignment)
+            elif grade_future_submitted:
+                # Future deadline, but user wants to grade submitted work
+                time_remaining = due_date - now
+                days = time_remaining.days
+                hours = time_remaining.seconds // 3600
+                print(f"   ⚠️  Including '{assignment.get('name')}' (due in {days}d {hours}h)")
+                print(f"       Will only grade students who already submitted")
+                filtered.append(assignment)
+            else:
+                # Future deadline, skip
+                time_remaining = due_date - now
+                days = time_remaining.days
+                hours = time_remaining.seconds // 3600
+                print(f"   ⏭️  Skipping '{assignment.get('name')}' (due in {days}d {hours}h)")
+        except Exception as e:
+            print(f"   ⚠️  Could not parse due date for '{assignment.get('name')}': {e}")
+            print(f"       Skipping to be safe (cannot verify deadline has passed)")
     
     return filtered
 
@@ -370,31 +517,53 @@ def export_rationale(course_id: int, assignment_id: int, assignment_name: str, r
     BASE_DIR = get_output_base_dir()
 
     OUTPUT_DIR = BASE_DIR / "Complete-Incomplete Assignments"
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    
+    try:
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        print(f"❌ Failed to create output directory: {e}")
+        return
+        
     output_path = OUTPUT_DIR / filename
 
-    with open(output_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=[
-            "Student Name", "User ID", "Grade", "Reason"
-        ])
-        writer.writeheader()
-        for row in rationale_rows:
-            writer.writerow({
-                "Student Name": row["name"],
-                "User ID": row["user_id"],
-                "Grade": row["grade"],
-                "Reason": row["reason"]
-            })
-    print(f"✅ Complete/Incomplete rationale exported: {output_path}")
+    try:
+        with open(output_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=[
+                "Student Name", "User ID", "Grade", "Reason"
+            ])
+            writer.writeheader()
+            for row in rationale_rows:
+                writer.writerow({
+                    "Student Name": row["name"],
+                    "User ID": row["user_id"],
+                    "Grade": row["grade"],
+                    "Reason": row["reason"]
+                })
+        print(f"✅ Rationale exported: {output_path.name}")
+            
+    except Exception as e:
+        print(f"❌ Error creating CSV file: {e}")
 
 def main():
     print("🎓 Canvas Auto-Grader: Complete/Incomplete with PDF Annotation Support")
     print("Make sure CANVAS_API_TOKEN is set in your environment.\n")
 
+    print("="*70)
+    print("📌 HOW TO FIND YOUR COURSE ID")
+    print("="*70)
+    print("1. Open your course in Canvas")
+    print("2. Look at the URL in your browser's address bar")
+    print("3. Find the number after '/courses/' in the URL")
+    print()
+    print("   Example: https://cabrillo.instructure.com/courses/12345")
+    print("            The Course ID is: 12345")
+    print("="*70)
+    print()
+
     try:
         course_id = int(input("Enter Course ID: ").strip())
     except ValueError:
-        print("❌ Invalid course ID.")
+        print("❌ Invalid course ID. Please enter only the numeric ID.")
         return
 
     # Verify API access
@@ -407,11 +576,48 @@ def main():
         print("   Response preview:", repr(test_resp.text[:200]))
         return
 
-    # Selection mode
-    print("\n📋 Assignment Selection:")
-    print("   [1] Grade specific assignments by ID")
-    print("   [2] Grade ALL complete/incomplete assignments (auto-detect)")
-    selection_mode = input("\nChoose option (1/2, default=1): ").strip() or "1"
+    # Session-wide deadline settings (default to safe mode, can be toggled in menu)
+    include_no_deadline = False
+    grade_future_submitted = False
+
+    # Selection mode with deadline toggles
+    while True:
+        print("\n📋 Assignment Selection:")
+        print("   [1] Grade specific assignments by ID")
+        print("   [2] Grade ALL complete/incomplete assignments (auto-detect)")
+        print("   [3] Grade assignments filtered by keyword")
+        print()
+        print("   Deadline Settings:")
+        no_deadline_status = "ON" if include_no_deadline else "OFF"
+        future_status = "ON" if grade_future_submitted else "OFF"
+        print(f"   [N] Include no-deadline assignments: {no_deadline_status}")
+        print(f"   [F] Grade submitted work for future deadlines: {future_status}")
+        if grade_future_submitted:
+            print(f"       ⚠️  Only grades students who already submitted")
+        print()
+        
+        selection_input = input("Choose option (1/2/3, N, F): ").strip().upper()
+        
+        # Handle toggle options
+        if selection_input == 'N':
+            include_no_deadline = not include_no_deadline
+            status = "ON" if include_no_deadline else "OFF"
+            print(f"\n✅ No-deadline assignments: {status}")
+            continue
+        elif selection_input == 'F':
+            grade_future_submitted = not grade_future_submitted
+            status = "ON" if grade_future_submitted else "OFF"
+            print(f"\n✅ Future deadline grading: {status}")
+            if grade_future_submitted:
+                print("   ⚠️  Will only grade students who already submitted")
+                print("      Students without submissions will remain ungraded")
+            continue
+        elif selection_input in ['1', '2', '3']:
+            selection_mode = selection_input
+            break
+        else:
+            print("❌ Invalid choice. Please enter 1, 2, 3, N, or F")
+            continue
 
     if selection_mode == "2":
         # Auto-detect complete/incomplete assignments
@@ -422,10 +628,15 @@ def main():
             print("❌ No assignments found in course.")
             return
         
-        complete_incomplete_assignments = filter_complete_incomplete_assignments(all_assignments)
+        print("\n🕒 Filtering by grading type and deadline...")
+        complete_incomplete_assignments = filter_complete_incomplete_assignments(
+            all_assignments, 
+            include_no_deadline=include_no_deadline,
+            grade_future_submitted=grade_future_submitted
+        )
         
         if not complete_incomplete_assignments:
-            print("❌ No complete/incomplete assignments found in this course.")
+            print("❌ No complete/incomplete assignments found matching your deadline settings.")
             return
         
         print(f"\n✅ Found {len(complete_incomplete_assignments)} complete/incomplete assignments:")
@@ -446,9 +657,76 @@ def main():
         
         assignment_ids = [a.get("id") for a in complete_incomplete_assignments]
         
+    elif selection_mode == "3":
+        # Filter by keyword
+        print("\n🔍 Fetching all assignments...")
+        all_assignments = get_all_assignments(course_id)
+        
+        if not all_assignments:
+            print("❌ No assignments found in course.")
+            return
+        
+        filter_keyword = input("\nEnter keyword to filter assignments (e.g., 'essay', 'quiz', 'homework'): ").strip().lower()
+        if not filter_keyword:
+            print("❌ No keyword provided.")
+            return
+        
+        # First filter by keyword
+        keyword_matched = [a for a in all_assignments if filter_keyword in a.get("name", "").lower()]
+        
+        if not keyword_matched:
+            print(f"❌ No assignments found containing '{filter_keyword}'")
+            return
+        
+        # Then filter by deadline using session settings
+        print(f"\n🕒 Filtering {len(keyword_matched)} assignments by deadline...")
+        filtered_assignments = filter_by_deadline(
+            keyword_matched, 
+            include_no_deadline=include_no_deadline,
+            grade_future_submitted=grade_future_submitted
+        )
+        
+        if not filtered_assignments:
+            print(f"\n❌ No assignments containing '{filter_keyword}' match your deadline settings")
+            return
+        
+        print(f"\n✅ Found {len(filtered_assignments)} assignments with '{filter_keyword}':")
+        for idx, assignment in enumerate(filtered_assignments, 1):
+            grading_type = assignment.get("grading_type", "points")
+            print(f"   {idx}. {assignment.get('name')} (ID: {assignment.get('id')}) [{grading_type}]")
+        
+        # Ask about regrade mode
+        print("\n⚙️ Grading Mode:")
+        print("   [1] Grade all students (may change existing grades)")
+        print("   [2] Regrade only 'incomplete' students (preserve existing 'complete' grades)")
+        regrade_choice = input("\nChoose mode (1/2, default=2): ").strip() or "2"
+        regrade_mode = (regrade_choice == "2")
+        
+        if regrade_mode:
+            print("✅ Regrade mode: Will only update 'incomplete' submissions")
+        else:
+            print("⚠️  Full grade mode: May change existing grades if criteria not met")
+        
+        assignment_ids = [a.get("id") for a in filtered_assignments]
+        
     else:
         # Manual assignment ID entry
-        assignment_input = input("\nEnter Assignment ID(s) (space-separated): ").strip()
+        print("\n" + "="*70)
+        print("📌 HOW TO FIND ASSIGNMENT IDs")
+        print("="*70)
+        print("1. Go to the Assignments page in Canvas")
+        print("2. Click on an assignment to open it")
+        print("3. Look at the URL in your browser's address bar")
+        print("4. Find the number after '/assignments/' in the URL")
+        print()
+        print("   Example: https://cabrillo.instructure.com/courses/12345/assignments/67890")
+        print("            The Assignment ID is: 67890")
+        print()
+        print("   TIP: You can enter multiple IDs separated by spaces")
+        print("        Example: 67890 67891 67892")
+        print("="*70)
+        print()
+        assignment_input = input("Enter Assignment ID(s) (space-separated): ").strip()
         try:
             assignment_ids = [int(x) for x in assignment_input.split()]
         except ValueError:

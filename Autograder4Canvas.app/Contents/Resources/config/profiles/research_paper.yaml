@@ -1,0 +1,155 @@
+# Research Paper Assignment Profile
+# Version 2.0.0
+# Profile for research papers requiring citations and source verification
+
+profile_id: research_paper
+profile_name: "Research Paper with Citations"
+version: "2.0.0"
+effective_date: "2025-12-26"
+
+description: |
+  Profile for formal research papers requiring citations, source
+  engagement, and evidence-based argumentation. Citation verification
+  is a critical component—AI frequently fabricates sources.
+
+learning_objectives:
+  primary:
+    - "Conduct academic research"
+    - "Synthesize multiple sources"
+    - "Support claims with verifiable evidence"
+  secondary:
+    - "Practice proper citation format"
+    - "Evaluate source credibility"
+    - "Develop evidence-based arguments"
+
+detection_approach: "citation_verification"
+detection_explanation: |
+  For research papers, citation verification is paramount.
+  AI frequently fabricates:
+  - Author names that don't exist
+  - Journal titles that sound plausible but aren't real
+  - Page numbers that don't contain the cited text
+  - DOIs that don't resolve
+  
+  Key question: "Can these citations be verified?"
+
+weight_priorities:
+  citation_markers:
+    multiplier: 2.0
+    rationale: "Citation verification is critical"
+  vague_attribution:
+    multiplier: 1.5
+    rationale: "Claims should be cited, not vaguely attributed"
+  ai_transitions:
+    multiplier: 0.7
+    rationale: "Formal language expected in research papers"
+  generic_phrases:
+    multiplier: 1.3
+    rationale: "Specific evidence should replace generic claims"
+  source_engagement:
+    multiplier: 1.8
+    rationale: "Should engage with sources, not just cite"
+
+citation_verification:
+  priority: high
+  actions:
+    - "Spot-check 2-3 citations for existence"
+    - "Verify at least one quote matches source"
+    - "Check that authors exist and wrote on this topic"
+    - "Confirm journals/books are real"
+    
+  red_flags:
+    fabricated_sources:
+      - "Journal name sounds academic but doesn't exist"
+      - "Author name is plausible but ungoogleable"
+      - "Book title exists but author is different"
+      - "DOI provided but doesn't resolve"
+      - "Page number doesn't contain cited text"
+      
+    ai_citation_patterns:
+      - "All citations from similar date range (e.g., 2018-2022)"
+      - "Perfect MLA/APA format but wrong content"
+      - "Generic quotes that could fit many arguments"
+      - "Citations to 'et al.' without full author list"
+      
+  verification_process:
+    step_1: "Google exact citation"
+    step_2: "Search Google Scholar for author + keywords"
+    step_3: "Check if journal exists in academic databases"
+    step_4: "If DOI provided, test at doi.org"
+    step_5: "Ask student to provide PDF or link"
+
+source_engagement_markers:
+  positive_indicators:
+    - "Direct quotes with analysis"
+    - "Paraphrase with interpretation"
+    - "Comparison between sources"
+    - "Critique of source limitations"
+    - "Synthesis of multiple perspectives"
+    
+  concerning_patterns:
+    - "Citation dropped without discussion"
+    - "Quote used without analysis"
+    - "Sources listed but not engaged"
+    - "All sources say the same thing"
+    - "No acknowledgment of debates"
+
+concern_indicators:
+  high_concern:
+    - "Citations cannot be verified"
+    - "Author names don't exist"
+    - "Journal titles are fabricated"
+    - "Quotes don't match sources"
+    - "Vague attribution instead of citations"
+    
+  moderate_concern:
+    - "Limited source engagement"
+    - "Some citations unverifiable"
+    - "Heavy reliance on vague attribution"
+    - "Sources not synthesized"
+    
+  low_concern:
+    - "Minor citation format errors"
+    - "Some sources more engaged than others"
+    - "Verifiable citations present"
+
+conversation_starters:
+  citation_verification:
+    - "I couldn't find this source—can you show me where you accessed it?"
+    - "Can you send me the PDF or link for this article?"
+    - "I want to read more of this author's work—what database did you use?"
+    
+  source_engagement:
+    - "What did you find most convincing about this source?"
+    - "Did any sources disagree with each other?"
+    - "How did you decide which sources to include?"
+    
+  process:
+    - "Walk me through how you found your sources"
+    - "Which database did you use most?"
+    - "How long did the research take?"
+
+instructor_notes:
+  key_principles:
+    - "Citation verification is the strongest check"
+    - "Fabricated citations are clear evidence"
+    - "Ask students to produce the actual source"
+    - "Check DOIs and Google exact citations"
+    
+  verification_shortcuts:
+    - "Copy-paste author + title into Google Scholar"
+    - "Check doi.org for any DOIs provided"
+    - "Look for author on university websites"
+    - "Verify journal exists in JSTOR/library databases"
+    
+  fabrication_response:
+    - "If source is fabricated, document clearly"
+    - "Ask student to explain where they found it"
+    - "Fabricated citations are clear dishonesty evidence"
+    - "Distinguish AI fabrication from student error"
+    
+  pedagogical_approach:
+    - "Teach source verification as research skill"
+    - "Require annotated bibliography earlier"
+    - "Have students submit PDFs with final paper"
+    - "Discuss AI citation fabrication openly"

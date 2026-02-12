@@ -1,0 +1,272 @@
+# AI-Specific Organization Markers
+# Version 2.0.1
+# Organizational patterns characteristic of AI that DO NOT overlap with neurodivergent writing
+
+metadata:
+  marker_id: ai_specific_organization
+  version: "2.0.1"
+  effective_date: "2025-12-27"
+  category: suspicious_presence
+  no_cognitive_protection: true  # These markers are NEVER protected
+  pedagogical_context: |
+    AI-generated text has distinctive organizational signatures that rarely appear
+    in authentic student writing, including neurodivergent writing patterns.
+
+    These patterns are AI-SPECIFIC, not overlapping with neurodivergent styles:
+    - Excessive headers (too many for word count)
+    - Hierarchical header structure (multiple levels unnecessarily)
+    - Perfectly balanced sections
+    - Meta-announcements without substance
+    - False balance ("both sides" artificially equal)
+
+    Unlike overlapping markers (formal transitions, precise language), these
+    should NEVER receive cognitive diversity protection.
+
+markers:
+  meta_announcements_without_substance:
+    description: "Pure structural announcements with no claim or reasoning"
+    pedagogical_note: |
+      AI announces structure generically. Neurodivergent students who signpost
+      usually do so WITH reasoning or personal investment.
+
+      AI: "This essay will explore three aspects"
+      Neurodivergent: "I'm going to talk about three things because they all connect"
+    patterns:
+      - pattern: "this essay will explore"
+        weight: 0.8
+        note: "Pure announcement, no substance"
+      - pattern: "this paper will examine"
+        weight: 0.8
+      - pattern: "this section discusses"
+        weight: 0.7
+      - pattern: "the next section examines"
+        weight: 0.7
+      - pattern: "this paragraph will discuss"
+        weight: 0.8
+        note: "Very rare in authentic student writing"
+      - pattern: "one key aspect is"
+        weight: 0.5
+      - pattern: "another important factor"
+        weight: 0.5
+      - pattern: "the next aspect involves"
+        weight: 0.6
+      - pattern: "a final consideration"
+        weight: 0.5
+
+  false_balance_patterns:
+    description: "Artificial 'both sides' balance typical of AI conflict-avoidance"
+    pedagogical_note: |
+      AI avoids strong stances and creates false balance. Neurodivergent students
+      (especially autistic) often have VERY specific, passionate positions.
+
+      This is about wishy-washy "both sides have merit" when student hasn't
+      actually engaged with the tension.
+    patterns:
+      - pattern: "on the one hand.*on the other hand"
+        regex: true
+        weight: 0.7
+        note: "Classic AI hedge - valid if followed by actual stance"
+      - pattern: "there are valid points on both sides"
+        weight: 0.8
+        note: "AI conflict avoidance"
+      - pattern: "both perspectives have merit"
+        weight: 0.7
+      - pattern: "reasonable people can disagree"
+        weight: 0.6
+        note: "Legitimate in some contexts, but AI overuses"
+      - pattern: "each side presents compelling arguments"
+        weight: 0.7
+      - pattern: "the truth likely lies somewhere in between"
+        weight: 0.8
+        note: "Classic AI non-commitment"
+
+  circular_signposting:
+    description: "References to previous content that don't actually exist"
+    pedagogical_note: |
+      AI sometimes hallucinates references to its own structure. Humans don't
+      reference things they didn't write.
+    patterns:
+      - pattern: "as previously mentioned"
+        weight: 0.4
+        verification_required: true
+        note: "Flag if nothing was actually mentioned previously"
+      - pattern: "as stated above"
+        weight: 0.4
+        verification_required: true
+      - pattern: "as discussed earlier"
+        weight: 0.4
+        verification_required: true
+      - pattern: "returning to our earlier point"
+        weight: 0.5
+        verification_required: true
+
+  uniform_topic_sentences:
+    description: "Every paragraph starts with announcement-style topic sentence"
+    pedagogical_note: |
+      AI uses formulaic topic sentences. Humans (including neurodivergent) vary
+      their paragraph openings more.
+
+      Detection requires algorithmic analysis of paragraph-initial sentences.
+    detection_method: "algorithmic"
+    threshold: 4
+    note: "If 4+ paragraphs start with announcement phrases, flag"
+    weight: 0.9
+
+  conclusion_meta_commentary:
+    description: "Generic conclusion phrases that announce rather than conclude"
+    pedagogical_note: |
+      AI loves meta-commentary conclusions. Humans tend to just make concluding
+      points without announcing them.
+    patterns:
+      - pattern: "in conclusion"
+        weight: 0.3
+        note: "Taught in classes, but AI overuses"
+      - pattern: "to sum up"
+        weight: 0.3
+      - pattern: "in summary"
+        weight: 0.3
+      - pattern: "as we have seen"
+        weight: 0.5
+        note: "More AI-like"
+      - pattern: "it is clear that"
+        weight: 0.4
+      - pattern: "ultimately.*demonstrates"
+        regex: true
+        weight: 0.5
+
+algorithmic_detection:
+  excessive_headers:
+    description: "Too many headers for word count - AI signature"
+    detection_method: "header_analysis"
+    thresholds:
+      - word_count: "<500"
+        max_headers: 2
+        weight_if_exceeded: 1.5
+      - word_count: "500-1000"
+        max_headers: 4
+        weight_if_exceeded: 1.2
+      - word_count: "1000-2000"
+        max_headers: 6
+        weight_if_exceeded: 1.0
+    note: |
+      AI uses excessive headers to impose structure. Humans (including
+      neurodivergent using headers as scaffolding) use them more sparingly.
+
+      Count both markdown headers and implied structural divisions.
+
+  hierarchical_headers:
+    description: "Multiple levels of headers (H1, H2, H3) unnecessarily deep"
+    detection_method: "header_analysis"
+    threshold: 3
+    note: "If >3 levels of headers in <2000 words, flag"
+    weight: 1.3
+    pedagogical_note: |
+      AI creates unnecessarily deep hierarchies. Even students using headers
+      as executive function scaffolding rarely go beyond H1 and H2.
+
+  balanced_header_sections:
+    description: "Content under headers is suspiciously uniform in length"
+    detection_method: "section_balance_analysis"
+    threshold: 0.25
+    note: "If section length variance coefficient < 0.25, flag"
+    weight: 1.4
+    pedagogical_note: |
+      AI produces balanced sections. Neurodivergent students using headers
+      will still show UNEVEN depth (hyperfocus on interesting sections).
+
+      This is the KEY difference: Headers + uniform depth = AI
+                                  Headers + uneven depth = scaffolding
+
+  uniform_paragraph_structure:
+    description: "Every paragraph follows identical structure"
+    detection_method: "paragraph_structure_analysis"
+    threshold: 0.20
+    note: "If paragraph length variance coefficient < 0.20, flag"
+    weight: 1.2
+    pedagogical_note: |
+      AI produces uniform paragraphs. Neurodivergent students (especially with
+      hyperfocus) produce HIGHLY VARIABLE paragraph lengths based on interest.
+
+      Low variance = AI signature
+      High variance = authentic engagement
+
+  sentence_uniformity:
+    description: "Sentences are suspiciously similar in length and structure"
+    detection_method: "sentence_analysis"
+    threshold: 0.25
+    note: "If sentence length variance coefficient < 0.25, flag"
+    weight: 0.8
+    pedagogical_note: |
+      AI produces rhythmically similar sentences. Human writing (especially
+      neurodivergent) shows more variation in sentence complexity and length.
+
+context_adjustments:
+  none: 1.0
+  note: |
+    These markers receive NO context adjustments. They are AI-specific
+    regardless of student population, ESL status, or neurodivergent patterns.
+
+cognitive_diversity_protection:
+  enabled: false
+  rationale: |
+    These organizational patterns are AI-SPECIFIC and do not overlap with
+    neurodivergent writing styles. Even when cognitive diversity markers are
+    present, these patterns remain fully weighted.
+
+    A student may show hyperfocus AND have AI-generated headers - the hyperfocus
+    markers indicate some authentic engagement, but the AI organizational
+    patterns still need to be flagged for instructor review.
+
+clustering:
+  threshold: 3
+  weight_boost: 2.5
+  description: "3+ AI-specific organizational markers is very strong AI signature"
+
+instructor_guidance:
+  interpreting_high_scores: |
+    When AI-specific organizational markers are high, even if cognitive diversity
+    markers are also present, this suggests:
+
+    1. Possible partial AI use (student used AI for structure, added own content)
+    2. Template following at extreme level (rare)
+    3. AI generation with manual additions
+
+    Conversation approach:
+    - "I noticed your paper has [specific organizational pattern]. Can you walk me
+      through how you structured this?"
+    - "Tell me about your writing process for this assignment."
+    - Don't accuse - explore. Student may have valid explanation.
+
+  red_flags:
+    - "Excessive headers (>4 in 500 words) + balanced sections = strong AI signature"
+    - "Meta-announcements + no substance = AI structural generation"
+    - "False balance + no genuine engagement = AI conflict-avoidance"
+    - "Circular references ('as mentioned') to non-existent content = AI hallucination"
+
+verification_requirements:
+  circular_signposting:
+    process: |
+      When patterns like "as previously mentioned" are detected:
+      1. Search backwards in text for the referenced content
+      2. If content was actually mentioned, no flag
+      3. If content wasn't mentioned, flag as AI hallucination (strong indicator)
+
+  uniform_structure:
+    process: |
+      For uniformity detection:
+      1. Calculate variance in paragraph/sentence/section lengths
+      2. If variance is below threshold, flag
+      3. Document the variance coefficient in transparency flags
+
+version_history:
+  "2.0.1":
+    date: "2025-12-27"
+    changes: |
+      - Created AI-specific organizational markers separate from overlapping markers
+      - Removed "generic headers" (AI headers are content-specific)
+      - Added algorithmic detection specifications
+      - Emphasized these markers receive NO cognitive protection
+    rationale: |
+      Surgical approach to distinguish AI-specific patterns from neurodivergent-
+      overlapping patterns. Allows cognitive protection for overlapping markers
+      while maintaining strong AI detection for specific signatures.

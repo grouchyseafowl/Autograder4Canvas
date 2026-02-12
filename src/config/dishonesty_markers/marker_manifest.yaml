@@ -1,0 +1,204 @@
+# Marker Manifest
+# Version 2.0.0
+# Tracks installed markers, versions, and update information
+
+manifest_version: "2.1.0"
+last_updated: "2025-12-27"
+schema_version: "2.1"
+
+# Update configuration
+updates:
+  check_frequency: weekly
+  update_channel: stable
+  auto_update: false
+  notify_on_update: true
+
+# Installed core markers
+core_markers:
+  ai_transitions:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    category: suspicious_presence
+    checksum: null  # Will be computed on first load
+    
+  personal_voice_markers:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    category: required_presence
+    checksum: null
+    
+  generic_phrases:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    category: suspicious_presence
+    checksum: null
+    
+  hedge_phrases:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    category: suspicious_presence
+    checksum: null
+    
+  inflated_vocabulary:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    category: suspicious_presence
+    checksum: null
+    
+  citation_markers:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    category: mixed
+    checksum: null
+
+  balance_markers:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    category: required_presence
+    checksum: null
+
+  emotional_language:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    category: required_presence
+    checksum: null
+
+  cognitive_diversity_markers:
+    version: "2.0.0"
+    installed_date: "2025-12-27"
+    category: required_presence
+    checksum: null
+    note: "Protective markers for neurodivergent thinking patterns"
+
+  ai_specific_organization:
+    version: "2.0.1"
+    installed_date: "2025-12-27"
+    category: suspicious_presence
+    checksum: null
+    no_cognitive_protection: true
+    note: "AI-specific organizational patterns (excessive headers, perfect balance, etc.) - NOT subject to cognitive diversity protection"
+
+  authentic_voice:
+    version: "2.1.0"
+    installed_date: "2025-12-27"
+    category: human_presence
+    checksum: null
+    weight_in_human_presence: 0.15
+    note: "Human presence detection - authentic voice markers (code-meshing, translanguaging, cultural grounding)"
+
+  productive_messiness:
+    version: "2.1.0"
+    installed_date: "2025-12-27"
+    category: human_presence
+    checksum: null
+    weight_in_human_presence: 0.10
+    note: "Human presence detection - thinking-in-progress markers (self-correction, revision thinking)"
+
+  cognitive_struggle:
+    version: "2.1.0"
+    installed_date: "2025-12-27"
+    category: human_presence
+    checksum: null
+    weight_in_human_presence: 0.20
+    note: "Human presence detection - intellectual engagement markers (metacognition, working through complexity)"
+
+  emotional_stakes:
+    version: "2.1.0"
+    installed_date: "2025-12-27"
+    category: human_presence
+    checksum: null
+    weight_in_human_presence: 0.20
+    note: "Human presence detection - personal investment markers (emotional engagement, stakes articulation)"
+
+  contextual_grounding:
+    version: "2.1.0"
+    installed_date: "2025-12-27"
+    category: human_presence
+    checksum: null
+    weight_in_human_presence: 0.35
+    priority: "CRITICAL"
+    note: "Human presence detection - course participation markers (class discussions, specific readings, assignment engagement) - HIGHEST WEIGHT, hardest to fake"
+
+# Custom user markers (populated by user)
+custom_markers: {}
+
+# Installed profiles
+profiles:
+  personal_reflection:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    
+  analytical_essay:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    
+  discussion_post:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    
+  rough_draft:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+    
+  research_paper:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+
+# Context profiles
+context_profiles:
+  community_college:
+    version: "2.0.0"
+    installed_date: "2025-12-26"
+
+# Marker categories
+categories:
+  suspicious_presence:
+    description: "Markers whose PRESENCE indicates concern"
+    markers:
+      - ai_transitions
+      - generic_phrases
+      - hedge_phrases
+      - inflated_vocabulary
+      - ai_specific_organization
+      
+  required_presence:
+    description: "Markers whose ABSENCE indicates concern, PRESENCE indicates authenticity"
+    markers:
+      - personal_voice_markers
+      - balance_markers
+      - emotional_language
+      - cognitive_diversity_markers
+
+  human_presence:
+    description: "Markers actively detecting human engagement across multiple dimensions (paradigm shift to presence-based detection)"
+    markers:
+      - authentic_voice
+      - productive_messiness
+      - cognitive_struggle
+      - emotional_stakes
+      - contextual_grounding
+    note: "These markers work in COMBINATION to create human signature. Contextual grounding (35%) weighted highest as hardest to fake."
+
+  mixed:
+    description: "Markers with both positive and negative patterns"
+    markers:
+      - citation_markers
+
+# Deprecated markers (no longer used)
+deprecated: []
+
+# Notes
+notes: |
+  This manifest tracks all installed detection markers and their versions.
+  
+  Marker files are located in:
+  - Core markers: config/dishonesty_markers/core/
+  - Custom markers: config/dishonesty_markers/custom/
+  - Profiles: config/profiles/
+  - Context profiles: config/context_profiles/
+  
+  To add custom markers, create YAML files in the custom/ directory
+  following the schema of existing markers.
+  
+  Updates are checked weekly but not auto-installed to ensure
+  instructor review of any changes to detection patterns.

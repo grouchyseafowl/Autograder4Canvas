@@ -1,0 +1,170 @@
+# Emotional Language Marker Configuration
+# Version 2.0.0
+# Presence indicates authentic personal engagement
+
+metadata:
+  marker_id: emotional_language
+  version: "2.0.0"
+  effective_date: "2025-12-26"
+  category: required_presence
+  pedagogical_context: |
+    Emotional language indicates genuine personal engagement with material.
+    AI-generated text typically lacks authentic emotional expression—it
+    produces generic, distanced language even when prompted to be personal.
+    
+    The ABSENCE of emotional markers in personal writing is concerning.
+    The PRESENCE of emotional markers is a positive authenticity indicator.
+
+markers:
+  explicit_emotions:
+    description: "Named emotional states"
+    patterns:
+      - pattern: "I felt"
+        weight: -0.4  # Negative = authenticity indicator
+      - pattern: "I feel"
+        weight: -0.4
+      - pattern: "made me feel"
+        weight: -0.5
+      - pattern: "frustrated"
+        weight: -0.3
+      - pattern: "excited"
+        weight: -0.3
+      - pattern: "confused"
+        weight: -0.3
+      - pattern: "angry"
+        weight: -0.3
+      - pattern: "happy"
+        weight: -0.3
+      - pattern: "sad"
+        weight: -0.3
+      - pattern: "nervous"
+        weight: -0.3
+      - pattern: "anxious"
+        weight: -0.3
+      - pattern: "relieved"
+        weight: -0.3
+      - pattern: "scared"
+        weight: -0.3
+      - pattern: "proud"
+        weight: -0.3
+      - pattern: "embarrassed"
+        weight: -0.4
+      - pattern: "overwhelmed"
+        weight: -0.3
+        
+  embodied_emotion:
+    description: "Physical sensations associated with emotion"
+    patterns:
+      - pattern: "my heart"
+        weight: -0.4
+      - pattern: "stomach dropped"
+        weight: -0.5
+      - pattern: "couldn't breathe"
+        weight: -0.5
+      - pattern: "tears"
+        weight: -0.4
+      - pattern: "I cried"
+        weight: -0.5
+      - pattern: "hands shaking"
+        weight: -0.5
+      - pattern: "couldn't sleep"
+        weight: -0.4
+      - pattern: "sick to my stomach"
+        weight: -0.5
+        
+  cognitive_emotional:
+    description: "Emotional responses to ideas/concepts"
+    patterns:
+      - pattern: "made me realize"
+        weight: -0.4
+      - pattern: "made me question"
+        weight: -0.4
+      - pattern: "made me think"
+        weight: -0.3
+      - pattern: "challenged my"
+        weight: -0.4
+      - pattern: "changed how I"
+        weight: -0.5
+      - pattern: "surprised me"
+        weight: -0.4
+      - pattern: "shocked me"
+        weight: -0.4
+      - pattern: "opened my eyes"
+        weight: -0.4
+      - pattern: "resonated with"
+        weight: -0.4
+      - pattern: "hit close to home"
+        weight: -0.5
+      - pattern: "struck a chord"
+        weight: -0.4
+        
+  informal_emotional:
+    description: "Casual emotional expressions (authentic but less formal)"
+    patterns:
+      - pattern: "pissed off"
+        weight: -0.5
+        note: "Strong informal language indicates authentic voice"
+      - pattern: "freaked out"
+        weight: -0.5
+      - pattern: "blew my mind"
+        weight: -0.4
+      - pattern: "weirded me out"
+        weight: -0.5
+      - pattern: "creeped me out"
+        weight: -0.5
+
+absence_detection:
+  enabled: true
+  minimum_for_personal_reflection: 1
+  minimum_for_discussion: 0
+  minimum_for_analytical: 0
+  
+  absence_interpretation: |
+    Complete absence of emotional language in a personal reflection
+    is concerning. Even analytical thinkers express SOME emotional
+    response when writing about personal experiences.
+    
+    Absence may indicate:
+    1. AI-generated content (AI doesn't have emotions)
+    2. Student avoiding genuine engagement
+    3. Cultural differences in expressing emotion (see context adjustments)
+    4. Student misunderstanding assignment expectations
+
+context_adjustments:
+  personal_reflection:
+    weight_multiplier: 1.5
+    rationale: "Emotional engagement is central to reflective writing"
+    
+  analytical_essay:
+    weight_multiplier: 0.5
+    rationale: "Less emotional expression expected in analytical work"
+    
+  neurodivergent:
+    weight_multiplier: 0.5
+    rationale: |
+      Some neurodivergent students express emotion differently.
+      Do not require explicit emotional language if other
+      authenticity markers are present.
+    minimum_required: 0
+    
+  cultural:
+    note: |
+      Some cultures discourage overt emotional expression in academic
+      writing. Consider cultural background before flagging absence.
+
+instructor_guidance:
+  interpreting_presence:
+    - "Emotional language is a POSITIVE authenticity indicator"
+    - "Informal emotional language (even profanity) can indicate authentic voice"
+    - "Cognitive-emotional markers show engagement with course concepts"
+    
+  interpreting_absence:
+    - "Check for other authenticity markers before concern"
+    - "Consider cultural and neurodivergent factors"
+    - "Absence + generic content = higher concern"
+    - "Absence + specific details = may be personal style"
+    
+  verification_questions:
+    - "How did this topic make you feel?"
+    - "What was your emotional response to the reading?"
+    - "Can you tell me more about the personal significance of this?"

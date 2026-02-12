@@ -25,11 +25,11 @@ try:
     HAS_UTILS = True
 except ImportError:
     HAS_UTILS = False
-    # Fallback subdirectory names
+    # Fallback subdirectory names (must match autograder_utils.py SUBDIRS)
     SUBDIRS = {
         "Academic_Dishonesty": "Academic Dishonesty Reports",
-        "Discussion_Forum": "Discussion Grades",
-        "Complete-Incomplete": "Assignment Grades",
+        "Discussion_Forum": "Discussion Forums",
+        "Complete-Incomplete": "Complete-Incomplete Assignments",
     }
 
 # === CONFIGURATION ===
@@ -71,32 +71,134 @@ SETTINGS_FILE = Path.home() / ".canvas_autograder_settings"
 
 def print_header():
     """Print welcome header."""
-    print("🎓 Canvas Autograder")
+    print("ðŸŽ“ Canvas Autograder")
     print("=" * 70)
     print()
+
+def open_url_in_browser(url):
+    """Open a URL in the default web browser."""
+    import webbrowser
+    try:
+        webbrowser.open(url)
+        return True
+    except Exception:
+        return False
 
 def check_python_version():
     """Verify Python version is 3.7+."""
     version = sys.version_info
     if version < (3, 7):
-        print("❌ Python 3.7 or higher is required.")
+        print("âŒ Python 3.7 or higher is required.")
         print(f"   Current version: {version.major}.{version.minor}.{version.micro}")
         print()
-        print("Please install Python 3.7+ from https://www.python.org/downloads/")
-        sys.exit(1)
+        print("=" * 70)
+        print("ðŸ“¥ PYTHON INSTALLATION REQUIRED")
+        print("=" * 70)
+        print()
+        print("To use Canvas Autograder, you need Python 3.7 or higher.")
+        print()
+        print("Download from: https://www.python.org/downloads/")
+        print()
+        print("IMPORTANT for Windows users:")
+        print("  âœ“ CHECK the box 'Add Python to PATH' during installation")
+        print("  âœ“ This is required for the autograder to work properly")
+        print()
+        print("Options:")
+        print("  [1] Open Python download page in browser")
+        print("  [2] Exit and install manually")
+        print()
+        
+        try:
+            choice = input("Choose option (1 or 2, default=2): ").strip() or "2"
+            
+            if choice == "1":
+                print("\nðŸŒ Opening Python download page in your browser...")
+                if open_url_in_browser("https://www.python.org/downloads/"):
+                    print("âœ… Browser opened successfully")
+                else:
+                    print("âš ï¸  Could not open browser automatically")
+                    print("   Please manually visit: https://www.python.org/downloads/")
+                
+                print()
+                print("After installing Python:")
+                print("  1. Make sure to CHECK 'Add Python to PATH' (Windows)")
+                print("  2. Complete the installation")
+                print("  3. Press Enter to restart this program")
+                print()
+                input("Press Enter after installing Python to continue...")
+                
+                # Restart the script
+                print("\nðŸ”„ Restarting Canvas Autograder...\n")
+                python = sys.executable
+                os.execl(python, python, *sys.argv)
+            else:
+                print("\nðŸ‘‹ Please install Python 3.7+ and run this program again.")
+                sys.exit(1)
+        except (KeyboardInterrupt, EOFError):
+            print("\n\nðŸ‘‹ Goodbye!")
+            sys.exit(1)
     
-    print(f"✅ Python {version.major}.{version.minor}.{version.micro}")
+    print(f"âœ… Python {version.major}.{version.minor}.{version.micro}")
 
 def check_pip():
     """Verify pip is available."""
     try:
         import pip
-        print("✅ pip available")
+        print("âœ… pip available")
         return True
     except ImportError:
-        print("❌ pip is not installed.")
-        print("   Install pip: https://pip.pypa.io/en/stable/installation/")
-        sys.exit(1)
+        print("âŒ pip is not installed.")
+        print()
+        print("=" * 70)
+        print("ðŸ“¥ PIP INSTALLATION REQUIRED")
+        print("=" * 70)
+        print()
+        print("pip is Python's package installer and is required for Canvas Autograder.")
+        print()
+        print("Installation instructions: https://pip.pypa.io/en/stable/installation/")
+        print()
+        print("Most Python installations include pip by default.")
+        print("If you just installed Python, try restarting your terminal/command prompt.")
+        print()
+        print("Options:")
+        print("  [1] Open pip installation guide in browser")
+        print("  [2] Try restarting this script (if you just installed Python)")
+        print("  [3] Exit")
+        print()
+        
+        try:
+            choice = input("Choose option (1/2/3, default=3): ").strip() or "3"
+            
+            if choice == "1":
+                print("\nðŸŒ Opening pip installation guide in your browser...")
+                if open_url_in_browser("https://pip.pypa.io/en/stable/installation/"):
+                    print("âœ… Browser opened successfully")
+                else:
+                    print("âš ï¸  Could not open browser automatically")
+                    print("   Please manually visit: https://pip.pypa.io/en/stable/installation/")
+                
+                print()
+                print("After installing pip:")
+                print("  1. Follow the installation instructions on the website")
+                print("  2. Press Enter to restart this program")
+                print()
+                input("Press Enter after installing pip to continue...")
+                
+                # Restart the script
+                print("\nðŸ”„ Restarting Canvas Autograder...\n")
+                python = sys.executable
+                os.execl(python, python, *sys.argv)
+            elif choice == "2":
+                # Restart the script
+                print("\nðŸ”„ Restarting Canvas Autograder...\n")
+                python = sys.executable
+                os.execl(python, python, *sys.argv)
+            else:
+                print("\nðŸ‘‹ Please install pip and run this program again.")
+                sys.exit(1)
+        except (KeyboardInterrupt, EOFError):
+            print("\n\nðŸ‘‹ Goodbye!")
+            sys.exit(1)
 
 def get_venv_python():
     """Get path to Python executable in virtual environment."""
@@ -156,7 +258,7 @@ def save_settings(settings):
                 f.write(f"{key}={value}\n")
         return True
     except Exception as e:
-        print(f"⚠️  Could not save settings: {e}")
+        print(f"âš ï¸  Could not save settings: {e}")
         return False
 
 def toggle_auto_open():
@@ -167,7 +269,7 @@ def toggle_auto_open():
     
     if save_settings(settings):
         new_state = "ON" if settings["auto_open_folder"] else "OFF"
-        print(f"✅ Auto-open Grading Rationales folder is now {new_state}")
+        print(f"âœ… Auto-open Grading Rationales folder is now {new_state}")
     
     return settings["auto_open_folder"]
 
@@ -181,7 +283,7 @@ def configure_cleanup():
     current_targets = settings.get("cleanup_targets", "all")
     
     print()
-    print("🗑️  Automatic Cleanup Settings")
+    print("ðŸ—‘ï¸  Automatic Cleanup Settings")
     print("=" * 50)
     print()
     print("This controls what happens to old grading rationale files")
@@ -216,7 +318,7 @@ def configure_cleanup():
         elif mode_choice == 'T':
             settings["cleanup_mode"] = "trash"
         elif mode_choice != '':
-            print("❌ Invalid choice. Keeping current mode.")
+            print("âŒ Invalid choice. Keeping current mode.")
         
         # Only ask for threshold and targets if mode is not "none"
         if settings.get("cleanup_mode", "none") != "none":
@@ -229,11 +331,11 @@ def configure_cleanup():
                 try:
                     days = int(days_input)
                     if days < 1:
-                        print("❌ Days must be at least 1. Keeping current threshold.")
+                        print("âŒ Days must be at least 1. Keeping current threshold.")
                     else:
                         settings["cleanup_threshold_days"] = days
                 except ValueError:
-                    print("❌ Invalid number. Keeping current threshold.")
+                    print("âŒ Invalid number. Keeping current threshold.")
             
             # Ask which files to clean up
             print()
@@ -283,7 +385,7 @@ def configure_cleanup():
                         valid_targets = list(dict.fromkeys(valid_targets))
                         settings["cleanup_targets"] = ",".join(valid_targets)
                     else:
-                        print("❌ No valid selections. Keeping current targets.")
+                        print("âŒ No valid selections. Keeping current targets.")
         
         if save_settings(settings):
             new_mode = mode_display.get(settings.get("cleanup_mode", "none"), "None")
@@ -291,14 +393,14 @@ def configure_cleanup():
             new_targets = settings.get("cleanup_targets", "all")
             print()
             if settings.get("cleanup_mode", "none") == "none":
-                print(f"✅ Cleanup mode set to: {new_mode}")
+                print(f"âœ… Cleanup mode set to: {new_mode}")
             else:
-                print(f"✅ Cleanup mode set to: {new_mode}")
+                print(f"âœ… Cleanup mode set to: {new_mode}")
                 print(f"   Threshold: {new_days} days")
                 print(f"   Targets: {new_targets}")
     
     except (KeyboardInterrupt, EOFError):
-        print("\n⏭️  Cancelled. Settings unchanged.")
+        print("\nâ­ï¸  Cancelled. Settings unchanged.")
 
 def run_onetime_cleanup():
     """Run a one-time cleanup with user-specified options."""
@@ -306,7 +408,7 @@ def run_onetime_cleanup():
     base_dir = get_base_exports_dir()
     
     print()
-    print("🗑️  One-Time Cleanup")
+    print("ðŸ—‘ï¸  One-Time Cleanup")
     print("=" * 50)
     print()
     print(f"Grading Rationales folder: {base_dir}")
@@ -328,11 +430,11 @@ def run_onetime_cleanup():
         mode_choice = input("Choose (A/T/C): ").strip().upper()
         
         if mode_choice == 'C' or mode_choice == '':
-            print("⏭️  Cleanup cancelled.")
+            print("â­ï¸  Cleanup cancelled.")
             return
         
         if mode_choice not in ('A', 'T'):
-            print("❌ Invalid choice. Cleanup cancelled.")
+            print("âŒ Invalid choice. Cleanup cancelled.")
             return
         
         # Ask for threshold
@@ -347,10 +449,10 @@ def run_onetime_cleanup():
             try:
                 threshold_days = int(days_input)
                 if threshold_days < 1:
-                    print("❌ Days must be at least 1. Using default of 180.")
+                    print("âŒ Days must be at least 1. Using default of 180.")
                     threshold_days = 180
             except ValueError:
-                print("❌ Invalid number. Using default of 180.")
+                print("âŒ Invalid number. Using default of 180.")
                 threshold_days = 180
         
         # Ask which tools/file types to clean
@@ -377,7 +479,7 @@ def run_onetime_cleanup():
         selection = input("Enter selection: ").strip().upper()
         
         if selection == 'C' or selection == '':
-            print("⏭️  Cleanup cancelled.")
+            print("â­ï¸  Cleanup cancelled.")
             return
         
         # Parse selection
@@ -410,7 +512,7 @@ def run_onetime_cleanup():
                     cleanup_targets.append(("Discussion_Forum", "csv"))
         
         if not cleanup_targets:
-            print("❌ No valid selections. Cleanup cancelled.")
+            print("âŒ No valid selections. Cleanup cancelled.")
             return
         
         # Remove duplicates while preserving order
@@ -429,13 +531,13 @@ def run_onetime_cleanup():
         for script_type, file_type in cleanup_targets:
             info = script_type_info.get(script_type, {})
             folder_name = info.get("subdir", script_type)
-            print(f"  • {folder_name}: {file_type.upper()} files")
+            print(f"  â€¢ {folder_name}: {file_type.upper()} files")
         
         print()
         confirm = input("Proceed? (y/N): ").strip().lower()
         
         if confirm != 'y':
-            print("⏭️  Cleanup cancelled.")
+            print("â­ï¸  Cleanup cancelled.")
             return
         
         # Perform cleanup
@@ -444,7 +546,7 @@ def run_onetime_cleanup():
             target_dir = base_dir / info.get("subdir", script_type)
             
             if not target_dir.exists():
-                print(f"\nℹ️  Folder not found: {info.get('subdir', script_type)} (skipping)")
+                print(f"\nâ„¹ï¸  Folder not found: {info.get('subdir', script_type)} (skipping)")
                 continue
             
             print()
@@ -456,36 +558,80 @@ def run_onetime_cleanup():
                 trash_files_by_type(target_dir, script_type, file_type, threshold_days)
         
         print()
-        print("✅ One-time cleanup complete!")
+        print("âœ… One-time cleanup complete!")
     
     except (KeyboardInterrupt, EOFError):
-        print("\n⏭️  Cleanup cancelled.")
+        print("\nâ­ï¸  Cleanup cancelled.")
 
 def create_virtual_environment():
     """Create virtual environment if it doesn't exist."""
     if VENV_DIR.exists():
-        print("✅ Virtual environment exists")
+        print("âœ… Virtual environment exists")
         return
     
-    print("📦 Creating virtual environment...")
+    print("ðŸ“¦ Creating virtual environment...")
     try:
         subprocess.run(
             [sys.executable, "-m", "venv", str(VENV_DIR)],
             check=True,
             capture_output=True
         )
-        print("✅ Virtual environment created")
+        print("âœ… Virtual environment created")
     except subprocess.CalledProcessError as e:
-        print(f"❌ Failed to create virtual environment: {e}")
+        print(f"âŒ Failed to create virtual environment: {e}")
         sys.exit(1)
 
-def install_dependencies():
-    """Install required dependencies."""
+def check_dependencies_installed():
+    """Check if required dependencies are already installed."""
     if not REQUIREMENTS_FILE.exists():
-        print(f"❌ requirements.txt not found at: {REQUIREMENTS_FILE}")
+        return False
+    
+    pip_exe = get_venv_pip()
+    python_exe = get_venv_python()
+    
+    if not pip_exe.exists() or not python_exe.exists():
+        return False
+    
+    try:
+        # Read requirements
+        with open(REQUIREMENTS_FILE, 'r') as f:
+            requirements = [line.strip().split('==')[0].split('>=')[0].split('[')[0] 
+                          for line in f if line.strip() and not line.startswith('#')]
+        
+        # Check if each package is installed
+        result = subprocess.run(
+            [str(pip_exe), "list", "--format=freeze"],
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode != 0:
+            return False
+        
+        installed = {line.split('==')[0].lower() for line in result.stdout.strip().split('\n') if '==' in line}
+        
+        for req in requirements:
+            if req.lower() not in installed:
+                return False
+        
+        return True
+        
+    except Exception:
+        return False
+
+
+def install_dependencies():
+    """Install required dependencies if not already installed."""
+    if not REQUIREMENTS_FILE.exists():
+        print(f"âŒ requirements.txt not found at: {REQUIREMENTS_FILE}")
         sys.exit(1)
     
-    print("📦 Installing dependencies...")
+    # Check if dependencies are already installed
+    if check_dependencies_installed():
+        print("âœ… Dependencies already installed")
+        return
+    
+    print("ðŸ“¦ Installing dependencies...")
     
     pip_exe = get_venv_pip()
     
@@ -504,22 +650,22 @@ def install_dependencies():
             capture_output=True
         )
         
-        print("✅ Dependencies installed")
+        print("âœ… Dependencies installed")
     except subprocess.CalledProcessError as e:
-        print(f"❌ Failed to install dependencies: {e}")
+        print(f"âŒ Failed to install dependencies: {e}")
         print(f"   Error output: {e.stderr.decode() if e.stderr else 'N/A'}")
         sys.exit(1)
 
 def verify_structure():
     """Verify project structure is correct."""
     if not PROGRAMS_DIR.exists():
-        print(f"❌ Missing 'Programs/' directory at: {PROGRAMS_DIR}")
+        print(f"âŒ Missing 'Programs/' directory at: {PROGRAMS_DIR}")
         print()
         print("Expected: Programs/ folder in same directory as run_autograder.py")
         sys.exit(1)
     
     if not REQUIREMENTS_FILE.exists():
-        print(f"❌ Missing 'requirements.txt' at: {REQUIREMENTS_FILE}")
+        print(f"âŒ Missing 'requirements.txt' at: {REQUIREMENTS_FILE}")
         sys.exit(1)
 
 def get_script_type_info():
@@ -534,13 +680,13 @@ def get_script_type_info():
         "Discussion_Forum": {
             "display": "Discussion Forum Autograder",
             "pattern": "*Discussion*Forum*.py",
-            "subdir": SUBDIRS.get("Discussion_Forum", "Discussion Grades"),
+            "subdir": SUBDIRS.get("Discussion_Forum", "Discussion Forums"),
             "subdir_key": "Discussion_Forum"
         },
         "Complete-Incomplete": {
             "display": "Complete/Incomplete Autograder",
             "pattern": "*Complete*Incomplete*.py",
-            "subdir": SUBDIRS.get("Complete-Incomplete", "Assignment Grades"),
+            "subdir": SUBDIRS.get("Complete-Incomplete", "Complete-Incomplete Assignments"),
             "subdir_key": "Complete-Incomplete"
         }
     }
@@ -557,15 +703,16 @@ def find_scripts():
             found_scripts[script_type] = {
                 "path": matches[0],
                 "display": info["display"],
-                "subdir": info["subdir"]
+                "subdir": info["subdir"],
+                "subdir_key": info["subdir_key"]  # Include subdir_key for cleanup identification
             }
     
     if not found_scripts:
-        print("❌ No autograder scripts found in:", PROGRAMS_DIR)
+        print("âŒ No autograder scripts found in:", PROGRAMS_DIR)
         print()
         print("Looking for:")
         for info in script_types.values():
-            print(f"   • {info['pattern']}")
+            print(f"   â€¢ {info['pattern']}")
         sys.exit(1)
     
     return found_scripts
@@ -575,7 +722,7 @@ def select_script(scripts):
     base_dir = get_base_exports_dir()
     
     print()
-    print("🎓 Canvas Autograder - Main Menu")
+    print("ðŸŽ“ Canvas Autograder - Main Menu")
     print("=" * 50)
     print()
     print("Grading Tools:")
@@ -608,22 +755,24 @@ def select_script(scripts):
         cleanup_status = f"{mode_label} after {cleanup_days} days"
     print(f"  [C] Configure automatic cleanup of old files [{cleanup_status}]")
     print(f"  [R] Run one-time cleanup now")
+    print(f"  [T] Change Canvas API token")
     
     print(f"  [O] Open Grading Rationales folder")
+    print(f"  [H] Help - Definitions and Instructions")
     print()
     print(f"  [Q] Quit")
     print()
     
     while True:
         try:
-            choice = input(f"Enter choice (1-{len(script_list)}, S, A, C, R, O, or Q): ").strip().upper()
+            choice = input(f"Enter choice (1-{len(script_list)}, S, A, C, R, T, O, H, or Q): ").strip().upper()
             
             # Check for settings options
             if choice == 'S':
                 if HAS_UTILS:
                     change_output_directory()
                 else:
-                    print("⚠️  Settings not available (utilities module not found)")
+                    print("âš ï¸  Settings not available (utilities module not found)")
                 # Return None to indicate we should show the menu again
                 return None
             elif choice == 'A':
@@ -635,8 +784,11 @@ def select_script(scripts):
             elif choice == 'R':
                 run_onetime_cleanup()
                 return None
+            elif choice == 'T':
+                change_canvas_token()
+                return None
             elif choice == 'O':
-                print(f"📂 Opening: {base_dir}")
+                print(f"ðŸ“‚ Opening: {base_dir}")
                 if HAS_UTILS:
                     open_folder(base_dir)
                 else:
@@ -649,8 +801,11 @@ def select_script(scripts):
                     else:
                         subprocess.run(['xdg-open', str(base_dir)])
                 return None
+            elif choice == 'H':
+                show_help_menu()
+                return None
             elif choice == 'Q':
-                print("\n👋 Goodbye!")
+                print("\nðŸ‘‹ Goodbye!")
                 sys.exit(0)
             
             # Check for grading tool selection
@@ -659,11 +814,11 @@ def select_script(scripts):
                 selected_type, selected_info = script_list[choice_num - 1]
                 return selected_info
             else:
-                print(f"❌ Please enter a number between 1 and {len(script_list)}, S, A, C, R, O, or Q")
+                print(f"âŒ Please enter a number between 1 and {len(script_list)}, S, A, C, R, T, O, H, or Q")
         except ValueError:
-            print("❌ Invalid input. Please try again.")
+            print("âŒ Invalid input. Please try again.")
         except (KeyboardInterrupt, EOFError):
-            print("\n\n👋 Goodbye!")
+            print("\n\nðŸ‘‹ Goodbye!")
             sys.exit(0)
 
 def get_canvas_token():
@@ -674,28 +829,94 @@ def get_canvas_token():
         return token
     
     print()
-    print("❌ CANVAS_API_TOKEN not set.")
+    print("=" * 70)
+    print("ðŸ”‘ CANVAS API TOKEN REQUIRED")
+    print("=" * 70)
+    print()
+    print("To use Canvas Autograder, you need a Canvas API access token.")
+    print("This token allows the program to access your Canvas courses and grades.")
+    print()
+    print("=" * 70)
+    print("HOW TO GET YOUR CANVAS API TOKEN:")
+    print("=" * 70)
+    print()
+    print("1. Log in to Canvas (e.g., cabrillo.instructure.com)")
+    print("2. Click your profile picture (top-left) â†’ Settings")
+    print("3. Scroll down to 'Approved Integrations'")
+    print("4. Click '+ New Access Token'")
+    print("5. Enter a purpose (e.g., 'Autograder')")
+    print("6. Click 'Generate Token'")
+    print("7. COPY THE TOKEN immediately (you can't see it again!)")
+    print()
+    print("âš ï¸  IMPORTANT: Keep your token secret - it has access to your Canvas!")
+    print()
+    print("=" * 70)
     print()
     print("Options:")
-    print("  [1] Enter token once (not saved)")
-    print("  [2] Save token permanently")
+    print("  [1] I have my token - enter it now (session only)")
+    print("  [2] I have my token - save it permanently")
+    print("  [3] Open Canvas login page in browser to get token")
+    print("  [4] Exit (get token later)")
     print()
     
     while True:
         try:
-            choice = input("Choose (1 or 2): ").strip()
-            if choice in ["1", "2"]:
+            choice = input("Choose option (1/2/3/4, default=4): ").strip() or "4"
+            if choice in ["1", "2", "3", "4"]:
                 break
-            print("❌ Please enter 1 or 2")
+            print("âŒ Please enter 1, 2, 3, or 4")
         except (KeyboardInterrupt, EOFError):
-            print("\n\n❌ Cancelled by user")
+            print("\n\nâŒ Cancelled by user")
             sys.exit(0)
     
+    if choice == "3":
+        # Open Canvas in browser
+        print("\nðŸŒ Opening Canvas in your browser...")
+        print()
+        print("Default Canvas URL: https://cabrillo.instructure.com")
+        print()
+        custom = input("Use a different Canvas URL? (Enter URL or press Enter for default): ").strip()
+        
+        canvas_url = custom if custom else "https://cabrillo.instructure.com"
+        
+        if open_url_in_browser(canvas_url):
+            print(f"âœ… Opened {canvas_url} in your browser")
+        else:
+            print("âš ï¸  Could not open browser automatically")
+            print(f"   Please manually visit: {canvas_url}")
+        
+        print()
+        print("After getting your Canvas API token:")
+        print("  1. Follow the steps listed above to generate a token")
+        print("  2. Copy the token")
+        print("  3. Return here and choose option 1 or 2")
+        print()
+        
+        # Ask again after opening browser
+        return get_canvas_token()
+    
+    elif choice == "4":
+        print("\nðŸ‘‹ Please get your Canvas API token and run this program again.")
+        print()
+        print("Quick reference:")
+        print("  Canvas â†’ Profile â†’ Settings â†’ Approved Integrations â†’ New Access Token")
+        sys.exit(0)
+    
+    # Options 1 or 2 - get the token
     print()
-    token = getpass.getpass("Enter Canvas API token: ")
+    print("Paste your Canvas API token below:")
+    print("(You should be able to see the token as you type)")
+    print()
+    token = input("Canvas API Token: ").strip()
+    
+    if not token:
+        print("âŒ No token entered.")
+        sys.exit(0)
     
     if choice == "2":
         save_token_permanently(token)
+    else:
+        print("âœ… Token accepted (session only - will need to re-enter next time)")
     
     return token
 
@@ -733,7 +954,7 @@ def save_token_permanently(token):
             with open(rc_file, 'r') as f:
                 content = f.read()
                 if "CANVAS_API_TOKEN=" in content:
-                    print(f"⚠️  Token variable already exists in {rc_file}")
+                    print(f"âš ï¸  Token variable already exists in {rc_file}")
                     return
         
         # Append token to file
@@ -742,10 +963,488 @@ def save_token_permanently(token):
             f.write("# Canvas API token for autograder\n")
             f.write(f'export CANVAS_API_TOKEN="{token}"\n')
         
-        print(f"✅ Saved token to {rc_file}")
+        print(f"âœ… Saved token to {rc_file}")
         print("   (Restart your terminal for it to take effect)")
     except Exception as e:
-        print(f"⚠️  Could not save token: {e}")
+        print(f"âš ï¸  Could not save token: {e}")
+
+def show_help_menu():
+    """Display help menu with definitions and instructions."""
+    while True:
+        print()
+        print("=" * 70)
+        print("ℹ️  CANVAS AUTOGRADER HELP")
+        print("=" * 70)
+        print()
+        print("Help Topics:")
+        print("  [1] What is an API token?")
+        print("  [2] How to get/change my Canvas API token")
+        print("  [3] What are 'Grading Rationales'?")
+        print("  [4] What does 'autograding' mean?")
+        print("  [5] Understanding file cleanup options")
+        print("  [6] Troubleshooting common issues")
+        print()
+        print("  [B] Back to main menu")
+        print()
+        
+        try:
+            choice = input("Select a topic (1-6 or B): ").strip().upper()
+            
+            if choice == 'B':
+                return
+            elif choice == '1':
+                print()
+                print("=" * 70)
+                print("WHAT IS AN API TOKEN?")
+                print("=" * 70)
+                print()
+                print("An API token is like a special password that allows this program")
+                print("to access your Canvas account safely.")
+                print()
+                print("Think of it like a key that only works for specific tasks:")
+                print("  ✓ The program can read your course information")
+                print("  ✓ The program can view student submissions")
+                print("  ✓ The program can enter grades")
+                print("  ✗ But it can't change your personal settings or password")
+                print()
+                print("Why use a token instead of your Canvas password?")
+                print("  ✓ More secure - if someone gets the token, they can't")
+                print("    access everything in your Canvas account")
+                print("  ✓ You can delete/disable the token anytime without changing")
+                print("    your password")
+                print("  ✓ The program never sees or stores your actual Canvas password")
+                print()
+                print("⚠️  IMPORTANT: Keep your API token private! Don't share it with")
+                print("   others, just like you wouldn't share your password.")
+                print()
+                input("Press Enter to continue...")
+                
+            elif choice == '2':
+                print()
+                print("=" * 70)
+                print("HOW TO GET/CHANGE YOUR CANVAS API TOKEN")
+                print("=" * 70)
+                print()
+                print("GETTING YOUR TOKEN FOR THE FIRST TIME:")
+                print()
+                print("1. Log in to your Canvas site (e.g., cabrillo.instructure.com)")
+                print("2. Click on your profile picture or name in the top-left corner")
+                print("3. Select 'Settings' from the dropdown menu")
+                print("4. Scroll down to the section called 'Approved Integrations'")
+                print("5. Click the '+ New Access Token' button")
+                print("6. In the popup window:")
+                print("   - Enter a name like 'Autograder' in the 'Purpose' field")
+                print("   - Leave the expiration date blank (or set it far in the future)")
+                print("   - Click 'Generate Token'")
+                print("7. IMPORTANT: Copy the token immediately!")
+                print("   - Canvas shows it only once")
+                print("   - If you close the window, you'll need to create a new token")
+                print()
+                print("CHANGING YOUR TOKEN:")
+                print()
+                print("If you need to change your token (e.g., it expired or was lost):")
+                print("1. From the main menu, select [T] 'Change Canvas API token'")
+                print("2. Follow the prompts to enter your new token")
+                print("3. Choose whether to save it permanently or just for this session")
+                print()
+                print("You can also delete old tokens from Canvas:")
+                print("1. Go to Canvas → Settings → Approved Integrations")
+                print("2. Find the old token in the list")
+                print("3. Click the 'X' or 'Delete' button next to it")
+                print()
+                input("Press Enter to continue...")
+                
+            elif choice == '3':
+                print()
+                print("=" * 70)
+                print("WHAT ARE 'GRADING RATIONALES'?")
+                print("=" * 70)
+                print()
+                print("'Grading Rationales' is the folder where this program saves all")
+                print("the reports and spreadsheets it creates.")
+                print()
+                print("When you run an autograding tool, it creates files like:")
+                print("  📄 Spreadsheets (.xlsx files) with student scores")
+                print("  📄 Reports (.csv files) for uploading to Canvas")
+                print("  📄 Academic dishonesty reports (if you run that check)")
+                print()
+                print("By default, these files are saved in:")
+                print("  📁 Documents/Autograder Rationales/")
+                print()
+                print("Inside this folder, files are organized by type:")
+                print("  📂 Academic Dishonesty Reports/")
+                print("  📂 Discussion Forums/")
+                print("  📂 Complete-Incomplete Assignments/")
+                print()
+                print("You can change where files are saved:")
+                print("  - Select [S] from the main menu")
+                print("  - Choose a new location (like your Desktop)")
+                print()
+                input("Press Enter to continue...")
+                
+            elif choice == '4':
+                print()
+                print("=" * 70)
+                print("WHAT DOES 'AUTOGRADING' MEAN?")
+                print("=" * 70)
+                print()
+                print("'Autograding' means the computer automatically checks student work")
+                print("and assigns grades based on rules you've set up.")
+                print()
+                print("This program includes three autograding tools:")
+                print()
+                print("1. DISCUSSION FORUM AUTOGRADER")
+                print("   - Checks if students posted in discussion forums")
+                print("   - Verifies they met requirements (word count, replies, etc.)")
+                print("   - Gives credit for complete participation")
+                print()
+                print("2. COMPLETE/INCOMPLETE AUTOGRADER")
+                print("   - For assignments graded as Complete or Incomplete")
+                print("   - Checks if student submitted something")
+                print("   - Awards full credit if they turned it in")
+                print()
+                print("3. ACADEMIC DISHONESTY CHECK")
+                print("   - Scans student work for potential AI usage or copying")
+                print("   - Creates a report for YOU to review")
+                print("   - Does NOT automatically fail students")
+                print("   - You make the final decision on each case")
+                print()
+                print("⚠️  Important: These tools help speed up grading, but you should")
+                print("   always review the results before finalizing grades!")
+                print()
+                input("Press Enter to continue...")
+                
+            elif choice == '5':
+                print()
+                print("=" * 70)
+                print("UNDERSTANDING FILE CLEANUP OPTIONS")
+                print("=" * 70)
+                print()
+                print("Over time, this program creates many files. The cleanup feature")
+                print("helps you manage old files automatically.")
+                print()
+                print("THREE CLEANUP OPTIONS:")
+                print()
+                print("1. NONE (default)")
+                print("   - All files are kept forever")
+                print("   - You manually delete files when needed")
+                print("   - Best if you want complete control")
+                print()
+                print("2. ARCHIVE")
+                print("   - Old files are moved to an 'Archived' subfolder")
+                print("   - Files are still accessible if you need them")
+                print("   - Keeps your main folders tidy")
+                print("   - Recommended for most users")
+                print()
+                print("3. TRASH/RECYCLE BIN")
+                print("   - Old files are moved to your computer's Trash/Recycle Bin")
+                print("   - You can restore them if needed")
+                print("   - Files are permanently deleted when you empty the trash")
+                print()
+                print("You can set:")
+                print("  ➡️  How old files must be before cleanup (default: 180 days)")
+                print("  ➡️  Which file types to clean up (CSV, Excel, or both)")
+                print()
+                print("To configure: Select [C] from the main menu")
+                print("To run cleanup once: Select [R] from the main menu")
+                print()
+                input("Press Enter to continue...")
+                
+            elif choice == '6':
+                print()
+                print("=" * 70)
+                print("TROUBLESHOOTING COMMON ISSUES")
+                print("=" * 70)
+                print()
+                print("PROBLEM: 'Invalid API token' or 'Authentication failed'")
+                print("SOLUTION:")
+                print("  1. Your token may have expired - create a new one in Canvas")
+                print("  2. Select [T] from the main menu to update your token")
+                print("  3. Make sure you copied the entire token (no spaces)")
+                print()
+                print("PROBLEM: Can't find the output files")
+                print("SOLUTION:")
+                print("  1. Check the 'Grading Rationales' folder in your Documents")
+                print("  2. Select [O] from the main menu to open the folder")
+                print("  3. Look inside the subfolders (Academic Dishonesty, etc.)")
+                print()
+                print("PROBLEM: Program crashes or shows errors")
+                print("SOLUTION:")
+                print("  1. Make sure you're connected to the internet")
+                print("  2. Check that your Canvas site is accessible")
+                print("  3. Try running the program again")
+                print("  4. If it keeps failing, contact your IT support")
+                print()
+                print("PROBLEM: Grades aren't uploading to Canvas")
+                print("SOLUTION:")
+                print("  1. The autograder creates files - YOU upload them to Canvas")
+                print("  2. Open the Excel/CSV file it created")
+                print("  3. In Canvas, use the grade import feature")
+                print("  4. Upload the file the autograder created")
+                print()
+                print("PROBLEM: Want to change where files are saved")
+                print("SOLUTION:")
+                print("  1. Select [S] from the main menu")
+                print("  2. Enter the full path to your preferred folder")
+                print("  3. Or press Enter to browse and select a folder")
+                print()
+                input("Press Enter to continue...")
+                
+            else:
+                print("❌ Please enter a number from 1-6 or B")
+                
+        except (KeyboardInterrupt, EOFError):
+            print("\n")
+            return
+
+
+def change_canvas_token():
+    """Allow user to change their Canvas API token."""
+    print()
+    print("=" * 70)
+    print("🔑 CHANGE CANVAS API TOKEN")
+    print("=" * 70)
+    print()
+    print("This will update your Canvas API token.")
+    print()
+    print("Options:")
+    print("  [1] I need help getting a new token from Canvas")
+    print("  [2] I have a new token ready - enter it now")
+    print("  [3] Remove saved token (you'll be asked each session)")
+    print("  [4] Cancel - go back to main menu")
+    print()
+    
+    try:
+        choice = input("Choose option (1/2/3/4, default=4): ").strip() or "4"
+        
+        if choice == "1":
+            # Show instructions for getting a token
+            print()
+            print("=" * 70)
+            print("HOW TO GET YOUR CANVAS API TOKEN")
+            print("=" * 70)
+            print()
+            print("Follow these steps to get a new token from Canvas:")
+            print()
+            print("1. Open Canvas in your web browser")
+            print("   (e.g., cabrillo.instructure.com)")
+            print()
+            print("2. Click on your profile picture or name in the top-left corner")
+            print()
+            print("3. Select 'Settings' from the dropdown menu")
+            print()
+            print("4. Scroll down to the section called 'Approved Integrations'")
+            print()
+            print("5. Click the '+ New Access Token' button")
+            print()
+            print("6. In the popup window:")
+            print("   - Purpose: Enter 'Autograder' (or any name you prefer)")
+            print("   - Expiration: Leave blank or set a far future date")
+            print("   - Click 'Generate Token'")
+            print()
+            print("7. ⚠️  IMPORTANT: Copy the token IMMEDIATELY!")
+            print("   - Canvas only shows it once")
+            print("   - If you close the window, you'll need to create a new one")
+            print()
+            print("=" * 70)
+            print()
+            print("What would you like to do?")
+            print("  [1] Open Canvas in browser to get my token")
+            print("  [2] I have my token - enter it now")
+            print("  [3] Cancel - go back to main menu")
+            print()
+            
+            sub_choice = input("Choose option (1/2/3, default=3): ").strip() or "3"
+            
+            if sub_choice == "1":
+                # Open Canvas in browser
+                print()
+                print("Default Canvas URL: https://cabrillo.instructure.com")
+                print()
+                custom = input("Press Enter for default, or type your Canvas URL: ").strip()
+                canvas_url = custom if custom else "https://cabrillo.instructure.com"
+                
+                print()
+                print(f"🌐 Opening {canvas_url} in your browser...")
+                if open_url_in_browser(canvas_url):
+                    print("✅ Browser opened")
+                else:
+                    print("⚠️  Could not open browser automatically")
+                    print(f"   Please manually visit: {canvas_url}")
+                
+                print()
+                print("After you get your token from Canvas, come back here.")
+                print()
+                print("What would you like to do?")
+                print("  [1] I have my token - enter it now")
+                print("  [2] Cancel - I'll do this later")
+                print()
+                
+                token_choice = input("Choose option (1/2, default=2): ").strip() or "2"
+                
+                if token_choice == "1":
+                    # Fall through to token entry
+                    pass
+                else:
+                    print("❌ Cancelled - no changes made to your token")
+                    return
+            elif sub_choice == "2":
+                # Fall through to token entry
+                pass
+            else:
+                print("❌ Cancelled - no changes made to your token")
+                return
+            
+            # Token entry section (reached from sub_choice 1 or 2)
+            print()
+            print("Enter your new Canvas API token below:")
+            print("(You can paste it - you should see the text as you type)")
+            print()
+            print("Or type 'cancel' to abort without making changes")
+            print()
+            new_token = input("Canvas API Token: ").strip()
+            
+            if not new_token or new_token.lower() == 'cancel':
+                print("❌ Cancelled - no changes made to your token")
+                return
+            
+            print()
+            print("How should this token be saved?")
+            print("  [1] Session only (you'll need to re-enter it next time)")
+            print("  [2] Save permanently (recommended)")
+            print("  [3] Cancel - don't save this token")
+            print()
+            save_choice = input("Choose (1/2/3, default=2): ").strip() or "2"
+            
+            if save_choice == "3":
+                print("❌ Cancelled - no changes made to your token")
+                return
+            elif save_choice == "2":
+                # First remove old token if it exists
+                remove_saved_token()
+                # Then save new token
+                save_token_permanently(new_token)
+                print()
+                print("✅ New token saved permanently")
+                print("   You won't need to enter it again in future sessions")
+            else:
+                # Just set for this session
+                os.environ["CANVAS_API_TOKEN"] = new_token
+                print()
+                print("✅ New token set for this session only")
+                print("   You'll need to enter it again next time you run the program")
+        
+        elif choice == "2":
+            # Direct token entry
+            print()
+            print("Enter your new Canvas API token below:")
+            print("(You can paste it - you should see the text as you type)")
+            print()
+            print("Or type 'cancel' to abort without making changes")
+            print()
+            new_token = input("Canvas API Token: ").strip()
+            
+            if not new_token or new_token.lower() == 'cancel':
+                print("❌ Cancelled - no changes made to your token")
+                return
+            
+            print()
+            print("How should this token be saved?")
+            print("  [1] Session only (you'll need to re-enter it next time)")
+            print("  [2] Save permanently (recommended)")
+            print("  [3] Cancel - don't save this token")
+            print()
+            save_choice = input("Choose (1/2/3, default=2): ").strip() or "2"
+            
+            if save_choice == "3":
+                print("❌ Cancelled - no changes made to your token")
+                return
+            elif save_choice == "2":
+                # First remove old token if it exists
+                remove_saved_token()
+                # Then save new token
+                save_token_permanently(new_token)
+                print()
+                print("✅ New token saved permanently")
+                print("   You won't need to enter it again in future sessions")
+            else:
+                # Just set for this session
+                os.environ["CANVAS_API_TOKEN"] = new_token
+                print()
+                print("✅ New token set for this session only")
+                print("   You'll need to enter it again next time you run the program")
+            
+        elif choice == "3":
+            print()
+            confirm = input("Remove saved token? You'll need to enter it each session (y/n, default=n): ").strip().lower()
+            if confirm == 'y':
+                remove_saved_token()
+                # Also clear from environment for this session
+                if "CANVAS_API_TOKEN" in os.environ:
+                    del os.environ["CANVAS_API_TOKEN"]
+                print("✅ Saved token removed")
+            else:
+                print("❌ Cancelled - no changes made")
+        else:
+            print("❌ Cancelled - no changes made to your token")
+            
+    except (KeyboardInterrupt, EOFError):
+        print("\n\n❌ Cancelled - no changes made to your token")
+
+
+def remove_saved_token():
+    """Remove saved Canvas API token from config files."""
+    system = platform.system()
+    
+    if system == "Windows":
+        print("âš ï¸  On Windows, please remove the token manually from System Environment Variables")
+        print("   1. Search for 'Environment Variables' in Windows")
+        print("   2. Click 'Environment Variables' button")
+        print("   3. Find and delete CANVAS_API_TOKEN from User variables")
+        return
+    
+    # Unix-like systems - try to remove from shell config files
+    shell = os.environ.get("SHELL", "")
+    
+    if "zsh" in shell:
+        rc_file = Path.home() / ".zshrc"
+    elif "bash" in shell:
+        rc_file = Path.home() / ".bashrc"
+    else:
+        rc_file = Path.home() / ".profile"
+    
+    try:
+        if not rc_file.exists():
+            return
+        
+        with open(rc_file, 'r') as f:
+            lines = f.readlines()
+        
+        # Remove lines containing CANVAS_API_TOKEN
+        new_lines = []
+        skip_next = False
+        for line in lines:
+            if "CANVAS_API_TOKEN" in line:
+                skip_next = False  # Don't skip the line itself
+                continue
+            elif skip_next:
+                skip_next = False
+                continue
+            elif "Canvas API token for autograder" in line:
+                skip_next = True  # Skip the export line after the comment
+                continue
+            else:
+                new_lines.append(line)
+        
+        # Write back
+        with open(rc_file, 'w') as f:
+            f.writelines(new_lines)
+        
+        print(f"âœ… Removed token from {rc_file}")
+        print("   (Restart your terminal for it to take effect)")
+        
+    except Exception as e:
+        print(f"âš ï¸  Could not remove token: {e}")
 
 def cleanup_old_files(target_dir, script_type):
     """Automatically clean up old files based on settings."""
@@ -788,7 +1487,7 @@ def cleanup_old_files(target_dir, script_type):
         return  # No targets configured for this script type
     
     print()
-    print(f"🗑️  Checking for files older than {cleanup_days} days...")
+    print(f"ðŸ—‘ï¸  Checking for files older than {cleanup_days} days...")
     
     for st, file_type in targets_to_clean:
         if cleanup_mode == "archive":
@@ -850,10 +1549,10 @@ def archive_files(target_dir, script_type, threshold_days=180):
                 moved_count += 1
     
     if moved_count > 0:
-        print(f"✅ Moved {moved_count} old files to {archive_dir}")
-        print("⚠️  Archived files can only be deleted manually — this program will not touch them.")
+        print(f"âœ… Moved {moved_count} old files to {archive_dir}")
+        print("âš ï¸  Archived files can only be deleted manually â€” this program will not touch them.")
     else:
-        print("✅ No old files found to archive")
+        print("âœ… No old files found to archive")
 
 def trash_files(target_dir, script_type, threshold_days=180):
     """Move old files to Trash/Recycle Bin - cross-platform."""
@@ -900,7 +1599,7 @@ def trash_files(target_dir, script_type, threshold_days=180):
                 shutil.move(str(file_path), str(trash_dir / file_path.name))
                 return True
         except Exception as e:
-            print(f"   ⚠️  Could not trash {file_path.name}: {e}")
+            print(f"   âš ï¸  Could not trash {file_path.name}: {e}")
             return False
     
     # For Academic Dishonesty, handle csv and excel subdirs
@@ -931,9 +1630,9 @@ def trash_files(target_dir, script_type, threshold_days=180):
     
     if moved_count > 0:
         trash_name = "Trash" if system != "Windows" else "Recycle Bin"
-        print(f"✅ Moved {moved_count} old files to {trash_name}")
+        print(f"âœ… Moved {moved_count} old files to {trash_name}")
     else:
-        print("✅ No old files found to trash")
+        print("âœ… No old files found to trash")
 
 def archive_files_by_type(target_dir, script_type, file_type, threshold_days=180):
     """Archive old files of a specific type to archived subfolder."""
@@ -981,9 +1680,9 @@ def archive_files_by_type(target_dir, script_type, file_type, threshold_days=180
                 moved_count += 1
     
     if moved_count > 0:
-        print(f"   ✅ Archived {moved_count} {file_type.upper()} files")
+        print(f"   âœ… Archived {moved_count} {file_type.upper()} files")
     else:
-        print(f"   ✅ No old {file_type.upper()} files found to archive")
+        print(f"   âœ… No old {file_type.upper()} files found to archive")
 
 def trash_files_by_type(target_dir, script_type, file_type, threshold_days=180):
     """Move old files of a specific type to Trash/Recycle Bin."""
@@ -1026,7 +1725,7 @@ def trash_files_by_type(target_dir, script_type, file_type, threshold_days=180):
                 shutil.move(str(file_path), str(trash_dir / file_path.name))
                 return True
         except Exception as e:
-            print(f"   ⚠️  Could not trash {file_path.name}: {e}")
+            print(f"   âš ï¸  Could not trash {file_path.name}: {e}")
             return False
     
     # For Academic Dishonesty, files are in subdirectories
@@ -1053,9 +1752,9 @@ def trash_files_by_type(target_dir, script_type, file_type, threshold_days=180):
     
     if moved_count > 0:
         trash_name = "Trash" if system != "Windows" else "Recycle Bin"
-        print(f"   ✅ Moved {moved_count} {file_type.upper()} files to {trash_name}")
+        print(f"   âœ… Moved {moved_count} {file_type.upper()} files to {trash_name}")
     else:
-        print(f"   ✅ No old {file_type.upper()} files found to trash")
+        print(f"   âœ… No old {file_type.upper()} files found to trash")
 
 def run_script(script_info, token):
     """Run the selected Python script."""
@@ -1076,8 +1775,8 @@ def run_script(script_info, token):
     cleanup_old_files(target_dir, script_type)
     
     print()
-    print(f"📤 Running {script_name}...")
-    print(f"📁 Output will be saved to: {target_dir}")
+    print(f"ðŸ“¤ Running {script_name}...")
+    print(f"ðŸ“ Output will be saved to: {target_dir}")
     print()
     
     # Get Python executable from venv
@@ -1094,9 +1793,9 @@ def run_script(script_info, token):
         
         print()
         if result.returncode == 0:
-            print("✅ Script completed successfully!")
+            print("âœ… Script completed successfully!")
         else:
-            print(f"⚠️  Script exited with code {result.returncode}")
+            print(f"âš ï¸  Script exited with code {result.returncode}")
         
         # Check auto-open setting
         settings = load_settings()
@@ -1106,7 +1805,7 @@ def run_script(script_info, token):
         if HAS_UTILS:
             print_output_location(target_dir, auto_open=auto_open)
         else:
-            print(f"📁 Results saved to: {target_dir}")
+            print(f"ðŸ“ Results saved to: {target_dir}")
             if auto_open:
                 print("   Opening folder...")
                 system = platform.system()
@@ -1121,10 +1820,10 @@ def run_script(script_info, token):
                     pass
         
     except KeyboardInterrupt:
-        print("\n\n❌ Script interrupted by user")
+        print("\n\nâŒ Script interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n❌ Error running script: {e}")
+        print(f"\nâŒ Error running script: {e}")
         sys.exit(1)
 
 def main():
@@ -1143,7 +1842,7 @@ def main():
     install_dependencies()
     
     print()
-    print("✅ Setup complete")
+    print("âœ… Setup complete")
     
     # First-time setup if needed
     if HAS_UTILS and is_first_run():
@@ -1176,15 +1875,15 @@ def main():
         try:
             again = input("Run another tool? (y/n, default=n): ").strip().lower()
             if again != 'y':
-                print("\n👋 Goodbye!")
+                print("\nðŸ‘‹ Goodbye!")
                 break
         except (KeyboardInterrupt, EOFError):
-            print("\n\n👋 Goodbye!")
+            print("\n\nðŸ‘‹ Goodbye!")
             break
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n👋 Goodbye!")
+        print("\n\nðŸ‘‹ Goodbye!")
         sys.exit(0)

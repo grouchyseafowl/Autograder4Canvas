@@ -1,0 +1,274 @@
+# Assignment Type Configuration
+# PHASE 7: Configurable assignment type profiles
+#
+# Each profile adjusts human presence marker weights based on assignment context.
+# Different assignments call for different forms of engagement.
+
+version: "2.1.0"
+last_updated: "2025-12-27"
+
+# =============================================================================
+# ASSIGNMENT TYPE PROFILES
+# =============================================================================
+
+discussion_post:
+  name: "Discussion Forum Post"
+  description: "Short, informal responses to readings or prompts"
+  expected_word_count: [100, 500]
+
+  marker_weight_adjustments:
+    # Discussion posts: High on emotion/voice, lower on formal cognitive struggle
+    contextual_grounding: 1.4        # Course material references VERY important
+    emotional_stakes: 1.3            # Personal connection expected
+    authentic_voice: 1.2             # Informal voice is appropriate
+    cognitive_struggle: 0.8          # May be less visible in short posts
+    productive_messiness: 0.9        # Less revision expected in informal posts
+
+  notes: |
+    Discussion posts should show direct engagement with course materials
+    and peers. Expect more informal voice and personal connection.
+    Cognitive struggle may be implicit rather than explicit.
+
+reflection_paper:
+  name: "Reflection Paper"
+  description: "Personal reflection on experience, reading, or learning"
+  expected_word_count: [500, 2000]
+
+  marker_weight_adjustments:
+    contextual_grounding: 1.3        # Should reference specific experiences
+    emotional_stakes: 1.5            # HIGHEST - personal investment central
+    authentic_voice: 1.4             # Personal voice expected
+    cognitive_struggle: 1.2          # Processing experience/learning
+    productive_messiness: 1.1        # Authentic reflection is messy
+
+  notes: |
+    Reflection papers should show personal engagement with material.
+    Expect strong emotional stakes and authentic voice. AI reflections
+    tend to be generic; human reflections are specific and messy.
+
+research_paper:
+  name: "Research Paper"
+  description: "Formal academic research with sources"
+  expected_word_count: [1500, 5000]
+
+  marker_weight_adjustments:
+    contextual_grounding: 1.2        # Citations and course context
+    emotional_stakes: 0.7            # Less personal, more analytical
+    authentic_voice: 0.8             # Formal register may limit voice
+    cognitive_struggle: 1.1          # Synthesis and analysis visible
+    productive_messiness: 0.9        # More polished, but revisions visible
+
+  notes: |
+    Research papers use formal academic register which may limit
+    emotional expression and authentic voice. Look for struggle with
+    synthesis, genuine engagement with sources, and course-specific angles.
+
+rough_draft:
+  name: "Rough Draft"
+  description: "Early draft of longer assignment"
+  expected_word_count: [500, 3000]
+
+  marker_weight_adjustments:
+    contextual_grounding: 1.0        # Standard weight
+    emotional_stakes: 1.0            # Standard weight
+    authentic_voice: 1.1             # May be more visible in drafts
+    cognitive_struggle: 1.4          # HIGHEST - working through ideas
+    productive_messiness: 1.5        # HIGHEST - expected in drafts
+
+  notes: |
+    Rough drafts should show thinking-in-progress. Expect high cognitive
+    struggle and productive messiness. AI drafts tend to be too polished;
+    human drafts show the work.
+
+essay_exam:
+  name: "Essay Exam / Timed Writing"
+  description: "Timed essay response to prompt"
+  expected_word_count: [300, 1500]
+
+  marker_weight_adjustments:
+    contextual_grounding: 1.3        # Must use course knowledge
+    emotional_stakes: 0.9            # Less personal, more demonstrative
+    authentic_voice: 1.1             # Time pressure shows through
+    cognitive_struggle: 1.2          # Working under time constraint
+    productive_messiness: 1.3        # Less time to polish
+
+  notes: |
+    Timed writing should show course knowledge applied under time pressure.
+    Expect less polish, more struggle, evidence of time constraint.
+    AI can't replicate the specific imperfections of timed writing.
+
+analytical_essay:
+  name: "Analytical Essay"
+  description: "Analysis of text, film, artwork, or concept"
+  expected_word_count: [1000, 3000]
+
+  marker_weight_adjustments:
+    contextual_grounding: 1.3        # Specific textual evidence
+    emotional_stakes: 0.9            # Analysis more than feeling
+    authentic_voice: 1.0             # Balanced
+    cognitive_struggle: 1.3          # Working through interpretation
+    productive_messiness: 1.0        # Some revision visible
+
+  notes: |
+    Analytical essays should show genuine grappling with interpretation.
+    Look for specific textual engagement, evolution of understanding,
+    and unique analytical angles tied to course discussions.
+
+creative_writing:
+  name: "Creative Writing"
+  description: "Fiction, poetry, creative nonfiction"
+  expected_word_count: [500, 3000]
+
+  marker_weight_adjustments:
+    contextual_grounding: 0.7        # May not reference course directly
+    emotional_stakes: 1.3            # Personal investment in craft
+    authentic_voice: 1.5             # HIGHEST - voice is central
+    cognitive_struggle: 1.2          # Craft decisions visible
+    productive_messiness: 1.2        # Drafting process visible
+
+  notes: |
+    Creative writing should show unique voice and craft decisions.
+    May not reference course materials directly, but should show
+    engagement with craft concepts. Look for revision thinking.
+
+lab_report:
+  name: "Lab Report"
+  description: "Scientific lab report with data and analysis"
+  expected_word_count: [1000, 2500]
+
+  marker_weight_adjustments:
+    contextual_grounding: 1.4        # Specific experimental details
+    emotional_stakes: 0.6            # Formal scientific register
+    authentic_voice: 0.7             # Limited by genre conventions
+    cognitive_struggle: 1.1          # Analysis of results
+    productive_messiness: 0.8        # More structured format
+
+  notes: |
+    Lab reports use highly structured format which limits some markers.
+    Look for specific experimental details, genuine data analysis,
+    and interpretation tied to course concepts. AI lab reports lack
+    the messiness of real experimental data.
+
+# =============================================================================
+# COURSE LEVEL ADJUSTMENTS
+# =============================================================================
+
+course_levels:
+
+  developmental:
+    name: "Developmental / Remedial"
+    description: "Below college-level courses"
+    adjustments:
+      suspicious_threshold_multiplier: 0.6    # 40% more lenient
+      authenticity_boost: 1.5                # Value effort
+      notes: |
+        Students may be developing academic writing skills.
+        Expect more informal voice, less polish, but genuine engagement.
+        Focus on evidence of learning and effort over perfection.
+
+  introductory:
+    name: "Introductory (100-level)"
+    description: "First-year or general education courses"
+    adjustments:
+      suspicious_threshold_multiplier: 0.7    # 30% more lenient
+      authenticity_boost: 1.2
+      notes: |
+        Students learning disciplinary conventions and academic voice.
+        Expect variation in sophistication. Value engagement over polish.
+
+  intermediate:
+    name: "Intermediate (200-300 level)"
+    description: "Upper-division undergraduate"
+    adjustments:
+      suspicious_threshold_multiplier: 1.0    # Standard
+      authenticity_boost: 1.0
+      notes: |
+        Students should show developing mastery of disciplinary writing.
+        Standard expectations for engagement and polish.
+
+  advanced:
+    name: "Advanced (400-level)"
+    description: "Senior seminars, capstone courses"
+    adjustments:
+      suspicious_threshold_multiplier: 1.1    # Slightly stricter
+      authenticity_boost: 0.9
+      notes: |
+        Students should demonstrate sophisticated engagement with material.
+        Higher expectations for synthesis and original thinking.
+
+  honors:
+    name: "Honors"
+    description: "Honors courses at any level"
+    adjustments:
+      suspicious_threshold_multiplier: 1.0    # Standard but different focus
+      authenticity_boost: 0.9
+      notes: |
+        Focus on depth of engagement and original thinking.
+        Expect sophisticated grappling with complex ideas.
+
+  graduate:
+    name: "Graduate"
+    description: "Master's or doctoral level"
+    adjustments:
+      suspicious_threshold_multiplier: 1.2    # Higher expectations
+      authenticity_boost: 0.8
+      notes: |
+        Expect sophisticated engagement with scholarship and original
+        contribution to field. Higher polish expected but should still
+        show genuine intellectual work.
+
+# =============================================================================
+# INSTITUTIONAL CONTEXT ADJUSTMENTS
+# =============================================================================
+
+institutional_contexts:
+
+  community_college:
+    name: "Community College"
+    description: "2-year colleges, diverse student populations"
+    adjustments:
+      suspicious_threshold_multiplier: 0.7    # 30% more lenient
+      notes: |
+        Diverse student populations: returning students, ESL students,
+        first-generation college students. Wide range of academic
+        preparation. Value engagement and growth over polish.
+
+  liberal_arts:
+    name: "Liberal Arts College"
+    description: "4-year liberal arts institutions"
+    adjustments:
+      suspicious_threshold_multiplier: 1.0    # Standard
+      notes: |
+        Focus on writing across curriculum. Students develop
+        writing skills throughout college experience.
+
+  research_university:
+    name: "Research University"
+    description: "Large research institutions"
+    adjustments:
+      suspicious_threshold_multiplier: 1.0    # Standard
+      notes: |
+        Mix of course sizes and levels. Adjust based on course level.
+
+  online:
+    name: "Online / Distance Learning"
+    description: "Fully online courses"
+    adjustments:
+      suspicious_threshold_multiplier: 0.8    # Slightly more lenient
+      notes: |
+        Students may have less access to in-person support.
+        Discussion posts and asynchronous engagement central.
+        May see more diverse student demographics.
+
+# =============================================================================
+# DEFAULT CONFIGURATION
+# =============================================================================
+
+default:
+  assignment_type: "analytical_essay"
+  course_level: "intermediate"
+  institutional_context: "liberal_arts"
+
+  notes: |
+    If no specific configuration provided, system uses intermediate-level
+    analytical essay expectations at a liberal arts college context.
