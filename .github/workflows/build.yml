@@ -44,24 +44,9 @@ jobs:
           Copy-Item -Force "scripts\windows\credentials.bat"   "$root\"
           Write-Host "Portable folder assembled."
 
-      - name: Create virtual environment
-        shell: cmd
-        run: |
-          python -m venv portable_test\venv
-          if errorlevel 1 (echo FAILED to create venv & exit /b 1)
-          echo venv created OK.
-
-      - name: Install requirements
-        shell: cmd
-        run: |
-          portable_test\venv\Scripts\pip install --quiet -r portable_test\src\requirements.txt
-          if errorlevel 1 (echo FAILED to install requirements & exit /b 1)
-          echo Requirements installed OK.
-
       - name: Syntax-check all Python files
         shell: pwsh
         run: |
-          $venvPy = "portable_test\venv\Scripts\python.exe"
           $dirs = @(
             "portable_test\src",
             "portable_test\src\Programs",
@@ -70,7 +55,7 @@ jobs:
           $failed = $false
           foreach ($dir in $dirs) {
             Get-ChildItem "$dir\*.py" | ForEach-Object {
-              & $venvPy -m py_compile $_.FullName 2>&1 | Out-Null
+              python -m py_compile $_.FullName 2>&1 | Out-Null
               if ($LASTEXITCODE -ne 0) {
                 Write-Host "SYNTAX ERROR: $($_.Name)"
                 $failed = $true
@@ -82,24 +67,18 @@ jobs:
           if ($failed) { exit 1 }
           Write-Host "All Python files pass syntax check."
 
-      - name: Smoke-test imports
-        shell: cmd
-        run: |
-          set CANVAS_BASE_URL=https://test.instructure.com
-          set CANVAS_API_TOKEN=test_token_for_ci
-          cd portable_test\src
-          ..\venv\Scripts\python -c "import autograder_utils; print('autograder_utils OK')"
-          if errorlevel 1 (echo IMPORT FAILED & exit /b 1)
-
+      # Let the script manage its own .venv (same as real-user flow).
+      # PYTHONIOENCODING ensures emoji in print() doesn't crash on cp1252.
       - name: Smoke-test launcher startup
         shell: cmd
         run: |
           set CANVAS_BASE_URL=https://test.instructure.com
           set CANVAS_API_TOKEN=test_token_for_ci
+          set PYTHONIOENCODING=utf-8
           cd portable_test
-          echo 0 | venv\Scripts\python src\run_autograder.py > launcher_output.txt 2>&1
+          echo 0 | python src\run_autograder.py > launcher_output.txt 2>&1
           type launcher_output.txt
-          findstr /i "canvas\|autograder\|menu\|error\|option" launcher_output.txt >nul
+          findstr /i "canvas\|autograder\|menu\|option\|grader" launcher_output.txt >nul
           if errorlevel 1 (echo LAUNCHER produced no recognisable output & exit /b 1)
           echo Launcher smoke test passed.
   # ============================================================

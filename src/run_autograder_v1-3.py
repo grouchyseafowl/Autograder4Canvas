@@ -13,6 +13,15 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import getpass
 
+# Windows cmd.exe defaults to cp1252; switch stdout/stderr to UTF-8 so
+# emoji in print() doesn't crash with UnicodeEncodeError.
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except AttributeError:
+        pass  # Python < 3.7 fallback: silently continue
+
 # Try to import the utilities module (may not exist in all installations)
 try:
     from autograder_utils import (
