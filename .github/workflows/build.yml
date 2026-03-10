@@ -2,11 +2,109 @@ name: Build Executables
 
 on:
   push:
+    branches: [main]
     tags:
-      - 'v*'  # Trigger on version tags (e.g., v1.0.0)
-  workflow_dispatch:  # Allow manual trigger
+      - 'v*'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
+
+  # ============================================================
+  # Windows Portable — smoke-test on every push to main
+  # Tests that the portable build installs, imports, and runs
+  # ============================================================
+  test-windows-portable:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Assemble the portable folder from tracked source files
+      - name: Assemble portable folder
+        shell: pwsh
+        run: |
+          $root = "portable_test"
+          $src  = "$root\src"
+          New-Item -Force -ItemType Directory "$src\Programs" | Out-Null
+          New-Item -Force -ItemType Directory "$src\modules"  | Out-Null
+          Copy-Item -Recurse -Force "src\config"       "$src\config"
+          Copy-Item -Force "src\run_autograder_v1-3.py"        "$src\run_autograder.py"
+          Copy-Item -Force "src\autograder_utils.py"           "$src\"
+          Copy-Item -Force "src\requirements.txt"              "$src\"
+          Copy-Item -Force "src\Programs\*.py"                 "$src\Programs\"
+          Copy-Item -Force "src\modules\*.py"                  "$src\modules\"
+          # Launcher scripts from the tracked windows launcher directory
+          Copy-Item -Force "scripts\windows\run.bat"           "$root\"
+          Copy-Item -Force "scripts\windows\credentials.bat"   "$root\"
+          Write-Host "Portable folder assembled."
+
+      - name: Create virtual environment
+        shell: cmd
+        run: |
+          python -m venv portable_test\venv
+          if errorlevel 1 (echo FAILED to create venv & exit /b 1)
+          echo venv created OK.
+
+      - name: Install requirements
+        shell: cmd
+        run: |
+          portable_test\venv\Scripts\pip install --quiet -r portable_test\src\requirements.txt
+          if errorlevel 1 (echo FAILED to install requirements & exit /b 1)
+          echo Requirements installed OK.
+
+      - name: Syntax-check all Python files
+        shell: pwsh
+        run: |
+          $venvPy = "portable_test\venv\Scripts\python.exe"
+          $dirs = @(
+            "portable_test\src",
+            "portable_test\src\Programs",
+            "portable_test\src\modules"
+          )
+          $failed = $false
+          foreach ($dir in $dirs) {
+            Get-ChildItem "$dir\*.py" | ForEach-Object {
+              & $venvPy -m py_compile $_.FullName 2>&1 | Out-Null
+              if ($LASTEXITCODE -ne 0) {
+                Write-Host "SYNTAX ERROR: $($_.Name)"
+                $failed = $true
+              } else {
+                Write-Host "OK: $($_.Name)"
+              }
+            }
+          }
+          if ($failed) { exit 1 }
+          Write-Host "All Python files pass syntax check."
+
+      - name: Smoke-test imports
+        shell: cmd
+        run: |
+          set CANVAS_BASE_URL=https://test.instructure.com
+          set CANVAS_API_TOKEN=test_token_for_ci
+          cd portable_test\src
+          ..\venv\Scripts\python -c "import autograder_utils; print('autograder_utils OK')"
+          if errorlevel 1 (echo IMPORT FAILED & exit /b 1)
+
+      - name: Smoke-test launcher startup
+        shell: cmd
+        run: |
+          set CANVAS_BASE_URL=https://test.instructure.com
+          set CANVAS_API_TOKEN=test_token_for_ci
+          cd portable_test
+          echo 0 | venv\Scripts\python src\run_autograder.py > launcher_output.txt 2>&1
+          type launcher_output.txt
+          findstr /i "canvas\|autograder\|menu\|error\|option" launcher_output.txt >nul
+          if errorlevel 1 (echo LAUNCHER produced no recognisable output & exit /b 1)
+          echo Launcher smoke test passed.
+  # ============================================================
+  # macOS — builds a .app bundle wrapped in a DMG
+  # ============================================================
   build-macos:
     runs-on: macos-latest
     steps:
@@ -21,14 +119,33 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r src/requirements.txt
-          pip install pyinstaller
+          pip install pyinstaller pillow
+
+      - name: Convert icon to .icns
+        run: |
+          if [ -f src/icon.jpg ]; then
+            mkdir -p /tmp/AppIcon.iconset
+            python3 - <<'PY'
+          from PIL import Image
+          import os
+          img = Image.open("src/icon.jpg").convert("RGBA")
+          sizes = [16,32,64,128,256,512,1024]
+          for s in sizes:
+              img.resize((s,s), Image.LANCZOS).save(f"/tmp/AppIcon.iconset/icon_{s}x{s}.png")
+              if s <= 512:
+                  img.resize((s*2,s*2), Image.LANCZOS).save(f"/tmp/AppIcon.iconset/icon_{s}x{s}@2x.png")
+          PY
+            iconutil -c icns /tmp/AppIcon.iconset -o src/AppIcon.icns
+            echo "ICON_FLAG=--icon src/AppIcon.icns" >> $GITHUB_ENV
+          else
+            echo "ICON_FLAG=" >> $GITHUB_ENV
+          fi
 
       - name: Build macOS app
         run: |
           pyinstaller --name "Autograder4Canvas" \
             --windowed \
-            --icon "build/mac/Autograder4Canvas.app/Contents/Resources/AppIcon.icns" \
-            --add-data "src:src" \
+            $ICON_FLAG \
             --add-data "src/Programs:Programs" \
             --add-data "src/config:config" \
             --add-data "src/modules:modules" \
@@ -38,16 +155,13 @@ jobs:
 
       - name: Create DMG
         run: |
-          # Install create-dmg
           brew install create-dmg
-
-          # Create DMG
           create-dmg \
             --volname "Autograder4Canvas" \
             --window-pos 200 120 \
-            --window-size 800 400 \
+            --window-size 600 400 \
             --icon-size 100 \
-            --app-drop-link 600 185 \
+            --app-drop-link 450 185 \
             "Autograder4Canvas-macOS.dmg" \
             "dist/Autograder4Canvas.app"
 
@@ -57,6 +171,9 @@ jobs:
           name: Autograder4Canvas-macOS
           path: Autograder4Canvas-macOS.dmg
 
+  # ============================================================
+  # Windows — builds a standalone .exe (no Python required)
+  # ============================================================
   build-windows:
     runs-on: windows-latest
     steps:
@@ -71,25 +188,37 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r src/requirements.txt
-          pip install pyinstaller
+          pip install pyinstaller pillow
+
+      - name: Convert icon to .ico
+        shell: python
+        run: |
+          import os
+          from PIL import Image
+          if os.path.exists("src/icon.jpg"):
+              img = Image.open("src/icon.jpg").convert("RGBA")
+              img.save("src/icon.ico", format="ICO", sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])
+              print("Icon created: src/icon.ico")
+          else:
+              print("No icon found, skipping")
 
       - name: Build Windows exe
+        shell: cmd
         run: |
-          pyinstaller --name "Autograder4Canvas" `
-            --onefile `
-            --windowed `
-            --icon "build/windows/Autograder4Canvas/icon.ico" `
-            --add-data "src;src" `
-            --add-data "src/Programs;Programs" `
-            --add-data "src/config;config" `
-            --add-data "src/modules;modules" `
-            --add-data "src/docs;docs" `
+          set ICON_FLAG=
+          if exist src\icon.ico set ICON_FLAG=--icon src\icon.ico
+          pyinstaller --name "Autograder4Canvas" ^
+            --onefile ^
+            --console ^
+            %ICON_FLAG% ^
+            --add-data "src/Programs;Programs" ^
+            --add-data "src/config;config" ^
+            --add-data "src/modules;modules" ^
+            --add-data "src/docs;docs" ^
             src/run_autograder_v1-3.py
 
-      - name: Create installer (optional)
+      - name: Package exe
         run: |
-          # You can add NSIS or Inno Setup here for a proper installer
-          # For now, we'll just zip the executable
           Compress-Archive -Path dist/Autograder4Canvas.exe -DestinationPath Autograder4Canvas-Windows.zip
 
       - name: Upload Windows artifact
@@ -98,6 +227,9 @@ jobs:
           name: Autograder4Canvas-Windows
           path: Autograder4Canvas-Windows.zip
 
+  # ============================================================
+  # Linux — builds a standalone binary
+  # ============================================================
   build-linux:
     runs-on: ubuntu-latest
     steps:
@@ -118,18 +250,16 @@ jobs:
         run: |
           pyinstaller --name "Autograder4Canvas" \
             --onefile \
-            --add-data "src:src" \
             --add-data "src/Programs:Programs" \
             --add-data "src/config:config" \
             --add-data "src/modules:modules" \
             --add-data "src/docs:docs" \
             src/run_autograder_v1-3.py
 
-      - name: Create tarball
+      - name: Package binary
         run: |
           mkdir -p Autograder4Canvas-Linux
           cp dist/Autograder4Canvas Autograder4Canvas-Linux/
-          cp build/linux/Autograder4Canvas/install.sh Autograder4Canvas-Linux/
           tar -czf Autograder4Canvas-Linux.tar.gz Autograder4Canvas-Linux/
 
       - name: Upload Linux artifact
@@ -138,6 +268,10 @@ jobs:
           name: Autograder4Canvas-Linux
           path: Autograder4Canvas-Linux.tar.gz
 
+  # ============================================================
+  # Release — attaches all artifacts to a GitHub Release
+  # Only runs when triggered by a version tag (v*)
+  # ============================================================
   create-release:
     needs: [build-macos, build-windows, build-linux]
     runs-on: ubuntu-latest
