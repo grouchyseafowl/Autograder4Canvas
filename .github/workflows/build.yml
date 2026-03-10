@@ -68,19 +68,27 @@ jobs:
           Write-Host "All Python files pass syntax check."
 
       # Let the script manage its own .venv (same as real-user flow).
-      # PYTHONIOENCODING ensures emoji in print() doesn't crash on cp1252.
+      # Use PowerShell for the smoke test so UTF-8 output and string matching
+      # work reliably (cmd + findstr has encoding issues with emoji output).
+      # Feed "1" then "Q" so the first-time setup prompt and main menu both
+      # get a valid answer without looping or producing error messages.
       - name: Smoke-test launcher startup
-        shell: cmd
+        shell: pwsh
         run: |
-          set CANVAS_BASE_URL=https://test.instructure.com
-          set CANVAS_API_TOKEN=test_token_for_ci
-          set PYTHONIOENCODING=utf-8
-          cd portable_test
-          echo 0 | python src\run_autograder.py > launcher_output.txt 2>&1
-          type launcher_output.txt
-          findstr /R /i "canvas\|autograder\|menu\|goodbye" launcher_output.txt >nul
-          if errorlevel 1 (echo LAUNCHER produced no recognisable output & exit /b 1)
-          echo Launcher smoke test passed.
+          $env:CANVAS_BASE_URL    = "https://test.instructure.com"
+          $env:CANVAS_API_TOKEN   = "test_token_for_ci"
+          $env:PYTHONIOENCODING   = "utf-8"
+          Set-Location portable_test
+          # "1`nQ`n" → answer "1" to the first-time-setup location prompt,
+          # then "Q" to the main-menu quit prompt.
+          $output = "1`nQ`n" | python src\run_autograder.py 2>&1
+          $output | ForEach-Object { Write-Host $_ }
+          $joined = $output -join "`n"
+          if ($joined -notmatch "(?i)canvas|autograder|menu|goodbye") {
+            Write-Host "LAUNCHER produced no recognisable output"
+            exit 1
+          }
+          Write-Host "Launcher smoke test passed."
   # ============================================================
   # macOS — builds a .app bundle wrapped in a DMG
   # ============================================================
