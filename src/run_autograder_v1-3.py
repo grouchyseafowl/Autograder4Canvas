@@ -662,9 +662,10 @@ def install_dependencies():
     pip_exe = get_venv_pip()
     
     try:
-        # Upgrade pip first
+        # Upgrade pip first — use python -m pip (required on Windows;
+        # calling pip.exe to upgrade itself is blocked there)
         subprocess.run(
-            [str(pip_exe), "install", "--quiet", "--upgrade", "pip"],
+            [str(get_venv_python()), "-m", "pip", "install", "--quiet", "--upgrade", "pip"],
             check=True,
             capture_output=True
         )
