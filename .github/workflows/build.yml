@@ -78,7 +78,7 @@ jobs:
           cd portable_test
           echo 0 | python src\run_autograder.py > launcher_output.txt 2>&1
           type launcher_output.txt
-          findstr /i "canvas\|autograder\|menu\|option\|grader" launcher_output.txt >nul
+          findstr /R /i "canvas\|autograder\|menu\|goodbye" launcher_output.txt >nul
           if errorlevel 1 (echo LAUNCHER produced no recognisable output & exit /b 1)
           echo Launcher smoke test passed.
   # ============================================================
