@@ -13,8 +13,11 @@ import csv
 # ======================
 # CONFIGURATION
 # ======================
-CANVAS_BASE_URL = "https://cabrillo.instructure.com"
+CANVAS_BASE_URL = os.getenv("CANVAS_BASE_URL")
 API_TOKEN = os.getenv("CANVAS_API_TOKEN")
+
+if not CANVAS_BASE_URL:
+    raise ValueError("❌ Missing CANVAS_BASE_URL environment variable. Set it to your Canvas instance URL (e.g., https://institution.instructure.com)")
 
 if not API_TOKEN:
     raise ValueError("❌ Missing CANVAS_API_TOKEN environment variable")
@@ -190,7 +193,7 @@ def get_active_students(course_id: int) -> List[Dict]:
     print("📥 Fetching active student enrollments...")
     url = f"{CANVAS_BASE_URL}/api/v1/courses/{course_id}/enrollments"
     params = {"type": ["StudentEnrollment"], "state": ["active"], "per_page": 100}
-    response = requests.get(url, headers=HEADERS, params=params)
+    response = requests.get(url, headers=HEADERS, params=params, timeout=30)
 
     if not response.headers.get('Content-Type', '').startswith('application/json'):
         print("⚠️ Received non-JSON response (likely redirected to login):")
@@ -209,7 +212,7 @@ def get_all_assignments(course_id: int) -> List[Dict]:
     print("📚 Fetching all assignments...")
     url = f"{CANVAS_BASE_URL}/api/v1/courses/{course_id}/assignments"
     params = {"per_page": 100}
-    response = requests.get(url, headers=HEADERS, params=params)
+    response = requests.get(url, headers=HEADERS, params=params, timeout=30)
 
     if response.status_code != 200:
         print(f"❌ Failed to fetch assignments: {response.text}")
@@ -355,7 +358,7 @@ def get_submissions(course_id: int, assignment_id: int) -> Dict[int, Dict]:
     page_count = 0
 
     while url:
-        response = requests.get(url, headers=HEADERS, params=params)
+        response = requests.get(url, headers=HEADERS, params=params, timeout=30)
         page_count += 1
 
         if not response.headers.get('Content-Type', '').startswith('application/json'):
@@ -394,7 +397,7 @@ def get_submissions(course_id: int, assignment_id: int) -> Dict[int, Dict]:
 
 def get_assignment_name(course_id: int, assignment_id: int) -> str:
     url = f"{CANVAS_BASE_URL}/api/v1/courses/{course_id}/assignments/{assignment_id}"
-    resp = requests.get(url, headers=HEADERS)
+    resp = requests.get(url, headers=HEADERS, timeout=30)
     if resp.status_code == 200:
         try:
             return resp.json().get("name", f"Assignment {assignment_id}")
@@ -487,7 +490,7 @@ def grade_assignment(course_id: int, assignment_id: int, students: List[Dict],
     if flagged_submissions:
         print(f"   ⚠️  Flagged for review: {len(flagged_submissions)}")
 
-    response = requests.post(url, headers=HEADERS, json=payload)
+    response = requests.post(url, headers=HEADERS, json=payload, timeout=60)
 
     if response.status_code not in (200, 201):
         print(f"❌ Assignment {assignment_id}: Failed to submit grades ({response.status_code})")
@@ -507,8 +510,15 @@ def grade_assignment(course_id: int, assignment_id: int, students: List[Dict],
 
     print(f"⏳ Waiting for grade job {job_id} to finish...")
     progress_url = f"{CANVAS_BASE_URL}/api/v1/progress/{job_id}"
+    max_wait_seconds = 300  # 5 minutes max
+    start_time = time.time()
     while True:
-        prog_resp = requests.get(progress_url, headers=HEADERS)
+        # Check timeout
+        if time.time() - start_time > max_wait_seconds:
+            print(f"⚠️ Job timeout after {max_wait_seconds}s - assuming success")
+            break
+
+        prog_resp = requests.get(progress_url, headers=HEADERS, timeout=30)
         if prog_resp.status_code != 200:
             print(f"⚠️ Could not check job status (HTTP {prog_resp.status_code})")
             break
@@ -579,7 +589,7 @@ def main():
     print("2. Look at the URL in your browser's address bar")
     print("3. Find the number after '/courses/' in the URL")
     print()
-    print("   Example: https://cabrillo.instructure.com/courses/12345")
+    print("   Example: https://institution.instructure.com/courses/12345")
     print("            The Course ID is: 12345")
     print("="*70)
     print()
@@ -593,7 +603,7 @@ def main():
     # Verify API access
     print("🔍 Verifying Canvas API access...")
     test_url = f"{CANVAS_BASE_URL}/api/v1/courses/{course_id}"
-    test_resp = requests.get(test_url, headers=HEADERS)
+    test_resp = requests.get(test_url, headers=HEADERS, timeout=30)
     if not test_resp.headers.get('Content-Type', '').startswith('application/json'):
         print("❌ CRITICAL: Received HTML (e.g., OpenCCC login page).")
         print("   Check your token, URL, and internet connection.")
@@ -743,7 +753,7 @@ def main():
         print("3. Look at the URL in your browser's address bar")
         print("4. Find the number after '/assignments/' in the URL")
         print()
-        print("   Example: https://cabrillo.instructure.com/courses/12345/assignments/67890")
+        print("   Example: https://institution.instructure.com/courses/12345/assignments/67890")
         print("            The Assignment ID is: 67890")
         print()
         print("   TIP: You can enter multiple IDs separated by spaces")

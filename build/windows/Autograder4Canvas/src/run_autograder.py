@@ -220,7 +220,7 @@ def load_settings():
         "auto_open_folder": True,
         "cleanup_mode": "none",  # "none", "archive", or "trash"
         "cleanup_threshold_days": 180,
-        "cleanup_targets": "all"  # "all" or comma-separated: "ad_csv,ad_excel,ci_csv,df_csv"
+        "cleanup_targets": "all"  # "all" or comma-separated: "ad_csv,ad_excel,ad_txt,ci_csv,df_csv"
     }
     
     if not SETTINGS_FILE.exists():
@@ -344,21 +344,23 @@ def configure_cleanup():
             print("  Academic Dishonesty Check:")
             print("    [1] CSV files only")
             print("    [2] Excel files only")
-            print("    [3] Both CSV and Excel files")
+            print("    [3] TXT report files only")
+            print("    [4] CSV and Excel files")
+            print("    [5] All Academic Dishonesty files (CSV, Excel, TXT)")
             print()
             print("  Complete/Incomplete Autograder:")
-            print("    [4] CSV files")
+            print("    [6] CSV files")
             print()
             print("  Discussion Forum Autograder:")
-            print("    [5] CSV files")
+            print("    [7] CSV files")
             print()
             print("  Other options:")
             print("    [A] All files from all tools (default)")
             print()
-            print("  (You can select multiple, e.g., '1 4 5' or '2,4')")
-            
+            print("  (You can select multiple, e.g., '1 6 7' or '2,6')")
+
             target_input = input(f"Enter selection (or Enter to keep '{current_targets}'): ").strip().upper()
-            
+
             if target_input:
                 if target_input == 'A':
                     settings["cleanup_targets"] = "all"
@@ -366,18 +368,24 @@ def configure_cleanup():
                     # Parse and validate selections
                     selections = target_input.replace(',', ' ').split()
                     valid_targets = []
-                    
+
                     for sel in selections:
                         if sel == '1':
                             valid_targets.append("ad_csv")
                         elif sel == '2':
                             valid_targets.append("ad_excel")
                         elif sel == '3':
+                            valid_targets.append("ad_txt")
+                        elif sel == '4':
                             valid_targets.append("ad_csv")
                             valid_targets.append("ad_excel")
-                        elif sel == '4':
-                            valid_targets.append("ci_csv")
                         elif sel == '5':
+                            valid_targets.append("ad_csv")
+                            valid_targets.append("ad_excel")
+                            valid_targets.append("ad_txt")
+                        elif sel == '6':
+                            valid_targets.append("ci_csv")
+                        elif sel == '7':
                             valid_targets.append("df_csv")
                     
                     if valid_targets:
@@ -462,19 +470,21 @@ def run_onetime_cleanup():
         print("  Academic Dishonesty Check:")
         print("    [1] CSV files only")
         print("    [2] Excel files only")
-        print("    [3] Both CSV and Excel files")
+        print("    [3] TXT report files only")
+        print("    [4] CSV and Excel files")
+        print("    [5] All Academic Dishonesty files (CSV, Excel, TXT)")
         print()
         print("  Complete/Incomplete Autograder:")
-        print("    [4] CSV files")
+        print("    [6] CSV files")
         print()
         print("  Discussion Forum Autograder:")
-        print("    [5] CSV files")
+        print("    [7] CSV files")
         print()
         print("  Other options:")
         print("    [A] All files from all tools")
         print("    [C] Cancel")
         print()
-        print("  (You can select multiple, e.g., '1 4 5' or '2,4')")
+        print("  (You can select multiple, e.g., '1 6 7' or '2,6')")
         
         selection = input("Enter selection: ").strip().upper()
         
@@ -490,6 +500,7 @@ def run_onetime_cleanup():
             cleanup_targets = [
                 ("Academic_Dishonesty", "csv"),
                 ("Academic_Dishonesty", "excel"),
+                ("Academic_Dishonesty", "txt"),
                 ("Complete-Incomplete", "csv"),
                 ("Discussion_Forum", "csv")
             ]
@@ -504,11 +515,17 @@ def run_onetime_cleanup():
                 elif sel == '2':
                     cleanup_targets.append(("Academic_Dishonesty", "excel"))
                 elif sel == '3':
+                    cleanup_targets.append(("Academic_Dishonesty", "txt"))
+                elif sel == '4':
                     cleanup_targets.append(("Academic_Dishonesty", "csv"))
                     cleanup_targets.append(("Academic_Dishonesty", "excel"))
-                elif sel == '4':
-                    cleanup_targets.append(("Complete-Incomplete", "csv"))
                 elif sel == '5':
+                    cleanup_targets.append(("Academic_Dishonesty", "csv"))
+                    cleanup_targets.append(("Academic_Dishonesty", "excel"))
+                    cleanup_targets.append(("Academic_Dishonesty", "txt"))
+                elif sel == '6':
+                    cleanup_targets.append(("Complete-Incomplete", "csv"))
+                elif sel == '7':
                     cleanup_targets.append(("Discussion_Forum", "csv"))
         
         if not cleanup_targets:
@@ -756,16 +773,17 @@ def select_script(scripts):
     print(f"  [C] Configure automatic cleanup of old files [{cleanup_status}]")
     print(f"  [R] Run one-time cleanup now")
     print(f"  [T] Change Canvas API token")
-    
+    print(f"  [U] Change Canvas URL")
+
     print(f"  [O] Open Grading Rationales folder")
     print(f"  [H] Help - Definitions and Instructions")
     print()
     print(f"  [Q] Quit")
     print()
-    
+
     while True:
         try:
-            choice = input(f"Enter choice (1-{len(script_list)}, S, A, C, R, T, O, H, or Q): ").strip().upper()
+            choice = input(f"Enter choice (1-{len(script_list)}, S, A, C, R, T, U, O, H, or Q): ").strip().upper()
             
             # Check for settings options
             if choice == 'S':
@@ -786,6 +804,9 @@ def select_script(scripts):
                 return None
             elif choice == 'T':
                 change_canvas_token()
+                return None
+            elif choice == 'U':
+                change_canvas_url()
                 return None
             elif choice == 'O':
                 print(f"ðŸ“‚ Opening: {base_dir}")
@@ -821,10 +842,155 @@ def select_script(scripts):
             print("\n\nðŸ‘‹ Goodbye!")
             sys.exit(0)
 
+def get_canvas_url():
+    """Get Canvas base URL from environment or user input."""
+    canvas_url = os.environ.get("CANVAS_BASE_URL")
+
+    if canvas_url:
+        return canvas_url
+
+    print()
+    print("=" * 70)
+    print("🌐 CANVAS URL REQUIRED")
+    print("=" * 70)
+    print()
+    print("First, we need to know which Canvas site you use.")
+    print()
+    print("📍 WHERE TO FIND YOUR CANVAS URL:")
+    print("=" * 70)
+    print()
+    print("1. Open your web browser")
+    print("2. Log in to Canvas like you normally do")
+    print("3. Look at the address bar at the top of your browser")
+    print("4. Copy everything BEFORE '/courses' or '/login'")
+    print()
+    print("EXAMPLES:")
+    print("  • If you see: https://example.instructure.com/courses/12345")
+    print("    You need:   https://example.instructure.com")
+    print()
+    print("  • If you see: https://canvas.university.edu/login")
+    print("    You need:   https://canvas.university.edu")
+    print()
+    print("=" * 70)
+    print()
+
+    while True:
+        canvas_url = input("Enter your Canvas URL: ").strip()
+
+        if not canvas_url:
+            print("❌ Canvas URL is required. Please try again.")
+            print()
+            continue
+
+        # Remove trailing slashes
+        canvas_url = canvas_url.rstrip('/')
+
+        # Basic validation
+        if not canvas_url.startswith('http'):
+            print("⚠️  URL should start with https:// or http://")
+            retry = input("Did you mean: https://" + canvas_url + "? (Y/n): ").strip().lower()
+            if retry in ['', 'y', 'yes']:
+                canvas_url = "https://" + canvas_url
+            else:
+                continue
+
+        # Confirm with user
+        print()
+        print(f"✅ Canvas URL: {canvas_url}")
+        confirm = input("Is this correct? (Y/n): ").strip().lower()
+
+        if confirm in ['', 'y', 'yes']:
+            # Ask if they want to save it
+            print()
+            save = input("Save this URL permanently? (Y/n): ").strip().lower()
+            if save in ['', 'y', 'yes']:
+                save_canvas_url_permanently(canvas_url)
+            else:
+                print("✅ URL accepted (session only - will need to re-enter next time)")
+
+            return canvas_url
+        else:
+            print("Let's try again...")
+            print()
+
+def save_canvas_url_permanently(canvas_url):
+    """Save Canvas URL to shell config file."""
+    system = platform.system()
+
+    if system == "Windows":
+        # Windows: Set as system environment variable
+        print()
+        print("To save permanently on Windows:")
+        print("1. Search for 'Environment Variables' in Start Menu")
+        print("2. Click 'Environment Variables'")
+        print("3. Under 'User variables', click 'New'")
+        print("4. Variable name: CANVAS_BASE_URL")
+        print(f"5. Variable value: {canvas_url}")
+        print()
+        print("Or run in PowerShell (as Administrator):")
+        print(f'[Environment]::SetEnvironmentVariable("CANVAS_BASE_URL", "{canvas_url}", "User")')
+        print()
+        print("✅ Instructions displayed. You'll need to set this manually on Windows.")
+        print("   (Close and reopen this program after setting the variable)")
+        return
+
+    # Unix-like systems (macOS, Linux)
+    home = Path.home()
+
+    # Determine which shell config file to use
+    shell_config = None
+    if (home / ".zshrc").exists() or os.environ.get("SHELL", "").endswith("zsh"):
+        shell_config = home / ".zshrc"
+    elif (home / ".bashrc").exists():
+        shell_config = home / ".bashrc"
+    elif (home / ".bash_profile").exists():
+        shell_config = home / ".bash_profile"
+    else:
+        # Create .zshrc as default for macOS
+        shell_config = home / ".zshrc"
+
+    try:
+        # Read existing config
+        if shell_config.exists():
+            with open(shell_config, 'r') as f:
+                content = f.read()
+
+            # Check if URL already exists
+            if "CANVAS_BASE_URL=" in content:
+                # Update existing entry
+                lines = content.split('\n')
+                with open(shell_config, 'w') as f:
+                    for line in lines:
+                        if line.startswith('export CANVAS_BASE_URL='):
+                            f.write(f'export CANVAS_BASE_URL="{canvas_url}"\n')
+                        else:
+                            f.write(line + '\n')
+                print(f"✅ Updated Canvas URL in {shell_config}")
+                return
+
+        # Append new entry
+        with open(shell_config, 'a') as f:
+            f.write(f'\n# Canvas Autograder - Canvas URL\n')
+            f.write(f'export CANVAS_BASE_URL="{canvas_url}"\n')
+
+        print(f"✅ Canvas URL saved to {shell_config}")
+        print()
+        print("⚠️  IMPORTANT: The URL will be available in new terminal windows.")
+        print("   For this session, I'll use it temporarily.")
+
+        # Set for current session
+        os.environ["CANVAS_BASE_URL"] = canvas_url
+
+    except Exception as e:
+        print(f"⚠️  Could not save URL automatically: {e}")
+        print()
+        print(f"To save manually, add this line to {shell_config}:")
+        print(f'export CANVAS_BASE_URL="{canvas_url}"')
+
 def get_canvas_token():
     """Get Canvas API token from environment or user input."""
     token = os.environ.get("CANVAS_API_TOKEN")
-    
+
     if token:
         return token
     
@@ -840,7 +1006,7 @@ def get_canvas_token():
     print("HOW TO GET YOUR CANVAS API TOKEN:")
     print("=" * 70)
     print()
-    print("1. Log in to Canvas (e.g., cabrillo.instructure.com)")
+    print("1. Log in to Canvas (e.g., institution.instructure.com)")
     print("2. Click your profile picture (top-left) â†’ Settings")
     print("3. Scroll down to 'Approved Integrations'")
     print("4. Click '+ New Access Token'")
@@ -870,14 +1036,22 @@ def get_canvas_token():
             sys.exit(0)
     
     if choice == "3":
-        # Open Canvas in browser
-        print("\nðŸŒ Opening Canvas in your browser...")
-        print()
-        print("Default Canvas URL: https://cabrillo.instructure.com")
-        print()
-        custom = input("Use a different Canvas URL? (Enter URL or press Enter for default): ").strip()
-        
-        canvas_url = custom if custom else "https://cabrillo.instructure.com"
+        # Open Canvas in browser - use already configured URL if available
+        print("\n🌐 Opening Canvas in your browser...")
+
+        canvas_url = os.environ.get("CANVAS_BASE_URL")
+
+        if canvas_url:
+            print(f"\nUsing your Canvas URL: {canvas_url}")
+        else:
+            print()
+            print("Enter your Canvas URL to open it in the browser.")
+            print()
+            canvas_url = input("Canvas URL (e.g., https://institution.instructure.com): ").strip()
+
+        if not canvas_url:
+            print("⚠️  No Canvas URL available - skipping browser open")
+
         
         if open_url_in_browser(canvas_url):
             print(f"âœ… Opened {canvas_url} in your browser")
@@ -1027,7 +1201,7 @@ def show_help_menu():
                 print()
                 print("GETTING YOUR TOKEN FOR THE FIRST TIME:")
                 print()
-                print("1. Log in to your Canvas site (e.g., cabrillo.instructure.com)")
+                print("1. Log in to your Canvas site (e.g., institution.instructure.com)")
                 print("2. Click on your profile picture or name in the top-left corner")
                 print("3. Select 'Settings' from the dropdown menu")
                 print("4. Scroll down to the section called 'Approved Integrations'")
@@ -1227,7 +1401,7 @@ def change_canvas_token():
             print("Follow these steps to get a new token from Canvas:")
             print()
             print("1. Open Canvas in your web browser")
-            print("   (e.g., cabrillo.instructure.com)")
+            print("   (e.g., institution.instructure.com)")
             print()
             print("2. Click on your profile picture or name in the top-left corner")
             print()
@@ -1258,11 +1432,18 @@ def change_canvas_token():
             
             if sub_choice == "1":
                 # Open Canvas in browser
-                print()
-                print("Default Canvas URL: https://cabrillo.instructure.com")
-                print()
-                custom = input("Press Enter for default, or type your Canvas URL: ").strip()
-                canvas_url = custom if custom else "https://cabrillo.instructure.com"
+                canvas_url = os.environ.get("CANVAS_BASE_URL")
+
+                if not canvas_url:
+                    print()
+                    print("Enter your Canvas instance URL")
+                    print()
+                    canvas_url = input("Canvas URL (e.g., https://institution.instructure.com): ").strip()
+
+                if not canvas_url:
+                    print("❌ No Canvas URL available")
+                    print("❌ Cancelled - no changes made to your token")
+                    return
                 
                 print()
                 print(f"🌐 Opening {canvas_url} in your browser...")
@@ -1392,6 +1573,168 @@ def change_canvas_token():
         print("\n\n❌ Cancelled - no changes made to your token")
 
 
+def change_canvas_url():
+    """Allow user to change their Canvas URL."""
+    print()
+    print("=" * 70)
+    print("🌐 CHANGE CANVAS URL")
+    print("=" * 70)
+    print()
+
+    current_url = os.environ.get("CANVAS_BASE_URL")
+    if current_url:
+        print(f"Current Canvas URL: {current_url}")
+        print()
+
+    print("Options:")
+    print("  [1] Enter a new Canvas URL")
+    print("  [2] Remove saved URL (you'll be asked each session)")
+    print("  [3] Cancel - go back to main menu")
+    print()
+
+    try:
+        choice = input("Choose option (1/2/3, default=3): ").strip() or "3"
+
+        if choice == "1":
+            # Get new URL
+            print()
+            print("=" * 70)
+            print("ENTER YOUR CANVAS URL")
+            print("=" * 70)
+            print()
+            print("📍 WHERE TO FIND YOUR CANVAS URL:")
+            print()
+            print("1. Open your web browser and log in to Canvas")
+            print("2. Look at the address bar")
+            print("3. Copy everything BEFORE '/courses' or '/login'")
+            print()
+            print("EXAMPLES:")
+            print("  If you see: https://example.instructure.com/courses/12345")
+            print("  You need:   https://example.instructure.com")
+            print()
+            print("=" * 70)
+            print()
+
+            while True:
+                new_url = input("Enter your Canvas URL: ").strip()
+
+                if not new_url:
+                    print("❌ Canvas URL cannot be empty")
+                    retry = input("Try again? (Y/n): ").strip().lower()
+                    if retry in ['', 'y', 'yes']:
+                        continue
+                    else:
+                        print("❌ Cancelled - no changes made")
+                        return
+
+                # Remove trailing slashes
+                new_url = new_url.rstrip('/')
+
+                # Add https if missing
+                if not new_url.startswith('http'):
+                    confirm = input(f"Add https:// prefix? (Y/n): ").strip().lower()
+                    if confirm in ['', 'y', 'yes']:
+                        new_url = "https://" + new_url
+
+                # Confirm
+                print()
+                print(f"New Canvas URL: {new_url}")
+                confirm = input("Is this correct? (Y/n): ").strip().lower()
+
+                if confirm in ['', 'y', 'yes']:
+                    break
+                print("Let's try again...")
+                print()
+
+            # Ask if they want to save permanently
+            print()
+            save = input("Save this URL permanently? (Y/n): ").strip().lower()
+
+            if save in ['', 'y', 'yes']:
+                save_canvas_url_permanently(new_url)
+            else:
+                # Set for current session only
+                os.environ["CANVAS_BASE_URL"] = new_url
+                print("✅ Canvas URL updated (session only)")
+
+        elif choice == "2":
+            # Remove saved URL
+            remove_saved_canvas_url()
+
+        elif choice == "3":
+            print("❌ Cancelled - no changes made")
+            return
+        else:
+            print("❌ Invalid choice - no changes made")
+            return
+
+    except (KeyboardInterrupt, EOFError):
+        print("\n\n❌ Cancelled - no changes made")
+        return
+
+def remove_saved_canvas_url():
+    """Remove saved Canvas URL from config files."""
+    system = platform.system()
+
+    if system == "Windows":
+        print("⚠️  On Windows, please remove the URL manually from System Environment Variables")
+        print("   1. Search for 'Environment Variables' in Windows")
+        print("   2. Click 'Environment Variables' button")
+        print("   3. Find and delete CANVAS_BASE_URL from User variables")
+        return
+
+    # Unix-like systems - try to remove from shell config files
+    shell = os.environ.get("SHELL", "")
+
+    if "zsh" in shell:
+        rc_file = Path.home() / ".zshrc"
+    elif "bash" in shell:
+        rc_file = Path.home() / ".bashrc"
+    else:
+        rc_file = Path.home() / ".bashrc"  # Default to .bashrc
+
+    if not rc_file.exists():
+        print(f"⚠️  {rc_file} not found - nothing to remove")
+        return
+
+    try:
+        with open(rc_file, 'r') as f:
+            lines = f.readlines()
+
+        # Filter out the Canvas URL line
+        new_lines = []
+        removed = False
+        skip_next_comment = False
+
+        for line in lines:
+            if 'export CANVAS_BASE_URL=' in line:
+                removed = True
+                skip_next_comment = False
+                continue
+            if skip_next_comment and line.strip().startswith('#') and 'Canvas' in line:
+                skip_next_comment = False
+                continue
+            if '# Canvas Autograder - Canvas URL' in line:
+                skip_next_comment = True
+                continue
+            new_lines.append(line)
+
+        if removed:
+            with open(rc_file, 'w') as f:
+                f.writelines(new_lines)
+            print(f"✅ Removed Canvas URL from {rc_file}")
+            print("   (Will take effect in new terminal sessions)")
+
+            # Remove from current session too
+            if "CANVAS_BASE_URL" in os.environ:
+                del os.environ["CANVAS_BASE_URL"]
+                print("   Removed from current session as well")
+        else:
+            print(f"⚠️  No saved Canvas URL found in {rc_file}")
+
+    except Exception as e:
+        print(f"❌ Error removing URL: {e}")
+
 def remove_saved_token():
     """Remove saved Canvas API token from config files."""
     system = platform.system()
@@ -1463,7 +1806,7 @@ def cleanup_old_files(target_dir, script_type):
     if cleanup_targets == "all":
         # Clean all file types for this script
         if script_type == "Academic_Dishonesty":
-            targets_to_clean = [("Academic_Dishonesty", "csv"), ("Academic_Dishonesty", "excel")]
+            targets_to_clean = [("Academic_Dishonesty", "csv"), ("Academic_Dishonesty", "excel"), ("Academic_Dishonesty", "txt")]
         elif script_type == "Complete-Incomplete":
             targets_to_clean = [("Complete-Incomplete", "csv")]
         elif script_type == "Discussion_Forum":
@@ -1478,6 +1821,8 @@ def cleanup_old_files(target_dir, script_type):
                     targets_to_clean.append(("Academic_Dishonesty", "csv"))
                 elif target == "ad_excel":
                     targets_to_clean.append(("Academic_Dishonesty", "excel"))
+                elif target == "ad_txt":
+                    targets_to_clean.append(("Academic_Dishonesty", "txt"))
             elif script_type == "Complete-Incomplete" and target == "ci_csv":
                 targets_to_clean.append(("Complete-Incomplete", "csv"))
             elif script_type == "Discussion_Forum" and target == "df_csv":
@@ -1653,17 +1998,21 @@ def archive_files_by_type(target_dir, script_type, file_type, threshold_days=180
     cutoff_date = datetime.now() - timedelta(days=threshold_days)
     moved_count = 0
     
-    # For Academic Dishonesty, files are in subdirectories
+    # For Academic Dishonesty, files are in subdirectories (except txt)
     if script_type == "Academic_Dishonesty":
         if file_type == "csv":
             source_dir = target_dir / "csv"
             dest_dir = archive_dir / "csv"
             pattern = "*.csv"
-        else:  # excel
+        elif file_type == "excel":
             source_dir = target_dir / "excel"
             dest_dir = archive_dir / "excel"
             pattern = "*.xlsx"
-        
+        else:  # txt - stored directly in target_dir
+            source_dir = target_dir
+            dest_dir = archive_dir
+            pattern = "*_report.txt"
+
         if source_dir.exists():
             dest_dir.mkdir(parents=True, exist_ok=True)
             for file in source_dir.glob(pattern):
@@ -1728,15 +2077,18 @@ def trash_files_by_type(target_dir, script_type, file_type, threshold_days=180):
             print(f"   âš ï¸  Could not trash {file_path.name}: {e}")
             return False
     
-    # For Academic Dishonesty, files are in subdirectories
+    # For Academic Dishonesty, files are in subdirectories (except txt)
     if script_type == "Academic_Dishonesty":
         if file_type == "csv":
             source_dir = target_dir / "csv"
             pattern = "*.csv"
-        else:  # excel
+        elif file_type == "excel":
             source_dir = target_dir / "excel"
             pattern = "*.xlsx"
-        
+        else:  # txt - stored directly in target_dir
+            source_dir = target_dir
+            pattern = "*_report.txt"
+
         if source_dir.exists():
             for file in source_dir.glob(pattern):
                 if datetime.fromtimestamp(file.stat().st_mtime) < cutoff_date:
@@ -1859,14 +2211,20 @@ def main():
         # If None returned, user accessed settings - show menu again
         if selected_script is None:
             continue
-        
+
+        # Get Canvas URL (required first)
+        canvas_url = get_canvas_url()
+
+        # Set it in environment so scripts can use it
+        os.environ["CANVAS_BASE_URL"] = canvas_url
+
         # Get Canvas API token
         token = get_canvas_token()
-        
+
         # Create base exports directory
         base_dir = get_base_exports_dir()
         base_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Run the script
         run_script(selected_script, token)
         

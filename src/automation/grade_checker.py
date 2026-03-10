@@ -19,7 +19,7 @@ class GradeChecker:
             base_url: Canvas base URL
             api_token: Canvas API token
         """
-        self.base_url = base_url or os.getenv("CANVAS_BASE_URL", "https://cabrillo.instructure.com")
+        self.base_url = base_url or os.getenv("CANVAS_BASE_URL")
         self.api_token = api_token or os.getenv("CANVAS_API_TOKEN")
 
         if not self.api_token:
@@ -55,31 +55,34 @@ class GradeChecker:
 
     def _is_safe_to_grade(self, submission: Dict[str, Any]) -> bool:
         """
-        Check if a submission is safe to grade.
+        Check if a submission is safe to grade without overwriting manual grades.
+
+        Only skips submissions that are explicitly marked as 'graded' by Canvas.
+        Does NOT use the score field because Canvas automatically sets score=0
+        for all submitted work, even when ungraded. Using score would incorrectly
+        skip submitted work that needs grading.
 
         Args:
             submission: Submission data dictionary
 
         Returns:
-            True if safe to grade
+            True if safe to grade (submitted but not yet graded)
         """
         # Check workflow_state
         workflow_state = submission.get('workflow_state', '')
 
-        # Skip if already graded
+        # Skip if already graded by a teacher
+        # Only workflow_state='graded' reliably indicates an existing grade
         if workflow_state == 'graded':
             return False
 
-        # Skip if has a score (indicates existing grade)
-        score = submission.get('score')
-        if score is not None:
-            return False
-
-        # Skip if not submitted
+        # Skip if not submitted (nothing to grade)
         if workflow_state in ['unsubmitted', 'not_submitted']:
             return False
 
-        # Safe to grade
+        # If workflow_state is 'submitted' or 'pending_review', safe to grade
+        # Note: These submissions may have score=0, which is a Canvas placeholder
+        # for submitted work, NOT an indication of being graded
         return True
 
     def has_manual_grades(self, course_id: int, assignment_id: int) -> bool:

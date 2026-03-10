@@ -4,6 +4,7 @@ Specialized API wrappers for automation system.
 """
 
 import os
+import time
 import requests
 from typing import List, Dict, Any, Set, Optional
 from datetime import datetime
@@ -22,7 +23,7 @@ class CanvasAutomationAPI:
             base_url: Canvas base URL (defaults to env CANVAS_BASE_URL or Cabrillo)
             api_token: Canvas API token (defaults to env CANVAS_API_TOKEN)
         """
-        self.base_url = base_url or os.getenv("CANVAS_BASE_URL", "https://cabrillo.instructure.com")
+        self.base_url = base_url or os.getenv("CANVAS_BASE_URL")
         self.api_token = api_token or os.getenv("CANVAS_API_TOKEN")
 
         if not self.api_token:
@@ -48,27 +49,36 @@ class CanvasAutomationAPI:
         params = params or {}
 
         while url:
-            try:
-                response = requests.get(url, headers=self.headers, params=params, timeout=30)
-                response.raise_for_status()
-                items.extend(response.json())
-
-                # Get next page URL from Link header
-                url = response.links.get('next', {}).get('url')
-                params = {}  # Params are in the next URL
-
-            except requests.exceptions.RequestException as e:
-                print(f"⚠️  API request failed: {e}")
-                # Try once more
+            # Retry with exponential backoff
+            for attempt in range(3):
                 try:
                     response = requests.get(url, headers=self.headers, params=params, timeout=30)
                     response.raise_for_status()
                     items.extend(response.json())
+
+                    # Get next page URL from Link header
                     url = response.links.get('next', {}).get('url')
-                    params = {}
-                except:
-                    # Give up on this page
-                    break
+                    params = {}  # Params are in the next URL
+                    break  # Success, exit retry loop
+
+                except requests.exceptions.Timeout as e:
+                    if attempt < 2:  # Don't wait after last attempt
+                        wait_time = 2 ** attempt  # 1s, 2s
+                        print(f"⏱️  Timeout on attempt {attempt + 1}/3, retrying in {wait_time}s...")
+                        time.sleep(wait_time)
+                    else:
+                        print(f"⚠️  API request failed after 3 attempts: {e}")
+                        url = None  # Give up on remaining pages
+                        break
+                except requests.exceptions.RequestException as e:
+                    if attempt < 2:
+                        wait_time = 2 ** attempt
+                        print(f"⚠️  Request failed on attempt {attempt + 1}/3, retrying in {wait_time}s...")
+                        time.sleep(wait_time)
+                    else:
+                        print(f"⚠️  API request failed after 3 attempts: {e}")
+                        url = None
+                        break
 
         return items
 
@@ -147,6 +157,9 @@ class CanvasAutomationAPI:
         Returns:
             List of assignment group dictionaries
         """
+        import logging
+        logger = logging.getLogger('autograder_automation')
+
         url = f"{self.base_url}/api/v1/courses/{course_id}/assignment_groups"
         params = {'include[]': ['assignments', 'discussion_topic']}
 
@@ -154,8 +167,14 @@ class CanvasAutomationAPI:
             response = requests.get(url, headers=self.headers, params=params, timeout=30)
             response.raise_for_status()
             return response.json()
+        except requests.exceptions.Timeout as e:
+            logger.warning(f"⏱️  Timeout fetching assignment groups for course {course_id}: {e}")
+            return []
+        except requests.exceptions.ConnectionError as e:
+            logger.warning(f"🔌 Connection error fetching assignment groups for course {course_id}: {e}")
+            return []
         except requests.exceptions.RequestException as e:
-            print(f"⚠️  Failed to fetch assignment groups for course {course_id}: {e}")
+            logger.warning(f"⚠️  Failed to fetch assignment groups for course {course_id}: {e}")
             return []
 
     def get_assignments_in_group(self, course_id: int, group_id: int) -> List[Dict[str, Any]]:
@@ -203,37 +222,35 @@ class CanvasAutomationAPI:
         """
         Get count of submissions for an assignment.
 
+        Only needs to determine whether any submitted work exists (> 0), so
+        fetches a single page of 1 and filters for actually-submitted workflow
+        states. Avoids a full paginated fetch on every assignment, which was
+        causing multi-minute hangs when Canvas was slow.
+
         Args:
             course_id: Canvas course ID
             assignment_id: Assignment ID
 
         Returns:
-            Number of submissions
+            Number of submissions (may be capped at 1 — callers only check > 0)
         """
         url = f"{self.base_url}/api/v1/courses/{course_id}/assignments/{assignment_id}/submissions"
-        params = {'per_page': 1}  # We only need the count
+        params = {'per_page': 1, 'workflow_state': 'submitted'}
 
         try:
             response = requests.get(url, headers=self.headers, params=params, timeout=30)
             response.raise_for_status()
-
-            # Check for pagination info to get total count
-            # Canvas doesn't always provide total count, so we need to check actual submissions
-            url = f"{self.base_url}/api/v1/courses/{course_id}/assignments/{assignment_id}/submissions"
-            params = {'per_page': 100}
-
-            submissions = self._get_paginated(url, params)
-
-            # Count submissions that are actually submitted
-            submitted_count = sum(
-                1 for sub in submissions
-                if sub.get('workflow_state') not in ['unsubmitted', 'not_submitted']
-            )
-
-            return submitted_count
+            submissions = response.json()
+            return len([
+                s for s in submissions
+                if s.get('workflow_state') not in ['unsubmitted', 'not_submitted']
+            ])
 
         except requests.exceptions.RequestException as e:
-            print(f"⚠️  Failed to get submission count: {e}")
+            import logging
+            logging.getLogger('autograder_automation').warning(
+                f"⚠️  Failed to get submission count for assignment {assignment_id}: {e}"
+            )
             return 0
 
     def get_assignment_details(self, course_id: int, assignment_id: int) -> Optional[Dict[str, Any]]:

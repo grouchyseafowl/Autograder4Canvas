@@ -1,0 +1,762 @@
+{
+  "ETHN1_01_2": [
+    {
+      "row": "b",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.10317460317460317,
+        0.012285012285012284,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Explanation of subject matter",
+      "crop_file": "ETHN1_01_2_rowb.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in cell B1, which is the first column. There is no other mark in this cell, and the 'X' is not a cross-out. There is no handwritten text in this cell or any other cell in the row that would indicate a different rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in cell B1, which is the first column. There is no other mark in this cell, and the 'X' is not a cross-out. There is no handwritten text in this cell or any other cell in the row that would indicate a different rating."
+      }
+    },
+    {
+      "row": "i",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.0782312925170068,
+        0.012748597654258032,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Instructor's sensitivity to the student population",
+      "crop_file": "ETHN1_01_2_rowi.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell, which is commonly used as a standard mark. There is no evidence of a cross-out or any other mark in the adjacent cells. There is no handwritten text in the row that would indicate a different rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell, which is commonly used as a standard mark. There is no evidence of a cross-out or any other mark in the adjacent cells. There is no handwritten text in the row that would indicate a different rating."
+      }
+    }
+  ],
+  "ETHN1_01_4": [
+    {
+      "row": "a",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.12015503875968993,
+        0.0343980343980344,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Organization of subject matter",
+      "crop_file": "ETHN1_01_4_rowa.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in the cell corresponding to column 1 (Excellent). There is no other mark in the same cell, and the 'X' is not a cross-out. There is no handwritten text in the row that would indicate a different rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in the cell corresponding to column 1 (Excellent). There is no other mark in the same cell, and the 'X' is not a cross-out. There is no handwritten text in the row that would indicate a different rating."
+      }
+    },
+    {
+      "row": "b",
+      "cv_pick": "Good",
+      "densities": [
+        0.01937984496124031,
+        0.11179361179361179,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Explanation of subject matter",
+      "crop_file": "ETHN1_01_4_rowb.png",
+      "llm_response": "```json\n{\n  \"column\": 2,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in cell B2, which is the second column from the left. There are no other marks in the other columns of cell B2. There is no handwritten text in cell B2. The student's intended rating mark is 2 (Good).\"\n}\n```",
+      "llm_parsed": {
+        "column": 2,
+        "confidence": "high",
+        "notes": "The student has marked an X in cell B2, which is the second column from the left. There are no other marks in the other columns of cell B2. There is no handwritten text in cell B2. The student's intended rating mark is 2 (Good)."
+      }
+    },
+    {
+      "row": "i",
+      "cv_pick": "No Opinion/Does Not Apply",
+      "densities": [
+        0.030374940673943997,
+        0.0,
+        0.0,
+        0.0,
+        0.06425531914893617
+      ],
+      "question": "Instructor's sensitivity to the student population",
+      "crop_file": "ETHN1_01_4_rowi.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in the cell, which is commonly used as a standard mark. There is no evidence of a cross-out or any other mark in the adjacent cells. There is no handwritten text in the row that would indicate a different rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in the cell, which is commonly used as a standard mark. There is no evidence of a cross-out or any other mark in the adjacent cells. There is no handwritten text in the row that would indicate a different rating."
+      }
+    },
+    {
+      "row": "k",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.0563953488372093,
+        0.016409266409266408,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Opportunities to demonstrate learning through a variety of assessments",
+      "crop_file": "ETHN1_01_4_rowk.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell, which is commonly used as a standard mark. There is no evidence of a cross-out or any other mark in the adjacent cells. There is no handwritten text in the row that would indicate a different rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell, which is commonly used as a standard mark. There is no evidence of a cross-out or any other mark in the adjacent cells. There is no handwritten text in the row that would indicate a different rating."
+      }
+    }
+  ],
+  "ETHN1_01_5": [
+    {
+      "row": "c",
+      "cv_pick": "Needs some improvement",
+      "densities": [
+        0.0,
+        0.0,
+        0.01919934640522876,
+        0.010416666666666666,
+        0.0
+      ],
+      "question": "Relation of subject matter to other fields and real-life applications",
+      "crop_file": "ETHN1_01_5_rowc.png",
+      "llm_response": "```json\n{\n  \"column\": 3,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in cell C3, which is the 'Needs some improvement' column. There are no other marks in the same row that could be confused with the student's rating. There is no handwritten text in the row that would contradict the student's mark.\"\n}\n```",
+      "llm_parsed": {
+        "column": 3,
+        "confidence": "high",
+        "notes": "The student has marked an X in cell C3, which is the 'Needs some improvement' column. There are no other marks in the same row that could be confused with the student's rating. There is no handwritten text in the row that would contradict the student's mark."
+      }
+    }
+  ],
+  "ETHN1_01_10": [
+    {
+      "row": "a",
+      "cv_pick": "Good",
+      "densities": [
+        0.04894179894179894,
+        0.12407862407862408,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Organization of subject matter",
+      "crop_file": "ETHN1_01_10_rowa.png",
+      "llm_response": "```json\n{\n  \"column\": 2,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell corresponding to column 2 (Good). There is no other mark in the same cell, and the X is not a cross-out. There is no handwritten text in the row that would indicate a different rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 2,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell corresponding to column 2 (Good). There is no other mark in the same cell, and the X is not a cross-out. There is no handwritten text in the row that would indicate a different rating."
+      }
+    },
+    {
+      "row": "c",
+      "cv_pick": "Needs some improvement",
+      "densities": [
+        0.0,
+        0.02039775624681285,
+        0.13872340425531915,
+        0.0,
+        0.0
+      ],
+      "question": "Relation of subject matter to other fields and real-life applications",
+      "crop_file": "ETHN1_01_10_rowc.png",
+      "llm_response": "```json\n{\n  \"column\": 3,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell for column 3 (Needs some improvement). There is no other mark in the same row that could be confused with the student's rating. There is no handwritten text in the row that would override the student's mark.\"\n}\n```",
+      "llm_parsed": {
+        "column": 3,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell for column 3 (Needs some improvement). There is no other mark in the same row that could be confused with the student's rating. There is no handwritten text in the row that would override the student's mark."
+      }
+    }
+  ],
+  "ETHN1_01_19": [
+    {
+      "row": "m",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.22790697674418606,
+        0.17780938833570412,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Use of supplemental materials (handouts, presentation, sheets, if necessary)",
+      "crop_file": "ETHN1_01_19_rowm.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell for column 1 (Excellent). There are no other marks in the cell, and the cell is not crossed out or obscured. There is no handwritten text in the cell.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell for column 1 (Excellent). There are no other marks in the cell, and the cell is not crossed out or obscured. There is no handwritten text in the cell."
+      }
+    }
+  ],
+  "ETHN1_01_26": [
+    {
+      "row": "b",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.07142857142857142,
+        0.012285012285012284,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Explanation of subject matter",
+      "crop_file": "ETHN1_01_26_rowb.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in the 'Excellent' column for row B. There are no other marks in the same row, and the 'X' is not a cross-out or a hand-written note. The arrow points to the 'Excellent' column, indicating the student's intended rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in the 'Excellent' column for row B. There are no other marks in the same row, and the 'X' is not a cross-out or a hand-written note. The arrow points to the 'Excellent' column, indicating the student's intended rating."
+      }
+    },
+    {
+      "row": "c",
+      "cv_pick": "Good",
+      "densities": [
+        0.019922254616132166,
+        0.03926568077511474,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Relation of subject matter to other fields and real-life applications",
+      "crop_file": "ETHN1_01_26_rowc.png",
+      "llm_response": "```json\n{\n  \"column\": 2,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in the cell corresponding to column 2 (Good). There is no other mark in the same row that could be confused with the student's rating. There is no handwritten text in the row that would contradict the 'X' mark.\"\n}\n```",
+      "llm_parsed": {
+        "column": 2,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in the cell corresponding to column 2 (Good). There is no other mark in the same row that could be confused with the student's rating. There is no handwritten text in the row that would contradict the 'X' mark."
+      }
+    },
+    {
+      "row": "f",
+      "cv_pick": "Good",
+      "densities": [
+        0.01098901098901099,
+        0.06576576576576576,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Selection of texts, assignments, and materials relevant to the subject",
+      "crop_file": "ETHN1_01_26_rowf.png",
+      "llm_response": "```json\n{\n  \"column\": 2,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell corresponding to column 2 (Good). There is no other mark in the same row that could be confused with the student's rating. There is no handwritten text in the row that would contradict the student's mark.\"\n}\n```",
+      "llm_parsed": {
+        "column": 2,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell corresponding to column 2 (Good). There is no other mark in the same row that could be confused with the student's rating. There is no handwritten text in the row that would contradict the student's mark."
+      }
+    }
+  ],
+  "ETHN1_01_27": [
+    {
+      "row": "i",
+      "cv_pick": "Good",
+      "densities": [
+        0.13140866102538576,
+        0.33962264150943394,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Instructor's sensitivity to the student population",
+      "crop_file": "ETHN1_01_27_rowi.png",
+      "llm_response": "```json\n{\n  \"column\": 2,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell, which is commonly used as a standard mark. There is no evidence of a cross-out or a deliberate obscuration of the mark. The arrow points to the cell with the X, indicating that this is the intended rating. There is no handwritten text in the row that contradicts the student's mark.\"\n}\n```",
+      "llm_parsed": {
+        "column": 2,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell, which is commonly used as a standard mark. There is no evidence of a cross-out or a deliberate obscuration of the mark. The arrow points to the cell with the X, indicating that this is the intended rating. There is no handwritten text in the row that contradicts the student's mark."
+      }
+    }
+  ],
+  "ETHN1_01_33": [
+    {
+      "row": "a",
+      "cv_pick": "Good",
+      "densities": [
+        0.03561253561253561,
+        0.11143695014662756,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Organization of subject matter",
+      "crop_file": "ETHN1_01_33_rowa.png",
+      "llm_response": "```json\n{\n  \"column\": 2,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell corresponding to column 2 (Good). There is no evidence of a cross-out or a mark in another cell that would indicate a change of mind. There is no handwritten text in the row that would override the student's mark.\"\n}\n```",
+      "llm_parsed": {
+        "column": 2,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell corresponding to column 2 (Good). There is no evidence of a cross-out or a mark in another cell that would indicate a change of mind. There is no handwritten text in the row that would override the student's mark."
+      }
+    },
+    {
+      "row": "b",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.0868945868945869,
+        0.021994134897360705,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Explanation of subject matter",
+      "crop_file": "ETHN1_01_33_rowb.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in cell B1, which is the first column. There is no other mark in this cell, and the 'X' is not a cross-out. There is no handwritten text in this cell or any other cell in the row that would indicate a different rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in cell B1, which is the first column. There is no other mark in this cell, and the 'X' is not a cross-out. There is no handwritten text in this cell or any other cell in the row that would indicate a different rating."
+      }
+    },
+    {
+      "row": "c",
+      "cv_pick": "Good",
+      "densities": [
+        0.02040816326530612,
+        0.044221698113207544,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Relation of subject matter to other fields and real-life applications",
+      "crop_file": "ETHN1_01_33_rowc.png",
+      "llm_response": "```json\n{\n  \"column\": 2,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in the cell corresponding to column 2 (Good). There is no other mark in the same row that could be confused with the student's rating. There is no handwritten text in the row that would contradict the 'X' mark.\"\n}\n```",
+      "llm_parsed": {
+        "column": 2,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in the cell corresponding to column 2 (Good). There is no other mark in the same row that could be confused with the student's rating. There is no handwritten text in the row that would contradict the 'X' mark."
+      }
+    },
+    {
+      "row": "e",
+      "cv_pick": "Needs some improvement",
+      "densities": [
+        0.015781922525107604,
+        0.0,
+        0.042091836734693876,
+        0.0,
+        0.0
+      ],
+      "question": "Reasonable opportunity to ask questions and express viewpoints",
+      "crop_file": "ETHN1_01_33_rowe.png",
+      "llm_response": "```json\n{\n  \"column\": 3,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in cell 3, which is the 'Needs some improvement' column. There is no other mark in the same row that could be confused with the student's rating. There is no handwritten text in the row that would contradict the student's mark.\"\n}\n```",
+      "llm_parsed": {
+        "column": 3,
+        "confidence": "high",
+        "notes": "The student has marked an X in cell 3, which is the 'Needs some improvement' column. There is no other mark in the same row that could be confused with the student's rating. There is no handwritten text in the row that would contradict the student's mark."
+      }
+    },
+    {
+      "row": "l",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.06070120355834641,
+        0.0,
+        0.012025901942645698,
+        0.0,
+        0.0
+      ],
+      "question": "Informing students of progress and maintaining accurate records",
+      "crop_file": "ETHN1_01_33_rowl.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell for column 1 (Excellent). There is no other mark in the cell, and the cell is not adjacent to any other marked cell. There is no handwritten text in the row.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell for column 1 (Excellent). There is no other mark in the cell, and the cell is not adjacent to any other marked cell. There is no handwritten text in the row."
+      }
+    }
+  ],
+  "ETHN1_01_36": [
+    {
+      "row": "d",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.06666666666666667,
+        0.0,
+        0.05384615384615385,
+        0.0,
+        0.0
+      ],
+      "question": "Clarification of expected standards of performance",
+      "crop_file": "ETHN1_01_36_rowd.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in cell D1, which is the first column. There is no other mark in this cell, and the student's note 'Begins/ends class on time; has good attendance' is not crossed out or obscured. The arrow points to cell D1, indicating that this is the intended cell for the rating mark.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an X in cell D1, which is the first column. There is no other mark in this cell, and the student's note 'Begins/ends class on time; has good attendance' is not crossed out or obscured. The arrow points to cell D1, indicating that this is the intended cell for the rating mark."
+      }
+    },
+    {
+      "row": "h",
+      "cv_pick": "Good",
+      "densities": [
+        0.04329004329004329,
+        0.05405405405405406,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Instructor's helpfulness in working with the student",
+      "crop_file": "ETHN1_01_36_rowh.png",
+      "llm_response": "```json\n{\n  \"column\": 2,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell, which is commonly used as a standard mark. There is no evidence of a cross-out or a deliberate obscuration of the mark. The arrow points to the cell with the X, indicating that this is the intended rating. There is no handwritten text in the row that contradicts the student's mark.\"\n}\n```",
+      "llm_parsed": {
+        "column": 2,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell, which is commonly used as a standard mark. There is no evidence of a cross-out or a deliberate obscuration of the mark. The arrow points to the cell with the X, indicating that this is the intended rating. There is no handwritten text in the row that contradicts the student's mark."
+      }
+    },
+    {
+      "row": "l",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.04616132167152575,
+        0.016828148903620603,
+        0.003829787234042553,
+        0.0,
+        0.0
+      ],
+      "question": "Informing students of progress and maintaining accurate records",
+      "crop_file": "ETHN1_01_36_rowl.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell corresponding to column 1 (Excellent). There is no other mark in the same cell, and the cell is not crossed out or obscured. There is no handwritten text in the row.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell corresponding to column 1 (Excellent). There is no other mark in the same cell, and the cell is not crossed out or obscured. There is no handwritten text in the row."
+      }
+    }
+  ],
+  "ETHN1_02_1": [
+    {
+      "row": "a",
+      "cv_pick": "Good",
+      "densities": [
+        0.03840682788051209,
+        0.09937888198757763,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Organization of subject matter",
+      "crop_file": "ETHN1_02_1_rowa.png",
+      "llm_response": "```json\n{\n  \"column\": 2,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell corresponding to column 2 (Good). There is no other mark in the same row that could be confused with the student's rating. There is no handwritten text in the row that would contradict the student's mark.\"\n}\n```",
+      "llm_parsed": {
+        "column": 2,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell corresponding to column 2 (Good). There is no other mark in the same row that could be confused with the student's rating. There is no handwritten text in the row that would contradict the student's mark."
+      }
+    },
+    {
+      "row": "f",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.08653846153846154,
+        0.034482758620689655,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Selection of texts, assignments, and materials relevant to the subject",
+      "crop_file": "ETHN1_02_1_rowf.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in the cell for column 1 (Excellent). There are no other marks in the cell, and the 'X' is not a cross-out. There is no handwritten text in the cell or in the row that would indicate a different rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in the cell for column 1 (Excellent). There are no other marks in the cell, and the 'X' is not a cross-out. There is no handwritten text in the cell or in the row that would indicate a different rating."
+      }
+    },
+    {
+      "row": "g",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.08,
+        0.0,
+        0.0351311232063335,
+        0.0,
+        0.0
+      ],
+      "question": "Usefulness of assignments in understanding subject matter",
+      "crop_file": "ETHN1_02_1_rowg.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in cell G1, which is the cell corresponding to the 'Excellent' rating. There is no other mark in the same row that could be confused with the student's rating. There is no handwritten text in the row that would contradict the 'X' mark.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in cell G1, which is the cell corresponding to the 'Excellent' rating. There is no other mark in the same row that could be confused with the student's rating. There is no handwritten text in the row that would contradict the 'X' mark."
+      }
+    },
+    {
+      "row": "i",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.0923469387755102,
+        0.034482758620689655,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Instructor's sensitivity to the student population",
+      "crop_file": "ETHN1_02_1_rowi.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell, which is commonly used as a standard mark. There is no evidence of a cross-out or any other mark in the adjacent cells. There is no handwritten text in the row that would indicate a different rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell, which is commonly used as a standard mark. There is no evidence of a cross-out or any other mark in the adjacent cells. There is no handwritten text in the row that would indicate a different rating."
+      }
+    },
+    {
+      "row": "j",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.1513157894736842,
+        0.022488755622188907,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Instructor appropriate to the student population",
+      "crop_file": "ETHN1_02_1_rowj.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell for column 1 (Excellent). There is no other mark in the same cell, and the cell is not adjacent to any other marked cell. There is no handwritten text in the row that would indicate a different rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell for column 1 (Excellent). There is no other mark in the same cell, and the cell is not adjacent to any other marked cell. There is no handwritten text in the row that would indicate a different rating."
+      }
+    },
+    {
+      "row": "k",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.1006578947368421,
+        0.09359605911330049,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Opportunities to demonstrate learning through a variety of assessments",
+      "crop_file": "ETHN1_02_1_rowk.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell corresponding to column 1 (Excellent). There is no other mark in the same cell, and the cell is not crossed out or obscured. There is no handwritten text in the row that would indicate a different rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell corresponding to column 1 (Excellent). There is no other mark in the same cell, and the cell is not crossed out or obscured. There is no handwritten text in the row that would indicate a different rating."
+      }
+    },
+    {
+      "row": "l",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.11783783783783784,
+        0.022486772486772486,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Informing students of progress and maintaining accurate records",
+      "crop_file": "ETHN1_02_1_rowl.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in the cell corresponding to column 1 (Excellent). There are no other marks in the same row, and the 'X' is not a cross-out or a hand-written note. The arrow points to the cell with the 'X', indicating the student's intended rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in the cell corresponding to column 1 (Excellent). There are no other marks in the same row, and the 'X' is not a cross-out or a hand-written note. The arrow points to the cell with the 'X', indicating the student's intended rating."
+      }
+    }
+  ],
+  "ETHN1_02_5": [
+    {
+      "row": "h",
+      "cv_pick": "Good",
+      "densities": [
+        0.05757575757575758,
+        0.12244897959183673,
+        0.08258186995728524,
+        0.06976744186046512,
+        0.053630754627432366
+      ],
+      "question": "Instructor's helpfulness in working with the student",
+      "crop_file": "ETHN1_02_5_rowh.png",
+      "llm_response": "```json\n{\n  \"column\": 2,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in cell H2, which is the second column from the left. There is no other mark in the same cell, and the 'X' is not a cross-out. There is no handwritten text in the row that would indicate a different rating. Therefore, the student's intended rating mark is 'Good' (2).\"\n}\n```",
+      "llm_parsed": {
+        "column": 2,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in cell H2, which is the second column from the left. There is no other mark in the same cell, and the 'X' is not a cross-out. There is no handwritten text in the row that would indicate a different rating. Therefore, the student's intended rating mark is 'Good' (2)."
+      }
+    }
+  ],
+  "ETHN1_02_11": [
+    {
+      "row": "l",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.28833333333333333,
+        0.019230769230769232,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Informing students of progress and maintaining accurate records",
+      "crop_file": "ETHN1_02_11_rowl.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in the cell corresponding to column 1 (Excellent). There are no other marks in the same row, and the 'X' is clearly visible and not obscured by any other marks or text.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in the cell corresponding to column 1 (Excellent). There are no other marks in the same row, and the 'X' is clearly visible and not obscured by any other marks or text."
+      }
+    }
+  ],
+  "ETHN1_02_12": [
+    {
+      "row": "l",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.043243243243243246,
+        0.013409961685823755,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Informing students of progress and maintaining accurate records",
+      "crop_file": "ETHN1_02_12_rowl.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in the cell corresponding to column 1 (Excellent). There are no other marks in the same row, and the 'X' is not a cross-out or a hand-written note. The arrow points to the cell with the 'X', indicating the student's intended rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in the cell corresponding to column 1 (Excellent). There are no other marks in the same row, and the 'X' is not a cross-out or a hand-written note. The arrow points to the cell with the 'X', indicating the student's intended rating."
+      }
+    }
+  ],
+  "ETHN1_02_18": [
+    {
+      "row": "l",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.06232763375620518,
+        0.0468445022771633,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Informing students of progress and maintaining accurate records",
+      "crop_file": "ETHN1_02_18_rowl.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in the cell corresponding to column 1 (Excellent). There are no other marks in the same row, and the 'X' is not a cross-out or a hand-written note. The arrow points to the cell with the 'X', indicating the student's intended rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in the cell corresponding to column 1 (Excellent). There are no other marks in the same row, and the 'X' is not a cross-out or a hand-written note. The arrow points to the cell with the 'X', indicating the student's intended rating."
+      }
+    }
+  ],
+  "ETHN27AN_1": [
+    {
+      "row": "g",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.04353741496598639,
+        0.010957324106113034,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Usefulness of assignments in understanding subject matter",
+      "crop_file": "ETHN27AN_1_rowg.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell for column 1 (Excellent). There are no other marks in the same row, and the X is not a cross-out or a hand-written note. The arrow points to the cell with the X, indicating that it is the intended mark.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell for column 1 (Excellent). There are no other marks in the same row, and the X is not a cross-out or a hand-written note. The arrow points to the cell with the X, indicating that it is the intended mark."
+      }
+    }
+  ],
+  "ETHN27AN_14": [
+    {
+      "row": "c",
+      "cv_pick": "Needs some improvement",
+      "densities": [
+        0.10008203445447088,
+        0.07559808612440191,
+        0.35366739288307913,
+        0.0,
+        0.0
+      ],
+      "question": "Relation of subject matter to other fields and real-life applications",
+      "crop_file": "ETHN27AN_14_rowc.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked the cell with an 'X' which is commonly used as a rating mark. There is no evidence of a cross-out or a mark in a different cell. The arrow points to the cell with the 'X', indicating that this is the intended rating. There is no handwritten text in the row that contradicts this.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked the cell with an 'X' which is commonly used as a rating mark. There is no evidence of a cross-out or a mark in a different cell. The arrow points to the cell with the 'X', indicating that this is the intended rating. There is no handwritten text in the row that contradicts this."
+      }
+    }
+  ],
+  "ETHN27AN_17": [
+    {
+      "row": "m",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.35735735735735735,
+        0.14444444444444443,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "question": "Use of supplemental materials (handouts, presentation, sheets, if necessary)",
+      "crop_file": "ETHN27AN_17_rowm.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an X in the cell for column 1 (Excellent). There is no other mark in the cell, and the cell is not adjacent to any other marked cell. There is no handwritten text in the row.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an X in the cell for column 1 (Excellent). There is no other mark in the cell, and the cell is not adjacent to any other marked cell. There is no handwritten text in the row."
+      }
+    }
+  ],
+  "ETHN27AN_20": [
+    {
+      "row": "j",
+      "cv_pick": "No Opinion/Does Not Apply",
+      "densities": [
+        0.0,
+        0.0,
+        0.016203703703703703,
+        0.0,
+        0.1746031746031746
+      ],
+      "question": "Instructor appropriate to the student population",
+      "crop_file": "ETHN27AN_20_rowj.png",
+      "llm_response": "```json\n{\n  \"column\": 5,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in the cell, which is commonly used as a rating mark. There is no evidence of a cross-out or a different mark in the adjacent cells. There is no handwritten text in the row that would indicate a different rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 5,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in the cell, which is commonly used as a rating mark. There is no evidence of a cross-out or a different mark in the adjacent cells. There is no handwritten text in the row that would indicate a different rating."
+      }
+    }
+  ],
+  "ETHN27AN_21": [
+    {
+      "row": "d",
+      "cv_pick": "Excellent",
+      "densities": [
+        0.16414141414141414,
+        0.0,
+        0.011029411764705883,
+        0.0,
+        0.0
+      ],
+      "question": "Clarification of expected standards of performance",
+      "crop_file": "ETHN27AN_21_rowd.png",
+      "llm_response": "```json\n{\n  \"column\": 1,\n  \"confidence\": \"high\",\n  \"notes\": \"The student has marked an 'X' in the cell for column 1, which is the 'Excellent' rating. There is no other mark in the cell, and the 'X' is not a cross-out or a hand-written note. The arrow points to the cell with the 'X', indicating that this is the intended rating.\"\n}\n```",
+      "llm_parsed": {
+        "column": 1,
+        "confidence": "high",
+        "notes": "The student has marked an 'X' in the cell for column 1, which is the 'Excellent' rating. There is no other mark in the cell, and the 'X' is not a cross-out or a hand-written note. The arrow points to the cell with the 'X', indicating that this is the intended rating."
+      }
+    }
+  ]
+}

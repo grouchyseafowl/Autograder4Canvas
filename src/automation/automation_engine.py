@@ -9,7 +9,8 @@ import logging
 import requests
 import importlib.util
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
+import json
 from datetime import datetime
 from dateutil import parser
 import pytz
@@ -22,6 +23,7 @@ from .canvas_helpers import CanvasAutomationAPI
 from .grade_checker import GradeChecker
 from .flag_aggregator import FlagAggregator
 from .notification_manager import NotificationManager, IncompleteEvent
+from .reply_quality_checker import OllamaReplyChecker
 
 
 class AutomationEngine:
@@ -59,6 +61,9 @@ class AutomationEngine:
             self.notifier = NotificationManager(gs.n8n_webhook_url, gs.notify_email)
         else:
             self.notifier = None
+
+        # LLM reply quality checker (lazy — only used when rule enables it)
+        self._reply_checker = None
 
         # Canvas API details
         self.base_url = os.getenv("CANVAS_BASE_URL", "https://cabrillo.instructure.com")
@@ -188,18 +193,11 @@ class AutomationEngine:
                 if self._should_skip_assignment(assignment, rule):
                     continue
 
-                # Grade based on type
+                # Process assignment (handles type auto-detection for mixed assignments)
                 try:
-                    if rule.assignment_type == "complete_incomplete":
-                        graded_count, skipped_count = self._run_complete_incomplete(
-                            course_id, assignment, rule, config.course_name
-                        )
-                    elif rule.assignment_type == "discussion_forum":
-                        graded_count, skipped_count = self._run_discussion_forum(
-                            course_id, assignment, rule, config.course_name
-                        )
-                    else:
-                        continue
+                    graded_count, skipped_count = self._process_assignment(
+                        course_id, assignment, rule, config.course_name
+                    )
 
                     stats['assignments'] += 1
                     stats['submissions_graded'] += graded_count
@@ -259,6 +257,37 @@ class AutomationEngine:
         """
         assignments = self.api.get_assignments_in_group(course_id, rule.assignment_group_id)
         return assignments
+
+    def _process_assignment(self, course_id: int, assignment: Dict[str, Any],
+                           rule: AssignmentRule, course_name: str) -> tuple:
+        """
+        Process a single assignment, auto-detecting type for mixed assignments.
+
+        For 'mixed' assignment types, inspects Canvas submission_types to determine
+        whether the assignment is a discussion forum or regular submission, then
+        routes to the appropriate grading method.
+
+        Returns:
+            Tuple of (graded_count, skipped_count)
+        """
+        assignment_type = rule.assignment_type
+
+        if assignment_type == "mixed":
+            submission_types = assignment.get('submission_types', [])
+            if 'discussion_topic' in submission_types:
+                assignment_type = "discussion_forum"
+                self.logger.debug(f"      🔍 Mixed type detected as: discussion_forum")
+            else:
+                assignment_type = "complete_incomplete"
+                self.logger.debug(f"      🔍 Mixed type detected as: complete_incomplete")
+
+        if assignment_type == "discussion_forum":
+            return self._run_discussion_forum(course_id, assignment, rule, course_name)
+        elif assignment_type == "complete_incomplete":
+            return self._run_complete_incomplete(course_id, assignment, rule, course_name)
+        else:
+            self.logger.warning(f"    ⚠️  Unknown assignment type: {assignment_type}")
+            return 0, 0
 
     def _run_complete_incomplete(self, course_id: int, assignment: Dict[str, Any],
                                  rule: AssignmentRule, course_name: str = "") -> tuple:
@@ -328,8 +357,9 @@ class AutomationEngine:
             if is_complete:
                 grade_data[user_id] = {"posted_grade": "complete"}
             else:
-                grade_data[user_id] = {"posted_grade": "incomplete"}
-                # Collect notification event
+                # Never assign 0/incomplete — grant credit and flag for manual review
+                grade_data[user_id] = {"posted_grade": "complete"}
+                # Collect notification event so instructor can review manually
                 if self.notifier:
                     body = submission.get("body", "")
                     word_count = self._count_words(body) if body else 0
@@ -349,11 +379,11 @@ class AutomationEngine:
         if not self.dry_run and grade_data:
             self._submit_grades(course_id, assignment_id, grade_data)
             complete_count = sum(1 for g in grade_data.values() if g.get("posted_grade") == "complete")
-            incomplete_count = len(grade_data) - complete_count
-            self.logger.info(f"      ✅ Graded {len(grade_data)}: {complete_count} complete, {incomplete_count} incomplete")
+            flagged_count = len(grade_data) - complete_count  # always 0 now; kept for clarity
+            self.logger.info(f"      ✅ Graded {len(grade_data)}: {complete_count} complete, {flagged_count} flagged for review (granted credit)")
         elif self.dry_run:
             complete_count = sum(1 for g in grade_data.values() if g.get("posted_grade") == "complete")
-            self.logger.info(f"      🔍 Would grade {len(grade_data)} ({complete_count} complete, {len(grade_data) - complete_count} incomplete)")
+            self.logger.info(f"      🔍 Would grade {len(grade_data)} ({complete_count} complete, {len(grade_data) - complete_count} flagged for review)")
         else:
             self.logger.info(f"      ℹ️  No submissions to evaluate")
 
@@ -409,65 +439,218 @@ class AutomationEngine:
             if uid and user:
                 student_names[uid] = user.get("name", f"Student {uid}")
 
-        # Grade preservation: fetch existing submissions to skip already-graded students
-        skipped_count = 0
-        if rule.preserve_existing_grades:
-            try:
-                existing = self._fetch_submissions(course_id, assignment_id)
-                already_graded = self.grade_checker.get_graded_user_ids(existing)
-                if already_graded:
-                    skipped_count = len(already_graded & set(student_data.keys()))
-                    student_data = {
-                        uid: data for uid, data in student_data.items()
-                        if uid not in already_graded
-                    }
-                    self.logger.info(f"      ℹ️  {skipped_count} already graded, skipping")
-            except Exception as e:
-                self.logger.warning(f"      ⚠️  Could not check existing grades: {e}")
-
-        if not student_data:
-            self.logger.info(f"      ⏭️  All participants already graded")
-            return 0, skipped_count
-
-        # Evaluate each student
+        # Determine grading mode
         mode = rule.discussion_grading_mode or "separate"
         grading_type = rule.grading_type or "complete_incomplete"
         grade_data = {}
+        skipped_count = 0
 
-        for user_id, data in student_data.items():
-            if grading_type == "points":
-                score = self._score_discussion_student(data, rule, mode)
-                grade_data[user_id] = {"score": score}
-                # Notify if zero score (didn't meet any threshold)
-                if self.notifier and score == 0:
-                    post_words = sum(self._count_words(m) for m in data["posts"])
-                    self.notifier.add_event(IncompleteEvent(
-                        course_name=course_name,
-                        assignment_name=assignment_name,
-                        student_name=student_names.get(user_id, f"Student {user_id}"),
-                        student_id=user_id,
-                        course_id=course_id,
-                        assignment_id=assignment_id,
-                        word_count=post_words,
-                        required_words=rule.post_min_words or 200,
-                        category="discussion_post"
-                    ))
+        if grading_type == "points":
+            # ── Points mode: incremental reply tracking ──
+            # Resolve the reply credit assignment ID for this discussion (if configured).
+            # When set, reply points go to a separate not_graded Canvas assignment so
+            # students see a clean score (no percentage display) for post vs reply credit.
+            reply_credit_assignment_id: Optional[int] = None
+            if rule.reply_credit_assignment_ids:
+                for week_key, rcid in rule.reply_credit_assignment_ids.items():
+                    if week_key.lower() in assignment_name.lower():
+                        reply_credit_assignment_id = rcid
+                        break
+                if reply_credit_assignment_id:
+                    self.logger.info(
+                        f"      📋 Reply credits → assignment {reply_credit_assignment_id}"
+                    )
+
+            # Fetch existing submissions for the post assignment — abort if this fails
+            # to avoid writing bad state (e.g. treating already-graded students as ungraded)
+            try:
+                existing_subs = self._fetch_submissions(course_id, assignment_id)
+            except Exception as e:
+                self.logger.error(
+                    f"      ❌ Aborting {assignment_name}: could not fetch existing grades ({e}). "
+                    f"State file not modified."
+                )
+                return 0, 0
+
+            existing_grades = {
+                uid: sub for uid, sub in existing_subs.items()
+                if sub.get("workflow_state") == "graded"
+            }
+
+            # Also fetch existing reply credit grades if using a separate assignment
+            existing_reply_grades: Dict[int, float] = {}
+            if reply_credit_assignment_id:
+                try:
+                    reply_subs = self._fetch_submissions(course_id, reply_credit_assignment_id)
+                    existing_reply_grades = {
+                        uid: float(sub.get("score") or 0)
+                        for uid, sub in reply_subs.items()
+                        if sub.get("workflow_state") == "graded"
+                    }
+                except Exception as e:
+                    self.logger.warning(
+                        f"      ⚠️  Could not fetch reply credit grades for assignment "
+                        f"{reply_credit_assignment_id}: {e}. Treating all reply scores as 0."
+                    )
+
+            state_key = f"{course_id}:{assignment_id}"
+            full_state = self._load_discussion_state()
+            assignment_state = full_state.get(state_key, {})
+
+            # Collect state updates in memory — only flushed to disk after
+            # _submit_grades succeeds, so a Canvas timeout can't leave the state
+            # file ahead of what was actually graded.
+            pending_state: Dict[int, Dict[str, Any]] = {}
+
+            # Separate grade_data dicts: post scores go to the discussion assignment,
+            # reply scores go to the reply credit assignment (or fall back to post assignment)
+            post_grade_data: Dict[int, Dict[str, Any]] = {}
+            reply_grade_data: Dict[int, Dict[str, Any]] = {}
+
+            for user_id, data in student_data.items():
+                student_name = student_names.get(user_id, f"Student {user_id}")
+                student_state = assignment_state.get(str(user_id), {})
+
+                if user_id not in existing_grades:
+                    # ── Scenario A: never graded — score posts and replies from scratch ──
+                    post_score, reply_score = self._score_discussion_student_split(data, rule, mode)
+
+                    # Never assign 0 — grant full post credit and flag for manual review
+                    needs_review = post_score == 0
+                    if needs_review:
+                        post_score = rule.post_points if rule.post_points is not None else 1.0
+
+                    post_grade_data[user_id] = {"score": post_score}
+                    if reply_score > 0:
+                        reply_grade_data[user_id] = {"score": reply_score}
+
+                    # Stage state update — written after successful grade submission
+                    all_ids = [e["id"] for e in data["posts"] + data["replies"]]
+                    credited_replies = [e for e in data["replies"]
+                                        if self._count_words(e["message"]) >= (rule.reply_min_words or 40)]
+                    pending_state[user_id] = {
+                        "credited_entry_ids": all_ids,
+                        "reply_audit": self._build_reply_audit(
+                            data["replies"], credited_replies, rule, student_state
+                        )
+                    }
+
+                    total_score = post_score + reply_score
+                    self.logger.info(
+                        f"      👤 {student_name}: first grade → "
+                        f"post {post_score:.1f} + reply {reply_score:.1f} = {total_score:.1f}"
+                        + (" [flagged for manual review]" if needs_review else "")
+                    )
+
+                    # Notify if post didn't qualify — granted credit but flag for manual review
+                    if self.notifier and needs_review:
+                        post_words = sum(self._count_words(e["message"]) for e in data["posts"])
+                        self.notifier.add_event(IncompleteEvent(
+                            course_name=course_name,
+                            assignment_name=assignment_name,
+                            student_name=student_name,
+                            student_id=user_id,
+                            course_id=course_id,
+                            assignment_id=assignment_id,
+                            word_count=post_words,
+                            required_words=rule.post_min_words or 200,
+                            category="discussion_post"
+                        ))
+                else:
+                    # ── Scenario B: already graded ──
+                    canvas_post_score = float(existing_grades[user_id].get("score") or 0)
+                    canvas_reply_score = existing_reply_grades.get(user_id, 0.0)
+
+                    # One-time migration: if no state entry yet, lock all currently-visible
+                    # entry IDs so existing work isn't re-scored on first run under new system
+                    if not student_state:
+                        all_current_ids = [e["id"] for e in data["posts"] + data["replies"]]
+                        self.logger.info(
+                            f"      👤 {student_name}: migrating — locking "
+                            f"{len(all_current_ids)} existing entries"
+                        )
+                        student_state = {"credited_entry_ids": all_current_ids, "reply_audit": []}
+                        pending_state[user_id] = student_state
+
+                    # Check for new replies not yet credited
+                    delta, new_ids, new_audit = self._score_new_replies_for_student(
+                        data, rule, student_state
+                    )
+
+                    if delta > 0:
+                        new_reply_total = canvas_reply_score + delta
+                        reply_grade_data[user_id] = {"score": new_reply_total}
+
+                        updated_ids = student_state.get("credited_entry_ids", []) + new_ids
+                        existing_audit = student_state.get("reply_audit", [])
+                        pending_state[user_id] = {
+                            "credited_entry_ids": updated_ids,
+                            "reply_audit": existing_audit + new_audit
+                        }
+
+                        self.logger.info(
+                            f"      👤 {student_name}: +{delta:.1f} reply credit "
+                            f"({canvas_reply_score:.1f} → {new_reply_total:.1f})"
+                        )
+                    else:
+                        # No new qualifying replies — stage tracking of new IDs
+                        if new_ids:
+                            updated_ids = student_state.get("credited_entry_ids", []) + new_ids
+                            existing_audit = student_state.get("reply_audit", [])
+                            pending_state[user_id] = {
+                                "credited_entry_ids": updated_ids,
+                                "reply_audit": existing_audit + new_audit
+                            }
+                        skipped_count += 1
+                        self.logger.info(
+                            f"      👤 {student_name}: no new qualifying replies, skipping"
+                        )
+
+            # Merge post and reply grade_data for the legacy path (no separate assignment)
+            if not reply_credit_assignment_id:
+                # No separate reply assignment — combine into single grade on post assignment
+                grade_data = {}
+                all_uids = set(post_grade_data) | set(reply_grade_data)
+                for uid in all_uids:
+                    post_s = post_grade_data.get(uid, {}).get("score", 0)
+                    reply_s = reply_grade_data.get(uid, {}).get("score", 0)
+                    grade_data[uid] = {"score": post_s + reply_s}
             else:
+                grade_data = post_grade_data  # used only for the legacy submission path below
+
+        else:
+            # ── Complete/Incomplete mode: original skip-if-graded behavior ──
+            if rule.preserve_existing_grades:
+                try:
+                    existing = self._fetch_submissions(course_id, assignment_id)
+                    already_graded = self.grade_checker.get_graded_user_ids(existing)
+                    if already_graded:
+                        skipped_count = len(already_graded & set(student_data.keys()))
+                        student_data = {
+                            uid: data for uid, data in student_data.items()
+                            if uid not in already_graded
+                        }
+                        self.logger.info(f"      ℹ️  {skipped_count} already graded, skipping")
+                except Exception as e:
+                    self.logger.warning(f"      ⚠️  Could not check existing grades: {e}")
+
+            for user_id, data in student_data.items():
                 is_complete = self._evaluate_discussion_student(data, rule, mode)
                 if is_complete:
                     grade_data[user_id] = {"posted_grade": "complete"}
                 else:
-                    grade_data[user_id] = {"posted_grade": "incomplete"}
-                    # Collect notification events for what's missing
+                    # Never assign 0/incomplete — grant credit and flag for manual review
+                    grade_data[user_id] = {"posted_grade": "complete"}
+                    # Collect notification events so instructor can review manually
                     if self.notifier and mode == "separate":
                         post_threshold = rule.post_min_words or 200
                         reply_threshold = rule.reply_min_words or 50
                         qualifying_posts = sum(
-                            1 for m in data["posts"] if self._count_words(m) >= post_threshold
+                            1 for e in data["posts"] if self._count_words(e["message"]) >= post_threshold
                         )
                         min_posts_req = rule.min_posts if rule.min_posts is not None else 1
                         if qualifying_posts < min_posts_req:
-                            post_words = sum(self._count_words(m) for m in data["posts"])
+                            post_words = sum(self._count_words(e["message"]) for e in data["posts"])
                             self.notifier.add_event(IncompleteEvent(
                                 course_name=course_name,
                                 assignment_name=assignment_name,
@@ -480,11 +663,11 @@ class AutomationEngine:
                                 category="discussion_post"
                             ))
                         qualifying_replies = sum(
-                            1 for m in data["replies"] if self._count_words(m) >= reply_threshold
+                            1 for e in data["replies"] if self._count_words(e["message"]) >= reply_threshold
                         )
                         min_replies_req = rule.min_replies if rule.min_replies is not None else 2
                         if qualifying_replies < min_replies_req:
-                            reply_words = sum(self._count_words(m) for m in data["replies"])
+                            reply_words = sum(self._count_words(e["message"]) for e in data["replies"])
                             self.notifier.add_event(IncompleteEvent(
                                 course_name=course_name,
                                 assignment_name=assignment_name,
@@ -497,7 +680,7 @@ class AutomationEngine:
                                 category="discussion_reply"
                             ))
                     elif self.notifier and mode == "combined":
-                        all_words = sum(self._count_words(m) for m in data["posts"] + data["replies"])
+                        all_words = sum(self._count_words(e["message"]) for e in data["posts"] + data["replies"])
                         self.notifier.add_event(IncompleteEvent(
                             course_name=course_name,
                             assignment_name=assignment_name,
@@ -511,19 +694,83 @@ class AutomationEngine:
                         ))
 
         # Submit grades
-        if not self.dry_run and grade_data:
-            self._submit_grades(course_id, assignment_id, grade_data)
-            if grading_type == "points":
-                scores = [g["score"] for g in grade_data.values()]
-                self.logger.info(f"      ✅ Graded {len(grade_data)}: scores range {min(scores):.1f}–{max(scores):.1f}")
-            else:
+        if grading_type == "points":
+            if not self.dry_run:
+                submitted_post_count = 0
+                submitted_reply_count = 0
+
+                # Submit post grades to the discussion assignment
+                if post_grade_data and reply_credit_assignment_id:
+                    self._submit_grades(course_id, assignment_id, post_grade_data)
+                    submitted_post_count = len(post_grade_data)
+                    post_scores = [g["score"] for g in post_grade_data.values()]
+                    self.logger.info(
+                        f"      ✅ Post grades submitted ({submitted_post_count}): "
+                        f"range {min(post_scores):.1f}–{max(post_scores):.1f}"
+                    )
+                elif grade_data and not reply_credit_assignment_id:
+                    # Legacy path: combined score on post assignment
+                    self._submit_grades(course_id, assignment_id, grade_data)
+                    submitted_post_count = len(grade_data)
+                    scores = [g["score"] for g in grade_data.values()]
+                    self.logger.info(
+                        f"      ✅ Graded {submitted_post_count}: scores range {min(scores):.1f}–{max(scores):.1f}"
+                    )
+
+                # Submit reply grades to the separate reply credit assignment
+                # Uses individual PUTs (not bulk update_grades) for points/null assignments
+                if reply_grade_data and reply_credit_assignment_id:
+                    self._submit_reply_credits(course_id, reply_credit_assignment_id, reply_grade_data)
+                    submitted_reply_count = len(reply_grade_data)
+                    reply_scores = [g["score"] for g in reply_grade_data.values()]
+                    self.logger.info(
+                        f"      ✅ Reply credits submitted ({submitted_reply_count}): "
+                        f"range {min(reply_scores):.1f}–{max(reply_scores):.1f}"
+                    )
+                    # Post submission comments for audit trail
+                    self._post_reply_audit_comments(
+                        course_id, reply_credit_assignment_id,
+                        pending_state, student_names, assignment_name
+                    )
+
+                # Flush pending state only after all submissions succeed
+                for uid, student_state in pending_state.items():
+                    self._save_discussion_state(state_key, uid, student_state)
+
+            elif self.dry_run:
+                if post_grade_data and reply_credit_assignment_id:
+                    post_scores = [g["score"] for g in post_grade_data.values()]
+                    self.logger.info(
+                        f"      🔍 Would submit {len(post_grade_data)} post grades: "
+                        f"range {min(post_scores):.1f}–{max(post_scores):.1f}"
+                    )
+                if reply_grade_data and reply_credit_assignment_id:
+                    reply_scores = [g["score"] for g in reply_grade_data.values()]
+                    self.logger.info(
+                        f"      🔍 Would submit {len(reply_grade_data)} reply credits: "
+                        f"range {min(reply_scores):.1f}–{max(reply_scores):.1f}"
+                    )
+                if grade_data and not reply_credit_assignment_id:
+                    scores = [g["score"] for g in grade_data.values()]
+                    self.logger.info(
+                        f"      🔍 Would grade {len(grade_data)}: scores range {min(scores):.1f}–{max(scores):.1f}"
+                    )
+
+            elif not self.dry_run and pending_state:
+                # No grades to submit but tracking-only state updates (new non-qualifying reply IDs)
+                for uid, student_state in pending_state.items():
+                    self._save_discussion_state(state_key, uid, student_state)
+
+            total_graded = len(post_grade_data) if reply_credit_assignment_id else len(grade_data)
+            return total_graded, skipped_count
+
+        else:
+            # Complete/Incomplete submit path
+            if not self.dry_run and grade_data:
+                self._submit_grades(course_id, assignment_id, grade_data)
                 complete_count = sum(1 for g in grade_data.values() if g.get("posted_grade") == "complete")
                 self.logger.info(f"      ✅ Graded {len(grade_data)}: {complete_count} complete, {len(grade_data) - complete_count} incomplete")
-        elif self.dry_run:
-            if grading_type == "points":
-                scores = [g["score"] for g in grade_data.values()]
-                self.logger.info(f"      🔍 Would grade {len(grade_data)}: scores range {min(scores):.1f}–{max(scores):.1f}")
-            else:
+            elif self.dry_run and grade_data:
                 complete_count = sum(1 for g in grade_data.values() if g.get("posted_grade") == "complete")
                 self.logger.info(f"      🔍 Would grade {len(grade_data)}: {complete_count} complete, {len(grade_data) - complete_count} incomplete")
 
@@ -596,7 +843,7 @@ class AutomationEngine:
             self.logger.error(f"      ❌ Failed to fetch discussion entries: {e}")
             return []
 
-    def _categorize_discussion_entries(self, entries: List[Dict[str, Any]]) -> Dict[int, Dict[str, List[str]]]:
+    def _categorize_discussion_entries(self, entries: List[Dict[str, Any]]) -> Dict[int, Dict[str, Any]]:
         """
         Walk the nested entry tree and separate each student's posts from replies.
 
@@ -612,29 +859,35 @@ class AutomationEngine:
         Top-level entries in the view array are original posts. Anything nested
         inside a replies array is a reply (regardless of further nesting depth).
 
+        Each entry is stored as {"id": int, "message": str} so that callers can
+        track which specific entries have been credited across grading runs.
+
         Args:
             entries: Top-level entry list from the /view endpoint
 
         Returns:
-            Dict of {user_id: {"posts": [message_texts], "replies": [message_texts]}}
+            Dict of {user_id: {"posts": [{"id", "message"}], "replies": [{"id", "message"}]}}
         """
-        student_data: Dict[int, Dict[str, List[str]]] = {}
+        student_data: Dict[int, Dict[str, Any]] = {}
 
         def ensure_student(uid: int):
             if uid not in student_data:
                 student_data[uid] = {"posts": [], "replies": []}
 
-        def collect_replies(reply_list: List[Dict[str, Any]]):
+        def collect_replies(reply_list: List[Dict[str, Any]], parent_message: str = ""):
             """Recursively collect all replies (and replies-to-replies)."""
             for reply in reply_list:
                 uid = reply.get("user_id")
                 message = reply.get("message", "")
                 if uid and message:
                     ensure_student(uid)
-                    student_data[uid]["replies"].append(message)
-                # Replies can have their own nested replies
+                    student_data[uid]["replies"].append({
+                        "id": reply.get("id"),
+                        "message": message,
+                        "parent_message": parent_message,
+                    })
                 if "replies" in reply:
-                    collect_replies(reply["replies"])
+                    collect_replies(reply["replies"], parent_message=reply.get("message", ""))
 
         # Top-level entries are posts
         for entry in entries:
@@ -642,11 +895,10 @@ class AutomationEngine:
             message = entry.get("message", "")
             if uid and message:
                 ensure_student(uid)
-                student_data[uid]["posts"].append(message)
+                student_data[uid]["posts"].append({"id": entry.get("id"), "message": message})
 
-            # Everything nested under a post is a reply
             if "replies" in entry:
-                collect_replies(entry["replies"])
+                collect_replies(entry["replies"], parent_message=entry.get("message", ""))
 
         return student_data
 
@@ -670,8 +922,8 @@ class AutomationEngine:
         Returns:
             True if student meets the requirements
         """
-        posts = student_data["posts"]
-        replies = student_data["replies"]
+        posts = [e["message"] for e in student_data["posts"]]
+        replies = [e["message"] for e in student_data["replies"]]
 
         if mode == "combined":
             # Pool everything together, check total word count
@@ -728,8 +980,8 @@ class AutomationEngine:
         Returns:
             Calculated score as float
         """
-        posts = student_data["posts"]
-        replies = student_data["replies"]
+        posts = [e["message"] for e in student_data["posts"]]
+        replies = [e["message"] for e in student_data["replies"]]
         post_pts = rule.post_points if rule.post_points is not None else 1.0
         reply_pts = rule.reply_points if rule.reply_points is not None else 0.5
 
@@ -759,7 +1011,31 @@ class AutomationEngine:
                 score += post_pts
 
             # Replies: award reply_points for EACH qualifying reply
-            qualifying_replies = sum(1 for msg in replies if self._count_words(msg) >= reply_threshold)
+            word_count_pass = [e for e in student_data["replies"]
+                               if self._count_words(e["message"]) >= reply_threshold]
+
+            if rule.use_llm_reply_check and word_count_pass:
+                if self._reply_checker is None:
+                    self._reply_checker = OllamaReplyChecker()
+                qualifying_replies = 0
+                for e in word_count_pass:
+                    wc = self._count_words(e["message"])
+                    is_sub = self._reply_checker.is_substantive(
+                        e.get("parent_message", ""), e["message"]
+                    )
+                    if is_sub:
+                        qualifying_replies += 1
+                        self.logger.info(
+                            f"        [quality] Reply {e['id']} ({wc} words): "
+                            f"PASS — substantive"
+                        )
+                    else:
+                        self.logger.info(
+                            f"        [quality] Reply {e['id']} ({wc} words): "
+                            f"FAIL — not substantive, no credit"
+                        )
+            else:
+                qualifying_replies = len(word_count_pass)
             score += qualifying_replies * reply_pts
 
             self.logger.info(
@@ -790,6 +1066,257 @@ class AutomationEngine:
         words = clean.split()
         return len(words)
 
+    def _discussion_state_path(self) -> Path:
+        """Return path to the discussion state JSON file."""
+        return self.config_path.parent / "discussion_state.json"
+
+    def _load_discussion_state(self) -> Dict[str, Any]:
+        """Load the discussion state file, or return empty dict if missing."""
+        path = self._discussion_state_path()
+        if path.exists():
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        return {}
+
+    def _save_discussion_state(self, state_key: str, user_id: int,
+                               student_state: Dict[str, Any]) -> None:
+        """Merge and save a single student's state into the discussion state file."""
+        state = self._load_discussion_state()
+        if state_key not in state:
+            state[state_key] = {}
+        state[state_key][str(user_id)] = student_state
+        path = self._discussion_state_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(state, f, indent=2, ensure_ascii=False)
+
+    def _score_new_replies_for_student(self, data: Dict[str, Any],
+                                        rule: AssignmentRule,
+                                        student_state: Dict[str, Any]
+                                        ) -> Tuple[float, List[int], List[Dict[str, Any]]]:
+        """
+        Score only NEW replies that haven't been credited yet.
+
+        Args:
+            data: Student's categorized entries {"posts": [...], "replies": [...]}
+            rule: Assignment rule with reply_points and reply_min_words
+            student_state: {"credited_entry_ids": [...], "reply_audit": [...]}
+
+        Returns:
+            (delta_score, new_entry_ids, audit_entries)
+            - new_entry_ids includes ALL new reply IDs (even non-qualifying, to prevent re-eval)
+            - audit_entries is a list of dicts with id, words, credited, reason, timestamp
+        """
+        from datetime import datetime as _dt
+        already_credited = set(student_state.get("credited_entry_ids", []))
+        new_replies = [e for e in data["replies"] if e["id"] not in already_credited]
+
+        if not new_replies:
+            return 0.0, [], []
+
+        reply_threshold = rule.reply_min_words or 50
+        reply_pts = rule.reply_points if rule.reply_points is not None else 0.5
+        audit_entries: List[Dict[str, Any]] = []
+
+        # Step 1: filter by word count
+        word_count_pass = []
+        for e in new_replies:
+            wc = self._count_words(e["message"])
+            if wc < reply_threshold:
+                audit_entries.append({
+                    "entry_id": e["id"],
+                    "words": wc,
+                    "credited": False,
+                    "reason": f"too short ({wc} words, need {reply_threshold})",
+                    "graded_at": _dt.now().isoformat(timespec="seconds")
+                })
+            else:
+                word_count_pass.append(e)
+
+        # Step 2: LLM quality check (if enabled)
+        if rule.use_llm_reply_check and word_count_pass:
+            if self._reply_checker is None:
+                self._reply_checker = OllamaReplyChecker()
+
+            qualifying = []
+            for e in word_count_pass:
+                wc = self._count_words(e["message"])
+                is_sub = self._reply_checker.is_substantive(
+                    e.get("parent_message", ""), e["message"]
+                )
+                if is_sub:
+                    qualifying.append(e)
+                    audit_entries.append({
+                        "entry_id": e["id"],
+                        "words": wc,
+                        "credited": True,
+                        "reason": "substantive (LLM pass)",
+                        "graded_at": _dt.now().isoformat(timespec="seconds")
+                    })
+                    self.logger.info(
+                        f"        [quality] Reply {e['id']} ({wc} words): "
+                        f"PASS — substantive"
+                    )
+                else:
+                    audit_entries.append({
+                        "entry_id": e["id"],
+                        "words": wc,
+                        "credited": False,
+                        "reason": "not substantive (LLM fail)",
+                        "graded_at": _dt.now().isoformat(timespec="seconds")
+                    })
+                    self.logger.info(
+                        f"        [quality] Reply {e['id']} ({wc} words): "
+                        f"FAIL — not substantive, no credit"
+                    )
+            qualifying_count = len(qualifying)
+        else:
+            qualifying_count = len(word_count_pass)
+            for e in word_count_pass:
+                wc = self._count_words(e["message"])
+                audit_entries.append({
+                    "entry_id": e["id"],
+                    "words": wc,
+                    "credited": True,
+                    "reason": "meets word count",
+                    "graded_at": _dt.now().isoformat(timespec="seconds")
+                })
+
+        delta = qualifying_count * reply_pts
+        new_ids = [e["id"] for e in new_replies]
+
+        self.logger.info(
+            f"        [incremental] {len(new_replies)} new replies, "
+            f"{qualifying_count} qualifying → +{delta:.1f} points"
+        )
+
+        return delta, new_ids, audit_entries
+
+    def _score_discussion_student_split(self, data: Dict[str, Any],
+                                         rule: AssignmentRule,
+                                         mode: str) -> Tuple[float, float]:
+        """
+        Like _score_discussion_student but returns (post_score, reply_score) separately.
+        Used in Scenario A (first grade) when reply credits go to a separate assignment.
+        """
+        posts = [e["message"] for e in data["posts"]]
+        replies = data["replies"]
+        post_pts = rule.post_points if rule.post_points is not None else 1.0
+        reply_pts = rule.reply_points if rule.reply_points is not None else 0.5
+
+        if mode == "combined":
+            all_words = sum(self._count_words(m) for m in posts) + \
+                        sum(self._count_words(e["message"]) for e in replies)
+            threshold = rule.post_min_words or 200
+            if all_words >= threshold:
+                return post_pts, len(replies) * reply_pts
+            return 0.0, 0.0
+
+        # separate mode
+        post_threshold = rule.post_min_words or 200
+        reply_threshold = rule.reply_min_words or 50
+
+        qualifying_posts = sum(1 for msg in posts if self._count_words(msg) >= post_threshold)
+        post_score = post_pts if qualifying_posts > 0 else 0.0
+
+        word_count_pass = [e for e in replies
+                           if self._count_words(e["message"]) >= reply_threshold]
+        if rule.use_llm_reply_check and word_count_pass:
+            if self._reply_checker is None:
+                self._reply_checker = OllamaReplyChecker()
+            qualifying_replies = sum(
+                1 for e in word_count_pass
+                if self._reply_checker.is_substantive(e.get("parent_message", ""), e["message"])
+            )
+        else:
+            qualifying_replies = len(word_count_pass)
+
+        reply_score = qualifying_replies * reply_pts
+        self.logger.info(
+            f"        [separate/points] posts: {qualifying_posts} qualifying (+{post_score:.1f}) | "
+            f"replies: {qualifying_replies} qualifying (+{reply_score:.1f})"
+        )
+        return post_score, reply_score
+
+    def _build_reply_audit(self, all_replies: List[Dict[str, Any]],
+                            credited_replies: List[Dict[str, Any]],
+                            rule: AssignmentRule,
+                            student_state: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Build audit trail entries for Scenario A (first grade).
+        Returns a list of audit dicts for all replies seen.
+        """
+        from datetime import datetime as _dt
+        credited_ids = {e["id"] for e in credited_replies}
+        reply_threshold = rule.reply_min_words or 50
+        audit = []
+        for e in all_replies:
+            wc = self._count_words(e["message"])
+            if e["id"] in credited_ids:
+                reason = "substantive (LLM pass)" if rule.use_llm_reply_check else "meets word count"
+                credited = True
+            elif wc < reply_threshold:
+                reason = f"too short ({wc} words, need {reply_threshold})"
+                credited = False
+            else:
+                reason = "not substantive (LLM fail)"
+                credited = False
+            audit.append({
+                "entry_id": e["id"],
+                "words": wc,
+                "credited": credited,
+                "reason": reason,
+                "graded_at": _dt.now().isoformat(timespec="seconds")
+            })
+        return audit
+
+    def _post_reply_audit_comments(self, course_id: int, reply_assignment_id: int,
+                                    pending_state: Dict[int, Dict[str, Any]],
+                                    student_names: Dict[int, str],
+                                    assignment_name: str) -> None:
+        """
+        Post a submission comment on each student's reply credit assignment entry
+        listing which reply entry IDs were credited and which were not.
+        This gives instructors (and optionally students) a traceable audit trail.
+        """
+        base_url = f"{self.base_url}/api/v1/courses/{course_id}/assignments/{reply_assignment_id}"
+
+        for user_id, state in pending_state.items():
+            audit = state.get("reply_audit", [])
+            if not audit:
+                continue
+
+            credited = [a for a in audit if a["credited"]]
+            rejected = [a for a in audit if not a["credited"]]
+
+            lines = [f"Reply credit audit for {assignment_name}:"]
+            lines.append("")
+            if credited:
+                lines.append(f"✅ Credited ({len(credited)}):")
+                for a in credited:
+                    lines.append(f"  • Entry {a['entry_id']} — {a['words']} words — {a['reason']}")
+            if rejected:
+                lines.append(f"❌ Not credited ({len(rejected)}):")
+                for a in rejected:
+                    lines.append(f"  • Entry {a['entry_id']} — {a['words']} words — {a['reason']}")
+            lines.append("")
+            lines.append(f"Graded by autograder on {credited[0]['graded_at'][:10] if credited else rejected[0]['graded_at'][:10] if rejected else 'unknown'}")
+
+            comment_text = "\n".join(lines)
+
+            try:
+                url = f"{base_url}/submissions/{user_id}"
+                requests.put(
+                    url,
+                    headers=self.headers,
+                    json={"comment": {"text_comment": comment_text}},
+                    timeout=30
+                )
+            except Exception as e:
+                self.logger.warning(
+                    f"      ⚠️  Could not post audit comment for student {user_id}: {e}"
+                )
+
     def _fetch_submissions(self, course_id: int, assignment_id: int) -> Dict[int, Dict[str, Any]]:
         """
         Fetch current submissions for an assignment (for grade preservation).
@@ -805,42 +1332,98 @@ class AutomationEngine:
         params = {"per_page": 100}
 
         submissions = {}
-        try:
-            response = requests.get(url, headers=self.headers, params=params, timeout=30)
-            response.raise_for_status()
-            for sub in response.json():
-                uid = sub.get("user_id")
-                if uid:
-                    submissions[uid] = sub
-        except Exception as e:
-            self.logger.warning(f"      ⚠️  Failed to fetch submissions: {e}")
-
+        response = requests.get(url, headers=self.headers, params=params, timeout=30)
+        response.raise_for_status()
+        for sub in response.json():
+            uid = sub.get("user_id")
+            if uid:
+                submissions[uid] = sub
         return submissions
 
     def _submit_grades(self, course_id: int, assignment_id: int, grade_data: Dict[int, Dict[str, Any]]):
         """
-        Submit grades to Canvas.
+        Submit grades to Canvas using individual PUT requests.
+
+        The bulk update_grades endpoint is unreliable on this Canvas instance —
+        it returns 200/queued but grades don't always apply. Individual PUTs are
+        consistent for both points and complete/incomplete assignments.
 
         Args:
             course_id: Canvas course ID
             assignment_id: Assignment ID
-            grade_data: Dictionary of {user_id: grade_info}
+            grade_data: Dictionary of {user_id: {"score": float} or {"posted_grade": str}}
         """
-        url = f"{self.base_url}/api/v1/courses/{course_id}/assignments/{assignment_id}/submissions/update_grades"
+        base_url = (
+            f"{self.base_url}/api/v1/courses/{course_id}"
+            f"/assignments/{assignment_id}/submissions"
+        )
+        failed = []
+        for user_id, data in grade_data.items():
+            # Translate grade_data dict to posted_grade string for the PUT endpoint
+            if "score" in data:
+                posted_grade = str(data["score"])
+            else:
+                posted_grade = data.get("posted_grade", "")
 
-        payload = {
-            "grade_data": {
-                str(user_id): data
-                for user_id, data in grade_data.items()
-            }
-        }
+            try:
+                response = requests.put(
+                    f"{base_url}/{user_id}",
+                    headers=self.headers,
+                    json={"submission": {"posted_grade": posted_grade}},
+                    timeout=30
+                )
+                response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                self.logger.error(f"      ❌ Failed to submit grade for student {user_id}: {e}")
+                failed.append(user_id)
 
-        try:
-            response = requests.post(url, headers=self.headers, json=payload, timeout=60)
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            self.logger.error(f"      ❌ Failed to submit grades: {e}")
-            raise
+        if failed:
+            raise RuntimeError(f"Grade submission failed for {len(failed)} student(s): {failed}")
+
+    def _submit_reply_credits(self, course_id: int, reply_assignment_id: int,
+                              grade_data: Dict[int, Dict[str, Any]]) -> None:
+        """
+        Submit reply credit grades using individual PUT requests.
+
+        The bulk update_grades endpoint is unreliable for points/null assignments
+        (points_possible=None), so we use individual submission PUTs instead.
+
+        Args:
+            course_id: Canvas course ID
+            reply_assignment_id: The reply credit assignment ID
+            grade_data: Dict of {user_id: {"score": float}}
+        """
+        base_url = (
+            f"{self.base_url}/api/v1/courses/{course_id}"
+            f"/assignments/{reply_assignment_id}/submissions"
+        )
+        failed = []
+        for user_id, data in grade_data.items():
+            score = data.get("score", 0)
+            try:
+                response = requests.put(
+                    f"{base_url}/{user_id}",
+                    headers=self.headers,
+                    json={"submission": {"posted_grade": str(score)}},
+                    timeout=30
+                )
+                response.raise_for_status()
+                actual = response.json().get("score")
+                if actual != score:
+                    self.logger.warning(
+                        f"      ⚠️  Reply credit for student {user_id}: "
+                        f"submitted {score} but Canvas returned {actual}"
+                    )
+            except requests.exceptions.RequestException as e:
+                self.logger.error(
+                    f"      ❌ Failed to submit reply credit for student {user_id}: {e}"
+                )
+                failed.append(user_id)
+
+        if failed:
+            raise RuntimeError(
+                f"Reply credit submission failed for {len(failed)} student(s): {failed}"
+            )
 
     def _run_adc(self, course_id: int, assignment: Dict[str, Any], course_name: str) -> List[Dict[str, Any]]:
         """

@@ -18,7 +18,7 @@ class AssignmentRule:
     rule_id: str
     assignment_group_name: str
     assignment_group_id: int
-    assignment_type: str  # "complete_incomplete" or "discussion_forum"
+    assignment_type: str  # "complete_incomplete", "discussion_forum", or "mixed"
 
     # Complete/Incomplete settings
     min_word_count: Optional[int] = None
@@ -39,9 +39,18 @@ class AssignmentRule:
     # Grade preservation
     preserve_existing_grades: bool = True
 
+    # LLM reply quality check
+    use_llm_reply_check: bool = False
+
+    # Separate reply-credit assignment (not_graded Canvas assignment, no percentage display)
+    # When set, reply points are deposited here instead of on the discussion assignment itself.
+    # Maps discussion assignment name fragment → Canvas assignment ID, e.g.:
+    #   {"Week 1": 970488, "Week 2": 970489, "Week 3": 970490}
+    reply_credit_assignment_ids: Optional[Dict[str, int]] = None
+
     def __post_init__(self):
         """Validate rule configuration."""
-        if self.assignment_type not in ["complete_incomplete", "discussion_forum"]:
+        if self.assignment_type not in ["complete_incomplete", "discussion_forum", "mixed"]:
             raise ValueError(f"Invalid assignment_type: {self.assignment_type}")
 
         if self.assignment_type == "complete_incomplete":
@@ -57,6 +66,13 @@ class AssignmentRule:
                 if self.post_min_words is None:
                     raise ValueError("post_min_words required for combined mode (used as total word threshold)")
 
+        if self.assignment_type == "mixed":
+            # Mixed type needs both complete_incomplete and discussion_forum settings
+            if self.min_word_count is None:
+                raise ValueError("min_word_count required for mixed type (used for text submissions)")
+            if self.post_min_words is None:
+                raise ValueError("post_min_words required for mixed type (used for discussion posts)")
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return asdict(self)
@@ -64,6 +80,8 @@ class AssignmentRule:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'AssignmentRule':
         """Create from dictionary."""
+        # Provide defaults for fields added after initial release so old configs load cleanly
+        data.setdefault('reply_credit_assignment_ids', None)
         return cls(**data)
 
 

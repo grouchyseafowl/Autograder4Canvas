@@ -79,7 +79,7 @@ VERSION_DATE = "2025-12-26"
 # CONFIGURATION
 # =============================================================================
 
-CANVAS_BASE_URL = os.getenv("CANVAS_BASE_URL", "https://cabrillo.instructure.com")
+CANVAS_BASE_URL = os.getenv("CANVAS_BASE_URL")
 API_TOKEN = os.getenv("CANVAS_API_TOKEN")
 
 # Try to import requests
@@ -1815,7 +1815,7 @@ Usage:
 
 Environment Variables:
   CANVAS_API_TOKEN    - Your Canvas API token (required)
-  CANVAS_BASE_URL     - Canvas instance URL (default: https://cabrillo.instructure.com)
+  CANVAS_BASE_URL     - Canvas instance URL (e.g., https://institution.instructure.com)
 """)
         elif sys.argv[1] == "--version":
             print(f"Academic Dishonesty Check v{VERSION} ({VERSION_DATE})")
