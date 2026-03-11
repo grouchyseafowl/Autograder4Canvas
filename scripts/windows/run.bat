@@ -29,52 +29,60 @@ call "!CREDS_FILE!"
 set "NEEDS_SETUP=0"
 if "!CANVAS_BASE_URL!"=="https://yourschool.instructure.com" set "NEEDS_SETUP=1"
 if "!CANVAS_API_TOKEN!"=="your_api_token_here" set "NEEDS_SETUP=1"
+if "!NEEDS_SETUP!"=="0" goto :creds_done
 
-if "!NEEDS_SETUP!"=="1" (
-    echo  First-time setup: enter your Canvas credentials.
-    echo  These will be saved so you won't be asked again.
-    echo.
+echo  ============================================================
+echo   First-Time Setup
+echo  ============================================================
+echo  Enter your Canvas credentials below. They will be saved
+echo  so you won't be asked again.
+echo.
 
-    if "!CANVAS_BASE_URL!"=="https://yourschool.instructure.com" (
-        echo  Canvas URL -- the address you use to log in to Canvas.
-        echo  Example: https://myschool.instructure.com
-        echo.
-        set /p "CANVAS_BASE_URL=  Canvas URL: "
-        echo.
-        if "!CANVAS_BASE_URL!"=="" (
-            echo  No URL entered. Please run again.
-            pause
-            exit /b 1
-        )
-    )
+if not "!CANVAS_BASE_URL!"=="https://yourschool.instructure.com" goto :skip_url
 
-    if "!CANVAS_API_TOKEN!"=="your_api_token_here" (
-        echo  API Token -- found in Canvas under:
-        echo    Profile picture ^(top right^) ^> Settings ^> Approved Integrations
-        echo    Click "+ New Access Token", give it a name, click Generate.
-        echo.
-        set /p "CANVAS_API_TOKEN=  API Token: "
-        echo.
-        if "!CANVAS_API_TOKEN!"=="" (
-            echo  No token entered. Please run again.
-            pause
-            exit /b 1
-        )
-    )
-
-    :: Save credentials to credentials.bat
-    (
-        echo @echo off
-        echo :: Autograder4Canvas -- Credentials
-        echo :: To update: delete this file and run run.bat again.
-        echo set CANVAS_BASE_URL=!CANVAS_BASE_URL!
-        echo set CANVAS_API_TOKEN=!CANVAS_API_TOKEN!
-    ) > "!CREDS_FILE!"
-
-    echo  Credentials saved. You won't be asked again.
-    echo.
+echo  Canvas URL -- the web address you use to log in to Canvas.
+echo  Example: https://myschool.instructure.com
+echo.
+set /p "CANVAS_BASE_URL=  Canvas URL: "
+echo.
+if "!CANVAS_BASE_URL!"=="" (
+    echo  No URL entered. Please run again.
+    pause
+    exit /b 1
 )
 
+:skip_url
+if not "!CANVAS_API_TOKEN!"=="your_api_token_here" goto :skip_token
+
+echo  API Token -- find it in Canvas:
+echo    1. Click your profile picture ^(top right^)
+echo    2. Click Settings
+echo    3. Scroll to Approved Integrations
+echo    4. Click New Access Token, give it a name, click Generate
+echo    5. Copy the token and paste it here
+echo.
+set /p "CANVAS_API_TOKEN=  API Token: "
+echo.
+if "!CANVAS_API_TOKEN!"=="" (
+    echo  No token entered. Please run again.
+    pause
+    exit /b 1
+)
+
+:skip_token
+:: Save credentials to credentials.bat
+(
+    echo @echo off
+    echo :: Autograder4Canvas -- Credentials
+    echo :: To update: delete this file and run run.bat again.
+    echo set CANVAS_BASE_URL=!CANVAS_BASE_URL!
+    echo set CANVAS_API_TOKEN=!CANVAS_API_TOKEN!
+) > "!CREDS_FILE!"
+
+echo  Credentials saved. You won't be asked again.
+echo.
+
+:creds_done
 set "AUTOGRADER_CREDS_FILE=!CREDS_FILE!"
 
 :: -------------------------------------------------------
