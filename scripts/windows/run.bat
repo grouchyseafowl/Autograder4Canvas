@@ -67,7 +67,7 @@ if %ERRORLEVEL% == 0 (
 
 if not defined PYTHON_CMD (
     where python3 >nul 2>&1
-    if %ERRORLEVEL% == 0 set "PYTHON_CMD=python3"
+    if !ERRORLEVEL! == 0 set "PYTHON_CMD=python3"
 )
 
 if not defined PYTHON_CMD (
