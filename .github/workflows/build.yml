@@ -103,7 +103,8 @@ jobs:
           $output = "`n" | cmd /c "call portable_test\credentials.bat" 2>&1
           Write-Host "--- credentials.bat standalone output ---"
           $output | ForEach-Object { Write-Host $_ }
-          if ($output -notmatch "(?i)setup|notepad|edit|credentials") {
+          $joined1 = $output -join "`n"
+          if ($joined1 -notmatch "(?i)setup|notepad|edit|credentials") {
             Write-Host "FAIL: credentials.bat did not show setup instructions"
             exit 1
           }
@@ -115,7 +116,8 @@ jobs:
           $result = cmd /c test_creds_caller.bat 2>&1
           Write-Host "--- credentials.bat called-by-launcher output ---"
           $result | ForEach-Object { Write-Host $_ }
-          if ($result -notmatch "URL=https?://") {
+          $joined2 = $result -join "`n"
+          if ($joined2 -notmatch "URL=https?://") {
             Write-Host "FAIL: credentials.bat did not set CANVAS_BASE_URL"
             exit 1
           }
