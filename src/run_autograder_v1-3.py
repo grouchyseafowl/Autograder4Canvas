@@ -687,7 +687,8 @@ def install_dependencies():
         print(f"  {e}")
         if e.stderr:
             print(e.stderr.decode(errors="replace"))
-        input("Press Enter to close...")
+        if sys.stdin.isatty():
+            input("Press Enter to close...")
         sys.exit(1)
 
 def verify_structure():

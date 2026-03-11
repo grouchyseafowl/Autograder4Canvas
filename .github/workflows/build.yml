@@ -124,6 +124,7 @@ jobs:
           Write-Host "PASS: credentials.bat set env vars correctly when called by launcher."
 
       - name: Upload portable folder as artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Autograder4Canvas-Windows-Portable
