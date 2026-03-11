@@ -79,22 +79,38 @@ set "AUTOGRADER_CREDS_FILE=!CREDS_FILE!"
 
 :: -------------------------------------------------------
 :: Locate Python 3
+:: NOTE: We skip Microsoft Store app stubs (in WindowsApps).
+::       Those stubs report a version number but cannot create venvs.
 :: -------------------------------------------------------
 set "PYTHON_CMD="
 
-where python >nul 2>&1
-if %ERRORLEVEL% == 0 (
-    for /f "tokens=2 delims= " %%v in ('python --version 2^>^&1') do set "PY_VER=%%v"
-    if "!PY_VER:~0,1!"=="3" set "PYTHON_CMD=python"
+for /f "tokens=*" %%p in ('where python 2^>nul') do (
+    if not defined PYTHON_CMD (
+        echo %%p | findstr /i "WindowsApps" >nul 2>&1
+        if !ERRORLEVEL! neq 0 (
+            for /f "tokens=2 delims= " %%v in ('"%%p" --version 2^>^&1') do set "PY_VER=%%v"
+            if "!PY_VER:~0,1!"=="3" set "PYTHON_CMD=%%p"
+        )
+    )
 )
 
 if not defined PYTHON_CMD (
-    where python3 >nul 2>&1
-    if !ERRORLEVEL! == 0 set "PYTHON_CMD=python3"
+    for /f "tokens=*" %%p in ('where python3 2^>nul') do (
+        if not defined PYTHON_CMD (
+            echo %%p | findstr /i "WindowsApps" >nul 2>&1
+            if !ERRORLEVEL! neq 0 set "PYTHON_CMD=%%p"
+        )
+    )
 )
 
 if not defined PYTHON_CMD (
     for /d %%d in ("%LOCALAPPDATA%\Programs\Python\Python3*") do (
+        if exist "%%d\python.exe" set "PYTHON_CMD=%%d\python.exe"
+    )
+)
+
+if not defined PYTHON_CMD (
+    for /d %%d in ("%PROGRAMFILES%\Python3*") do (
         if exist "%%d\python.exe" set "PYTHON_CMD=%%d\python.exe"
     )
 )
@@ -105,9 +121,16 @@ if not defined PYTHON_CMD (
     echo  Please install Python 3 from https://www.python.org/downloads/
     echo  On the installer, check "Add Python to PATH".
     echo.
+    echo  Note: Python from the Microsoft Store does not work here.
+    echo  If that is what you have, uninstall it from the Store and
+    echo  install from python.org instead.
+    echo.
     pause
     exit /b 1
 )
+
+echo  Python: !PYTHON_CMD!
+echo.
 
 :: -------------------------------------------------------
 :: Create/reuse virtual environment
@@ -123,7 +146,15 @@ if not exist "!VENV_PYTHON!" (
     if !ERRORLEVEL! neq 0 (
         echo.
         echo  ERROR: Could not create virtual environment.
-        echo  Try right-clicking run.bat and choosing "Run as administrator".
+        echo.
+        echo  Python used: !PYTHON_CMD!
+        echo.
+        echo  Common causes:
+        echo    - Python was installed from the Microsoft Store (not supported)
+        echo      Fix: uninstall Store Python, install from https://www.python.org/downloads/
+        echo    - Python installation is incomplete or corrupted
+        echo      Fix: reinstall Python from https://www.python.org/downloads/
+        echo           On the installer, check "Add Python to PATH"
         echo.
         pause
         exit /b 1
