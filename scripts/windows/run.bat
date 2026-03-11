@@ -155,6 +155,17 @@ set "VENV_DIR=%~dp0venv"
 set "VENV_PYTHON=!VENV_DIR!\Scripts\python.exe"
 set "VENV_PIP=!VENV_DIR!\Scripts\pip.exe"
 
+:: If venv python exists but is broken (e.g. from a failed previous install),
+:: delete it so we rebuild cleanly rather than crashing on launch.
+if exist "!VENV_PYTHON!" (
+    "!VENV_PYTHON!" -c "" >nul 2>&1
+    if !ERRORLEVEL! neq 0 (
+        echo  Python environment is broken -- rebuilding it...
+        echo.
+        rmdir /s /q "!VENV_DIR!" >nul 2>&1
+    )
+)
+
 if not exist "!VENV_PYTHON!" (
     echo  Setting up Python environment (one-time, takes a minute)...
     echo.
@@ -174,26 +185,31 @@ if not exist "!VENV_PYTHON!" (
         echo.
         echo  To fix this:
         echo    1. Uninstall Python from the Microsoft Store
-        echo       (Start ^> Settings ^> Apps ^> search "Python" ^> Uninstall)
+        echo       ^(Start ^> Settings ^> Apps ^> search "Python" ^> Uninstall^)
         echo    2. Install Python from the page that just opened
         echo    3. IMPORTANT: check "Add Python to PATH" on the first screen
         echo    4. Close this window, then double-click run.bat again
         echo.
+        rmdir /s /q "!VENV_DIR!" >nul 2>&1
         pause
         exit /b 1
     )
 
     echo  Installing required packages...
-    "!VENV_PIP!" install --quiet -r "%~dp0src\requirements.txt"
+    echo  ^(This may take a minute -- please wait^)
+    echo.
+    "!VENV_PIP!" install -r "%~dp0src\requirements.txt"
     if !ERRORLEVEL! neq 0 (
         echo.
-        echo  WARNING: Some packages may not have installed correctly.
-        echo  If the program fails, open a Command Prompt here and run:
-        echo    venv\Scripts\pip install -r src\requirements.txt
+        echo  ERROR: Package installation failed.
+        echo  Please check your internet connection and try again.
         echo.
-    ) else (
-        echo  Done.
+        rmdir /s /q "!VENV_DIR!" >nul 2>&1
+        pause
+        exit /b 1
     )
+    echo.
+    echo  Setup complete.
     echo.
 )
 
