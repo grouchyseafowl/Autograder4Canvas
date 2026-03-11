@@ -123,6 +123,12 @@ jobs:
           }
           Write-Host "PASS: credentials.bat set env vars correctly when called by launcher."
 
+      - name: Upload portable folder as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Autograder4Canvas-Windows-Portable
+          path: portable_test/
+
   # ============================================================
   # macOS — builds a .app bundle wrapped in a DMG
   # ============================================================
