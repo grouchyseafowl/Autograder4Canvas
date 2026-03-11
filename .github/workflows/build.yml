@@ -93,35 +93,21 @@ jobs:
           }
           Write-Host "Launcher smoke test passed."
 
-      # Verify credentials.bat behaves correctly:
-      #   1. When double-clicked (no /from-run arg): shows setup instructions
-      #   2. When called by run.bat (with /from-run): sets env vars
-      - name: Test credentials.bat direct-launch guard
+      # Verify credentials.bat sets env vars when called
+      - name: Test credentials.bat env var loading
         shell: pwsh
         run: |
-          # Test 1: double-click scenario — pipe a newline to satisfy `pause`, expect exit 0
-          $output = "`n" | cmd /c "call portable_test\credentials.bat" 2>&1
-          Write-Host "--- credentials.bat standalone output ---"
-          $output | ForEach-Object { Write-Host $_ }
-          $joined1 = $output -join "`n"
-          if ($joined1 -notmatch "(?i)setup|notepad|edit|credentials") {
-            Write-Host "FAIL: credentials.bat did not show setup instructions"
-            exit 1
-          }
-          Write-Host "PASS: credentials.bat showed setup instructions when double-clicked."
-
-          # Test 2: called-by-run.bat scenario (/from-run arg) — env vars should be set
-          $lines = '@echo off', 'setlocal enabledelayedexpansion', 'call portable_test\credentials.bat /from-run', 'echo URL=!CANVAS_BASE_URL!'
-          Set-Content -Path "test_creds_caller.bat" -Value $lines -Encoding ascii
-          $result = cmd /c test_creds_caller.bat 2>&1
-          Write-Host "--- credentials.bat called-by-launcher output ---"
+          $lines = '@echo off', 'setlocal enabledelayedexpansion', 'call portable_test\credentials.bat', 'echo URL=!CANVAS_BASE_URL!'
+          Set-Content -Path "test_creds_check.bat" -Value $lines -Encoding ascii
+          $result = cmd /c test_creds_check.bat 2>&1
+          Write-Host "--- credentials.bat output ---"
           $result | ForEach-Object { Write-Host $_ }
-          $joined2 = $result -join "`n"
-          if ($joined2 -notmatch "URL=https?://") {
+          $joined = $result -join "`n"
+          if ($joined -notmatch "URL=https?://") {
             Write-Host "FAIL: credentials.bat did not set CANVAS_BASE_URL"
             exit 1
           }
-          Write-Host "PASS: credentials.bat set env vars correctly when called by launcher."
+          Write-Host "PASS: credentials.bat sets env vars correctly."
 
       - name: Upload portable folder as artifact
         if: always()

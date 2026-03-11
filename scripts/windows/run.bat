@@ -13,41 +13,66 @@ echo.
 set "CREDS_FILE=%~dp0credentials.bat"
 
 if not exist "!CREDS_FILE!" (
-    echo  ERROR: credentials.bat not found in this folder.
-    echo  Make sure credentials.bat is in the same folder as run.bat.
-    echo.
-    pause
-    exit /b 1
+    :: File missing entirely - create a blank one so we can write to it
+    (
+        echo @echo off
+        echo set CANVAS_BASE_URL=https://yourschool.instructure.com
+        echo set CANVAS_API_TOKEN=your_api_token_here
+    ) > "!CREDS_FILE!"
 )
 
-call "!CREDS_FILE!" /from-run
+call "!CREDS_FILE!"
 
-if "%CANVAS_BASE_URL%"=="https://yourschool.instructure.com" (
-    echo  ============================================================
-    echo   Setup Required
-    echo  ============================================================
-    echo.
-    echo  Please edit credentials.bat before running:
-    echo.
-    echo  1. Right-click credentials.bat and choose "Open with Notepad"
-    echo  2. Replace  https://yourschool.instructure.com
-    echo     with your real Canvas URL
-    echo  3. Replace  your_api_token_here
-    echo     with your Canvas API token
-    echo  4. Save the file, then double-click run.bat again
-    echo.
-    pause
-    exit /b 1
-)
+:: -------------------------------------------------------
+:: First-time credential setup (runs once, then saves)
+:: -------------------------------------------------------
+set "NEEDS_SETUP=0"
+if "!CANVAS_BASE_URL!"=="https://yourschool.instructure.com" set "NEEDS_SETUP=1"
+if "!CANVAS_API_TOKEN!"=="your_api_token_here" set "NEEDS_SETUP=1"
 
-if "%CANVAS_API_TOKEN%"=="your_api_token_here" (
-    echo  Setup Required - API Token Missing
+if "!NEEDS_SETUP!"=="1" (
+    echo  First-time setup: enter your Canvas credentials.
+    echo  These will be saved so you won't be asked again.
     echo.
-    echo  Please open credentials.bat in Notepad and replace
-    echo  "your_api_token_here" with your Canvas API token.
+
+    if "!CANVAS_BASE_URL!"=="https://yourschool.instructure.com" (
+        echo  Canvas URL -- the address you use to log in to Canvas.
+        echo  Example: https://myschool.instructure.com
+        echo.
+        set /p "CANVAS_BASE_URL=  Canvas URL: "
+        echo.
+        if "!CANVAS_BASE_URL!"=="" (
+            echo  No URL entered. Please run again.
+            pause
+            exit /b 1
+        )
+    )
+
+    if "!CANVAS_API_TOKEN!"=="your_api_token_here" (
+        echo  API Token -- found in Canvas under:
+        echo    Profile picture ^(top right^) ^> Settings ^> Approved Integrations
+        echo    Click "+ New Access Token", give it a name, click Generate.
+        echo.
+        set /p "CANVAS_API_TOKEN=  API Token: "
+        echo.
+        if "!CANVAS_API_TOKEN!"=="" (
+            echo  No token entered. Please run again.
+            pause
+            exit /b 1
+        )
+    )
+
+    :: Save credentials to credentials.bat
+    (
+        echo @echo off
+        echo :: Autograder4Canvas -- Credentials
+        echo :: To update: delete this file and run run.bat again.
+        echo set CANVAS_BASE_URL=!CANVAS_BASE_URL!
+        echo set CANVAS_API_TOKEN=!CANVAS_API_TOKEN!
+    ) > "!CREDS_FILE!"
+
+    echo  Credentials saved. You won't be asked again.
     echo.
-    pause
-    exit /b 1
 )
 
 set "AUTOGRADER_CREDS_FILE=!CREDS_FILE!"
@@ -84,9 +109,6 @@ if not defined PYTHON_CMD (
     exit /b 1
 )
 
-echo  Python: !PYTHON_CMD!
-echo.
-
 :: -------------------------------------------------------
 :: Create/reuse virtual environment
 :: -------------------------------------------------------
@@ -95,8 +117,7 @@ set "VENV_PYTHON=!VENV_DIR!\Scripts\python.exe"
 set "VENV_PIP=!VENV_DIR!\Scripts\pip.exe"
 
 if not exist "!VENV_PYTHON!" (
-    echo  First-time setup: creating local Python environment...
-    echo  (This only happens once - may take a minute or two)
+    echo  Setting up Python environment (one-time, takes a minute)...
     echo.
     !PYTHON_CMD! -m venv "!VENV_DIR!"
     if !ERRORLEVEL! neq 0 (
@@ -112,18 +133,17 @@ if not exist "!VENV_PYTHON!" (
     "!VENV_PIP!" install --quiet -r "%~dp0src\requirements.txt"
     if !ERRORLEVEL! neq 0 (
         echo.
-        echo  WARNING: Some packages may not have installed.
+        echo  WARNING: Some packages may not have installed correctly.
         echo  If the program fails, open a Command Prompt here and run:
         echo    venv\Scripts\pip install -r src\requirements.txt
         echo.
     ) else (
-        echo  Packages installed.
+        echo  Done.
     )
     echo.
 )
 
-:: Tell the Python script to use this venv for running sub-scripts
-:: (skips the script's own venv creation logic)
+:: Tell Python which venv to use for running sub-scripts
 set "AUTOGRADER_VENV_PYTHON=!VENV_PYTHON!"
 
 :: -------------------------------------------------------
