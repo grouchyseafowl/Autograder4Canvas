@@ -58,6 +58,7 @@ set "AUTOGRADER_CREDS_FILE=!CREDS_FILE!"
 
 :: -------------------------------------------------------
 :: Locate Python 3
+:: (The autograder script manages its own venv automatically)
 :: -------------------------------------------------------
 set "PYTHON_CMD="
 
@@ -95,43 +96,10 @@ echo  Python found: !PYTHON_CMD!
 echo.
 
 :: -------------------------------------------------------
-:: Create/reuse local virtual environment
-:: -------------------------------------------------------
-set "VENV_DIR=%~dp0venv"
-set "VENV_PYTHON=!VENV_DIR!\Scripts\python.exe"
-set "VENV_PIP=!VENV_DIR!\Scripts\pip.exe"
-
-if not exist "!VENV_PYTHON!" (
-    echo  First-time setup: creating local Python environment...
-    echo  (This only happens once and takes about a minute)
-    echo.
-    !PYTHON_CMD! -m venv "!VENV_DIR!"
-    if !ERRORLEVEL! neq 0 (
-        echo  ERROR: Could not create virtual environment.
-        echo  Try running this file as Administrator.
-        echo.
-        pause
-        exit /b 1
-    )
-
-    echo  Installing required packages...
-    "!VENV_PIP!" install --quiet -r "%~dp0src\requirements.txt"
-    if !ERRORLEVEL! neq 0 (
-        echo  WARNING: Some packages may not have installed correctly.
-        echo  The program will still try to run. If it fails, open a
-        echo  Command Prompt here and run:
-        echo    venv\Scripts\pip install -r src\requirements.txt
-        echo.
-    ) else (
-        echo  Packages installed successfully.
-    )
-    echo.
-)
-
-:: -------------------------------------------------------
 :: Run the autograder
+:: The script sets up its own virtual environment on first run.
 :: -------------------------------------------------------
 cd /d "%~dp0"
-"!VENV_PYTHON!" src\run_autograder.py %*
+"!PYTHON_CMD!" src\run_autograder.py %*
 echo.
 pause
