@@ -116,14 +116,22 @@ if not defined PYTHON_CMD (
 )
 
 if not defined PYTHON_CMD (
-    echo  ERROR: Python 3 not found.
+    echo  ============================================================
+    echo   Python Not Found
+    echo  ============================================================
     echo.
-    echo  Please install Python 3 from https://www.python.org/downloads/
-    echo  On the installer, check "Add Python to PATH".
+    echo  This program needs Python 3, which is not installed yet.
     echo.
-    echo  Note: Python from the Microsoft Store does not work here.
-    echo  If that is what you have, uninstall it from the Store and
-    echo  install from python.org instead.
+    echo  Opening the download page in your browser now...
+    start https://www.python.org/downloads/
+    echo.
+    echo  Once the page opens:
+    echo    1. Click the big yellow "Download Python" button
+    echo    2. Run the installer that downloads
+    echo    3. IMPORTANT: on the first screen, check the box that says
+    echo       "Add Python to PATH"  ^<-- this box must be checked
+    echo    4. Click "Install Now" and wait for it to finish
+    echo    5. Close this window, then double-click run.bat again
     echo.
     pause
     exit /b 1
@@ -145,16 +153,23 @@ if not exist "!VENV_PYTHON!" (
     !PYTHON_CMD! -m venv "!VENV_DIR!"
     if !ERRORLEVEL! neq 0 (
         echo.
-        echo  ERROR: Could not create virtual environment.
+        echo  ============================================================
+        echo   Python Setup Failed
+        echo  ============================================================
         echo.
-        echo  Python used: !PYTHON_CMD!
+        echo  Python was found but could not set up a working environment.
+        echo  This usually means Python was installed from the Microsoft
+        echo  Store, which does not fully work for this program.
         echo.
-        echo  Common causes:
-        echo    - Python was installed from the Microsoft Store (not supported)
-        echo      Fix: uninstall Store Python, install from https://www.python.org/downloads/
-        echo    - Python installation is incomplete or corrupted
-        echo      Fix: reinstall Python from https://www.python.org/downloads/
-        echo           On the installer, check "Add Python to PATH"
+        echo  Opening the Python download page in your browser...
+        start https://www.python.org/downloads/
+        echo.
+        echo  To fix this:
+        echo    1. Uninstall Python from the Microsoft Store
+        echo       (Start ^> Settings ^> Apps ^> search "Python" ^> Uninstall)
+        echo    2. Install Python from the page that just opened
+        echo    3. IMPORTANT: check "Add Python to PATH" on the first screen
+        echo    4. Close this window, then double-click run.bat again
         echo.
         pause
         exit /b 1
