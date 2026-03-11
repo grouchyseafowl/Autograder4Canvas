@@ -32,7 +32,7 @@ try:
         SUBDIRS
     )
     HAS_UTILS = True
-except ImportError:
+except Exception:
     HAS_UTILS = False
     # Fallback subdirectory names (must match autograder_utils.py SUBDIRS)
     SUBDIRS = {
@@ -2223,7 +2223,6 @@ def main():
     
     # System checks
     check_python_version()
-    check_pip()
     verify_structure()
     
     print()
