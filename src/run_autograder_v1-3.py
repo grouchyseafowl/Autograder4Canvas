@@ -597,11 +597,15 @@ def create_virtual_environment():
     
     print("ðŸ“¦ Creating virtual environment...")
     try:
-        subprocess.run(
+        result = subprocess.run(
             [sys.executable, "-m", "venv", str(VENV_DIR)],
-            check=True,
             capture_output=True
         )
+        if result.returncode != 0:
+            print("ERROR: Failed to create virtual environment.")
+            print(result.stderr.decode(errors="replace"))
+            input("Press Enter to close...")
+            sys.exit(1)
         print("âœ… Virtual environment created")
     except subprocess.CalledProcessError as e:
         print(f"âŒ Failed to create virtual environment: {e}")
@@ -679,8 +683,11 @@ def install_dependencies():
         
         print("âœ… Dependencies installed")
     except subprocess.CalledProcessError as e:
-        print(f"âŒ Failed to install dependencies: {e}")
-        print(f"   Error output: {e.stderr.decode() if e.stderr else 'N/A'}")
+        print("ERROR: Failed to install dependencies.")
+        print(f"  {e}")
+        if e.stderr:
+            print(e.stderr.decode(errors="replace"))
+        input("Press Enter to close...")
         sys.exit(1)
 
 def verify_structure():
@@ -2274,5 +2281,17 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\nðŸ‘‹ Goodbye!")
+        print("\n\nGoodbye!")
         sys.exit(0)
+    except Exception as e:
+        import traceback
+        print("\n" + "=" * 60)
+        print("  ERROR - The autograder encountered an unexpected error")
+        print("=" * 60)
+        print()
+        traceback.print_exc()
+        print()
+        print("Please copy the error above and report it.")
+        print()
+        input("Press Enter to close...")
+        sys.exit(1)
