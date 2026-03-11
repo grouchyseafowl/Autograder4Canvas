@@ -211,6 +211,10 @@ def check_pip():
 
 def get_venv_python():
     """Get path to Python executable in virtual environment."""
+    # If run.bat already set up a venv for us, use that
+    override = os.environ.get("AUTOGRADER_VENV_PYTHON", "")
+    if override and Path(override).exists():
+        return Path(override)
     if platform.system() == "Windows":
         return VENV_DIR / "Scripts" / "python.exe"
     else:
@@ -2228,8 +2232,10 @@ def main():
     print()
     
     # Setup virtual environment and dependencies
-    create_virtual_environment()
-    install_dependencies()
+    # If run.bat already built a venv, skip - packages are already installed
+    if not os.environ.get("AUTOGRADER_VENV_PYTHON"):
+        create_virtual_environment()
+        install_dependencies()
     
     print()
     print("âœ… Setup complete")

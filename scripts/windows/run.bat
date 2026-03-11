@@ -22,7 +22,6 @@ if not exist "!CREDS_FILE!" (
 
 call "!CREDS_FILE!" /from-run
 
-:: Check that the user filled in their credentials
 if "%CANVAS_BASE_URL%"=="https://yourschool.instructure.com" (
     echo  ============================================================
     echo   Setup Required
@@ -36,8 +35,6 @@ if "%CANVAS_BASE_URL%"=="https://yourschool.instructure.com" (
     echo  3. Replace  your_api_token_here
     echo     with your Canvas API token
     echo  4. Save the file, then double-click run.bat again
-    echo.
-    echo  (See the comments inside credentials.bat for how to get a token)
     echo.
     pause
     exit /b 1
@@ -53,12 +50,10 @@ if "%CANVAS_API_TOKEN%"=="your_api_token_here" (
     exit /b 1
 )
 
-:: Pass credentials file path so Python can write back to it on save
 set "AUTOGRADER_CREDS_FILE=!CREDS_FILE!"
 
 :: -------------------------------------------------------
 :: Locate Python 3
-:: (The autograder script manages its own venv automatically)
 :: -------------------------------------------------------
 set "PYTHON_CMD="
 
@@ -80,26 +75,61 @@ if not defined PYTHON_CMD (
 )
 
 if not defined PYTHON_CMD (
-    echo  Python is not installed or could not be found.
+    echo  ERROR: Python 3 not found.
     echo.
-    echo  Please install Python 3 from:
-    echo    https://www.python.org/downloads/
-    echo.
-    echo  IMPORTANT: On the first screen of the installer,
-    echo  check the box "Add Python to PATH" at the bottom.
+    echo  Please install Python 3 from https://www.python.org/downloads/
+    echo  On the installer, check "Add Python to PATH".
     echo.
     pause
     exit /b 1
 )
 
-echo  Python found: !PYTHON_CMD!
+echo  Python: !PYTHON_CMD!
 echo.
 
 :: -------------------------------------------------------
+:: Create/reuse virtual environment
+:: -------------------------------------------------------
+set "VENV_DIR=%~dp0venv"
+set "VENV_PYTHON=!VENV_DIR!\Scripts\python.exe"
+set "VENV_PIP=!VENV_DIR!\Scripts\pip.exe"
+
+if not exist "!VENV_PYTHON!" (
+    echo  First-time setup: creating local Python environment...
+    echo  (This only happens once - may take a minute or two)
+    echo.
+    !PYTHON_CMD! -m venv "!VENV_DIR!"
+    if !ERRORLEVEL! neq 0 (
+        echo.
+        echo  ERROR: Could not create virtual environment.
+        echo  Try right-clicking run.bat and choosing "Run as administrator".
+        echo.
+        pause
+        exit /b 1
+    )
+
+    echo  Installing required packages...
+    "!VENV_PIP!" install --quiet -r "%~dp0src\requirements.txt"
+    if !ERRORLEVEL! neq 0 (
+        echo.
+        echo  WARNING: Some packages may not have installed.
+        echo  If the program fails, open a Command Prompt here and run:
+        echo    venv\Scripts\pip install -r src\requirements.txt
+        echo.
+    ) else (
+        echo  Packages installed.
+    )
+    echo.
+)
+
+:: Tell the Python script to use this venv for running sub-scripts
+:: (skips the script's own venv creation logic)
+set "AUTOGRADER_VENV_PYTHON=!VENV_PYTHON!"
+
+:: -------------------------------------------------------
 :: Run the autograder
-:: The script sets up its own virtual environment on first run.
 :: -------------------------------------------------------
 cd /d "%~dp0"
-"!PYTHON_CMD!" src\run_autograder.py %*
+"!VENV_PYTHON!" src\run_autograder.py %*
 echo.
 pause
