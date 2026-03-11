@@ -16,6 +16,7 @@ if not exist "!CREDS_FILE!" (
     exit /b 1
 )
 
+set AUTOGRADER_RUNNING=1
 call "!CREDS_FILE!"
 
 :: Check that the user filled in their credentials
