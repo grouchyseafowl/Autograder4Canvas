@@ -1,8 +1,8 @@
 @echo off
 :: ============================================================
-:: Autograder4Canvas — Credentials Configuration
+:: Autograder4Canvas -- Credentials Configuration
 :: ============================================================
-:: This file is READ by run.bat — do not double-click it.
+:: This file is READ by run.bat -- do not double-click it.
 ::
 :: To set up your credentials:
 ::   1. Right-click THIS file and choose "Open with Notepad"
@@ -27,28 +27,30 @@
 :: IMPORTANT: Do not add spaces around the = signs.
 :: ============================================================
 
-:: If this file was double-clicked directly (not called by run.bat),
-:: show setup instructions instead of silently closing.
-if not defined AUTOGRADER_RUNNING (
-    echo.
-    echo  ============================================================
-    echo   Autograder4Canvas — Setup Instructions
-    echo  ============================================================
-    echo.
-    echo  This file stores your Canvas credentials.
-    echo  You should EDIT it in Notepad, not double-click it.
-    echo.
-    echo  To set up:
-    echo    1. Right-click  credentials.bat
-    echo       and choose "Open with Notepad"
-    echo    2. Replace the placeholder Canvas URL with your school's URL
-    echo    3. Replace "your_api_token_here" with your Canvas API token
-    echo    4. Save and close Notepad
-    echo    5. Double-click  run.bat  to start the autograder
-    echo.
-    pause
-    exit /b 0
-)
+:: run.bat passes /from-run when calling this file.
+:: If that argument is absent, the user double-clicked it directly.
+if /i "%~1"=="/from-run" goto :load_credentials
 
+chcp 65001 >nul 2>&1
+echo.
+echo  ============================================================
+echo   Autograder4Canvas - Setup Instructions
+echo  ============================================================
+echo.
+echo  This file stores your Canvas credentials.
+echo  Edit it in Notepad -- do not double-click to run it.
+echo.
+echo  To set up:
+echo    1. Right-click credentials.bat
+echo       and choose "Open with Notepad"
+echo    2. Replace the placeholder Canvas URL with your school URL
+echo    3. Replace your_api_token_here with your Canvas API token
+echo    4. Save and close Notepad
+echo    5. Double-click run.bat to start the autograder
+echo.
+pause
+exit /b 0
+
+:load_credentials
 set CANVAS_BASE_URL=https://yourschool.instructure.com
 set CANVAS_API_TOKEN=your_api_token_here

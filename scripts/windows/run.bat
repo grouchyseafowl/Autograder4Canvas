@@ -16,8 +16,7 @@ if not exist "!CREDS_FILE!" (
     exit /b 1
 )
 
-set AUTOGRADER_RUNNING=1
-call "!CREDS_FILE!"
+call "!CREDS_FILE!" /from-run
 
 :: Check that the user filled in their credentials
 if "%CANVAS_BASE_URL%"=="https://yourschool.instructure.com" (

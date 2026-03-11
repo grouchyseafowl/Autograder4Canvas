@@ -94,13 +94,13 @@ jobs:
           Write-Host "Launcher smoke test passed."
 
       # Verify credentials.bat behaves correctly:
-      #   1. When double-clicked (no AUTOGRADER_RUNNING): shows setup instructions
-      #   2. When called by run.bat (AUTOGRADER_RUNNING=1): sets env vars
+      #   1. When double-clicked (no /from-run arg): shows setup instructions
+      #   2. When called by run.bat (with /from-run): sets env vars
       - name: Test credentials.bat direct-launch guard
         shell: pwsh
         run: |
           # Test 1: double-click scenario — pipe a newline to satisfy `pause`, expect exit 0
-          $output = "`n" | cmd /c "set AUTOGRADER_RUNNING= && call portable_test\credentials.bat" 2>&1
+          $output = "`n" | cmd /c "call portable_test\credentials.bat" 2>&1
           Write-Host "--- credentials.bat standalone output ---"
           $output | ForEach-Object { Write-Host $_ }
           if ($output -notmatch "(?i)setup|notepad|edit|credentials") {
@@ -109,9 +109,8 @@ jobs:
           }
           Write-Host "PASS: credentials.bat showed setup instructions when double-clicked."
 
-          # Test 2: called-by-run.bat scenario — env vars should be set
-          # Write a temp batch so we can use delayed expansion to see what was set
-          $lines = '@echo off', 'setlocal enabledelayedexpansion', 'set AUTOGRADER_RUNNING=1', 'call portable_test\credentials.bat', 'echo URL=!CANVAS_BASE_URL!'
+          # Test 2: called-by-run.bat scenario (/from-run arg) — env vars should be set
+          $lines = '@echo off', 'setlocal enabledelayedexpansion', 'call portable_test\credentials.bat /from-run', 'echo URL=!CANVAS_BASE_URL!'
           Set-Content -Path "test_creds_caller.bat" -Value $lines -Encoding ascii
           $result = cmd /c test_creds_caller.bat 2>&1
           Write-Host "--- credentials.bat called-by-launcher output ---"
