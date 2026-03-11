@@ -108,13 +108,8 @@ jobs:
 
           # Test 2: called-by-run.bat scenario — env vars should be set
           # Write a temp batch so we can use delayed expansion to see what was set
-          @"
-@echo off
-setlocal enabledelayedexpansion
-set AUTOGRADER_RUNNING=1
-call portable_test\credentials.bat
-echo URL=!CANVAS_BASE_URL!
-"@ | Out-File -FilePath "test_creds_caller.bat" -Encoding ascii
+          $lines = '@echo off', 'setlocal enabledelayedexpansion', 'set AUTOGRADER_RUNNING=1', 'call portable_test\credentials.bat', 'echo URL=!CANVAS_BASE_URL!'
+          Set-Content -Path "test_creds_caller.bat" -Value $lines -Encoding ascii
           $result = cmd /c test_creds_caller.bat 2>&1
           Write-Host "--- credentials.bat called-by-launcher output ---"
           $result | ForEach-Object { Write-Host $_ }
