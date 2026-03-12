@@ -61,7 +61,12 @@ def get_base_exports_dir() -> Path:
     
     return documents / "Autograder Rationales"
 
-SCRIPT_DIR = Path(__file__).parent.resolve()  # Where this script lives (src/ or Resources/)
+# Detect PyInstaller frozen mode
+FROZEN = getattr(sys, 'frozen', False)
+if FROZEN:
+    SCRIPT_DIR = Path(sys._MEIPASS).resolve()
+else:
+    SCRIPT_DIR = Path(__file__).parent.resolve()  # Where this script lives (src/ or Resources/)
 PROGRAMS_DIR = SCRIPT_DIR / "Programs"
 REQUIREMENTS_FILE = SCRIPT_DIR / "requirements.txt"
 
@@ -538,7 +543,7 @@ def verify_structure():
         print("Expected: Programs/ folder in same directory as run_autograder.py")
         sys.exit(1)
     
-    if not REQUIREMENTS_FILE.exists():
+    if not FROZEN and not REQUIREMENTS_FILE.exists():
         print(f"âŒ Missing 'requirements.txt' at: {REQUIREMENTS_FILE}")
         sys.exit(1)
 
@@ -1838,23 +1843,39 @@ def run_script(script_info, token):
     print(f"ðŸ“ Output will be saved to: {target_dir}")
     print()
     
-    # Get Python executable from venv
-    python_exe = get_venv_python()
-    
     # Change to src directory and run
     try:
-        result = subprocess.run(
-            [str(python_exe), str(script_path)],
-            cwd=str(SCRIPT_DIR),
-            env=env,
-            check=False  # Don't raise exception on non-zero exit
-        )
-        
+        if FROZEN:
+            # PyInstaller bundle: run script in-process (no separate Python)
+            import importlib.util
+            old_cwd = os.getcwd()
+            os.chdir(str(SCRIPT_DIR))
+            os.environ.update(env)
+            spec = importlib.util.spec_from_file_location("__main__", str(script_path))
+            mod = importlib.util.module_from_spec(spec)
+            try:
+                spec.loader.exec_module(mod)
+                returncode = 0
+            except SystemExit as e:
+                returncode = e.code if isinstance(e.code, int) else 0
+            finally:
+                os.chdir(old_cwd)
+        else:
+            # Normal mode: subprocess with venv Python
+            python_exe = get_venv_python()
+            result = subprocess.run(
+                [str(python_exe), str(script_path)],
+                cwd=str(SCRIPT_DIR),
+                env=env,
+                check=False
+            )
+            returncode = result.returncode
+
         print()
-        if result.returncode == 0:
+        if returncode == 0:
             print("âœ… Script completed successfully!")
         else:
-            print(f"âš ï¸  Script exited with code {result.returncode}")
+            print(f"âš ï¸  Script exited with code {returncode}")
         
         # Check auto-open setting
         settings = load_settings()
