@@ -157,7 +157,7 @@ def run_first_time_setup() -> Path:
     print(f"  [2] Desktop")
     print(f"      {desktop_path}")
     print()
-    print(f"  [3] Custom location")
+    print(f"  [3] Browse for a folder...")
     print()
     
     while True:
@@ -171,15 +171,14 @@ def run_first_time_setup() -> Path:
                 selected_path = desktop_path
                 break
             elif choice == "3":
-                print()
-                custom = input("Enter full path: ").strip()
-                if custom:
-                    selected_path = Path(custom).expanduser().resolve()
+                picked = _pick_or_type_folder("Choose where to save grading reports")
+                if picked:
+                    selected_path = picked
                     break
                 else:
-                    print("❌ No path entered. Please try again.")
+                    print("  No folder selected. Please try again.")
             else:
-                print("❌ Please enter 1, 2, or 3")
+                print("  Please enter 1, 2, or 3")
         except (KeyboardInterrupt, EOFError):
             print("\n\nUsing default location.")
             selected_path = default_path
@@ -226,7 +225,7 @@ def change_output_directory() -> Path:
     print(f"  [2] Desktop")
     print(f"      {desktop_path}")
     print()
-    print(f"  [3] Custom location")
+    print(f"  [3] Browse for a folder...")
     print()
     print(f"  [4] Keep current location (cancel)")
     print()
@@ -242,13 +241,12 @@ def change_output_directory() -> Path:
                 selected_path = desktop_path
                 break
             elif choice == "3":
-                print()
-                custom = input("Enter full path: ").strip()
-                if custom:
-                    selected_path = Path(custom).expanduser().resolve()
+                picked = _pick_or_type_folder("Choose where to save grading reports")
+                if picked:
+                    selected_path = picked
                     break
                 else:
-                    print("❌ No path entered. Please try again.")
+                    print("  No folder selected. Please try again.")
             elif choice == "4" or choice == "":
                 print("⏭️  Keeping current location.")
                 return current
@@ -294,6 +292,101 @@ def change_output_directory() -> Path:
                     print(f"⚠️  Could not move some files: {e}")
     
     return selected_path
+
+
+# =============================================================================
+# UI Helpers
+# =============================================================================
+
+def pick_folder_dialog(title: str = "Choose a folder", initial_dir: str = None) -> "Path | None":
+    """Open a native OS folder-picker dialog. Returns Path or None on cancel/failure."""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+        root = tk.Tk()
+        root.withdraw()
+        # Bring dialog to front (especially needed on macOS)
+        root.lift()
+        root.attributes('-topmost', True)
+        if initial_dir is None:
+            initial_dir = str(Path.home() / "Documents")
+        result = filedialog.askdirectory(title=title, initialdir=initial_dir)
+        root.destroy()
+        if result:
+            return Path(result)
+        return None
+    except Exception:
+        return None
+
+
+def _pick_or_type_folder(prompt_label: str = "Choose output folder") -> "Path | None":
+    """Try native folder picker, fall back to typed path."""
+    print()
+    print(f"  Opening folder picker...")
+    selected = pick_folder_dialog(prompt_label)
+    if selected is not None:
+        return selected
+    # Fallback: tkinter unavailable or user cancelled the dialog
+    print("  (Folder picker not available -- type a path instead)")
+    custom = input("  Enter full path: ").strip()
+    if custom:
+        return Path(custom).expanduser().resolve()
+    return None
+
+
+def prompt_canvas_url(header: str = "CANVAS URL SETUP") -> "str | None":
+    """
+    Friendly Canvas URL prompt.  Asks for just the institution name and builds
+    the URL automatically.  Handles custom domains as an escape hatch.
+    Returns the URL string, or None if the user cancels.
+    """
+    print()
+    print("=" * 60)
+    print(f"  {header}")
+    print("=" * 60)
+    print()
+    print("  Most Canvas sites look like:")
+    print("    https://YOURSCHOOL.instructure.com")
+    print()
+    print("  Just type the part that is unique to your school.")
+    print("  Example: if your Canvas is at myschool.instructure.com,")
+    print("           type: myschool")
+    print()
+    print("  If your school uses a custom address (not instructure.com),")
+    print("  type the full address instead, like: canvas.myuniversity.edu")
+    print()
+
+    while True:
+        try:
+            answer = input("  Your school name (or full address): ").strip()
+        except (KeyboardInterrupt, EOFError):
+            return None
+        if not answer:
+            print("  Nothing entered. Please try again.")
+            print()
+            continue
+
+        # Decide whether this is a plain institution name or a full domain
+        if "." in answer or "/" in answer:
+            # User typed a domain or URL -- normalise it
+            url = answer.rstrip("/")
+            if not url.startswith("http"):
+                url = "https://" + url
+        else:
+            # Plain institution name
+            url = f"https://{answer}.instructure.com"
+
+        # Confirm
+        print()
+        print(f"  Your Canvas URL: {url}")
+        try:
+            ok = input("  Is this correct? (Y/n): ").strip().lower()
+        except (KeyboardInterrupt, EOFError):
+            return None
+        if ok in ("", "y", "yes"):
+            return url
+        print("  Let's try again.")
+        print()
 
 
 # =============================================================================

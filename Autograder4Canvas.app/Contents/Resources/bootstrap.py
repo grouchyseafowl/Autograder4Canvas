@@ -170,8 +170,20 @@ def ensure_dependencies():
     print("  Packages installed.")
 
 # ---------------------------------------------------------------------------
-# 7. Credential management (JSON-based)
+# 7. Credential management (JSON-based, multi-profile)
 # ---------------------------------------------------------------------------
+#
+# credentials.json format:
+# {
+#   "active_profile": "cabrillo",
+#   "profiles": {
+#     "cabrillo": {
+#       "canvas_base_url": "https://cabrillo.instructure.com",
+#       "canvas_api_token": "..."
+#     }
+#   }
+# }
+
 def _get_config_dir():
     """Platform config directory (mirrors autograder_utils.get_config_dir)."""
     system = platform.system()
@@ -198,100 +210,183 @@ def _load_creds():
             pass
     return {}
 
-def _save_creds(creds):
+def _save_creds(data):
     cf = _creds_file()
     cf.parent.mkdir(parents=True, exist_ok=True)
     with open(cf, "w", encoding="utf-8") as f:
-        json.dump(creds, f, indent=2)
+        json.dump(data, f, indent=2)
+
+def _profile_name_from_url(url):
+    """Derive a short profile name from a Canvas URL."""
+    # https://cabrillo.instructure.com -> cabrillo
+    # https://canvas.university.edu    -> canvas.university.edu
+    try:
+        from urllib.parse import urlparse
+        host = urlparse(url).hostname or url
+    except Exception:
+        host = url
+    if host.endswith(".instructure.com"):
+        return host.replace(".instructure.com", "")
+    return host
+
+def _get_active_profile(data):
+    """Return (name, profile_dict) for the active profile, or (None, {})."""
+    profiles = data.get("profiles", {})
+    active = data.get("active_profile", "")
+    if active and active in profiles:
+        return active, profiles[active]
+    # Fallback: first profile
+    if profiles:
+        name = next(iter(profiles))
+        return name, profiles[name]
+    return None, {}
 
 def _migrate_old_credentials():
-    """Migrate from old credentials.bat or env vars on first run."""
-    creds = _load_creds()
-    if creds.get("canvas_base_url") and creds.get("canvas_api_token"):
-        return creds  # already migrated
+    """Migrate from old flat format, credentials.bat, or env vars."""
+    data = _load_creds()
 
-    # Try old credentials.bat (look in several places)
-    bat_paths = []
-    # scripts/windows/credentials.bat (relative to project root)
-    project_root = SCRIPT_DIR.parent
-    bat_paths.append(project_root / "scripts" / "windows" / "credentials.bat")
-    bat_paths.append(project_root / "credentials.bat")
-    # AUTOGRADER_CREDS_FILE env var from old run.bat
-    old_creds_env = os.environ.get("AUTOGRADER_CREDS_FILE", "")
-    if old_creds_env:
-        bat_paths.insert(0, Path(old_creds_env))
+    # Already in profile format?
+    if "profiles" in data and data["profiles"]:
+        return data
 
-    for bat_path in bat_paths:
-        if bat_path.exists():
-            try:
-                with open(bat_path, "r", encoding="utf-8") as f:
-                    for line in f:
-                        line = line.strip()
-                        if line.lower().startswith("set "):
-                            rest = line[4:]
-                            if "=" in rest:
-                                k, v = rest.split("=", 1)
-                                k = k.strip().upper()
-                                if k == "CANVAS_BASE_URL" and v and "yourschool" not in v:
-                                    creds["canvas_base_url"] = v
-                                elif k == "CANVAS_API_TOKEN" and v and v != "your_api_token_here":
-                                    creds["canvas_api_token"] = v
-            except Exception:
-                pass
-            if creds.get("canvas_base_url") and creds.get("canvas_api_token"):
-                break
+    # Collect old flat credentials (from previous bootstrap format)
+    url = data.get("canvas_base_url", "")
+    token = data.get("canvas_api_token", "")
 
-    # Also check env vars (set by old shell configs)
-    if not creds.get("canvas_base_url"):
+    # Try old credentials.bat files
+    if not (url and token):
+        bat_paths = []
+        project_root = SCRIPT_DIR.parent
+        bat_paths.append(project_root / "scripts" / "windows" / "credentials.bat")
+        bat_paths.append(project_root / "credentials.bat")
+        old_creds_env = os.environ.get("AUTOGRADER_CREDS_FILE", "")
+        if old_creds_env:
+            bat_paths.insert(0, Path(old_creds_env))
+
+        for bat_path in bat_paths:
+            if bat_path.exists():
+                try:
+                    with open(bat_path, "r", encoding="utf-8") as f:
+                        for line in f:
+                            line = line.strip()
+                            if line.lower().startswith("set "):
+                                rest = line[4:]
+                                if "=" in rest:
+                                    k, v = rest.split("=", 1)
+                                    k = k.strip().upper()
+                                    if k == "CANVAS_BASE_URL" and v and "yourschool" not in v:
+                                        url = url or v
+                                    elif k == "CANVAS_API_TOKEN" and v and v != "your_api_token_here":
+                                        token = token or v
+                except Exception:
+                    pass
+                if url and token:
+                    break
+
+    # Env vars
+    if not url:
         env_url = os.environ.get("CANVAS_BASE_URL", "")
         if env_url and "yourschool" not in env_url:
-            creds["canvas_base_url"] = env_url
-    if not creds.get("canvas_api_token"):
+            url = env_url
+    if not token:
         env_tok = os.environ.get("CANVAS_API_TOKEN", "")
         if env_tok and env_tok != "your_api_token_here":
-            creds["canvas_api_token"] = env_tok
+            token = env_tok
 
-    if creds.get("canvas_base_url") or creds.get("canvas_api_token"):
-        _save_creds(creds)
-        print("  Migrated existing credentials to new JSON format.")
+    # Convert to profile format
+    if url and token:
+        name = _profile_name_from_url(url)
+        data = {
+            "active_profile": name,
+            "profiles": {
+                name: {"canvas_base_url": url, "canvas_api_token": token}
+            }
+        }
+        _save_creds(data)
+        print("  Migrated existing credentials to new profile format.")
+    elif not data.get("profiles"):
+        data = {"active_profile": "", "profiles": {}}
 
-    return creds
+    return data
 
-def _prompt_credentials(creds):
-    """Interactive first-time credential setup if values are missing."""
-    changed = False
+def _prompt_canvas_url_inline():
+    """Simplified Canvas URL prompt (inline version for bootstrap, no deps)."""
+    print()
+    print("  " + "=" * 56)
+    print("   Welcome to Canvas Autograder!")
+    print("  " + "=" * 56)
+    print()
+    print("  Let's connect to your school's Canvas.")
+    print()
+    print("  Most Canvas sites look like:")
+    print("    https://YOURSCHOOL.instructure.com")
+    print()
+    print("  Just type the part unique to your school.")
+    print("  Example: if your Canvas is at myschool.instructure.com,")
+    print("           type: myschool")
+    print()
+    print("  If your school uses a custom address (not instructure.com),")
+    print("  type the full address instead, like: canvas.myuniversity.edu")
+    print()
 
-    if not creds.get("canvas_base_url"):
-        print()
-        print("  " + "=" * 56)
-        print("   First-Time Setup")
-        print("  " + "=" * 56)
-        print("  Enter your Canvas credentials below. They will be saved")
-        print("  so you won't be asked again.")
-        print()
-        print("  Canvas URL -- the web address you use to log in to Canvas.")
-        print("  Example: https://myschool.instructure.com")
-        print()
+    while True:
         try:
-            url = input("  Canvas URL: ").strip()
+            answer = input("  Your school name (or full address): ").strip()
         except (KeyboardInterrupt, EOFError):
             print("\n  Cancelled.")
             sys.exit(1)
-        if not url:
-            print("  No URL entered. Please run again.")
-            input("Press Enter to exit...")
+        if not answer:
+            print("  Nothing entered -- you'll be asked again next time you launch.")
             sys.exit(1)
-        creds["canvas_base_url"] = url
-        changed = True
 
-    if not creds.get("canvas_api_token"):
+        if "." in answer or "/" in answer:
+            url = answer.rstrip("/")
+            if not url.startswith("http"):
+                url = "https://" + url
+        else:
+            url = f"https://{answer}.instructure.com"
+
         print()
-        print("  API Token -- find it in Canvas:")
-        print("    1. Click your profile picture (top right)")
-        print("    2. Click Settings")
-        print("    3. Scroll to Approved Integrations")
-        print("    4. Click New Access Token, give it a name, click Generate")
-        print("    5. Copy the token and paste it here")
+        print(f"  Your Canvas URL: {url}")
+        try:
+            ok = input("  Is this correct? (Y/n): ").strip().lower()
+        except (KeyboardInterrupt, EOFError):
+            print("\n  Cancelled.")
+            sys.exit(1)
+        if ok in ("", "y", "yes"):
+            return url
+        print("  Let's try again.")
+        print()
+
+
+def _prompt_credentials(data):
+    """Interactive first-time credential setup if no complete profile exists."""
+    _, profile = _get_active_profile(data)
+
+    if profile.get("canvas_base_url") and profile.get("canvas_api_token"):
+        return data  # already have a complete profile
+
+    # Need to create a new profile
+    url = profile.get("canvas_base_url") or _prompt_canvas_url_inline()
+    token = profile.get("canvas_api_token")
+
+    if not token:
+        print()
+        print("  " + "=" * 56)
+        print("   API Token Setup")
+        print("  " + "=" * 56)
+        print()
+        print("  Now we need an API token so the program can read your")
+        print("  Canvas courses and grades.")
+        print()
+        print("  How to get your token:")
+        print(f"    1. Log in to Canvas at {url}")
+        print("    2. Click your profile picture (top right)")
+        print("    3. Click Settings")
+        print("    4. Scroll to Approved Integrations")
+        print("    5. Click + New Access Token, give it a name, click Generate")
+        print("    6. Copy the token -- you won't be able to see it again!")
+        print("    7. Paste it here")
         print()
         try:
             token = input("  API Token: ").strip()
@@ -299,29 +394,30 @@ def _prompt_credentials(creds):
             print("\n  Cancelled.")
             sys.exit(1)
         if not token:
-            print("  No token entered. Please run again.")
-            input("Press Enter to exit...")
+            print("  No token entered -- you'll be asked again next time you launch.")
             sys.exit(1)
-        creds["canvas_api_token"] = token
-        changed = True
 
-    if changed:
-        _save_creds(creds)
-        print()
-        print("  Credentials saved.")
+    name = _profile_name_from_url(url)
+    if "profiles" not in data:
+        data["profiles"] = {}
+    data["profiles"][name] = {"canvas_base_url": url, "canvas_api_token": token}
+    data["active_profile"] = name
+    _save_creds(data)
+    print()
+    print(f"  Profile '{name}' saved. You won't be asked again.")
 
-    return creds
+    return data
 
 def setup_credentials():
     """Load/migrate/prompt for credentials, set env vars."""
-    creds = _migrate_old_credentials()
-    creds = _prompt_credentials(creds)
+    data = _migrate_old_credentials()
+    data = _prompt_credentials(data)
 
-    # Set env vars so run_autograder.py can read them
-    if creds.get("canvas_base_url"):
-        os.environ["CANVAS_BASE_URL"] = creds["canvas_base_url"]
-    if creds.get("canvas_api_token"):
-        os.environ["CANVAS_API_TOKEN"] = creds["canvas_api_token"]
+    _, profile = _get_active_profile(data)
+    if profile.get("canvas_base_url"):
+        os.environ["CANVAS_BASE_URL"] = profile["canvas_base_url"]
+    if profile.get("canvas_api_token"):
+        os.environ["CANVAS_API_TOKEN"] = profile["canvas_api_token"]
 
 # ---------------------------------------------------------------------------
 # 8. Launch autograder

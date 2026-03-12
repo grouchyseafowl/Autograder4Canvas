@@ -29,6 +29,7 @@ try:
         move_to_trash, trash_old_files, archive_old_files,
         open_folder, print_output_location,
         is_first_run, run_first_time_setup, change_output_directory,
+        prompt_canvas_url,
         SUBDIRS
     )
     HAS_UTILS = True
@@ -628,8 +629,11 @@ def select_script(scripts):
         cleanup_status = f"{mode_label} after {cleanup_days} days"
     print(f"  [C] Configure automatic cleanup of old files [{cleanup_status}]")
     print(f"  [R] Run one-time cleanup now")
-    print(f"  [T] Change Canvas API token")
-    print(f"  [U] Change Canvas URL")
+
+    # Show active profile info
+    active_name, _ = _get_active_profile()
+    profile_label = active_name if active_name else "none"
+    print(f"  [P] Institution profiles (active: {profile_label})")
 
     print(f"  [O] Open Grading Rationales folder")
     print(f"  [H] Help - Definitions and Instructions")
@@ -639,7 +643,7 @@ def select_script(scripts):
 
     while True:
         try:
-            choice = input(f"Enter choice (1-{len(script_list)}, S, A, C, R, T, U, O, H, or Q): ").strip().upper()
+            choice = input(f"Enter choice (1-{len(script_list)}, S, A, C, R, P, O, H, or Q): ").strip().upper()
             
             # Check for settings options
             if choice == 'S':
@@ -658,11 +662,8 @@ def select_script(scripts):
             elif choice == 'R':
                 run_onetime_cleanup()
                 return None
-            elif choice == 'T':
-                change_canvas_token()
-                return None
-            elif choice == 'U':
-                change_canvas_url()
+            elif choice == 'P':
+                manage_profiles()
                 return None
             elif choice == 'O':
                 print(f"ðŸ“‚ Opening: {base_dir}")
@@ -691,7 +692,7 @@ def select_script(scripts):
                 selected_type, selected_info = script_list[choice_num - 1]
                 return selected_info
             else:
-                print(f"âŒ Please enter a number between 1 and {len(script_list)}, S, A, C, R, T, O, H, or Q")
+                print(f"âŒ Please enter a number between 1 and {len(script_list)}, S, A, C, R, P, O, H, or Q")
         except ValueError:
             print("âŒ Invalid input. Please try again.")
         except (KeyboardInterrupt, EOFError):
@@ -705,69 +706,55 @@ def get_canvas_url():
     if canvas_url:
         return canvas_url
 
-    print()
-    print("=" * 70)
-    print("🌐 CANVAS URL REQUIRED")
-    print("=" * 70)
-    print()
-    print("First, we need to know which Canvas site you use.")
-    print()
-    print("📍 WHERE TO FIND YOUR CANVAS URL:")
-    print("=" * 70)
-    print()
-    print("1. Open your web browser")
-    print("2. Log in to Canvas like you normally do")
-    print("3. Look at the address bar at the top of your browser")
-    print("4. Copy everything BEFORE '/courses' or '/login'")
-    print()
-    print("EXAMPLES:")
-    print("  • If you see: https://example.instructure.com/courses/12345")
-    print("    You need:   https://example.instructure.com")
-    print()
-    print("  • If you see: https://canvas.university.edu/login")
-    print("    You need:   https://canvas.university.edu")
-    print()
-    print("=" * 70)
-    print()
-
-    while True:
-        canvas_url = input("Enter your Canvas URL: ").strip()
-
-        if not canvas_url:
-            print("❌ Canvas URL is required. Please try again.")
-            print()
-            continue
-
-        # Remove trailing slashes
-        canvas_url = canvas_url.rstrip('/')
-
-        # Basic validation
-        if not canvas_url.startswith('http'):
-            print("⚠️  URL should start with https:// or http://")
-            retry = input("Did you mean: https://" + canvas_url + "? (Y/n): ").strip().lower()
-            if retry in ['', 'y', 'yes']:
-                canvas_url = "https://" + canvas_url
-            else:
-                continue
-
-        # Confirm with user
+    # Use the shared helper if available, otherwise basic fallback
+    if HAS_UTILS:
+        url = prompt_canvas_url("CANVAS URL REQUIRED")
+    else:
+        # Minimal inline fallback (same logic as autograder_utils)
         print()
-        print(f"✅ Canvas URL: {canvas_url}")
-        confirm = input("Is this correct? (Y/n): ").strip().lower()
-
-        if confirm in ['', 'y', 'yes']:
-            # Ask if they want to save it
-            print()
-            save = input("Save this URL permanently? (Y/n): ").strip().lower()
-            if save in ['', 'y', 'yes']:
-                save_canvas_url_permanently(canvas_url)
+        print("=" * 60)
+        print("  CANVAS URL REQUIRED")
+        print("=" * 60)
+        print()
+        print("  Most Canvas sites look like:")
+        print("    https://YOURSCHOOL.instructure.com")
+        print()
+        print("  Just type the part unique to your school.")
+        print("  Example: if your Canvas is at myschool.instructure.com,")
+        print("           type: myschool")
+        print()
+        print("  If your school uses a custom address (not instructure.com),")
+        print("  type the full address instead, like: canvas.myuniversity.edu")
+        print()
+        url = None
+        while url is None:
+            try:
+                answer = input("  Your school name (or full address): ").strip()
+            except (KeyboardInterrupt, EOFError):
+                sys.exit(0)
+            if not answer:
+                print("  Please enter a value.")
+                continue
+            if "." in answer or "/" in answer:
+                url = answer.rstrip("/")
+                if not url.startswith("http"):
+                    url = "https://" + url
             else:
-                print("✅ URL accepted (session only - will need to re-enter next time)")
-
-            return canvas_url
-        else:
-            print("Let's try again...")
+                url = f"https://{answer}.instructure.com"
             print()
+            print(f"  Your Canvas URL: {url}")
+            ok = input("  Is this correct? (Y/n): ").strip().lower()
+            if ok not in ("", "y", "yes"):
+                url = None
+                print("  Let's try again.")
+                print()
+
+    if not url:
+        sys.exit(0)
+
+    # Save permanently by default (less confusing for non-tech users)
+    save_canvas_url_permanently(url)
+    return url
 
 def _get_credentials_file():
     """Get path to credentials.json in platform config directory."""
@@ -784,35 +771,87 @@ def _get_credentials_file():
     return config_dir / "credentials.json"
 
 def _load_credentials():
-    """Load credentials from JSON file."""
+    """Load credentials from JSON file (profile format)."""
     import json as _json
     cf = _get_credentials_file()
     if cf.exists():
         try:
             with open(cf, 'r', encoding='utf-8') as f:
-                return _json.load(f)
+                data = _json.load(f)
+            # Migrate flat format to profile format if needed
+            if "profiles" not in data and (data.get("canvas_base_url") or data.get("canvas_api_token")):
+                url = data.get("canvas_base_url", "")
+                token = data.get("canvas_api_token", "")
+                name = _profile_name_from_url(url) if url else "default"
+                data = {
+                    "active_profile": name,
+                    "profiles": {
+                        name: {"canvas_base_url": url, "canvas_api_token": token}
+                    }
+                }
+                _save_credentials(data)
+            return data
         except (ValueError, IOError):
             pass
-    return {}
+    return {"active_profile": "", "profiles": {}}
 
-def _save_credentials(creds):
+def _save_credentials(data):
     """Save credentials to JSON file."""
     import json as _json
     cf = _get_credentials_file()
     with open(cf, 'w', encoding='utf-8') as f:
-        _json.dump(creds, f, indent=2)
+        _json.dump(data, f, indent=2)
+
+def _profile_name_from_url(url):
+    """Derive a short profile name from a Canvas URL."""
+    try:
+        from urllib.parse import urlparse
+        host = urlparse(url).hostname or url
+    except Exception:
+        host = url
+    if host.endswith(".instructure.com"):
+        return host.replace(".instructure.com", "")
+    return host
+
+def _get_active_profile(data=None):
+    """Return (name, profile_dict) for the active profile, or (None, {})."""
+    if data is None:
+        data = _load_credentials()
+    profiles = data.get("profiles", {})
+    active = data.get("active_profile", "")
+    if active and active in profiles:
+        return active, profiles[active]
+    if profiles:
+        name = next(iter(profiles))
+        return name, profiles[name]
+    return None, {}
+
+def _set_env_from_profile(data=None):
+    """Set CANVAS_BASE_URL and CANVAS_API_TOKEN env vars from active profile."""
+    _, profile = _get_active_profile(data)
+    if profile.get("canvas_base_url"):
+        os.environ["CANVAS_BASE_URL"] = profile["canvas_base_url"]
+    if profile.get("canvas_api_token"):
+        os.environ["CANVAS_API_TOKEN"] = profile["canvas_api_token"]
 
 def save_canvas_url_permanently(canvas_url):
-    """Save Canvas URL to credentials.json."""
+    """Save Canvas URL to active profile in credentials.json."""
     try:
-        creds = _load_credentials()
-        creds["canvas_base_url"] = canvas_url
-        _save_credentials(creds)
+        data = _load_credentials()
+        name, _ = _get_active_profile(data)
+        if not name:
+            name = _profile_name_from_url(canvas_url)
+        if "profiles" not in data:
+            data["profiles"] = {}
+        if name not in data["profiles"]:
+            data["profiles"][name] = {}
+        data["profiles"][name]["canvas_base_url"] = canvas_url
+        data["active_profile"] = name
+        _save_credentials(data)
         os.environ["CANVAS_BASE_URL"] = canvas_url
-        print(f"Canvas URL saved to {_get_credentials_file()}")
+        print(f"  Canvas URL saved.")
     except Exception as e:
-        print(f"Could not save URL: {e}")
-        return
+        print(f"  Could not save URL: {e}")
 
 
 def get_canvas_token():
@@ -834,7 +873,8 @@ def get_canvas_token():
     print("HOW TO GET YOUR CANVAS API TOKEN:")
     print("=" * 70)
     print()
-    print("1. Log in to Canvas (e.g., institution.instructure.com)")
+    canvas_url_display = os.environ.get("CANVAS_BASE_URL", "your Canvas site")
+    print(f"1. Log in to Canvas at {canvas_url_display}")
     print("2. Click your profile picture (top-left) â†’ Settings")
     print("3. Scroll down to 'Approved Integrations'")
     print("4. Click '+ New Access Token'")
@@ -875,7 +915,9 @@ def get_canvas_token():
             print()
             print("Enter your Canvas URL to open it in the browser.")
             print()
-            canvas_url = input("Canvas URL (e.g., https://institution.instructure.com): ").strip()
+            canvas_url = input("Your school name or Canvas URL: ").strip()
+            if canvas_url and "." not in canvas_url and "/" not in canvas_url:
+                canvas_url = f"https://{canvas_url}.instructure.com"
 
         if not canvas_url:
             print("⚠️  No Canvas URL available - skipping browser open")
@@ -923,15 +965,23 @@ def get_canvas_token():
     return token
 
 def save_token_permanently(token):
-    """Save token to credentials.json."""
+    """Save token to active profile in credentials.json."""
     try:
-        creds = _load_credentials()
-        creds["canvas_api_token"] = token
-        _save_credentials(creds)
+        data = _load_credentials()
+        name, _ = _get_active_profile(data)
+        if not name:
+            name = "default"
+        if "profiles" not in data:
+            data["profiles"] = {}
+        if name not in data["profiles"]:
+            data["profiles"][name] = {}
+        data["profiles"][name]["canvas_api_token"] = token
+        data["active_profile"] = name
+        _save_credentials(data)
         os.environ["CANVAS_API_TOKEN"] = token
-        print(f"API token saved to {_get_credentials_file()}")
+        print(f"  API token saved.")
     except Exception as e:
-        print(f"Could not save token: {e}")
+        print(f"  Could not save token: {e}")
     
 def show_help_menu():
     """Display help menu with definitions and instructions."""
@@ -992,7 +1042,8 @@ def show_help_menu():
                 print()
                 print("GETTING YOUR TOKEN FOR THE FIRST TIME:")
                 print()
-                print("1. Log in to your Canvas site (e.g., institution.instructure.com)")
+                canvas_url_ref = os.environ.get("CANVAS_BASE_URL", "your Canvas site")
+                print(f"1. Log in to Canvas at {canvas_url_ref}")
                 print("2. Click on your profile picture or name in the top-left corner")
                 print("3. Select 'Settings' from the dropdown menu")
                 print("4. Scroll down to the section called 'Approved Integrations'")
@@ -1008,9 +1059,9 @@ def show_help_menu():
                 print("CHANGING YOUR TOKEN:")
                 print()
                 print("If you need to change your token (e.g., it expired or was lost):")
-                print("1. From the main menu, select [T] 'Change Canvas API token'")
-                print("2. Follow the prompts to enter your new token")
-                print("3. Choose whether to save it permanently or just for this session")
+                print("1. From the main menu, select [P] 'Institution profiles'")
+                print("2. Choose [E] to edit your current profile")
+                print("3. Select option [2] to update your API token")
                 print()
                 print("You can also delete old tokens from Canvas:")
                 print("1. Go to Canvas → Settings → Approved Integrations")
@@ -1124,7 +1175,7 @@ def show_help_menu():
                 print("PROBLEM: 'Invalid API token' or 'Authentication failed'")
                 print("SOLUTION:")
                 print("  1. Your token may have expired - create a new one in Canvas")
-                print("  2. Select [T] from the main menu to update your token")
+                print("  2. Select [P] > [E] from the main menu to update your token")
                 print("  3. Make sure you copied the entire token (no spaces)")
                 print()
                 print("PROBLEM: Can't find the output files")
@@ -1163,422 +1214,287 @@ def show_help_menu():
             return
 
 
-def change_canvas_token():
-    """Allow user to change their Canvas API token."""
+def _prompt_new_url():
+    """Prompt for a new Canvas URL using shared helper or inline fallback."""
+    if HAS_UTILS:
+        return prompt_canvas_url("INSTITUTION CANVAS URL")
+    # Inline fallback
+    url = None
     print()
-    print("=" * 70)
-    print("🔑 CHANGE CANVAS API TOKEN")
-    print("=" * 70)
+    print("  Type your school name (e.g., myschool)")
+    print("  or full address (e.g., canvas.myuniversity.edu)")
     print()
-    print("This will update your Canvas API token.")
-    print()
-    print("Options:")
-    print("  [1] I need help getting a new token from Canvas")
-    print("  [2] I have a new token ready - enter it now")
-    print("  [3] Remove saved token (you'll be asked each session)")
-    print("  [4] Cancel - go back to main menu")
-    print()
-    
-    try:
-        choice = input("Choose option (1/2/3/4, default=4): ").strip() or "4"
-        
-        if choice == "1":
-            # Show instructions for getting a token
-            print()
-            print("=" * 70)
-            print("HOW TO GET YOUR CANVAS API TOKEN")
-            print("=" * 70)
-            print()
-            print("Follow these steps to get a new token from Canvas:")
-            print()
-            print("1. Open Canvas in your web browser")
-            print("   (e.g., institution.instructure.com)")
-            print()
-            print("2. Click on your profile picture or name in the top-left corner")
-            print()
-            print("3. Select 'Settings' from the dropdown menu")
-            print()
-            print("4. Scroll down to the section called 'Approved Integrations'")
-            print()
-            print("5. Click the '+ New Access Token' button")
-            print()
-            print("6. In the popup window:")
-            print("   - Purpose: Enter 'Autograder' (or any name you prefer)")
-            print("   - Expiration: Leave blank or set a far future date")
-            print("   - Click 'Generate Token'")
-            print()
-            print("7. ⚠️  IMPORTANT: Copy the token IMMEDIATELY!")
-            print("   - Canvas only shows it once")
-            print("   - If you close the window, you'll need to create a new one")
-            print()
-            print("=" * 70)
-            print()
-            print("What would you like to do?")
-            print("  [1] Open Canvas in browser to get my token")
-            print("  [2] I have my token - enter it now")
-            print("  [3] Cancel - go back to main menu")
-            print()
-            
-            sub_choice = input("Choose option (1/2/3, default=3): ").strip() or "3"
-            
-            if sub_choice == "1":
-                # Open Canvas in browser
-                canvas_url = os.environ.get("CANVAS_BASE_URL")
-
-                if not canvas_url:
-                    print()
-                    print("Enter your Canvas instance URL")
-                    print()
-                    canvas_url = input("Canvas URL (e.g., https://institution.instructure.com): ").strip()
-
-                if not canvas_url:
-                    print("❌ No Canvas URL available")
-                    print("❌ Cancelled - no changes made to your token")
-                    return
-                
-                print()
-                print(f"🌐 Opening {canvas_url} in your browser...")
-                if open_url_in_browser(canvas_url):
-                    print("✅ Browser opened")
-                else:
-                    print("⚠️  Could not open browser automatically")
-                    print(f"   Please manually visit: {canvas_url}")
-                
-                print()
-                print("After you get your token from Canvas, come back here.")
-                print()
-                print("What would you like to do?")
-                print("  [1] I have my token - enter it now")
-                print("  [2] Cancel - I'll do this later")
-                print()
-                
-                token_choice = input("Choose option (1/2, default=2): ").strip() or "2"
-                
-                if token_choice == "1":
-                    # Fall through to token entry
-                    pass
-                else:
-                    print("❌ Cancelled - no changes made to your token")
-                    return
-            elif sub_choice == "2":
-                # Fall through to token entry
-                pass
-            else:
-                print("❌ Cancelled - no changes made to your token")
-                return
-            
-            # Token entry section (reached from sub_choice 1 or 2)
-            print()
-            print("Enter your new Canvas API token below:")
-            print("(You can paste it - you should see the text as you type)")
-            print()
-            print("Or type 'cancel' to abort without making changes")
-            print()
-            new_token = input("Canvas API Token: ").strip()
-            
-            if not new_token or new_token.lower() == 'cancel':
-                print("❌ Cancelled - no changes made to your token")
-                return
-            
-            print()
-            print("How should this token be saved?")
-            print("  [1] Session only (you'll need to re-enter it next time)")
-            print("  [2] Save permanently (recommended)")
-            print("  [3] Cancel - don't save this token")
-            print()
-            save_choice = input("Choose (1/2/3, default=2): ").strip() or "2"
-            
-            if save_choice == "3":
-                print("❌ Cancelled - no changes made to your token")
-                return
-            elif save_choice == "2":
-                # First remove old token if it exists
-                remove_saved_token()
-                # Then save new token
-                save_token_permanently(new_token)
-                print()
-                print("✅ New token saved permanently")
-                print("   You won't need to enter it again in future sessions")
-            else:
-                # Just set for this session
-                os.environ["CANVAS_API_TOKEN"] = new_token
-                print()
-                print("✅ New token set for this session only")
-                print("   You'll need to enter it again next time you run the program")
-        
-        elif choice == "2":
-            # Direct token entry
-            print()
-            print("Enter your new Canvas API token below:")
-            print("(You can paste it - you should see the text as you type)")
-            print()
-            print("Or type 'cancel' to abort without making changes")
-            print()
-            new_token = input("Canvas API Token: ").strip()
-            
-            if not new_token or new_token.lower() == 'cancel':
-                print("❌ Cancelled - no changes made to your token")
-                return
-            
-            print()
-            print("How should this token be saved?")
-            print("  [1] Session only (you'll need to re-enter it next time)")
-            print("  [2] Save permanently (recommended)")
-            print("  [3] Cancel - don't save this token")
-            print()
-            save_choice = input("Choose (1/2/3, default=2): ").strip() or "2"
-            
-            if save_choice == "3":
-                print("❌ Cancelled - no changes made to your token")
-                return
-            elif save_choice == "2":
-                # First remove old token if it exists
-                remove_saved_token()
-                # Then save new token
-                save_token_permanently(new_token)
-                print()
-                print("✅ New token saved permanently")
-                print("   You won't need to enter it again in future sessions")
-            else:
-                # Just set for this session
-                os.environ["CANVAS_API_TOKEN"] = new_token
-                print()
-                print("✅ New token set for this session only")
-                print("   You'll need to enter it again next time you run the program")
-            
-        elif choice == "3":
-            print()
-            confirm = input("Remove saved token? You'll need to enter it each session (y/n, default=n): ").strip().lower()
-            if confirm == 'y':
-                remove_saved_token()
-                # Also clear from environment for this session
-                if "CANVAS_API_TOKEN" in os.environ:
-                    del os.environ["CANVAS_API_TOKEN"]
-                print("✅ Saved token removed")
-            else:
-                print("❌ Cancelled - no changes made")
+    while url is None:
+        answer = input("  Your school name (or full address): ").strip()
+        if not answer:
+            return None
+        if "." in answer or "/" in answer:
+            url = answer.rstrip("/")
+            if not url.startswith("http"):
+                url = "https://" + url
         else:
-            print("❌ Cancelled - no changes made to your token")
-            
-    except (KeyboardInterrupt, EOFError):
-        print("\n\n❌ Cancelled - no changes made to your token")
+            url = f"https://{answer}.instructure.com"
+        print(f"\n  Your Canvas URL: {url}")
+        ok = input("  Is this correct? (Y/n): ").strip().lower()
+        if ok not in ("", "y", "yes"):
+            url = None
+            print("  Let's try again.\n")
+    return url
 
 
-def change_canvas_url():
-    """Allow user to change their Canvas URL."""
+def _prompt_new_token(canvas_url=None):
+    """Prompt for a new Canvas API token. Returns token string or None."""
     print()
-    print("=" * 70)
-    print("🌐 CHANGE CANVAS URL")
-    print("=" * 70)
+    print("  How to get your API token:")
+    url_display = canvas_url or os.environ.get("CANVAS_BASE_URL", "your Canvas site")
+    print(f"    1. Log in to Canvas at {url_display}")
+    print("    2. Click your profile picture (top-left) > Settings")
+    print("    3. Scroll to 'Approved Integrations'")
+    print("    4. Click '+ New Access Token', name it, click Generate")
+    print("    5. Copy the token immediately (you won't see it again!)")
     print()
-
-    current_url = os.environ.get("CANVAS_BASE_URL")
-    if current_url:
-        print(f"Current Canvas URL: {current_url}")
+    print("  Options:")
+    print("    [1] I have my token - enter it now")
+    print("    [2] Open Canvas in browser first, then enter token")
+    print("    [3] Cancel")
+    print()
+    choice = input("  Choose (1/2/3, default=3): ").strip() or "3"
+    if choice == "2":
+        open_url = canvas_url or os.environ.get("CANVAS_BASE_URL")
+        if open_url:
+            open_url_in_browser(open_url)
+            print(f"  Opened {open_url} in your browser.")
+        else:
+            print("  No Canvas URL set yet - please visit your Canvas site manually.")
         print()
-
-    print("Options:")
-    print("  [1] Enter a new Canvas URL")
-    print("  [2] Remove saved URL (you'll be asked each session)")
-    print("  [3] Cancel - go back to main menu")
+        print("  After getting your token, paste it below.")
+    elif choice != "1":
+        return None
     print()
+    token = input("  API Token: ").strip()
+    if not token or token.lower() == "cancel":
+        return None
+    return token
 
+
+def manage_profiles():
+    """Institution profile management sub-menu."""
     try:
-        choice = input("Choose option (1/2/3, default=3): ").strip() or "3"
+        while True:
+            data = _load_credentials()
+            profiles = data.get("profiles", {})
+            active = data.get("active_profile", "")
 
-        if choice == "1":
-            # Get new URL
             print()
-            print("=" * 70)
-            print("ENTER YOUR CANVAS URL")
-            print("=" * 70)
-            print()
-            print("📍 WHERE TO FIND YOUR CANVAS URL:")
-            print()
-            print("1. Open your web browser and log in to Canvas")
-            print("2. Look at the address bar")
-            print("3. Copy everything BEFORE '/courses' or '/login'")
-            print()
-            print("EXAMPLES:")
-            print("  If you see: https://example.instructure.com/courses/12345")
-            print("  You need:   https://example.instructure.com")
-            print()
-            print("=" * 70)
+            print("=" * 56)
+            print("  Institution Profiles")
+            print("=" * 56)
             print()
 
-            while True:
-                new_url = input("Enter your Canvas URL: ").strip()
-
-                if not new_url:
-                    print("❌ Canvas URL cannot be empty")
-                    retry = input("Try again? (Y/n): ").strip().lower()
-                    if retry in ['', 'y', 'yes']:
-                        continue
-                    else:
-                        print("❌ Cancelled - no changes made")
-                        return
-
-                # Remove trailing slashes
-                new_url = new_url.rstrip('/')
-
-                # Add https if missing
-                if not new_url.startswith('http'):
-                    confirm = input(f"Add https:// prefix? (Y/n): ").strip().lower()
-                    if confirm in ['', 'y', 'yes']:
-                        new_url = "https://" + new_url
-
-                # Confirm
-                print()
-                print(f"New Canvas URL: {new_url}")
-                confirm = input("Is this correct? (Y/n): ").strip().lower()
-
-                if confirm in ['', 'y', 'yes']:
-                    break
-                print("Let's try again...")
-                print()
-
-            # Ask if they want to save permanently
-            print()
-            save = input("Save this URL permanently? (Y/n): ").strip().lower()
-
-            if save in ['', 'y', 'yes']:
-                save_canvas_url_permanently(new_url)
+            if not profiles:
+                print("  No profiles saved yet.")
             else:
-                # Set for current session only
-                os.environ["CANVAS_BASE_URL"] = new_url
-                print("✅ Canvas URL updated (session only)")
+                print("  Your institutions:")
+                sorted_names = sorted(profiles.keys())
+                for idx, name in enumerate(sorted_names, 1):
+                    p = profiles[name]
+                    url = p.get("canvas_base_url", "(no URL)")
+                    has_token = "token saved" if p.get("canvas_api_token") else "no token"
+                    marker = " *" if name == active else "  "
+                    print(f"    [{idx}]{marker} {name}  ({url}, {has_token})")
+                if len(profiles) > 1:
+                    print()
+                    print("  * = active profile")
 
-        elif choice == "2":
-            # Remove saved URL
-            remove_saved_canvas_url()
+            print()
+            print("  [A] Add new institution")
+            if profiles:
+                print("  [E] Edit current profile (URL or API token)")
+                if len(profiles) > 1:
+                    print("  [S] Switch active institution")
+                print("  [D] Delete a profile")
+            print("  [B] Back to main menu")
+            print()
 
-        elif choice == "3":
-            print("❌ Cancelled - no changes made")
-            return
-        else:
-            print("❌ Invalid choice - no changes made")
-            return
+            choice = input("  Choose: ").strip().upper()
+
+            if choice == "B":
+                return
+
+            elif choice == "A":
+                # Add new profile
+                print()
+                print("  -- Add New Institution --")
+                new_url = _prompt_new_url()
+                if not new_url:
+                    print("  Cancelled.")
+                    continue
+                new_name = _profile_name_from_url(new_url)
+                if new_name in profiles:
+                    print(f"  Profile '{new_name}' already exists. Use [E] to edit it.")
+                    continue
+                new_token = _prompt_new_token(new_url)
+                if not new_token:
+                    print("  No token entered. Profile not saved.")
+                    continue
+                if "profiles" not in data:
+                    data["profiles"] = {}
+                data["profiles"][new_name] = {
+                    "canvas_base_url": new_url,
+                    "canvas_api_token": new_token,
+                }
+                data["active_profile"] = new_name
+                _save_credentials(data)
+                _set_env_from_profile(data)
+                print()
+                print(f"  Profile '{new_name}' added and set as active.")
+
+            elif choice == "E" and profiles:
+                # Edit current profile
+                name, profile = _get_active_profile(data)
+                if not name:
+                    print("  No active profile to edit.")
+                    continue
+                print()
+                print(f"  Editing profile: {name}")
+                print(f"    URL:   {profile.get('canvas_base_url', '(none)')}")
+                print(f"    Token: {'saved' if profile.get('canvas_api_token') else '(none)'}")
+                print()
+                print("  What to change?")
+                print("    [1] Canvas URL")
+                print("    [2] API token")
+                print("    [3] Both")
+                print("    [4] Cancel")
+                print()
+                sub = input("  Choose (1/2/3/4, default=4): ").strip() or "4"
+
+                if sub in ("1", "3"):
+                    new_url = _prompt_new_url()
+                    if new_url:
+                        old_name = name
+                        new_name = _profile_name_from_url(new_url)
+                        data["profiles"][old_name]["canvas_base_url"] = new_url
+                        # Rename profile if URL changed the derived name
+                        if new_name != old_name and new_name not in data["profiles"]:
+                            data["profiles"][new_name] = data["profiles"].pop(old_name)
+                            if data["active_profile"] == old_name:
+                                data["active_profile"] = new_name
+                            name = new_name
+                        _save_credentials(data)
+                        os.environ["CANVAS_BASE_URL"] = new_url
+                        print(f"  URL updated.")
+
+                if sub in ("2", "3"):
+                    cur_url = data["profiles"].get(name, {}).get("canvas_base_url")
+                    new_token = _prompt_new_token(cur_url)
+                    if new_token:
+                        data["profiles"][name]["canvas_api_token"] = new_token
+                        _save_credentials(data)
+                        os.environ["CANVAS_API_TOKEN"] = new_token
+                        print(f"  API token updated.")
+                    else:
+                        print("  Token not changed.")
+
+            elif choice == "S" and len(profiles) > 1:
+                # Switch active profile
+                sorted_names = sorted(profiles.keys())
+                print()
+                print("  Switch to which institution?")
+                for idx, name in enumerate(sorted_names, 1):
+                    marker = " *" if name == active else "  "
+                    print(f"    [{idx}]{marker} {name}")
+                print()
+                try:
+                    pick = input(f"  Enter number (1-{len(sorted_names)}): ").strip()
+                    pick_num = int(pick)
+                    if 1 <= pick_num <= len(sorted_names):
+                        chosen = sorted_names[pick_num - 1]
+                        data["active_profile"] = chosen
+                        _save_credentials(data)
+                        _set_env_from_profile(data)
+                        print(f"  Switched to '{chosen}'.")
+                    else:
+                        print("  Invalid choice.")
+                except (ValueError, IndexError):
+                    print("  Invalid choice.")
+
+            elif choice == "D" and profiles:
+                # Delete a profile
+                sorted_names = sorted(profiles.keys())
+                print()
+                print("  Delete which profile?")
+                for idx, name in enumerate(sorted_names, 1):
+                    marker = " *" if name == active else "  "
+                    print(f"    [{idx}]{marker} {name}")
+                print()
+                try:
+                    pick = input(f"  Enter number (1-{len(sorted_names)}): ").strip()
+                    pick_num = int(pick)
+                    if 1 <= pick_num <= len(sorted_names):
+                        to_delete = sorted_names[pick_num - 1]
+                        confirm = input(f"  Delete profile '{to_delete}'? (y/n, default=n): ").strip().lower()
+                        if confirm == "y":
+                            del data["profiles"][to_delete]
+                            if data["active_profile"] == to_delete:
+                                remaining = list(data["profiles"].keys())
+                                data["active_profile"] = remaining[0] if remaining else ""
+                            _save_credentials(data)
+                            _set_env_from_profile(data)
+                            print(f"  Profile '{to_delete}' deleted.")
+                        else:
+                            print("  Cancelled.")
+                    else:
+                        print("  Invalid choice.")
+                except (ValueError, IndexError):
+                    print("  Invalid choice.")
+
+            # Numeric selection to switch profile
+            elif choice.isdigit() and profiles:
+                sorted_names = sorted(profiles.keys())
+                pick_num = int(choice)
+                if 1 <= pick_num <= len(sorted_names):
+                    chosen = sorted_names[pick_num - 1]
+                    data["active_profile"] = chosen
+                    _save_credentials(data)
+                    _set_env_from_profile(data)
+                    print(f"  Switched to '{chosen}'.")
+                else:
+                    print("  Invalid choice.")
+
+            else:
+                print("  Invalid choice.")
 
     except (KeyboardInterrupt, EOFError):
-        print("\n\n❌ Cancelled - no changes made")
+        print("\n")
         return
 
 def remove_saved_canvas_url():
-    """Remove saved Canvas URL from config files."""
-    system = platform.system()
-
-    if system == "Windows":
-        print("⚠️  On Windows, please remove the URL manually from System Environment Variables")
-        print("   1. Search for 'Environment Variables' in Windows")
-        print("   2. Click 'Environment Variables' button")
-        print("   3. Find and delete CANVAS_BASE_URL from User variables")
-        return
-
-    # Unix-like systems - try to remove from shell config files
-    shell = os.environ.get("SHELL", "")
-
-    if "zsh" in shell:
-        rc_file = Path.home() / ".zshrc"
-    elif "bash" in shell:
-        rc_file = Path.home() / ".bashrc"
-    else:
-        rc_file = Path.home() / ".bashrc"  # Default to .bashrc
-
-    if not rc_file.exists():
-        print(f"⚠️  {rc_file} not found - nothing to remove")
-        return
-
+    """Remove saved Canvas URL from active profile."""
     try:
-        with open(rc_file, 'r') as f:
-            lines = f.readlines()
-
-        # Filter out the Canvas URL line
-        new_lines = []
-        removed = False
-        skip_next_comment = False
-
-        for line in lines:
-            if 'export CANVAS_BASE_URL=' in line:
-                removed = True
-                skip_next_comment = False
-                continue
-            if skip_next_comment and line.strip().startswith('#') and 'Canvas' in line:
-                skip_next_comment = False
-                continue
-            if '# Canvas Autograder - Canvas URL' in line:
-                skip_next_comment = True
-                continue
-            new_lines.append(line)
-
-        if removed:
-            with open(rc_file, 'w') as f:
-                f.writelines(new_lines)
-            print(f"✅ Removed Canvas URL from {rc_file}")
-            print("   (Will take effect in new terminal sessions)")
-
-            # Remove from current session too
-            if "CANVAS_BASE_URL" in os.environ:
-                del os.environ["CANVAS_BASE_URL"]
-                print("   Removed from current session as well")
-        else:
-            print(f"⚠️  No saved Canvas URL found in {rc_file}")
-
+        data = _load_credentials()
+        name, profile = _get_active_profile(data)
+        if name and "canvas_base_url" in profile:
+            del data["profiles"][name]["canvas_base_url"]
+            _save_credentials(data)
+        if "CANVAS_BASE_URL" in os.environ:
+            del os.environ["CANVAS_BASE_URL"]
+        print("  Saved Canvas URL removed.")
     except Exception as e:
-        print(f"❌ Error removing URL: {e}")
+        print(f"  Could not remove URL: {e}")
+
 
 def remove_saved_token():
-    """Remove saved Canvas API token from config files."""
-    system = platform.system()
-    
-    if system == "Windows":
-        print("âš ï¸  On Windows, please remove the token manually from System Environment Variables")
-        print("   1. Search for 'Environment Variables' in Windows")
-        print("   2. Click 'Environment Variables' button")
-        print("   3. Find and delete CANVAS_API_TOKEN from User variables")
-        return
-    
-    # Unix-like systems - try to remove from shell config files
-    shell = os.environ.get("SHELL", "")
-    
-    if "zsh" in shell:
-        rc_file = Path.home() / ".zshrc"
-    elif "bash" in shell:
-        rc_file = Path.home() / ".bashrc"
-    else:
-        rc_file = Path.home() / ".profile"
-    
+    """Remove saved Canvas API token from active profile."""
     try:
-        if not rc_file.exists():
-            return
-        
-        with open(rc_file, 'r') as f:
-            lines = f.readlines()
-        
-        # Remove lines containing CANVAS_API_TOKEN
-        new_lines = []
-        skip_next = False
-        for line in lines:
-            if "CANVAS_API_TOKEN" in line:
-                skip_next = False  # Don't skip the line itself
-                continue
-            elif skip_next:
-                skip_next = False
-                continue
-            elif "Canvas API token for autograder" in line:
-                skip_next = True  # Skip the export line after the comment
-                continue
-            else:
-                new_lines.append(line)
-        
-        # Write back
-        with open(rc_file, 'w') as f:
-            f.writelines(new_lines)
-        
-        print(f"âœ… Removed token from {rc_file}")
-        print("   (Restart your terminal for it to take effect)")
-        
+        data = _load_credentials()
+        name, profile = _get_active_profile(data)
+        if name and "canvas_api_token" in profile:
+            del data["profiles"][name]["canvas_api_token"]
+            _save_credentials(data)
+        if "CANVAS_API_TOKEN" in os.environ:
+            del os.environ["CANVAS_API_TOKEN"]
     except Exception as e:
-        print(f"âš ï¸  Could not remove token: {e}")
+        print(f"  Could not remove token: {e}")
 
 def cleanup_old_files(target_dir, script_type):
     """Automatically clean up old files based on settings."""
@@ -1976,6 +1892,9 @@ def main():
     # System checks
     check_python_version()
     verify_structure()
+
+    # Load saved credentials from active profile into env vars
+    _set_env_from_profile()
 
     print()
     print("âœ… Setup complete")
