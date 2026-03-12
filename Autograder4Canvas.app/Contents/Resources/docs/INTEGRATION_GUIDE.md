@@ -57,7 +57,7 @@ After integration, your project should look like:
 
 ```
 your_project/
-├── run_autograder_v1-3.py           # Main launcher
+├── run_autograder.py                # Main launcher
 ├── autograder_utils.py              # Utilities
 ├── Academic_Dishonesty_Check_v1-3.py    # v1.3 (can keep as backup)
 ├── Academic_Dishonesty_Check_v2.py      # v2.0 (main script)

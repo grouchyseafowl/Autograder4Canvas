@@ -149,72 +149,8 @@ def check_python_version():
     
     print(f"âœ… Python {version.major}.{version.minor}.{version.micro}")
 
-def check_pip():
-    """Verify pip is available."""
-    try:
-        import pip
-        print("âœ… pip available")
-        return True
-    except ImportError:
-        print("âŒ pip is not installed.")
-        print()
-        print("=" * 70)
-        print("ðŸ“¥ PIP INSTALLATION REQUIRED")
-        print("=" * 70)
-        print()
-        print("pip is Python's package installer and is required for Canvas Autograder.")
-        print()
-        print("Installation instructions: https://pip.pypa.io/en/stable/installation/")
-        print()
-        print("Most Python installations include pip by default.")
-        print("If you just installed Python, try restarting your terminal/command prompt.")
-        print()
-        print("Options:")
-        print("  [1] Open pip installation guide in browser")
-        print("  [2] Try restarting this script (if you just installed Python)")
-        print("  [3] Exit")
-        print()
-        
-        try:
-            choice = input("Choose option (1/2/3, default=3): ").strip() or "3"
-            
-            if choice == "1":
-                print("\nðŸŒ Opening pip installation guide in your browser...")
-                if open_url_in_browser("https://pip.pypa.io/en/stable/installation/"):
-                    print("âœ… Browser opened successfully")
-                else:
-                    print("âš ï¸  Could not open browser automatically")
-                    print("   Please manually visit: https://pip.pypa.io/en/stable/installation/")
-                
-                print()
-                print("After installing pip:")
-                print("  1. Follow the installation instructions on the website")
-                print("  2. Press Enter to restart this program")
-                print()
-                input("Press Enter after installing pip to continue...")
-                
-                # Restart the script
-                print("\nðŸ”„ Restarting Canvas Autograder...\n")
-                python = sys.executable
-                os.execl(python, python, *sys.argv)
-            elif choice == "2":
-                # Restart the script
-                print("\nðŸ”„ Restarting Canvas Autograder...\n")
-                python = sys.executable
-                os.execl(python, python, *sys.argv)
-            else:
-                print("\nðŸ‘‹ Please install pip and run this program again.")
-                sys.exit(1)
-        except (KeyboardInterrupt, EOFError):
-            print("\n\nðŸ‘‹ Goodbye!")
-            sys.exit(1)
-
 def get_venv_python():
     """Get path to Python executable in virtual environment."""
-    # If run.bat already set up a venv for us, use that
-    override = os.environ.get("AUTOGRADER_VENV_PYTHON", "")
-    if override and Path(override).exists():
-        return Path(override)
     if platform.system() == "Windows":
         return VENV_DIR / "Scripts" / "python.exe"
     else:
@@ -593,108 +529,6 @@ def run_onetime_cleanup():
     except (KeyboardInterrupt, EOFError):
         print("\nâ­ï¸  Cleanup cancelled.")
 
-def create_virtual_environment():
-    """Create virtual environment if it doesn't exist."""
-    if VENV_DIR.exists():
-        print("âœ… Virtual environment exists")
-        return
-    
-    print("ðŸ“¦ Creating virtual environment...")
-    try:
-        result = subprocess.run(
-            [sys.executable, "-m", "venv", str(VENV_DIR)],
-            capture_output=True
-        )
-        if result.returncode != 0:
-            print("ERROR: Failed to create virtual environment.")
-            print(result.stderr.decode(errors="replace"))
-            input("Press Enter to close...")
-            sys.exit(1)
-        print("âœ… Virtual environment created")
-    except subprocess.CalledProcessError as e:
-        print(f"âŒ Failed to create virtual environment: {e}")
-        sys.exit(1)
-
-def check_dependencies_installed():
-    """Check if required dependencies are already installed."""
-    if not REQUIREMENTS_FILE.exists():
-        return False
-    
-    pip_exe = get_venv_pip()
-    python_exe = get_venv_python()
-    
-    if not pip_exe.exists() or not python_exe.exists():
-        return False
-    
-    try:
-        # Read requirements
-        with open(REQUIREMENTS_FILE, 'r', encoding='utf-8') as f:
-            requirements = [line.strip().split('==')[0].split('>=')[0].split('[')[0]
-                          for line in f if line.strip() and not line.startswith('#')]
-        
-        # Check if each package is installed
-        result = subprocess.run(
-            [str(pip_exe), "list", "--format=freeze"],
-            capture_output=True,
-            text=True
-        )
-        
-        if result.returncode != 0:
-            return False
-        
-        installed = {line.split('==')[0].lower() for line in result.stdout.strip().split('\n') if '==' in line}
-        
-        for req in requirements:
-            if req.lower() not in installed:
-                return False
-        
-        return True
-        
-    except Exception:
-        return False
-
-
-def install_dependencies():
-    """Install required dependencies if not already installed."""
-    if not REQUIREMENTS_FILE.exists():
-        print(f"âŒ requirements.txt not found at: {REQUIREMENTS_FILE}")
-        sys.exit(1)
-    
-    # Check if dependencies are already installed
-    if check_dependencies_installed():
-        print("âœ… Dependencies already installed")
-        return
-    
-    print("ðŸ“¦ Installing dependencies...")
-    
-    pip_exe = get_venv_pip()
-    
-    try:
-        # Upgrade pip first — use python -m pip (required on Windows;
-        # calling pip.exe to upgrade itself is blocked there)
-        subprocess.run(
-            [str(get_venv_python()), "-m", "pip", "install", "--quiet", "--upgrade", "pip"],
-            check=True,
-            capture_output=True
-        )
-        
-        # Install requirements
-        subprocess.run(
-            [str(pip_exe), "install", "--quiet", "-r", str(REQUIREMENTS_FILE)],
-            check=True,
-            capture_output=True
-        )
-        
-        print("âœ… Dependencies installed")
-    except subprocess.CalledProcessError as e:
-        print("ERROR: Failed to install dependencies.")
-        print(f"  {e}")
-        if e.stderr:
-            print(e.stderr.decode(errors="replace"))
-        if sys.stdin.isatty():
-            input("Press Enter to close...")
-        sys.exit(1)
-
 def verify_structure():
     """Verify project structure is correct."""
     if not PROGRAMS_DIR.exists():
@@ -935,88 +769,51 @@ def get_canvas_url():
             print("Let's try again...")
             print()
 
-def save_canvas_url_permanently(canvas_url):
-    """Save Canvas URL to shell config file."""
+def _get_credentials_file():
+    """Get path to credentials.json in platform config directory."""
+    import json as _json
     system = platform.system()
-
     if system == "Windows":
-        # Portable mode: write to credentials.bat if launched via run.bat
-        creds_file = os.environ.get("AUTOGRADER_CREDS_FILE", "")
-        if creds_file and os.path.exists(creds_file):
-            try:
-                with open(creds_file, 'r', encoding='utf-8') as f:
-                    lines = f.readlines()
-                updated = False
-                for i, line in enumerate(lines):
-                    if line.strip().startswith("set CANVAS_BASE_URL="):
-                        lines[i] = f"set CANVAS_BASE_URL={canvas_url}\n"
-                        updated = True
-                        break
-                if not updated:
-                    lines.append(f"set CANVAS_BASE_URL={canvas_url}\n")
-                with open(creds_file, 'w', encoding='utf-8') as f:
-                    f.writelines(lines)
-                print("Canvas URL saved to credentials.bat")
-            except Exception as e:
-                print(f"Could not save to credentials.bat: {e}")
-        else:
-            print()
-            print("To save permanently, open credentials.bat in Notepad and set:")
-            print(f"  CANVAS_BASE_URL={canvas_url}")
+        base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+        config_dir = base / "CanvasAutograder"
+    elif system == "Darwin":
+        config_dir = Path.home() / "Library" / "Application Support" / "CanvasAutograder"
+    else:
+        config_dir = Path.home() / ".config" / "CanvasAutograder"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    return config_dir / "credentials.json"
+
+def _load_credentials():
+    """Load credentials from JSON file."""
+    import json as _json
+    cf = _get_credentials_file()
+    if cf.exists():
+        try:
+            with open(cf, 'r', encoding='utf-8') as f:
+                return _json.load(f)
+        except (ValueError, IOError):
+            pass
+    return {}
+
+def _save_credentials(creds):
+    """Save credentials to JSON file."""
+    import json as _json
+    cf = _get_credentials_file()
+    with open(cf, 'w', encoding='utf-8') as f:
+        _json.dump(creds, f, indent=2)
+
+def save_canvas_url_permanently(canvas_url):
+    """Save Canvas URL to credentials.json."""
+    try:
+        creds = _load_credentials()
+        creds["canvas_base_url"] = canvas_url
+        _save_credentials(creds)
+        os.environ["CANVAS_BASE_URL"] = canvas_url
+        print(f"Canvas URL saved to {_get_credentials_file()}")
+    except Exception as e:
+        print(f"Could not save URL: {e}")
         return
 
-    # Unix-like systems (macOS, Linux)
-    home = Path.home()
-
-    # Determine which shell config file to use
-    shell_config = None
-    if (home / ".zshrc").exists() or os.environ.get("SHELL", "").endswith("zsh"):
-        shell_config = home / ".zshrc"
-    elif (home / ".bashrc").exists():
-        shell_config = home / ".bashrc"
-    elif (home / ".bash_profile").exists():
-        shell_config = home / ".bash_profile"
-    else:
-        # Create .zshrc as default for macOS
-        shell_config = home / ".zshrc"
-
-    try:
-        # Read existing config
-        if shell_config.exists():
-            with open(shell_config, 'r') as f:
-                content = f.read()
-
-            # Check if URL already exists
-            if "CANVAS_BASE_URL=" in content:
-                # Update existing entry
-                lines = content.split('\n')
-                with open(shell_config, 'w') as f:
-                    for line in lines:
-                        if line.startswith('export CANVAS_BASE_URL='):
-                            f.write(f'export CANVAS_BASE_URL="{canvas_url}"\n')
-                        else:
-                            f.write(line + '\n')
-                print(f"✅ Updated Canvas URL in {shell_config}")
-                return
-
-        # Append new entry
-        with open(shell_config, 'a') as f:
-            f.write(f'\n# Canvas Autograder - Canvas URL\n')
-            f.write(f'export CANVAS_BASE_URL="{canvas_url}"\n')
-
-        print(f"✅ Canvas URL saved to {shell_config}")
-        print()
-        print("⚠️  IMPORTANT: The URL will be available in new terminal windows.")
-        print("   For this session, I'll use it temporarily.")
-
-        # Set for current session
-        os.environ["CANVAS_BASE_URL"] = canvas_url
-
-    except Exception as e:
-        print(f"⚠️  Could not save URL automatically: {e}")
-        print()
-        print(f"To save manually, add this line to {shell_config}:")
-        print(f'export CANVAS_BASE_URL="{canvas_url}"')
 
 def get_canvas_token():
     """Get Canvas API token from environment or user input."""
@@ -1126,65 +923,16 @@ def get_canvas_token():
     return token
 
 def save_token_permanently(token):
-    """Save token to shell config file."""
-    system = platform.system()
-    
-    if system == "Windows":
-        # Portable mode: write to credentials.bat if launched via run.bat
-        creds_file = os.environ.get("AUTOGRADER_CREDS_FILE", "")
-        if creds_file and os.path.exists(creds_file):
-            try:
-                with open(creds_file, 'r', encoding='utf-8') as f:
-                    lines = f.readlines()
-                updated = False
-                for i, line in enumerate(lines):
-                    if line.strip().startswith("set CANVAS_API_TOKEN="):
-                        lines[i] = f"set CANVAS_API_TOKEN={token}\n"
-                        updated = True
-                        break
-                if not updated:
-                    lines.append(f"set CANVAS_API_TOKEN={token}\n")
-                with open(creds_file, 'w', encoding='utf-8') as f:
-                    f.writelines(lines)
-                print("API token saved to credentials.bat")
-            except Exception as e:
-                print(f"Could not save to credentials.bat: {e}")
-        else:
-            print()
-            print("To save permanently, open credentials.bat in Notepad and set:")
-            print(f"  CANVAS_API_TOKEN={token}")
-        return
-    
-    # Unix-like systems
-    shell = os.environ.get("SHELL", "")
-    
-    if "zsh" in shell:
-        rc_file = Path.home() / ".zshrc"
-    elif "bash" in shell:
-        rc_file = Path.home() / ".bashrc"
-    else:
-        rc_file = Path.home() / ".profile"
-    
+    """Save token to credentials.json."""
     try:
-        # Check if token already exists in file
-        if rc_file.exists():
-            with open(rc_file, 'r') as f:
-                content = f.read()
-                if "CANVAS_API_TOKEN=" in content:
-                    print(f"âš ï¸  Token variable already exists in {rc_file}")
-                    return
-        
-        # Append token to file
-        with open(rc_file, 'a') as f:
-            f.write("\n")
-            f.write("# Canvas API token for autograder\n")
-            f.write(f'export CANVAS_API_TOKEN="{token}"\n')
-        
-        print(f"âœ… Saved token to {rc_file}")
-        print("   (Restart your terminal for it to take effect)")
+        creds = _load_credentials()
+        creds["canvas_api_token"] = token
+        _save_credentials(creds)
+        os.environ["CANVAS_API_TOKEN"] = token
+        print(f"API token saved to {_get_credentials_file()}")
     except Exception as e:
-        print(f"âš ï¸  Could not save token: {e}")
-
+        print(f"Could not save token: {e}")
+    
 def show_help_menu():
     """Display help menu with definitions and instructions."""
     while True:
@@ -2228,15 +1976,7 @@ def main():
     # System checks
     check_python_version()
     verify_structure()
-    
-    print()
-    
-    # Setup virtual environment and dependencies
-    # If run.bat already built a venv, skip - packages are already installed
-    if not os.environ.get("AUTOGRADER_VENV_PYTHON"):
-        create_virtual_environment()
-        install_dependencies()
-    
+
     print()
     print("âœ… Setup complete")
     

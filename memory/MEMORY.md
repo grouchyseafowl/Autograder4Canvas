@@ -1,20 +1,26 @@
 # Autograder4Canvas - Project Memory
 
-## Key Files
-- `build/windows-portable/` — portable no-install Windows distribution
-- `build/windows/Autograder4Canvas/` — installer-based Windows build (INSTALL.bat)
-- `src/` — canonical source (macOS-primary)
-- `distro/` — release zips including `Autograder4Canvas-Windows-Portable.zip`
+## Architecture (unified bootstrap)
+- `run.bat` / `run.sh` — minimal shell wrappers (~15 lines), just find Python and call `src/bootstrap.py`
+- `src/bootstrap.py` — all setup logic: Python check, venv, pip install, credential migration, then exec into `src/run_autograder.py`
+- `src/run_autograder.py` — main autograder (renamed from `run_autograder_v1-3.py`), no longer handles venv/pip
+- Credentials stored in `credentials.json` in platform config dir (`%LOCALAPPDATA%\CanvasAutograder\` etc.)
+- Old `credentials.bat` / env var formats auto-migrated on first run
 
-## Windows Portable Structure
-- `run.bat` — loads credentials.bat, creates local venv on first run, launches Python
-- `credentials.bat` — user fills in CANVAS_BASE_URL and CANVAS_API_TOKEN once
-- `src/run_autograder.py` — patched: encoding='utf-8' on all file opens, Windows credential save writes to credentials.bat via AUTOGRADER_CREDS_FILE env var
+## Key Files
+- `build/windows/Autograder4Canvas/` — installer-based Windows build (INSTALL.bat)
+- `build/linux/Autograder4Canvas/` — Linux installer (install.sh)
+- `build/mac/Autograder4Canvas.app/` — macOS app bundle
+- `src/` — canonical source
+- `src/autograder_utils.py` — cross-platform config/output utilities
 
 ## Known Windows Issues Fixed
 - `open()` without encoding='utf-8' crashes on Windows with non-ASCII text
-- Windows credential "save permanently" was print-only; now writes to credentials.bat
-- Added `chcp 65001` to run.bat so UTF-8/emoji output works in cmd.exe
+- Microsoft Store Python stubs detected and warned about
+- `chcp 65001` in run.bat for UTF-8/emoji output in cmd.exe
 
 ## Python Requirements
 requests, python-dateutil, pytz, openpyxl, pandas
+
+## Memories
+- [project_bootstrap_refactor](project_bootstrap_refactor.md) — bootstrap consolidation context

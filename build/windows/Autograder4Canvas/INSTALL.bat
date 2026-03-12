@@ -143,6 +143,7 @@ if not exist "%INSTALL_DIR%\docs" mkdir "%INSTALL_DIR%\docs"
 
 :: Copy files
 echo   Copying program files...
+copy "%SOURCE_DIR%src\bootstrap.py" "%INSTALL_DIR%\" >nul
 copy "%SOURCE_DIR%src\run_autograder.py" "%INSTALL_DIR%\" >nul
 copy "%SOURCE_DIR%src\requirements.txt" "%INSTALL_DIR%\" >nul
 if exist "%SOURCE_DIR%src\autograder_utils.py" copy "%SOURCE_DIR%src\autograder_utils.py" "%INSTALL_DIR%\" >nul
@@ -171,17 +172,7 @@ del "%XCOPY_EXCL%" >nul 2>&1
 :: Copy icon if it exists
 if exist "%SOURCE_DIR%icon.ico" copy "%SOURCE_DIR%icon.ico" "%INSTALL_DIR%\" >nul
 
-:: Install Python dependencies
-echo   Installing required Python packages...
-%PYTHON_CMD% -m pip install --quiet -r "%INSTALL_DIR%\requirements.txt"
-if %ERRORLEVEL% neq 0 (
-    echo   Warning: Some packages may not have installed correctly.
-    echo   The program may still work, or you can run:
-    echo     pip install -r "%INSTALL_DIR%\requirements.txt"
-    echo   manually to fix this.
-)
-
-:: Create launcher batch file
+:: Create launcher batch file (bootstrap.py handles pip install on first run)
 echo   Creating launcher...
 (
 echo @echo off
@@ -210,7 +201,7 @@ echo     pause
 echo     exit /b 1
 echo ^)
 echo.
-echo %%PYTHON_CMD%% run_autograder.py %%*
+echo %%PYTHON_CMD%% bootstrap.py %%*
 echo pause
 ) > "%INSTALL_DIR%\Autograder4Canvas.bat"
 

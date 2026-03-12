@@ -51,6 +51,7 @@ mkdir -p "$DESKTOP_DIR"
 
 # Copy files
 echo "  Copying program files..."
+cp "$SCRIPT_DIR/src/bootstrap.py" "$INSTALL_DIR/"
 cp "$SCRIPT_DIR/src/run_autograder.py" "$INSTALL_DIR/"
 cp "$SCRIPT_DIR/src/requirements.txt" "$INSTALL_DIR/"
 [ -f "$SCRIPT_DIR/src/autograder_utils.py" ] && cp "$SCRIPT_DIR/src/autograder_utils.py" "$INSTALL_DIR/"
@@ -84,7 +85,7 @@ echo "  Creating command-line launcher..."
 cat > "$BIN_DIR/autograder4canvas" << LAUNCHER
 #!/bin/bash
 cd "$INSTALL_DIR"
-python3 run_autograder.py "\$@"
+python3 bootstrap.py "\$@"
 LAUNCHER
 chmod +x "$BIN_DIR/autograder4canvas"
 
@@ -96,7 +97,7 @@ Version=1.0
 Type=Application
 Name=Autograder4Canvas
 Comment=Automated grading tools for Canvas LMS
-Exec=bash -c 'cd "$INSTALL_DIR" && python3 run_autograder.py; echo ""; read -p "Press Enter to close..."'
+Exec=bash -c 'cd "$INSTALL_DIR" && python3 bootstrap.py; echo ""; read -p "Press Enter to close..."'
 Icon=$ICON_PATH
 Terminal=true
 Categories=Education;Utility;

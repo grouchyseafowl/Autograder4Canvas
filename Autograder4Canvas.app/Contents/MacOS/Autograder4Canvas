@@ -37,20 +37,19 @@ if [ -z "$PYTHON_CMD" ]; then
     exit 1
 fi
 
-# Find the launcher script in Resources (version-agnostic)
-# Look for any run_autograder*.py and get the newest version
-LAUNCHER=$(ls -1 "$RESOURCES_DIR"/run_autograder*.py 2>/dev/null | sort -V | tail -n 1)
+# Launch via bootstrap.py (handles venv, deps, credentials)
+BOOTSTRAP="$RESOURCES_DIR/bootstrap.py"
 
-if [ -z "$LAUNCHER" ] || [ ! -f "$LAUNCHER" ]; then
-    osascript -e 'display alert "Error" message "Could not find run_autograder*.py in app bundle. The app may be corrupted." as critical'
+if [ ! -f "$BOOTSTRAP" ]; then
+    osascript -e 'display alert "Error" message "Could not find bootstrap.py in app bundle. The app may be corrupted." as critical'
     exit 1
 fi
 
-# Open Terminal and run the script
+# Open Terminal and run the bootstrap
 osascript << EOF
 tell application "Terminal"
     activate
-    set newTab to do script "cd '$RESOURCES_DIR' && '$PYTHON_CMD' '$LAUNCHER'; echo ''; echo 'Press Enter to close...'; read"
+    set newTab to do script "cd '$RESOURCES_DIR' && '$PYTHON_CMD' '$BOOTSTRAP'; echo ''; echo 'Press Enter to close...'; read"
     set custom title of front window to "Autograder4Canvas"
 end tell
 EOF
