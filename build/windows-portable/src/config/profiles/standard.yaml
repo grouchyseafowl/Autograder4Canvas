@@ -1,0 +1,136 @@
+# Standard Assignment Profile
+# Version 2.0.0
+# Default profile when no specific type is selected
+
+profile_id: standard
+profile_name: "Standard (Default)"
+version: "2.0.0"
+effective_date: "2025-12-26"
+
+description: |
+  Default profile for general assignments that don't fit specific
+  categories. Uses balanced detection weights and moderate thresholds.
+  
+  Use this when:
+  - Assignment type is unclear
+  - Mixed assignment types
+  - General writing without specific requirements
+
+learning_objectives:
+  primary:
+    - "Demonstrate understanding of course material"
+    - "Communicate ideas clearly"
+  secondary:
+    - "Show engagement with assignment prompt"
+    - "Apply course concepts appropriately"
+
+detection_approach: "balanced"
+detection_explanation: |
+  Standard profile uses balanced detection across all marker types.
+  Neither presence detection (AI markers) nor absence detection
+  (missing authenticity) is prioritized over the other.
+  
+  This is appropriate for mixed assignments or when unsure
+  of assignment type.
+
+weight_priorities:
+  ai_transitions:
+    multiplier: 1.0
+    rationale: "Standard weight"
+  generic_phrases:
+    multiplier: 1.0
+    rationale: "Standard weight"
+  personal_voice:
+    multiplier: 1.0
+    rationale: "Standard weight"
+  inflated_vocabulary:
+    multiplier: 1.0
+    rationale: "Standard weight"
+  hedge_phrases:
+    multiplier: 0.8
+    rationale: "Slightly lower - some hedging is normal"
+  citation_markers:
+    multiplier: 1.0
+    rationale: "Standard weight"
+
+thresholds:
+  minimum_word_count: 50
+  suspicious_score_concern: 3.0
+  authenticity_score_minimum: 2.0
+  peer_comparison_percentile: 90
+
+concern_levels:
+  high:
+    suspicious_score: ">= 5.0"
+    authenticity_score: "< 1.0"
+    description: "Multiple strong indicators of concern"
+    
+  elevated:
+    suspicious_score: ">= 3.5"
+    authenticity_score: "< 2.0"
+    description: "Several indicators warrant attention"
+    
+  moderate:
+    suspicious_score: ">= 2.0"
+    authenticity_score: "< 3.0"
+    description: "Some indicators present"
+    
+  low:
+    suspicious_score: ">= 1.0"
+    authenticity_score: ">= 3.0"
+    description: "Minor indicators only"
+    
+  none:
+    suspicious_score: "< 1.0"
+    description: "No concerns identified"
+
+conversation_starters:
+  high_concern:
+    - "Can you walk me through your process for this assignment?"
+    - "Tell me more about how you developed your main ideas."
+    - "What was the most challenging part of this assignment?"
+    
+  moderate_concern:
+    - "I noticed some patterns in your writing. Can you tell me about your process?"
+    - "How did you approach this assignment?"
+
+verification_questions:
+  - "What was your thesis or main point?"
+  - "What sources or readings informed your thinking?"
+  - "What would you change if you revised this?"
+  - "What part are you most proud of?"
+
+revision_guidance:
+  essential:
+    - "Add specific examples and details"
+    - "Develop your own voice more clearly"
+    - "Connect concepts to concrete instances"
+    
+  optional:
+    - "Vary sentence structure"
+    - "Reduce generic statements"
+
+instructor_notes:
+  when_to_use:
+    - "Assignment doesn't fit other profiles"
+    - "Unsure of appropriate profile"
+    - "Testing the tool"
+    - "Mixed assignment with multiple components"
+    
+  when_to_switch:
+    - "If assignment requires personal reflection → use personal_reflection"
+    - "If assignment is a rough draft → use rough_draft"
+    - "If assignment requires citations → use research_paper"
+    - "If assignment is a forum post → use discussion_post"
+    
+  profile_selection_help: |
+    The standard profile works for most cases but may miss
+    context-specific concerns. For best results, select the
+    profile that matches your assignment type:
+    
+    - Personal writing → personal_reflection
+    - Formal analysis → analytical_essay
+    - Early drafts → rough_draft
+    - Forum posts → discussion_post
+    - Research papers → research_paper
+    - Pre-writing → notes_brainstorm

@@ -1,0 +1,91 @@
+# Hedge Phrases Marker Configuration
+# Version 2.0.0
+# Excessive hedging and qualification that avoids intellectual commitment
+
+metadata:
+  marker_id: hedge_phrases
+  version: "2.0.0"
+  effective_date: "2025-12-26"
+  category: suspicious_presence
+  pedagogical_context: |
+    Some hedging is appropriate in academic writing (epistemic humility).
+    However, EXCESSIVE hedging suggests the writer is avoiding genuine
+    intellectual engagement. AI tends to hedge heavily to avoid controversy.
+    
+    The concern is not hedging itself but hedging WITHOUT substance—
+    qualifying everything while saying nothing specific.
+
+markers:
+  avoidance_hedges:
+    description: "Phrases that avoid taking a position"
+    patterns:
+      - pattern: "it can be said"
+        weight: 0.4
+      - pattern: "it could be argued"
+        weight: 0.4
+      - pattern: "one might say"
+        weight: 0.4
+      - pattern: "some might argue"
+        weight: 0.3
+      - pattern: "it is possible that"
+        weight: 0.3
+      - pattern: "there are those who believe"
+        weight: 0.4
+      - pattern: "it has been suggested"
+        weight: 0.4
+        
+  false_balance:
+    description: "Creating false equivalence to avoid commitment"
+    patterns:
+      - pattern: "on the one hand.*on the other hand"
+        regex: true
+        weight: 0.3
+        note: "Legitimate structure, but watch for empty balance"
+      - pattern: "both sides have valid points"
+        weight: 0.5
+      - pattern: "there are merits to both"
+        weight: 0.4
+      - pattern: "reasonable people can disagree"
+        weight: 0.3
+        
+  universal_qualifiers:
+    description: "Qualifiers that apply to everything (thus meaning nothing)"
+    patterns:
+      - pattern: "in many ways"
+        weight: 0.2
+      - pattern: "to some extent"
+        weight: 0.2
+      - pattern: "in some cases"
+        weight: 0.2
+      - pattern: "depending on the context"
+        weight: 0.3
+      - pattern: "it varies"
+        weight: 0.2
+
+clustering:
+  threshold: 4
+  weight_boost: 1.5
+  description: "4+ hedge phrases suggests systematic avoidance of positions"
+
+context_adjustments:
+  analytical_essay:
+    weight_multiplier: 0.8
+    rationale: "Some hedging appropriate in analytical writing"
+  personal_reflection:
+    weight_multiplier: 1.3
+    rationale: "Personal reflections should have clear personal positions"
+  research_paper:
+    weight_multiplier: 0.7
+    rationale: "Academic hedging is expected in research contexts"
+
+instructor_guidance:
+  high_score_interpretation: |
+    Heavy hedging often indicates one of:
+    1. AI-generated content (AI hedges to avoid controversy)
+    2. Student avoiding genuine engagement with difficult questions
+    3. Misunderstanding of academic voice as "neutral"
+    
+  conversation_prompts:
+    - "What do YOU actually think about this?"
+    - "If you had to pick a side, which would it be?"
+    - "What specific evidence convinced you?"

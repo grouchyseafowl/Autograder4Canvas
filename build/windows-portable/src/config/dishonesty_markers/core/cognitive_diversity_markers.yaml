@@ -1,0 +1,413 @@
+# Cognitive Diversity Markers Configuration
+# Version 2.0.0
+# Protective markers that recognize neurodivergent thinking patterns as authentic
+
+metadata:
+  marker_id: cognitive_diversity_markers
+  version: "2.0.0"
+  effective_date: "2025-12-27"
+  category: required_presence
+  pedagogical_context: |
+    These markers identify authentic intellectual engagement patterns that
+    may appear "unusual" in traditional academic writing but reflect genuine
+    cognitive diversity. Their PRESENCE is strong evidence of human authorship.
+
+    Neurodivergent students (ADHD, autistic, dyslexic, etc.) often demonstrate
+    thinking patterns that overlap with what AI detection might flag:
+    - Deep focus on specific details (hyperfocus)
+    - Associative/non-linear connections (creative thinking)
+    - Visible struggle with organization (executive function)
+    - Very formal or very precise language (communication style)
+
+    These patterns are NOT deficits - they're different forms of brilliance.
+    This marker set recognizes cognitive diversity as legitimate scholarship.
+
+markers:
+  depth_over_breadth:
+    description: "Hyperfocus, special interests, deep engagement with specifics"
+    pedagogical_note: |
+      ADHD hyperfocus and autistic special interests produce deep, detailed
+      engagement with specific aspects. This is POSITIVE - shows genuine
+      intellectual investment, not surface-level AI generation.
+    patterns:
+      - pattern: "what really interests me about.*is"
+        regex: true
+        weight: -0.6
+        note: "Explicit special interest marker - highly authentic"
+      - pattern: "I spent a lot of time thinking about"
+        weight: -0.5
+        note: "Deep engagement indicator"
+      - pattern: "I found myself focusing on"
+        weight: -0.5
+      - pattern: "I went down a rabbit hole"
+        weight: -0.7
+        note: "Hyperfocus/special interest indicator"
+      - pattern: "this is something I've been interested in"
+        weight: -0.5
+      - pattern: "I've read a lot about"
+        weight: -0.4
+      - pattern: "I know more than I probably need to about"
+        weight: -0.6
+        note: "Self-awareness about hyperfocus"
+      - pattern: "I could talk about this for hours"
+        weight: -0.5
+      - pattern: "this connects to something I care about"
+        weight: -0.5
+      - pattern: "I got really into"
+        weight: -0.5
+        note: "Hyperfocus activation"
+
+  associative_thinking:
+    description: "Non-linear but valid connections, tangents that show real thinking"
+    pedagogical_note: |
+      ADHD and autistic thinking often makes unexpected connections across
+      domains. These tangents are INTELLECTUAL WORK, not random - they show
+      pattern recognition and creative synthesis.
+    patterns:
+      - pattern: "this reminds me of something completely different"
+        weight: -0.6
+        note: "Associative leap - very human"
+      - pattern: "I know this is a tangent"
+        weight: -0.7
+        note: "Metacognitive awareness of non-linear thinking"
+      - pattern: "this might seem unrelated but"
+        weight: -0.6
+      - pattern: "going back to"
+        weight: -0.4
+        note: "Tangent that circles back"
+      - pattern: "now that I think about it"
+        weight: -0.5
+        note: "Thinking in progress"
+      - pattern: "actually, that connects to"
+        weight: -0.5
+        note: "Connection-making in real time"
+      - pattern: "wait, this is like"
+        weight: -0.6
+        note: "Spontaneous connection"
+      - pattern: "I just realized"
+        weight: -0.5
+      - pattern: "that makes me think of"
+        weight: -0.4
+      - pattern: "on a related note"
+        weight: -0.3
+        note: "Acknowledging association"
+      - pattern: "this is similar to"
+        weight: -0.3
+      - pattern: "I see a pattern"
+        weight: -0.5
+        note: "Pattern recognition across domains"
+
+  authentic_struggle:
+    description: "Visible organizational challenges paired with original thinking"
+    pedagogical_note: |
+      Executive function challenges create visible struggle with organization.
+      But this PROVES human authorship - AI doesn't struggle with structure.
+      Seeing struggle + original ideas = authentic neurodivergent scholarship.
+    patterns:
+      - pattern: "I'm not sure how to organize this"
+        weight: -0.6
+      - pattern: "I'm having trouble explaining"
+        weight: -0.6
+      - pattern: "I keep losing my train of thought"
+        weight: -0.7
+        note: "ADHD working memory indicator - very authentic"
+      - pattern: "let me try that again"
+        weight: -0.5
+        note: "Visible revision process"
+      - pattern: "I'm going to come back to this"
+        weight: -0.5
+      - pattern: "I started writing about.*but then"
+        regex: true
+        weight: -0.6
+        note: "Non-linear drafting process"
+      - pattern: "this is getting messy"
+        weight: -0.6
+        note: "Metacognitive awareness of organization"
+      - pattern: "I know I'm jumping around"
+        weight: -0.7
+        note: "Self-awareness about non-linear structure"
+      - pattern: "trying to make this make sense"
+        weight: -0.6
+      - pattern: "this is harder to explain than I thought"
+        weight: -0.5
+      - pattern: "I need to back up"
+        weight: -0.5
+      - pattern: "wait, I skipped"
+        weight: -0.6
+        note: "Awareness of missing step"
+      - pattern: "let me start over"
+        weight: -0.5
+
+  precise_literal_engagement:
+    description: "Very precise language, literal interpretations, formal register with personal content"
+    pedagogical_note: |
+      Autistic communication often involves:
+      - Very precise/specific word choices
+      - Literal interpretation of assignments
+      - Formal register even in personal writing
+      - Explicit signposting and organization
+
+      This is LEGITIMATE academic voice, not AI formality. When formal
+      language appears WITH personal content, it's authentic neurodivergent voice.
+    patterns:
+      - pattern: "to be specific"
+        weight: -0.4
+        note: "Precision marker"
+      - pattern: "to be precise"
+        weight: -0.4
+      - pattern: "more accurately"
+        weight: -0.4
+      - pattern: "technically"
+        weight: -0.3
+        note: "Literal precision"
+      - pattern: "I mean exactly"
+        weight: -0.5
+      - pattern: "I need to clarify"
+        weight: -0.4
+      - pattern: "what I mean is"
+        weight: -0.4
+        note: "Precision about meaning"
+      - pattern: "I'm being literal"
+        weight: -0.6
+        note: "Explicit about literal communication"
+      - pattern: "I interpreted this as"
+        weight: -0.5
+        note: "Literal interpretation acknowledgment"
+      - pattern: "the exact wording"
+        weight: -0.4
+      - pattern: "specifically"
+        weight: -0.2
+        note: "Precision emphasis"
+      - pattern: "I took this to mean"
+        weight: -0.4
+        note: "Explicit interpretation"
+
+  explicit_signposting:
+    description: "Meta-commentary and explicit organization as POSITIVE markers"
+    pedagogical_note: |
+      What generic_phrases.yaml flags as suspicious ("this paragraph will
+      discuss") is actually a legitimate organizational strategy for students
+      with executive function challenges or autistic communication styles.
+
+      When explicit signposting appears WITH authentic content, it's evidence
+      of organizational EFFORT, not AI generation. Reframe as positive.
+    patterns:
+      - pattern: "I'm going to talk about"
+        weight: -0.4
+        note: "Explicit organization - executive function support"
+      - pattern: "first I'll.*then I'll"
+        regex: true
+        weight: -0.5
+        note: "Planned organization structure"
+      - pattern: "now I want to"
+        weight: -0.3
+      - pattern: "my plan is to"
+        weight: -0.4
+        note: "Explicit planning"
+      - pattern: "I'm trying to"
+        weight: -0.4
+      - pattern: "what I'm going to do is"
+        weight: -0.5
+        note: "Process explanation"
+      - pattern: "to keep myself on track"
+        weight: -0.6
+        note: "Metacognitive organizational strategy"
+      - pattern: "so I don't forget"
+        weight: -0.5
+        note: "Working memory compensation"
+
+  tangential_connections:
+    description: "Tangential personal connections that show real engagement"
+    pedagogical_note: |
+      Tangents are not disorganization - they're evidence of a mind making
+      connections. When students connect course material to personal interests,
+      even unexpectedly, it shows genuine intellectual engagement.
+    patterns:
+      - pattern: "this has nothing to do with.*but"
+        regex: true
+        weight: -0.6
+        note: "Acknowledged tangent - very authentic"
+      - pattern: "this is random, but"
+        weight: -0.6
+      - pattern: "off topic, but"
+        weight: -0.5
+      - pattern: "side note:"
+        weight: -0.4
+      - pattern: "randomly"
+        weight: -0.3
+      - pattern: "for some reason this made me think of"
+        weight: -0.6
+        note: "Associative connection"
+      - pattern: "I don't know why but"
+        weight: -0.5
+        note: "Intuitive connection"
+      - pattern: "weirdly enough"
+        weight: -0.4
+        note: "Unexpected connection"
+
+  metacognitive_commentary:
+    description: "Thinking about thinking - metacognitive awareness"
+    pedagogical_note: |
+      Neurodivergent students often have high metacognitive awareness about
+      their own thinking processes. Comments about how they're thinking show
+      genuine cognitive engagement, not AI generation.
+    patterns:
+      - pattern: "I'm realizing as I write"
+        weight: -0.6
+      - pattern: "thinking about it now"
+        weight: -0.5
+      - pattern: "as I'm thinking through this"
+        weight: -0.5
+      - pattern: "my brain keeps going to"
+        weight: -0.6
+        note: "Awareness of thought patterns"
+      - pattern: "I keep coming back to"
+        weight: -0.5
+      - pattern: "I can't stop thinking about"
+        weight: -0.5
+      - pattern: "the way I understand this"
+        weight: -0.4
+      - pattern: "how I process this"
+        weight: -0.5
+      - pattern: "my thought process"
+        weight: -0.4
+      - pattern: "the way my brain works"
+        weight: -0.6
+        note: "Metacognitive self-awareness"
+
+  inconsistent_sophistication:
+    description: "Uneven depth across sections - shows authentic engagement"
+    pedagogical_note: |
+      AI produces consistent sophistication. Humans hyperfocus on parts that
+      interest them and skim parts that don't. Inconsistency is HUMAN.
+
+      Note: This requires comparative analysis, not simple pattern matching.
+      Look for sections with very different engagement levels.
+    detection_method: "algorithmic"
+    note: |
+      This marker type requires analysis of:
+      - Sentence length variation (high variance = authentic)
+      - Detail density variation (some sections deep, others surface)
+      - Vocabulary variation (some sections technical, others casual)
+      - Engagement markers concentrated in specific sections
+
+      Future enhancement: Implement variance detection algorithm
+
+scoring:
+  method: "presence_boost"
+  interpretation:
+    below_2: "Few cognitive diversity markers - standard assessment"
+    2_to_4: "Some cognitive diversity patterns - reduce organizational bias weight"
+    4_to_6: "Strong cognitive diversity patterns - significant protection needed"
+    above_6: "Very strong neurodivergent engagement patterns - authenticity highly likely"
+
+  protective_effect:
+    threshold: 2
+    suspicious_reduction: 0.3
+    description: "When 2+ cognitive diversity markers present, reduce organizational bias markers by 30%"
+
+    strong_threshold: 4
+    strong_reduction: 0.5
+    strong_description: "When 4+ cognitive diversity markers present, reduce organizational bias markers by 50%"
+
+context_adjustments:
+  personal_reflection:
+    weight_multiplier: 1.3
+    rationale: "Cognitive diversity patterns especially visible in personal writing"
+  analytical_essay:
+    weight_multiplier: 0.8
+    rationale: "Some patterns may be suppressed in formal analysis"
+  discussion_post:
+    weight_multiplier: 1.2
+    rationale: "Informal context allows authentic voice"
+  rough_draft:
+    weight_multiplier: 1.5
+    rationale: "Struggle and process markers highly expected"
+
+interaction_with_organizational_markers:
+  principle: "Protective markers override organizational bias"
+
+  when_both_present:
+    scenario: "Student shows both formal transitions AND depth over breadth"
+    interpretation: |
+      This is a neurodivergent student using learned academic structures
+      (formal transitions) while engaging authentically (hyperfocus).
+      The presence of cognitive diversity markers PROTECTS against
+      organizational bias false positives.
+
+    action: "Reduce weight of organizational bias markers by protective_effect percentage"
+
+  examples:
+    - case: "Formal transitions + hyperfocus markers"
+      interpretation: "Autistic student using learned structures + special interest"
+      action: "Reduce ai_transitions weight by 50%"
+
+    - case: "Explicit signposting + authentic struggle"
+      interpretation: "Executive function support strategies + genuine engagement"
+      action: "Reduce generic_phrases weight by 50%"
+
+    - case: "Precise language + tangential connections"
+      interpretation: "Autistic communication style + associative thinking"
+      action: "Reduce inflated_vocabulary and hedge_phrases weight by 50%"
+
+instructor_guidance:
+  interpreting_presence: |
+    Cognitive diversity markers indicate authentic neurodivergent scholarship.
+    These patterns are STRENGTHS, not deficits:
+
+    - Hyperfocus = deep intellectual investment
+    - Associative thinking = creative synthesis
+    - Visible struggle = genuine cognitive work
+    - Precise language = communication style
+    - Explicit organization = executive function strategies
+    - Tangents = mind making connections
+
+    When you see these patterns alongside "suspicious" markers, recognize
+    that organizational bias is likely at play. Focus conversation on
+    supporting the student's thinking process, not questioning authorship.
+
+  conversation_starters:
+    - "I noticed you went really deep on [topic] - tell me more about what interests you there"
+    - "You made an interesting connection between [X] and [Y] - how did you see that link?"
+    - "I can see you were working through your thinking as you wrote - walk me through your process"
+    - "Your precision about [detail] shows real engagement - what made that important to you?"
+
+  when_to_trust:
+    - "Cognitive diversity markers + organizational 'bias' markers = likely neurodivergent authenticity"
+    - "Hyperfocus patterns = NOT AI (AI produces breadth, not depth)"
+    - "Visible struggle = NOT AI (AI doesn't struggle with organization)"
+    - "Tangents that circle back = NOT AI (AI stays on prompt)"
+    - "Metacognitive commentary = NOT AI (AI doesn't think about thinking)"
+
+universal_design_principle: |
+  These markers benefit ALL students by recognizing multiple forms of
+  intellectual engagement. Making the system robust to cognitive diversity
+  makes it better for everyone, not just neurodivergent students.
+
+  This is universal design, not special accommodation.
+
+testing_requirements:
+  recommended_test_cases:
+    - "ADHD student with hyperfocus on specific aspect of assignment"
+    - "Autistic student with formal register + personal content"
+    - "Student with executive function challenges showing organizational struggle"
+    - "Student making associative connections across unexpected domains"
+    - "Student with inconsistent depth (deep on interest areas, surface elsewhere)"
+
+  validation:
+    - "Ensure protective markers actually reduce false positive rates"
+    - "Verify markers don't over-protect actual AI writing"
+    - "Test with diverse neurodivergent writing samples"
+    - "Compare false positive rates: with vs without cognitive diversity markers"
+
+privacy_note: |
+  Students should NEVER be required to disclose neurodivergence to receive
+  fair assessment. These markers operate automatically on writing patterns,
+  not on identity categories. Students maintain sovereignty over their
+  information.
+
+version_history:
+  "2.0.0":
+    date: "2025-12-27"
+    changes: "Initial implementation of cognitive diversity protection framework"
+    rationale: "Address false positives for neurodivergent students"

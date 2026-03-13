@@ -23,7 +23,8 @@ __pycache__/
 *.egg
 *.egg-info/
 dist/
-build/
+build/*
+!build/windows-portable/
 eggs/
 .eggs/
 lib/
