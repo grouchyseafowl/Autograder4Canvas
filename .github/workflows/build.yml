@@ -43,8 +43,8 @@ jobs:
           Copy-Item -Force "src\Programs\*.py"                 "$src\Programs\"
           Copy-Item -Force "src\modules\*.py"                  "$src\modules\"
           # Launcher scripts from the tracked windows launcher directory
-          Copy-Item -Force "scripts\windows\run.bat"           "$root\"
-          Copy-Item -Force "scripts\windows\credentials.bat"   "$root\"
+          Copy-Item -Force "build\windows-portable\run.bat"         "$root\"
+          Copy-Item -Force "build\windows-portable\credentials.bat" "$root\"
           Write-Host "Portable folder assembled."
 
       - name: Syntax-check all Python files
