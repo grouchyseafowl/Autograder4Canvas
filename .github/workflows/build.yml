@@ -37,7 +37,7 @@ jobs:
           New-Item -Force -ItemType Directory "$src\Programs" | Out-Null
           New-Item -Force -ItemType Directory "$src\modules"  | Out-Null
           Copy-Item -Recurse -Force "src\config"       "$src\config"
-          Copy-Item -Force "src\run_autograder_v1-3.py"        "$src\run_autograder.py"
+          Copy-Item -Force "src\run_autograder.py"        "$src\run_autograder.py"
           Copy-Item -Force "src\autograder_utils.py"           "$src\"
           Copy-Item -Force "src\requirements.txt"              "$src\"
           Copy-Item -Force "src\Programs\*.py"                 "$src\Programs\"
@@ -165,7 +165,7 @@ jobs:
             --add-data "src/modules:modules" \
             --add-data "src/docs:docs" \
             --osx-bundle-identifier "com.autograder4canvas.app" \
-            src/run_autograder_v1-3.py
+            src/run_autograder.py
 
       - name: Create DMG
         run: |
@@ -229,7 +229,7 @@ jobs:
             --add-data "src/config;config" ^
             --add-data "src/modules;modules" ^
             --add-data "src/docs;docs" ^
-            src/run_autograder_v1-3.py
+            src/run_autograder.py
 
       - name: Package exe
         run: |
@@ -268,7 +268,7 @@ jobs:
             --add-data "src/config:config" \
             --add-data "src/modules:modules" \
             --add-data "src/docs:docs" \
-            src/run_autograder_v1-3.py
+            src/run_autograder.py
 
       - name: Package binary
         run: |
