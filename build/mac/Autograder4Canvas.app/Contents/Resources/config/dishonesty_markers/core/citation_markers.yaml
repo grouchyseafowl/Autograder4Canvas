@@ -1,0 +1,134 @@
+# Citation Markers Configuration
+# Version 2.0.0
+# Patterns related to citations, sources, and attribution
+
+metadata:
+  marker_id: citation_markers
+  version: "2.0.0"
+  effective_date: "2025-12-26"
+  category: mixed
+  pedagogical_context: |
+    AI frequently fabricates citations—inventing authors, titles, and
+    page numbers that don't exist. It also uses vague attribution
+    ("studies show") without actual sources.
+    
+    This marker set identifies:
+    1. Suspicious citation patterns that may be fabricated
+    2. Vague attribution that should be cited
+    3. Missing citations for specific claims
+
+markers:
+  vague_attribution:
+    description: "Claims attributed to unnamed sources (should be cited)"
+    category: suspicious_presence
+    patterns:
+      - pattern: "studies show"
+        weight: 0.5
+        action: "request_citation"
+      - pattern: "studies have shown"
+        weight: 0.5
+      - pattern: "research shows"
+        weight: 0.5
+      - pattern: "research indicates"
+        weight: 0.5
+      - pattern: "research suggests"
+        weight: 0.4
+      - pattern: "experts say"
+        weight: 0.5
+      - pattern: "experts believe"
+        weight: 0.5
+      - pattern: "scientists have found"
+        weight: 0.5
+      - pattern: "according to experts"
+        weight: 0.5
+      - pattern: "it has been proven"
+        weight: 0.6
+      - pattern: "it is well established"
+        weight: 0.4
+      - pattern: "it is widely accepted"
+        weight: 0.4
+        
+  fabrication_indicators:
+    description: "Patterns that may indicate fabricated citations"
+    category: suspicious_presence
+    patterns:
+      - pattern: "et al\\., \\d{4}"
+        regex: true
+        weight: 0.2
+        note: "Not suspicious alone, but verify these exist"
+        action: "verify_citation"
+      - pattern: "p\\. \\d+"
+        regex: true
+        weight: 0.1
+        note: "Page numbers should be verified"
+        action: "verify_page"
+      - pattern: "Journal of"
+        weight: 0.1
+        note: "Verify journal exists and contains cited article"
+        action: "verify_source"
+        
+  proper_citation_patterns:
+    description: "Markers of legitimate citation practice (GOOD)"
+    category: required_presence
+    patterns:
+      - pattern: "according to [A-Z][a-z]+"
+        regex: true
+        weight: -0.3
+        note: "Named attribution is positive"
+      - pattern: "\\([A-Z][a-z]+, \\d{4}\\)"
+        regex: true
+        weight: -0.2
+        note: "Proper parenthetical citation"
+      - pattern: "as [A-Z][a-z]+ argues"
+        regex: true
+        weight: -0.3
+        note: "Engagement with named source"
+
+verification_requirements:
+  for_research_papers:
+    - "Verify at least 2 random citations actually exist"
+    - "Check if quoted text matches cited page"
+    - "Confirm author names are spelled correctly"
+    - "Verify journal/book titles are real"
+    
+  red_flags:
+    - "Citation includes plausible but non-existent journal"
+    - "Author name slightly misspelled"
+    - "Page number doesn't contain quoted text"
+    - "DOI doesn't resolve"
+    - "All citations from same year range"
+
+context_adjustments:
+  research_paper:
+    weight_multiplier: 1.5
+    rationale: "Citations are central to research papers"
+  analytical_essay:
+    weight_multiplier: 1.2
+    rationale: "Should cite course texts at minimum"
+  personal_reflection:
+    weight_multiplier: 0.5
+    rationale: "Citations less expected in personal writing"
+  discussion_post:
+    weight_multiplier: 1.0
+    rationale: "Should reference assigned readings"
+
+instructor_guidance:
+  vague_attribution_response: |
+    When you see "studies show" or similar:
+    1. Ask student to identify the specific study
+    2. Request they add a proper citation
+    3. If they can't, this suggests copied/generated content
+    
+  verification_process: |
+    For suspected fabrication:
+    1. Google the exact citation
+    2. Check Google Scholar for author + title
+    3. Verify DOI if provided
+    4. Check if journal exists
+    5. Ask student to show you the source
+    
+  conversation_starters:
+    - "Can you show me the study that found this?"
+    - "I couldn't find this source—can you send me the link?"
+    - "Which reading from class supports this claim?"
+    - "Walk me through how you found this research"

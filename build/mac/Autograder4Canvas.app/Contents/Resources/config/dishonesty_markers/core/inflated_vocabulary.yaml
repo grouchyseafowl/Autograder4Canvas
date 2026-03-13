@@ -1,0 +1,148 @@
+# Inflated Vocabulary Marker Configuration
+# Version 2.0.0
+# Unnecessarily complex words where simpler alternatives exist
+
+metadata:
+  marker_id: inflated_vocabulary
+  version: "2.0.0"
+  effective_date: "2025-12-26"
+  category: suspicious_presence
+  pedagogical_context: |
+    AI language models tend to use formal, Latinate vocabulary even when
+    simpler words would be clearer. This pattern is especially suspicious
+    in personal reflections where natural voice is expected.
+    
+    IMPORTANT: ESL students legitimately use thesauruses and may produce
+    similar patterns. Apply context adjustments carefully.
+    
+    The issue is not vocabulary size but INAPPROPRIATE formality—using
+    "utilize" when "use" would be more natural.
+
+markers:
+  latinate_substitutions:
+    description: "Formal words substituted for common ones"
+    patterns:
+      - pattern: "utilize"
+        simple_alternative: "use"
+        weight: 0.4
+      - pattern: "demonstrate"
+        simple_alternative: "show"
+        weight: 0.3
+      - pattern: "individuals"
+        simple_alternative: "people"
+        weight: 0.4
+      - pattern: "commence"
+        simple_alternative: "start/begin"
+        weight: 0.5
+      - pattern: "terminate"
+        simple_alternative: "end"
+        weight: 0.5
+      - pattern: "endeavor"
+        simple_alternative: "try"
+        weight: 0.5
+      - pattern: "facilitate"
+        simple_alternative: "help"
+        weight: 0.4
+      - pattern: "implement"
+        simple_alternative: "do/use"
+        weight: 0.3
+      - pattern: "ascertain"
+        simple_alternative: "find out"
+        weight: 0.5
+      - pattern: "subsequent"
+        simple_alternative: "next/later"
+        weight: 0.4
+      - pattern: "prior to"
+        simple_alternative: "before"
+        weight: 0.3
+      - pattern: "in order to"
+        simple_alternative: "to"
+        weight: 0.2
+      - pattern: "due to the fact that"
+        simple_alternative: "because"
+        weight: 0.4
+        
+  pompous_phrases:
+    description: "Unnecessarily complex constructions"
+    patterns:
+      - pattern: "at this point in time"
+        simple_alternative: "now"
+        weight: 0.4
+      - pattern: "in the event that"
+        simple_alternative: "if"
+        weight: 0.4
+      - pattern: "with regard to"
+        simple_alternative: "about"
+        weight: 0.3
+      - pattern: "in reference to"
+        simple_alternative: "about"
+        weight: 0.3
+      - pattern: "for the purpose of"
+        simple_alternative: "to/for"
+        weight: 0.4
+      - pattern: "in spite of the fact that"
+        simple_alternative: "although"
+        weight: 0.4
+        
+  ai_signature_words:
+    description: "Words AI uses more than humans typically do"
+    patterns:
+      - pattern: "multifaceted"
+        weight: 0.5
+      - pattern: "plethora"
+        weight: 0.5
+      - pattern: "myriad"
+        weight: 0.4
+      - pattern: "paramount"
+        weight: 0.4
+      - pattern: "intricate"
+        weight: 0.3
+      - pattern: "nuanced"
+        weight: 0.3
+      - pattern: "comprehensive"
+        weight: 0.2
+      - pattern: "holistic"
+        weight: 0.3
+
+context_adjustments:
+  esl:
+    weight_multiplier: 0.5
+    rationale: |
+      ESL students legitimately use thesauruses and translation tools.
+      Formal vocabulary may reflect language learning, not AI use.
+      Look for ESL error patterns as counter-indicator.
+      
+  personal_reflection:
+    weight_multiplier: 1.4
+    rationale: "Natural voice expected; formal vocabulary is suspicious"
+    
+  analytical_essay:
+    weight_multiplier: 0.7
+    rationale: "More formal vocabulary is appropriate"
+    
+  research_paper:
+    weight_multiplier: 0.6
+    rationale: "Technical vocabulary is expected"
+
+positive_counter_indicators:
+  # These suggest ESL student, not AI
+  vocabulary_errors:
+    - "False cognates (embarazada for embarrassed)"
+    - "Word form errors (importancy, educative)"
+    - "Collocation errors (make a decision vs do a decision)"
+  interpretation: |
+    Vocabulary ERRORS suggest human authorship. AI doesn't make
+    these types of mistakes. If you see formal vocabulary WITH
+    errors, it's likely ESL, not AI.
+
+instructor_guidance:
+  interpretation: |
+    Inflated vocabulary alone is weak evidence. Consider:
+    1. Is the student ESL? (Check for L1 transfer patterns)
+    2. Does the assignment call for formal register?
+    3. Are there vocabulary ERRORS? (Suggests human)
+    
+  revision_prompt: |
+    "Your ideas are good, but try expressing them more simply.
+    Replace 'utilize' with 'use' and 'individuals' with 'people.'
+    Clear writing is strong writing."

@@ -86,7 +86,7 @@ SETTINGS_FILE = Path.home() / ".canvas_autograder_settings"
 
 def print_header():
     """Print welcome header."""
-    print("ðŸŽ“ Canvas Autograder")
+    print("🎓 Canvas Autograder")
     print("=" * 70)
     print()
 
@@ -107,7 +107,7 @@ def check_python_version():
         print(f"   Current version: {version.major}.{version.minor}.{version.micro}")
         print()
         print("=" * 70)
-        print("ðŸ“¥ PYTHON INSTALLATION REQUIRED")
+        print("📥 PYTHON INSTALLATION REQUIRED")
         print("=" * 70)
         print()
         print("To use Canvas Autograder, you need Python 3.7 or higher.")
@@ -115,8 +115,8 @@ def check_python_version():
         print("Download from: https://www.python.org/downloads/")
         print()
         print("IMPORTANT for Windows users:")
-        print("  âœ“ CHECK the box 'Add Python to PATH' during installation")
-        print("  âœ“ This is required for the autograder to work properly")
+        print("  ✓ CHECK the box 'Add Python to PATH' during installation")
+        print("  ✓ This is required for the autograder to work properly")
         print()
         print("Options:")
         print("  [1] Open Python download page in browser")
@@ -129,7 +129,7 @@ def check_python_version():
             if choice == "1":
                 print("\nðŸŒ Opening Python download page in your browser...")
                 if open_url_in_browser("https://www.python.org/downloads/"):
-                    print("âœ… Browser opened successfully")
+                    print("✅ Browser opened successfully")
                 else:
                     print("âš ï¸  Could not open browser automatically")
                     print("   Please manually visit: https://www.python.org/downloads/")
@@ -143,17 +143,17 @@ def check_python_version():
                 input("Press Enter after installing Python to continue...")
                 
                 # Restart the script
-                print("\nðŸ”„ Restarting Canvas Autograder...\n")
+                print("\n🔄 Restarting Canvas Autograder...\n")
                 python = sys.executable
                 os.execl(python, python, *sys.argv)
             else:
-                print("\nðŸ‘‹ Please install Python 3.7+ and run this program again.")
+                print("\n👋 Please install Python 3.7+ and run this program again.")
                 sys.exit(1)
         except (KeyboardInterrupt, EOFError):
-            print("\n\nðŸ‘‹ Goodbye!")
+            print("\n\n👋 Goodbye!")
             sys.exit(1)
     
-    print(f"âœ… Python {version.major}.{version.minor}.{version.micro}")
+    print(f"✅ Python {version.major}.{version.minor}.{version.micro}")
 
 def get_venv_python():
     """Get path to Python executable in virtual environment."""
@@ -224,7 +224,7 @@ def toggle_auto_open():
     
     if save_settings(settings):
         new_state = "ON" if settings["auto_open_folder"] else "OFF"
-        print(f"âœ… Auto-open Grading Rationales folder is now {new_state}")
+        print(f"✅ Auto-open Grading Rationales folder is now {new_state}")
     
     return settings["auto_open_folder"]
 
@@ -356,9 +356,9 @@ def configure_cleanup():
             new_targets = settings.get("cleanup_targets", "all")
             print()
             if settings.get("cleanup_mode", "none") == "none":
-                print(f"âœ… Cleanup mode set to: {new_mode}")
+                print(f"✅ Cleanup mode set to: {new_mode}")
             else:
-                print(f"âœ… Cleanup mode set to: {new_mode}")
+                print(f"✅ Cleanup mode set to: {new_mode}")
                 print(f"   Threshold: {new_days} days")
                 print(f"   Targets: {new_targets}")
     
@@ -503,7 +503,7 @@ def run_onetime_cleanup():
         for script_type, file_type in cleanup_targets:
             info = script_type_info.get(script_type, {})
             folder_name = info.get("subdir", script_type)
-            print(f"  â€¢ {folder_name}: {file_type.upper()} files")
+            print(f"  • {folder_name}: {file_type.upper()} files")
         
         print()
         confirm = input("Proceed? (y/N): ").strip().lower()
@@ -530,7 +530,7 @@ def run_onetime_cleanup():
                 trash_files_by_type(target_dir, script_type, file_type, threshold_days)
         
         print()
-        print("âœ… One-time cleanup complete!")
+        print("✅ One-time cleanup complete!")
     
     except (KeyboardInterrupt, EOFError):
         print("\nâ­ï¸  Cleanup cancelled.")
@@ -591,7 +591,7 @@ def find_scripts():
         print()
         print("Looking for:")
         for info in script_types.values():
-            print(f"   â€¢ {info['pattern']}")
+            print(f"   • {info['pattern']}")
         sys.exit(1)
     
     return found_scripts
@@ -601,7 +601,7 @@ def select_script(scripts):
     base_dir = get_base_exports_dir()
     
     print()
-    print("ðŸŽ“ Canvas Autograder - Main Menu")
+    print("🎓 Canvas Autograder - Main Menu")
     print("=" * 50)
     print()
     print("Grading Tools:")
@@ -671,7 +671,7 @@ def select_script(scripts):
                 manage_profiles()
                 return None
             elif choice == 'O':
-                print(f"ðŸ“‚ Opening: {base_dir}")
+                print(f"📂 Opening: {base_dir}")
                 if HAS_UTILS:
                     open_folder(base_dir)
                 else:
@@ -688,7 +688,7 @@ def select_script(scripts):
                 show_help_menu()
                 return None
             elif choice == 'Q':
-                print("\nðŸ‘‹ Goodbye!")
+                print("\n👋 Goodbye!")
                 sys.exit(0)
             
             # Check for grading tool selection
@@ -701,7 +701,7 @@ def select_script(scripts):
         except ValueError:
             print("âŒ Invalid input. Please try again.")
         except (KeyboardInterrupt, EOFError):
-            print("\n\nðŸ‘‹ Goodbye!")
+            print("\n\n👋 Goodbye!")
             sys.exit(0)
 
 def get_canvas_url():
@@ -868,7 +868,7 @@ def get_canvas_token():
     
     print()
     print("=" * 70)
-    print("ðŸ”‘ CANVAS API TOKEN REQUIRED")
+    print("🔑 CANVAS API TOKEN REQUIRED")
     print("=" * 70)
     print()
     print("To use Canvas Autograder, you need a Canvas API access token.")
@@ -880,7 +880,7 @@ def get_canvas_token():
     print()
     canvas_url_display = os.environ.get("CANVAS_BASE_URL", "your Canvas site")
     print(f"1. Log in to Canvas at {canvas_url_display}")
-    print("2. Click your profile picture (top-left) â†’ Settings")
+    print("2. Click your profile picture (top-left) → Settings")
     print("3. Scroll down to 'Approved Integrations'")
     print("4. Click '+ New Access Token'")
     print("5. Enter a purpose (e.g., 'Autograder')")
@@ -929,7 +929,7 @@ def get_canvas_token():
 
         
         if open_url_in_browser(canvas_url):
-            print(f"âœ… Opened {canvas_url} in your browser")
+            print(f"✅ Opened {canvas_url} in your browser")
         else:
             print("âš ï¸  Could not open browser automatically")
             print(f"   Please manually visit: {canvas_url}")
@@ -945,10 +945,10 @@ def get_canvas_token():
         return get_canvas_token()
     
     elif choice == "4":
-        print("\nðŸ‘‹ Please get your Canvas API token and run this program again.")
+        print("\n👋 Please get your Canvas API token and run this program again.")
         print()
         print("Quick reference:")
-        print("  Canvas â†’ Profile â†’ Settings â†’ Approved Integrations â†’ New Access Token")
+        print("  Canvas → Profile → Settings → Approved Integrations → New Access Token")
         sys.exit(0)
     
     # Options 1 or 2 - get the token
@@ -965,7 +965,7 @@ def get_canvas_token():
     if choice == "2":
         save_token_permanently(token)
     else:
-        print("âœ… Token accepted (session only - will need to re-enter next time)")
+        print("✅ Token accepted (session only - will need to re-enter next time)")
     
     return token
 
@@ -1606,10 +1606,10 @@ def archive_files(target_dir, script_type, threshold_days=180):
                 moved_count += 1
     
     if moved_count > 0:
-        print(f"âœ… Moved {moved_count} old files to {archive_dir}")
-        print("âš ï¸  Archived files can only be deleted manually â€” this program will not touch them.")
+        print(f"✅ Moved {moved_count} old files to {archive_dir}")
+        print("âš ï¸  Archived files can only be deleted manually — this program will not touch them.")
     else:
-        print("âœ… No old files found to archive")
+        print("✅ No old files found to archive")
 
 def trash_files(target_dir, script_type, threshold_days=180):
     """Move old files to Trash/Recycle Bin - cross-platform."""
@@ -1687,9 +1687,9 @@ def trash_files(target_dir, script_type, threshold_days=180):
     
     if moved_count > 0:
         trash_name = "Trash" if system != "Windows" else "Recycle Bin"
-        print(f"âœ… Moved {moved_count} old files to {trash_name}")
+        print(f"✅ Moved {moved_count} old files to {trash_name}")
     else:
-        print("âœ… No old files found to trash")
+        print("✅ No old files found to trash")
 
 def archive_files_by_type(target_dir, script_type, file_type, threshold_days=180):
     """Archive old files of a specific type to archived subfolder."""
@@ -1741,9 +1741,9 @@ def archive_files_by_type(target_dir, script_type, file_type, threshold_days=180
                 moved_count += 1
     
     if moved_count > 0:
-        print(f"   âœ… Archived {moved_count} {file_type.upper()} files")
+        print(f"   ✅ Archived {moved_count} {file_type.upper()} files")
     else:
-        print(f"   âœ… No old {file_type.upper()} files found to archive")
+        print(f"   ✅ No old {file_type.upper()} files found to archive")
 
 def trash_files_by_type(target_dir, script_type, file_type, threshold_days=180):
     """Move old files of a specific type to Trash/Recycle Bin."""
@@ -1816,9 +1816,9 @@ def trash_files_by_type(target_dir, script_type, file_type, threshold_days=180):
     
     if moved_count > 0:
         trash_name = "Trash" if system != "Windows" else "Recycle Bin"
-        print(f"   âœ… Moved {moved_count} {file_type.upper()} files to {trash_name}")
+        print(f"   ✅ Moved {moved_count} {file_type.upper()} files to {trash_name}")
     else:
-        print(f"   âœ… No old {file_type.upper()} files found to trash")
+        print(f"   ✅ No old {file_type.upper()} files found to trash")
 
 def run_script(script_info, token):
     """Run the selected Python script."""
@@ -1839,7 +1839,7 @@ def run_script(script_info, token):
     cleanup_old_files(target_dir, script_type)
     
     print()
-    print(f"ðŸ“¤ Running {script_name}...")
+    print(f"📤 Running {script_name}...")
     print(f"ðŸ“ Output will be saved to: {target_dir}")
     print()
     
@@ -1873,7 +1873,7 @@ def run_script(script_info, token):
 
         print()
         if returncode == 0:
-            print("âœ… Script completed successfully!")
+            print("✅ Script completed successfully!")
         else:
             print(f"âš ï¸  Script exited with code {returncode}")
         
@@ -1918,7 +1918,7 @@ def main():
     _set_env_from_profile()
 
     print()
-    print("âœ… Setup complete")
+    print("✅ Setup complete")
     
     # First-time setup if needed
     if HAS_UTILS and is_first_run():
@@ -1957,10 +1957,10 @@ def main():
         try:
             again = input("Run another tool? (y/n, default=n): ").strip().lower()
             if again != 'y':
-                print("\nðŸ‘‹ Goodbye!")
+                print("\n👋 Goodbye!")
                 break
         except (KeyboardInterrupt, EOFError):
-            print("\n\nðŸ‘‹ Goodbye!")
+            print("\n\n👋 Goodbye!")
             break
 
 if __name__ == "__main__":

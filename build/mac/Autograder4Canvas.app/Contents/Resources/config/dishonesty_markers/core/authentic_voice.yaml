@@ -1,0 +1,227 @@
+# Authentic Voice Markers - Human Presence Detection
+# Version 2.1.0
+# Category: Human presence (positive indicators)
+# Purpose: Detect evidence of unique person with specific perspective
+
+metadata:
+  marker_id: authentic_voice
+  version: "2.1.0"
+  effective_date: "2025-12-27"
+  category: required_presence
+  weight_in_human_presence: 0.15
+  pedagogical_context: |
+    Authentic voice markers indicate a unique person with specific perspective,
+    cultural grounding, and linguistic identity. These are POSITIVE indicators
+    of human authorship.
+
+    IMPORTANT: Linguistic diversity is a strength. Code-meshing, translanguaging,
+    and culturally-specific expressions are sophisticated human practices.
+
+markers:
+  code_meshing:
+    description: "Mixing academic language with colloquial, personal, or dialect forms"
+    patterns:
+      - pattern: "hegemony.{0,20}(like|basically|you know)"
+        regex: true
+        weight: 0.9
+        note: "Academic term followed by colloquial explanation"
+      - pattern: "intersectionality.{0,20}(basically|like|you know)"
+        regex: true
+        weight: 0.9
+      - pattern: "\\b(this stuff|the thing is)\\b"
+        regex: true
+        weight: 0.6
+        note: "Colloquial anchors in academic prose"
+      - pattern: "what really gets me is"
+        weight: 0.7
+      - pattern: "let's be real"
+        weight: 0.7
+      - pattern: "honestly,"
+        weight: 0.5
+      - pattern: "in my neighborhood"
+        weight: 0.8
+        note: "Community-specific reference"
+      - pattern: "where I'm from"
+        weight: 0.8
+      - pattern: "in our community"
+        weight: 0.8
+      - pattern: "my family tradition"
+        weight: 0.8
+
+  translanguaging:
+    description: "Movement between languages as sophisticated practice"
+    patterns:
+      - pattern: "what we call.{0,30}(in my|in Spanish|in Chinese|in Arabic)"
+        regex: true
+        weight: 0.9
+        note: "Non-English phrase used with context"
+      - pattern: "the concept of.{0,30}(ubuntu|respeto|wasta|guanxi)"
+        regex: true
+        weight: 0.9
+      - pattern: "my (abuela|abuelo|nana|tita|auntie|grandmother) (always )?said"
+        regex: true
+        weight: 0.8
+      - pattern: "I don't know the English word for"
+        weight: 0.8
+        note: "Metalinguistic awareness"
+      - pattern: "This is hard to translate"
+        weight: 0.7
+      - pattern: "(It's|That's) kind of like saying.{0,40}but in"
+        regex: true
+        weight: 0.7
+
+  tonal_shifts:
+    description: "Moving between formal and informal within same piece"
+    patterns:
+      - pattern: "In academic terms.{0,40}but (honestly|really)"
+        regex: true
+        weight: 0.7
+      - pattern: "The textbook says.{0,40}which I guess"
+        regex: true
+        weight: 0.7
+      - pattern: "scholars (argue|claim|say).{0,40}but (honestly|really|to be honest)"
+        regex: true
+        weight: 0.6
+
+  personal_asides:
+    description: "Talking to reader, commenting on own writing process"
+    patterns:
+      - pattern: "\\(this reminds me of\\)"
+        regex: true
+        weight: 0.6
+      - pattern: "\\(I'm not sure if this makes sense\\)"
+        regex: true
+        weight: 0.7
+      - pattern: "\\(stay with me here\\)"
+        regex: true
+        weight: 0.7
+      - pattern: "\\(bear with me\\)"
+        regex: true
+        weight: 0.6
+      - pattern: "You might be wondering"
+        weight: 0.6
+      - pattern: "Think about it this way"
+        weight: 0.5
+      - pattern: "Let me explain what I mean"
+        weight: 0.6
+      - pattern: "Here's what I'm trying to say"
+        weight: 0.6
+
+  cultural_grounding:
+    description: "References to specific communities, traditions, lived experiences"
+    patterns:
+      - pattern: "in my culture"
+        weight: 0.9
+      - pattern: "my cultural (tradition|background|identity)"
+        regex: true
+        weight: 0.9
+      - pattern: "where I grew up"
+        weight: 0.8
+      - pattern: "in my (country|homeland|village|town)"
+        regex: true
+        weight: 0.8
+      - pattern: "my (family|ancestors|elders|community) (believe|teach|say|told me)"
+        regex: true
+        weight: 0.9
+      - pattern: "our (tradition|custom|way) is to"
+        regex: true
+        weight: 0.8
+      - pattern: "in my (religion|faith|spiritual tradition)"
+        regex: true
+        weight: 0.8
+      - pattern: "growing up (Black|Latinx|Asian|Indigenous|Muslim|Jewish|immigrant)"
+        regex: true
+        weight: 0.9
+        note: "Specific cultural identity grounding"
+
+  aave_patterns:
+    description: "African American Vernacular English - sophisticated linguistic practice"
+    patterns:
+      - pattern: "\\bfinna\\b"
+        regex: true
+        weight: 0.7
+        note: "AAVE grammar marker"
+      - pattern: "\\bmight could\\b"
+        regex: true
+        weight: 0.7
+      - pattern: "be like"
+        weight: 0.5
+        note: "Quotative marker common in AAVE"
+      - pattern: "\\ball.{0,20}(nah|yeah|though)\\b"
+        regex: true
+        weight: 0.5
+      - pattern: "ain't (nobody|nothing|no way)"
+        regex: true
+        weight: 0.6
+
+  unique_phrasings:
+    description: "Non-standard but intentional word combinations"
+    patterns:
+      - pattern: "\\bkinda sorta\\b"
+        regex: true
+        weight: 0.5
+      - pattern: "\\bit's like\\.{0,10}but also"
+        regex: true
+        weight: 0.5
+      - pattern: "(weird|strange|interesting) (thing|part) is"
+        regex: true
+        weight: 0.5
+
+scoring:
+  method: "presence_score"
+  interpretation:
+    below_2: "Little authentic voice detected"
+    2_to_5: "Some authentic voice markers present"
+    5_to_8: "Moderate authentic voice"
+    above_8: "Strong authentic voice - clear personal perspective"
+
+cultural_awareness:
+  note: |
+    Authentic voice looks different across cultures. This system recognizes:
+    - AAVE patterns as sophisticated language use, NOT errors
+    - Spanglish as intentional code-switching, NOT language deficiency
+    - Indigenous storytelling patterns (circular, relational) as valid
+    - Multiple forms of academic engagement across cultures
+    - Code-meshing by students of color navigating white academic spaces as sophisticated, NOT suspicious
+
+context_adjustments:
+  personal_reflection:
+    weight_multiplier: 1.3
+    rationale: "Personal voice highly valued in reflection assignments"
+  discussion_post:
+    weight_multiplier: 1.2
+    rationale: "Informal contexts encourage authentic voice"
+  analytical_essay:
+    weight_multiplier: 0.8
+    rationale: "More formal voice may be appropriate"
+  research_paper:
+    weight_multiplier: 0.7
+    rationale: "Academic register may predominate"
+
+instructor_guidance:
+  high_score_interpretation:
+    - "Student shows clear personal perspective and cultural grounding"
+    - "Authentic voice evident across multiple dimensions"
+    - "Linguistic sophistication through code-meshing or translanguaging"
+  low_score_interpretation:
+    - "May write in purely academic register (not necessarily AI)"
+    - "Some students avoid personal voice in academic writing"
+    - "Consider assignment type - is personal voice expected?"
+  verification_approaches:
+    - "Ask student to explain a cultural reference in their writing"
+    - "Discuss how they navigate academic vs. personal language"
+    - "Explore their linguistic background and writing choices"
+
+detection_notes:
+  critical_distinctions:
+    - "Code-meshing vs. error: Look for intentionality and consistency"
+    - "Translanguaging vs. lack of proficiency: Must include context/explanation"
+    - "Cultural grounding vs. generic diversity: Specific, not 'some cultures believe'"
+  combinations_that_matter:
+    - "Code-meshing + community-specific + emotional stakes = very strong"
+    - "Translanguaging + cultural grounding = highly authentic"
+    - "Multiple tonal shifts across essay = navigating registers intentionally"
+  absence_not_suspicious:
+    - "Some students write in purely academic voice - this is valid"
+    - "Absence of these markers doesn't mean AI"
+    - "Consider assignment type and student preference"

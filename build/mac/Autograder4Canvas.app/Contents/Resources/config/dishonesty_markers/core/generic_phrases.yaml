@@ -1,0 +1,166 @@
+# Generic Phrases Marker Configuration
+# Version 2.0.0
+# These are vague, non-specific phrases that indicate either AI generation
+# or superficial engagement with the assignment.
+
+metadata:
+  marker_id: generic_phrases
+  version: "2.0.0"
+  effective_date: "2025-12-26"
+  category: suspicious_presence
+  pedagogical_context: |
+    Generic phrases are concerning because they indicate the student
+    either used AI or didn't engage deeply with the material. Either way,
+    the learning objective of developing specific, evidence-based
+    thinking has not been met.
+    
+    These phrases are "slot fillers" - they could be dropped into any
+    essay on any topic. Authentic student writing engages with specifics.
+
+markers:
+  temporal_vagueness:
+    description: "Sweeping historical claims without specificity"
+    patterns:
+      - pattern: "throughout history"
+        weight: 0.5
+        note: "Classic filler phrase; never actually true in interesting ways"
+      - pattern: "since the beginning of time"
+        weight: 0.6
+        note: "Hyperbolic; rarely appropriate"
+      - pattern: "in today's society"
+        weight: 0.4
+      - pattern: "in today's world"
+        weight: 0.4
+      - pattern: "in modern times"
+        weight: 0.3
+      - pattern: "in recent years"
+        weight: 0.2
+        note: "Can be legitimate with follow-up specifics"
+
+  attribution_vagueness:
+    description: "Claims attributed to unnamed sources"
+    patterns:
+      - pattern: "studies show"
+        weight: 0.5
+        note: "Without citation, this is meaningless"
+      - pattern: "research indicates"
+        weight: 0.5
+      - pattern: "experts say"
+        weight: 0.5
+      - pattern: "it has been shown"
+        weight: 0.4
+      - pattern: "some people believe"
+        weight: 0.3
+      - pattern: "many believe"
+        weight: 0.3
+      - pattern: "it is widely known"
+        weight: 0.4
+      - pattern: "it is commonly accepted"
+        weight: 0.4
+
+  quantity_vagueness:
+    description: "Vague quantifiers instead of specifics"
+    patterns:
+      - pattern: "many things"
+        weight: 0.4
+      - pattern: "various aspects"
+        weight: 0.3
+      - pattern: "a variety of"
+        weight: 0.2
+      - pattern: "a number of"
+        weight: 0.2
+      - pattern: "countless"
+        weight: 0.3
+      - pattern: "numerous"
+        weight: 0.2
+        note: "Can be legitimate in some contexts"
+
+  importance_inflation:
+    description: "Overstatement of importance without substance"
+    patterns:
+      - pattern: "plays a crucial role"
+        weight: 0.4
+      - pattern: "of paramount importance"
+        weight: 0.5
+      - pattern: "cannot be overstated"
+        weight: 0.5
+      - pattern: "is essential to"
+        weight: 0.2
+      - pattern: "is vital to"
+        weight: 0.2
+
+  hedging_phrases:
+    description: "Excessive hedging that avoids commitment"
+    patterns:
+      - pattern: "it can be said"
+        weight: 0.3
+      - pattern: "it could be argued"
+        weight: 0.3
+      - pattern: "one might say"
+        weight: 0.3
+      - pattern: "perhaps"
+        weight: 0.1
+        note: "Common in careful academic writing; low weight"
+      - pattern: "in some ways"
+        weight: 0.2
+
+  textbook_topic_sentences:
+    description: "Meta-commentary topic sentences rare in authentic student work"
+    patterns:
+      - pattern: "this paragraph will discuss"
+        weight: 0.5
+        note: "Students rarely announce paragraph content this way"
+      - pattern: "this essay will explore"
+        weight: 0.4
+      - pattern: "this section examines"
+        weight: 0.4
+      - pattern: "one key aspect is"
+        weight: 0.3
+      - pattern: "another important factor"
+        weight: 0.2
+      - pattern: "let me explain"
+        weight: 0.3
+        note: "ChatGPT conversational artifact"
+      - pattern: "let's explore"
+        weight: 0.4
+        note: "ChatGPT engagement pattern"
+      - pattern: "let us examine"
+        weight: 0.4
+      - pattern: "let's delve into"
+        weight: 0.5
+        note: "Strong AI marker"
+
+  over_balanced_framing:
+    description: "Artificial 'both sides' balance typical of AI"
+    patterns:
+      - pattern: "there are valid points on both sides"
+        weight: 0.4
+        note: "AI conflict-avoidance pattern"
+      - pattern: "has both pros and cons"
+        weight: 0.3
+      - pattern: "advantages and disadvantages"
+        weight: 0.2
+        note: "Legitimate in some contexts"
+      - pattern: "there are two sides to"
+        weight: 0.3
+
+context_adjustments:
+  personal_reflection:
+    weight_multiplier: 1.3
+    rationale: "Generic language is especially inappropriate in personal writing"
+  analytical_essay:
+    weight_multiplier: 1.0
+    rationale: "Still concerning but slightly more expected in formal analysis"
+  research_paper:
+    weight_multiplier: 1.5
+    rationale: "Claims should be cited, not vaguely attributed"
+
+instructor_guidance:
+  high_score_actions:
+    - "Ask student to replace vague claims with specific examples"
+    - "Request citations for 'studies show' type claims"
+    - "Have student identify which 'experts' they're referencing"
+  revision_prompts:
+    - "Replace 'throughout history' with a specific time period"
+    - "Which study shows this? Add a citation"
+    - "Instead of 'many people,' who specifically?"

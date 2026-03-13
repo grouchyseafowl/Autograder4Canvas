@@ -1,0 +1,147 @@
+# Analytical Essay Assignment Profile
+# Version 2.0.0
+# Profile for formal analysis and argumentative essays
+
+profile_id: analytical_essay
+profile_name: "Analytical / Argumentative Essay"
+version: "2.0.0"
+effective_date: "2025-12-26"
+
+description: |
+  Profile for formal analysis essays, argumentative papers, and other
+  assignments requiring engagement with texts and development of
+  evidence-based arguments. Some formal language is expected.
+
+learning_objectives:
+  primary:
+    - "Develop evidence-based arguments"
+    - "Engage critically with course texts"
+    - "Support claims with specific textual evidence"
+  secondary:
+    - "Practice academic writing conventions"
+    - "Demonstrate close reading skills"
+    - "Synthesize multiple sources"
+
+detection_approach: "presence_detection"
+detection_explanation: |
+  For analytical essays, we focus on PRESENCE of concerning markers
+  rather than absence of personal voice. Some formal transitions
+  are expected and appropriate.
+  
+  The key question: "Does this analysis engage with specific texts,
+  or could it be written without reading anything?"
+
+weight_priorities:
+  ai_transitions:
+    multiplier: 0.8
+    rationale: "Formal transitions more acceptable here"
+  generic_phrases:
+    multiplier: 1.2
+    rationale: "Vague claims are still concerning"
+  citation_markers:
+    multiplier: 1.5
+    rationale: "Should cite course texts"
+  personal_voice:
+    multiplier: 0.5
+    rationale: "Less personal voice expected"
+  textual_engagement:
+    multiplier: 2.0
+    rationale: "Must engage with specific passages"
+  inflated_vocabulary:
+    multiplier: 0.7
+    rationale: "Academic vocabulary more appropriate"
+
+minimum_authenticity_score: 2.0
+minimum_authenticity_explanation: |
+  Lower threshold than personal reflection since less personal
+  voice is expected. Focus on textual engagement markers.
+
+concern_indicators:
+  high_concern:
+    - "No specific quotes or page references"
+    - "Could apply to any text on the topic"
+    - "Generic literary analysis without textual evidence"
+    - "Summary without interpretation"
+    - "Thesis is a truism rather than arguable claim"
+    
+  moderate_concern:
+    - "Limited textual evidence"
+    - "Analysis stays surface-level"
+    - "Heavy use of vague attribution"
+    - "Thesis present but weakly supported"
+    
+  low_concern:
+    - "Some generic transitions but solid analysis"
+    - "Good textual engagement with minor issues"
+
+example_indicators:
+  authentic_engagement:
+    - "On page 47, Morrison writes '...' which suggests..."
+    - "When Hamlet says '...', the word choice reveals..."
+    - "The author's use of imagery in paragraph 3..."
+    - "Comparing the opening and closing scenes shows..."
+    - "Smith argues that... but Jones counters with..."
+    
+  concerning_patterns:
+    - "This novel explores themes of identity"
+    - "The author uses literary devices effectively"
+    - "Throughout the story, the character develops"
+    - "Studies show that this interpretation is valid"
+    - "Many scholars have analyzed this text"
+
+textual_engagement_markers:
+  required:
+    description: "Evidence of actual reading"
+    patterns:
+      - "Direct quotes with page numbers"
+      - "Paraphrases of specific passages"
+      - "References to specific scenes/chapters"
+      - "Character names and specific actions"
+      - "Author's specific word choices"
+  suspicious_absence:
+    description: "What's missing if not read"
+    indicators:
+      - "No page numbers or line references"
+      - "Only plot summary, no interpretation"
+      - "Generic thematic statements"
+      - "Could describe any book on the topic"
+
+conversation_starters:
+  high_concern:
+    - "Can you show me where in the text you found this?"
+    - "Which specific passage led you to this interpretation?"
+    - "How did you decide on this argument?"
+    - "What other interpretations did you consider?"
+    
+  for_revision:
+    - "Add a quote from the text to support this point"
+    - "Which page is this from?"
+    - "What specific evidence supports this claim?"
+
+verification_questions:
+  textual:
+    - "Can you read me the passage you're analyzing here?"
+    - "What happens right before/after this scene?"
+    - "How does this connect to [another part of text]?"
+    
+  process:
+    - "What was your thesis before you started writing?"
+    - "Did your argument change as you wrote?"
+    - "What was the hardest part to analyze?"
+
+instructor_notes:
+  key_principles:
+    - "Generic analysis is the main red flag"
+    - "Look for engagement with SPECIFIC textual moments"
+    - "Some formal language is expected and appropriate"
+    - "The test: Could this be written without reading?"
+    
+  false_positive_awareness:
+    - "Strong students may have memorized formal structures"
+    - "ESL students may produce formal language legitimately"
+    - "Focus on textual engagement, not just style"
+    
+  pedagogical_approach:
+    - "Ask student to point to specific passages"
+    - "Request additions of textual evidence"
+    - "Have student explain their interpretation orally"

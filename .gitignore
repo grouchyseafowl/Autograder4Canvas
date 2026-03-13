@@ -25,6 +25,7 @@ __pycache__/
 dist/
 build/*
 !build/windows-portable/
+!build/mac/
 eggs/
 .eggs/
 lib/
@@ -109,7 +110,6 @@ sample_submissions/
 submissions/
 
 # Build and deployment
-build.sh
 run_automation_wrapper.sh
 setup_automation.sh
 

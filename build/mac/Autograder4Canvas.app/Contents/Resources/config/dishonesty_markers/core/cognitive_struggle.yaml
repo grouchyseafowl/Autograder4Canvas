@@ -1,0 +1,314 @@
+# Cognitive Struggle Markers - Human Presence Detection
+# Version 2.1.0
+# Category: Human presence (positive indicators)
+# Purpose: Detect evidence of mind grappling with difficult concepts, working through complexity
+
+metadata:
+  marker_id: cognitive_struggle
+  version: "2.1.0"
+  effective_date: "2025-12-27"
+  category: required_presence
+  weight_in_human_presence: 0.20
+  pedagogical_context: |
+    Cognitive struggle markers indicate genuine intellectual engagement with difficulty.
+    These are POSITIVE indicators showing a mind working through complexity.
+
+    IMPORTANT: Struggle looks different across cultures. Some cultures value
+    confidence over displays of uncertainty. System recognizes both explicit
+    struggle and implicit careful reasoning.
+
+markers:
+  metacognitive:
+    description: "Explicit reflection on own understanding or confusion"
+    patterns:
+      - pattern: "I'm (struggling|having trouble) to understand (how|why)"
+        regex: true
+        weight: 0.9
+        note: "Explicit struggle with specific concepts"
+      - pattern: "This is confusing because"
+        weight: 0.8
+      - pattern: "I'm having trouble reconciling"
+        weight: 0.9
+      - pattern: "I can't quite grasp"
+        weight: 0.8
+      - pattern: "I think I understand this part, but"
+        weight: 0.8
+        note: "Comprehension monitoring"
+      - pattern: "This makes sense to me except for"
+        weight: 0.8
+      - pattern: "I need to work through this more"
+        weight: 0.8
+      - pattern: "I'm trying to understand"
+        weight: 0.7
+      - pattern: "This (part|concept|idea) is (hard|difficult|challenging) for me"
+        regex: true
+        weight: 0.7
+      - pattern: "I'm (confused|uncertain|unsure) about"
+        regex: true
+        weight: 0.6
+
+  working_through:
+    description: "Step-by-step thinking visible in text"
+    patterns:
+      - pattern: "(First|Initially) I thought.{0,50}but then.{0,50}made me reconsider"
+        regex: true
+        weight: 0.9
+        note: "Evolution of understanding - VERY hard for AI to fake"
+      - pattern: "Initially this seemed (simple|straightforward).{0,30}but"
+        regex: true
+        weight: 0.8
+      - pattern: "My understanding has changed because"
+        weight: 0.9
+      - pattern: "I used to think.{0,50}but now"
+        regex: true
+        weight: 0.8
+      - pattern: "The more I (read|think|consider).{0,30}the more I (realize|see)"
+        regex: true
+        weight: 0.8
+      - pattern: "As I worked through"
+        weight: 0.7
+      - pattern: "Step by step"
+        weight: 0.5
+      - pattern: "Breaking this down"
+        weight: 0.6
+      - pattern: "Walking through this"
+        weight: 0.6
+
+  self_questioning:
+    description: "Asking questions of own arguments or understanding"
+    patterns:
+      - pattern: "But (what|how|why|when) (does|is|would)"
+        regex: true
+        weight: 0.7
+        note: "Self-questioning mid-argument"
+      - pattern: "This raises the question"
+        weight: 0.6
+      - pattern: "I'm left wondering"
+        weight: 0.7
+      - pattern: "Which makes me ask"
+        weight: 0.7
+      - pattern: "But then (how|why|what)"
+        regex: true
+        weight: 0.6
+      - pattern: "So if that's true, then (how|why|what)"
+        regex: true
+        weight: 0.7
+      - pattern: "But wouldn't that mean"
+        weight: 0.7
+      - pattern: "What about"
+        weight: 0.5
+
+  complexity_acknowledgment:
+    description: "Recognizing that issues are more complex than they first appeared"
+    patterns:
+      - pattern: "(This is|It's) more (complicated|complex|nuanced) than"
+        regex: true
+        weight: 0.8
+      - pattern: "There are (multiple|many|several) layers to this"
+        regex: true
+        weight: 0.7
+      - pattern: "I'm starting to see (how|that|why) (complicated|complex|nuanced)"
+        regex: true
+        weight: 0.8
+      - pattern: "This isn't as (simple|straightforward) as"
+        regex: true
+        weight: 0.7
+      - pattern: "The more I think about it, the more complicated"
+        weight: 0.8
+      - pattern: "There's a lot to (unpack|consider|think about)"
+        regex: true
+        weight: 0.7
+      - pattern: "This is messier than I first thought"
+        weight: 0.8
+      - pattern: "I didn't realize how (complex|complicated|nuanced)"
+        regex: true
+        weight: 0.7
+
+  contradictions_explored:
+    description: "Grappling with tensions or contradictions"
+    patterns:
+      - pattern: "On (the )?one hand.{0,100}on the other"
+        regex: true
+        weight: 0.7
+        note: "Exploring both sides"
+      - pattern: "This (seems|appears) to contradict"
+        regex: true
+        weight: 0.8
+      - pattern: "I'm trying to reconcile"
+        weight: 0.9
+      - pattern: "How can both be true"
+        weight: 0.9
+      - pattern: "There's a tension between"
+        weight: 0.8
+      - pattern: "These ideas (seem|appear) to conflict"
+        regex: true
+        weight: 0.8
+      - pattern: "I see the contradiction but"
+        weight: 0.8
+      - pattern: "This creates a paradox"
+        weight: 0.9
+      - pattern: "(But|Yet) at the same time"
+        regex: true
+        weight: 0.6
+
+  synthesis_attempts:
+    description: "Trying to bring together multiple perspectives or ideas"
+    patterns:
+      - pattern: "Trying to (put|bring|tie) (this|these|it all) together"
+        regex: true
+        weight: 0.7
+        note: "Explicit synthesis attempt"
+      - pattern: "If I (combine|integrate|synthesize)"
+        regex: true
+        weight: 0.7
+      - pattern: "Drawing from (both|all|multiple)"
+        regex: true
+        weight: 0.6
+      - pattern: "Weaving together"
+        weight: 0.7
+      - pattern: "Connecting (these|the|all these)"
+        regex: true
+        weight: 0.6
+      - pattern: "How (do |does )?these (fit|connect|relate) together"
+        regex: true
+        weight: 0.7
+      - pattern: "I'm trying to (see|understand) how.{0,40}relate"
+        regex: true
+        weight: 0.7
+
+  honest_confusion:
+    description: "Admitting genuine not-knowing"
+    patterns:
+      - pattern: "I honestly don't (know|understand)"
+        regex: true
+        weight: 0.8
+        note: "Honest admission of confusion"
+      - pattern: "I'm (really |genuinely )?confused about"
+        regex: true
+        weight: 0.7
+      - pattern: "I don't (fully |really )?get"
+        regex: true
+        weight: 0.6
+      - pattern: "I'm not (sure|certain) (I |how to)"
+        regex: true
+        weight: 0.6
+      - pattern: "This doesn't make sense to me"
+        weight: 0.7
+      - pattern: "I'm (lost|stuck) on"
+        regex: true
+        weight: 0.7
+      - pattern: "I can't figure out"
+        weight: 0.7
+
+  perspective_shifts:
+    description: "Showing change in understanding or approach"
+    patterns:
+      - pattern: "I never (thought about|considered)"
+        regex: true
+        weight: 0.8
+        note: "Shifted perspective"
+      - pattern: "I hadn't (realized|noticed|seen)"
+        regex: true
+        weight: 0.7
+      - pattern: "This (changed|shifted) (how|the way) I think about"
+        regex: true
+        weight: 0.8
+      - pattern: "Now I (see|understand|realize)"
+        regex: true
+        weight: 0.7
+      - pattern: "Looking at it (this way|differently)"
+        regex: true
+        weight: 0.6
+      - pattern: "From (this|a different|another) (angle|perspective)"
+        regex: true
+        weight: 0.6
+      - pattern: "I've come to (see|understand|believe)"
+        regex: true
+        weight: 0.7
+
+scoring:
+  method: "presence_score"
+  interpretation:
+    below_2: "Little evidence of cognitive struggle"
+    2_to_5: "Some engagement with difficulty"
+    5_to_8: "Moderate cognitive struggle evident"
+    above_8: "Strong evidence of mind grappling with complexity"
+
+critical_distinctions:
+  genuine_vs_performed:
+    genuine_struggle:
+      - "Specific to actual course content"
+      - "Connected to real conceptual difficulty"
+      - "Shows progression (may resolve or may not)"
+      - "Paired with specific examples or questions"
+    performed_struggle:
+      - "Generic confusion statements"
+      - "Not tied to specific conceptual problems"
+      - "Often resolved too neatly"
+      - "Lacks specificity"
+  cultural_awareness:
+    note: |
+      Some cultures value confidence over displays of uncertainty.
+      System recognizes BOTH:
+      - Explicit struggle ('I'm confused')
+      - Implicit cognitive work (careful qualification, multiple perspectives)
+      - Collective uncertainty ('We might consider')
+      - Action-oriented grappling ('We need to work through')
+
+context_adjustments:
+  analytical_essay:
+    weight_multiplier: 1.3
+    rationale: "Analysis requires grappling with complexity"
+  research_paper:
+    weight_multiplier: 1.2
+    rationale: "Research involves working through sources"
+  discussion_post:
+    weight_multiplier: 1.1
+    rationale: "Informal thinking-in-progress valued"
+  rough_draft:
+    weight_multiplier: 1.4
+    rationale: "Struggle expected in drafting process"
+  personal_reflection:
+    weight_multiplier: 1.0
+    rationale: "Struggle may or may not be central"
+  honors:
+    weight_multiplier: 0.9
+    rationale: "Advanced students may show less visible struggle"
+
+instructor_guidance:
+  high_score_interpretation:
+    - "Student is genuinely wrestling with course concepts"
+    - "Intellectual engagement with difficulty evident"
+    - "Evolution of understanding visible (very hard to fake)"
+    - "This is exactly what we want to see in student learning"
+  low_score_interpretation:
+    - "May indicate strong prior understanding (not necessarily AI)"
+    - "Some assignments don't require struggle"
+    - "Cultural differences in expressing uncertainty"
+    - "Low struggle + high contextual grounding = likely confident student"
+    - "Low struggle + low contextual grounding = more concerning"
+  verification_approaches:
+    - "Ask student about a concept they found difficult"
+    - "Discuss how their understanding evolved"
+    - "Explore the contradictions or tensions they identified"
+    - "Ask them to explain the complexity they mentioned"
+
+detection_notes:
+  strongest_signals:
+    - "Evolution of understanding ('First I thought X, then Y made me reconsider')"
+    - "Acknowledged contradictions without neat resolution"
+    - "Self-questioning that shows genuine grappling"
+    - "Specific confusion tied to course concepts"
+  combinations_that_matter:
+    - "Metacognitive + working through + complexity acknowledgment = very strong"
+    - "Self-questioning + contradictions explored = genuine engagement"
+    - "Evolution of understanding alone = highly authentic"
+  absence_not_suspicious:
+    - "Strong students may not show visible struggle"
+    - "Some assignments are straightforward"
+    - "Cultural differences in expressing uncertainty"
+    - "Evaluate in combination with other categories"
+  very_difficult_to_fake:
+    - "Specific evolution of understanding tied to course materials"
+    - "Contradictions that remain unresolved"
+    - "Questions that emerge from genuine reading"

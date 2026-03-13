@@ -496,20 +496,9 @@ def grade_discussion_topic(course_id: int, topic_id: int, topic_name: str,
                     "word_count": word_count
                 })
         else:
-            # No post found
-            if grading_type == "pass_fail":
-                grade = "incomplete"
-            else:
-                grade = "0"
-            marked_incomplete += 1
-            
-            student_grades[user_id] = {"grade": grade, "reason": "No post found"}
-            flagged_submissions.append({
-                "name": student_name,
-                "user_id": user_id,
-                "flags": ["No post"],
-                "word_count": 0
-            })
+            # Student has not posted — skip them entirely.
+            # Non-participants should remain ungraded until they post.
+            continue
         
         grade_data[str(user_id)] = {"posted_grade": student_grades[user_id]["grade"]}
     

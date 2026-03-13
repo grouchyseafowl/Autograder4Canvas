@@ -1,0 +1,97 @@
+# AI Transitions Marker Configuration
+# Version 2.0.0
+# These are transitional phrases and meta-commentary patterns that
+# are strongly associated with AI-generated text.
+
+metadata:
+  marker_id: ai_transitions
+  version: "2.0.0"
+  effective_date: "2025-12-26"
+  category: suspicious_presence
+  pedagogical_context: |
+    These phrases signal "academic essay mode" that AI defaults to.
+    They're rare in authentic student writing, especially in personal
+    reflections. However, ESL students may use these as learned structures.
+
+markers:
+  high_confidence:
+    # These are very strongly associated with AI text
+    - pattern: "delving into"
+      weight: 1.2
+      note: "Very rare in student writing; AI signature phrase"
+    - pattern: "navigating the complexities"
+      weight: 1.2
+    - pattern: "it is important to note"
+      weight: 1.0
+    - pattern: "in the realm of"
+      weight: 1.0
+    - pattern: "serves as a testament"
+      weight: 1.0
+    - pattern: "one cannot overstate"
+      weight: 1.0
+    - pattern: "it becomes evident"
+      weight: 0.9
+    - pattern: "this underscores"
+      weight: 0.9
+    - pattern: "plays a pivotal role"
+      weight: 0.9
+    - pattern: "a profound impact"
+      weight: 0.8
+    
+  medium_confidence:
+    # These may appear in formal student writing but are more common in AI
+    - pattern: "furthermore"
+      weight: 0.4
+      note: "Taught in composition; reduce weight for ESL"
+    - pattern: "moreover"
+      weight: 0.4
+    - pattern: "additionally"
+      weight: 0.3
+    - pattern: "in addition"
+      weight: 0.3
+    - pattern: "in conclusion"
+      weight: 0.3
+    - pattern: "to sum up"
+      weight: 0.3
+    - pattern: "firstly"
+      weight: 0.3
+    - pattern: "secondly"
+      weight: 0.3
+    - pattern: "lastly"
+      weight: 0.3
+    
+  monitoring:
+    # Track but don't weight heavily - common in formal writing
+    - pattern: "in light of"
+      weight: 0.2
+    - pattern: "as previously mentioned"
+      weight: 0.2
+    - pattern: "as stated above"
+      weight: 0.2
+    - pattern: "it should be noted"
+      weight: 0.3
+
+context_adjustments:
+  esl:
+    weight_multiplier: 0.7
+    rationale: "ESL students often learn these as 'academic English' structures"
+  first_generation:
+    weight_multiplier: 0.8
+    rationale: "May follow rigid templates from developmental English"
+  analytical_essay:
+    weight_multiplier: 0.8
+    rationale: "More expected in formal analytical writing"
+  personal_reflection:
+    weight_multiplier: 1.3
+    rationale: "Inappropriate formality for personal writing"
+
+clustering:
+  threshold: 3
+  weight_boost: 2.0
+  description: "3+ high-confidence markers in short text is very suspicious"
+
+deprecated:
+  # Phrases no longer reliable indicators
+  - pattern: "it is worth noting"
+    reason: "Now commonly taught in writing classes"
+    deprecated_date: "2025-06-01"
