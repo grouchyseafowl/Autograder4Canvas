@@ -567,31 +567,40 @@ LAUNCHER_EOF
     
     # Check if we can create a DMG (requires macOS)
     if command -v hdiutil &> /dev/null; then
-        # Create a temporary directory for DMG contents
-        rm -rf "$DMG_TEMP"
-        mkdir -p "$DMG_TEMP"
-        
-        # Copy the .app to the temp directory
-        cp -R "$APP_DEST" "$DMG_TEMP/"
-        
-        # Create a symbolic link to /Applications
-        ln -s /Applications "$DMG_TEMP/Applications"
-        
-        # Copy README if it exists
-        [ -f "$MAC_BUILD/README.txt" ] && cp "$MAC_BUILD/README.txt" "$DMG_TEMP/"
-        
         # Remove any existing DMG
         rm -f "$DMG_PATH"
-        
-        # Create the DMG
-        hdiutil create -volname "Autograder4Canvas" \
-            -srcfolder "$DMG_TEMP" \
-            -ov -format UDZO \
-            "$DMG_PATH"
-        
-        # Clean up temp directory
-        rm -rf "$DMG_TEMP"
-        
+
+        if command -v create-dmg &> /dev/null; then
+            # Use create-dmg for a polished installer window
+            local BG_IMG="$SRC_DIR/assets/dmg_background.png"
+            local BG_FLAG=()
+            [ -f "$BG_IMG" ] && BG_FLAG=(--background "$BG_IMG" --text-size 13)
+            create-dmg \
+                --volname "Autograder4Canvas" \
+                --volicon "$APP_DEST/Contents/Resources/AppIcon.icns" \
+                --window-pos 200 120 \
+                --window-size 600 380 \
+                --icon-size 100 \
+                --icon "Autograder4Canvas.app" 150 175 \
+                --app-drop-link 450 175 \
+                --no-internet-enable \
+                "${BG_FLAG[@]}" \
+                "$DMG_PATH" \
+                "$APP_DEST"
+        else
+            # Fallback: plain hdiutil
+            local DMG_TEMP="$BUILD_DIR/dmg_temp"
+            rm -rf "$DMG_TEMP"
+            mkdir -p "$DMG_TEMP"
+            cp -R "$APP_DEST" "$DMG_TEMP/"
+            ln -s /Applications "$DMG_TEMP/Applications"
+            hdiutil create -volname "Autograder4Canvas" \
+                -srcfolder "$DMG_TEMP" \
+                -ov -format UDZO \
+                "$DMG_PATH"
+            rm -rf "$DMG_TEMP"
+        fi
+
         echo -e "${GREEN}✓ Mac build complete: distro/$DMG_NAME${NC}"
         echo "  Users can open the DMG and drag the app to Applications."
     else
