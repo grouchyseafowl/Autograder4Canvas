@@ -18,7 +18,6 @@ class SettingsPanel(QWidget):
     """Full settings panel displayed in Tab 2."""
 
     settings_saved = Signal()     # emitted when Save is clicked successfully
-    open_folder_requested = Signal()
 
     def __init__(self, api=None, parent=None):
         super().__init__(parent)
@@ -91,10 +90,6 @@ class SettingsPanel(QWidget):
 
         self._auto_open_cb = QCheckBox("Auto-open folder after grading completes")
         out_form.addRow("", self._auto_open_cb)
-
-        open_btn = QPushButton("Open Output Folder")
-        open_btn.clicked.connect(self.open_folder_requested)
-        out_form.addRow("", open_btn)
 
         vbox.addWidget(out_box)
 

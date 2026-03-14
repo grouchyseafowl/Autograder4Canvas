@@ -471,8 +471,80 @@ class SetupDialog(QDialog):
         self._token_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         lay.addWidget(self._token_edit)
 
+        lay.addSpacing(4)
+
+        # Output Folder (optional)
+        folder_lbl = QLabel("OUTPUT FOLDER")
+        folder_lbl.setFont(ulf)
+        folder_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; letter-spacing: 1px;")
+        lay.addWidget(folder_lbl)
+
+        folder_row = QFrame()
+        folder_row.setStyleSheet(f"""
+            QFrame {{
+                background: transparent;
+                border: none;
+                border-bottom: 1px solid {BORDER_AMBER};
+            }}
+            QFrame QLineEdit, QFrame QPushButton {{
+                background: transparent;
+                border: none;
+            }}
+        """)
+        folder_h = QHBoxLayout(folder_row)
+        folder_h.setContentsMargins(0, 0, 0, 0)
+        folder_h.setSpacing(6)
+
+        self._folder_edit = QLineEdit()
+        self._folder_edit.setPlaceholderText("optional — leave blank to use default")
+        f_mono = QFont("Menlo, Consolas, Courier New, monospace")
+        f_mono.setPointSize(13)
+        self._folder_edit.setFont(f_mono)
+        self._folder_edit.setFixedHeight(30)
+        self._folder_edit.setStyleSheet(f"""
+            QLineEdit {{
+                background: transparent; border: none; border-radius: 0;
+                padding: 4px 2px 3px 2px;
+                color: {PHOSPHOR_HOT};
+                selection-background-color: {PHOSPHOR_GLOW};
+                selection-color: {PHOSPHOR_HOT};
+            }}
+        """)
+        folder_row.setFixedHeight(34)
+        folder_h.addWidget(self._folder_edit, 1)
+
+        browse_btn = QPushButton("Browse…")
+        browse_btn.setFont(f_mono)
+        browse_btn.setFixedHeight(26)
+        browse_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: transparent;
+                color: {PHOSPHOR_DIM};
+                border: 1px solid rgba(90,60,8,0.40);
+                border-radius: 3px;
+                padding: 2px 8px;
+                font-size: 12px;
+            }}
+            QPushButton:hover {{
+                color: {PHOSPHOR_MID};
+                border-color: rgba(90,60,8,0.80);
+            }}
+        """)
+        browse_btn.clicked.connect(self._on_browse_folder)
+        folder_h.addWidget(browse_btn)
+
+        lay.addWidget(folder_row)
+
         lay.addStretch()
         return panel
+
+    def _on_browse_folder(self) -> None:
+        from PySide6.QtWidgets import QFileDialog
+        folder = QFileDialog.getExistingDirectory(
+            self, "Select Output Folder", self._folder_edit.text()
+        )
+        if folder:
+            self._folder_edit.setText(folder)
 
     def _build_guide_panel(self) -> QFrame:
         panel = QFrame()
@@ -594,5 +666,15 @@ class SetupDialog(QDialog):
         import os
         os.environ["CANVAS_BASE_URL"] = url
         os.environ["CANVAS_API_TOKEN"] = token
+
+        # Save output folder if specified
+        folder = self._folder_edit.text().strip() if hasattr(self, "_folder_edit") else ""
+        if folder:
+            try:
+                from autograder_utils import set_output_directory
+                from pathlib import Path
+                set_output_directory(Path(folder))
+            except Exception:
+                pass
 
         self.accept()

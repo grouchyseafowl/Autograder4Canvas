@@ -1,12 +1,13 @@
 """
-Main application window: menu bar, toolbar, 3-tab layout, status bar.
+Main application window: menu bar, unified nav/action bar, stacked-page layout, status bar.
 """
 import os
 from typing import Optional
 
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QSplitter, QSplitterHandle, QTabWidget, QToolBar,
-    QStatusBar, QLabel, QMenuBar, QMessageBox,
+    QMainWindow, QWidget, QSplitter, QSplitterHandle, QStackedWidget,
+    QStatusBar, QLabel, QMenuBar, QMessageBox, QHBoxLayout, QVBoxLayout,
+    QPushButton, QButtonGroup, QFrame,
 )
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QAction, QKeySequence, QPainter, QColor
@@ -14,13 +15,73 @@ from PySide6.QtGui import QAction, QKeySequence, QPainter, QColor
 from gui.styles import (
     WIN_MIN_W, WIN_MIN_H, WIN_DEFAULT_W, WIN_DEFAULT_H,
     LEFT_PANEL_MIN, LEFT_PANEL_PREF,
+    BG_VOID, BG_PANEL, BORDER_DARK, BORDER_AMBER,
+    PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM,
+    ROSE_ACCENT,
 )
 from gui.panels.course_panel import CoursePanel
 from gui.panels.assignment_panel import AssignmentPanel
 from gui.panels.settings_panel import SettingsPanel
 from gui.panels.automation_panel import AutomationPanel
-from gui.styles import BG_VOID, BORDER_DARK, PHOSPHOR_DIM
 
+
+# ---------------------------------------------------------------------------
+# Nav bar button stylesheets
+# ---------------------------------------------------------------------------
+
+_NAV_BTN_QSS = f"""
+    QPushButton {{
+        background: transparent;
+        color: {PHOSPHOR_DIM};
+        border: none;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        padding: 0 18px;
+        font-family: "Menlo", "Consolas", "Courier New", monospace;
+        font-size: 12px;
+        min-height: 46px;
+    }}
+    QPushButton:hover:!checked {{
+        color: {PHOSPHOR_MID};
+        background: rgba(90, 60, 8, 0.10);
+    }}
+    QPushButton:checked {{
+        color: {PHOSPHOR_HOT};
+        border-bottom: 2px solid {ROSE_ACCENT};
+        font-weight: bold;
+        background: qradialgradient(cx:0.50,cy:1.00,radius:1.10,
+            stop:0.00 #2A1E08,stop:0.70 #181408,stop:1.00 {BG_PANEL});
+    }}
+    QPushButton:pressed {{
+        background: rgba(90, 60, 8, 0.15);
+    }}
+"""
+
+_ACTION_BTN_QSS = f"""
+    QPushButton {{
+        background: transparent;
+        color: {PHOSPHOR_DIM};
+        border: none;
+        border-radius: 0;
+        padding: 0 18px;
+        font-family: "Menlo", "Consolas", "Courier New", monospace;
+        font-size: 12px;
+        min-height: 46px;
+    }}
+    QPushButton:hover {{
+        color: {PHOSPHOR_MID};
+        background: rgba(90, 60, 8, 0.10);
+    }}
+    QPushButton:pressed {{
+        color: {PHOSPHOR_HOT};
+        background: rgba(90, 60, 8, 0.15);
+    }}
+"""
+
+
+# ---------------------------------------------------------------------------
+# Custom splitter handle
+# ---------------------------------------------------------------------------
 
 class _GripHandle(QSplitterHandle):
     """Splitter handle — void background so negative space reads between panels."""
@@ -59,6 +120,10 @@ class _GripSplitter(QSplitter):
     def createHandle(self):
         return _GripHandle(self.orientation(), self)
 
+
+# ---------------------------------------------------------------------------
+# Main window
+# ---------------------------------------------------------------------------
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -106,7 +171,6 @@ class MainWindow(QMainWindow):
 
     def _build_ui(self) -> None:
         self._build_menu()
-        self._build_toolbar()
         self._build_central()
         self._build_statusbar()
 
@@ -140,41 +204,130 @@ class MainWindow(QMainWindow):
         about_action.triggered.connect(self._show_about)
         help_menu.addAction(about_action)
 
-    def _build_toolbar(self) -> None:
-        tb = QToolBar("Main Toolbar")
-        tb.setMovable(False)
-        tb.setIconSize(QSize(20, 20))
-        self.addToolBar(tb)
+    def _build_nav_bar(self) -> QFrame:
+        """Single unified nav/action bar replacing the old toolbar + tab bar."""
+        bar = QFrame()
+        bar.setObjectName("navBar")
+        bar.setFixedHeight(48)
+        bar.setStyleSheet(f"""
+            QFrame#navBar {{
+                background: {BG_PANEL};
+                border-bottom: 1px solid {BORDER_DARK};
+            }}
+            QFrame#navBar QLabel {{
+                background: transparent;
+                border: none;
+            }}
+        """)
 
-        refresh_action = QAction("Refresh", self)
-        refresh_action.setToolTip("Re-fetch courses from Canvas")
-        refresh_action.triggered.connect(self._refresh_courses)
-        tb.addAction(refresh_action)
+        h = QHBoxLayout(bar)
+        h.setContentsMargins(0, 0, 0, 0)
+        h.setSpacing(0)
 
-        output_action = QAction("Output Folder", self)
-        output_action.setToolTip("Open output folder")
-        output_action.triggered.connect(self._open_output_folder)
-        tb.addAction(output_action)
+        # ── App name label ────────────────────────────────────────────────
+        name_lbl = QLabel(
+            f"<span style='color:{PHOSPHOR_HOT};letter-spacing:2px;"
+            f"font-weight:700;font-size:11px;line-height:1.3;'>"
+            f"AUTOGRADER<br>"
+            f"<span style='color:{ROSE_ACCENT};'>4CANVAS</span></span>"
+        )
+        name_lbl.setTextFormat(Qt.TextFormat.RichText)
+        name_lbl.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter)
+        name_lbl.setFixedWidth(110)
+        name_lbl.setFixedHeight(48)
+        name_lbl.setStyleSheet(f"""
+            QLabel {{
+                padding: 0 12px;
+                border-right: 1px solid {BORDER_DARK};
+            }}
+        """)
+        h.addWidget(name_lbl)
 
-        tb.addSeparator()
+        # ── Nav buttons (mutually exclusive, page switchers) ──────────────
+        self._nav_group = QButtonGroup(bar)
+        self._nav_group.setExclusive(True)
 
-        self._run_toolbar_action = QAction("Run Autograder", self)
-        self._run_toolbar_action.setToolTip("Run autograder for selected assignments")
-        self._run_toolbar_action.setEnabled(False)
-        self._run_toolbar_action.triggered.connect(self._on_run_from_toolbar)
-        tb.addAction(self._run_toolbar_action)
+        from PySide6.QtGui import QFont
+        _mono = QFont("Menlo")
+        _mono.setStyleHint(QFont.StyleHint.TypeWriter)
+        _mono.setPixelSize(12)
 
-        self._bulk_run_action = QAction("Bulk Run…", self)
-        self._bulk_run_action.setToolTip("Run autograder across multiple courses at once")
-        self._bulk_run_action.triggered.connect(self._open_bulk_run_dialog)
-        tb.addAction(self._bulk_run_action)
+        def _nav_btn(label: str) -> QPushButton:
+            btn = QPushButton(label)
+            btn.setCheckable(True)
+            btn.setFont(_mono)
+            btn.setStyleSheet(_NAV_BTN_QSS)
+            return btn
+
+        def _action_btn(label: str) -> QPushButton:
+            btn = QPushButton(label)
+            btn.setFont(_mono)
+            btn.setStyleSheet(_ACTION_BTN_QSS)
+            return btn
+
+        # Course Select → page 0
+        self._btn_courses = _nav_btn("Course Select")
+        self._btn_courses.clicked.connect(lambda: self._stack.setCurrentIndex(0))
+        self._nav_group.addButton(self._btn_courses)
+        h.addWidget(self._btn_courses)
+
+        # Bulk Run → opens dialog (action, not a page)
+        btn_bulk = _action_btn("Bulk Run")
+        btn_bulk.clicked.connect(self._open_bulk_run_dialog)
+        h.addWidget(btn_bulk)
+
+        # Review Prior Runs → page 3
+        self._btn_prior = _nav_btn("Review Prior Runs")
+        self._btn_prior.clicked.connect(lambda: self._stack.setCurrentIndex(3))
+        self._nav_group.addButton(self._btn_prior)
+        h.addWidget(self._btn_prior)
+
+        # Automation → page 1
+        self._btn_automation = _nav_btn("Automation")
+        self._btn_automation.clicked.connect(lambda: self._stack.setCurrentIndex(1))
+        self._nav_group.addButton(self._btn_automation)
+        h.addWidget(self._btn_automation)
+
+        # Settings → page 2
+        self._btn_settings = _nav_btn("Settings")
+        self._btn_settings.clicked.connect(lambda: self._stack.setCurrentIndex(2))
+        self._nav_group.addButton(self._btn_settings)
+        h.addWidget(self._btn_settings)
+
+        # ── Spacer + separator before Refresh ────────────────────────────
+        h.addStretch()
+
+        sep = QWidget()
+        sep.setFixedWidth(1)
+        sep.setFixedHeight(28)
+        sep.setStyleSheet(f"background: {BORDER_DARK};")
+        h.addWidget(sep, 0, Qt.AlignmentFlag.AlignVCenter)
+
+        # Refresh from Canvas → action
+        btn_refresh = _action_btn("Refresh from Canvas")
+        btn_refresh.clicked.connect(self._refresh_courses)
+        h.addWidget(btn_refresh)
+
+        # Default to courses page active
+        self._btn_courses.setChecked(True)
+
+        return bar
 
     def _build_central(self) -> None:
-        tabs = QTabWidget()
-        self.setCentralWidget(tabs)
-        self._tabs = tabs
+        # Root container: nav bar on top, stacked content below
+        root = QWidget()
+        root_layout = QVBoxLayout(root)
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setSpacing(0)
 
-        # Tab 0 — Courses
+        root_layout.addWidget(self._build_nav_bar())
+
+        self._stack = QStackedWidget()
+        root_layout.addWidget(self._stack, 1)
+
+        self.setCentralWidget(root)
+
+        # ── Page 0: Courses ───────────────────────────────────────────────
         self._course_panel = CoursePanel()
         self._assignment_panel = AssignmentPanel()
         splitter = _GripSplitter(Qt.Orientation.Horizontal)
@@ -186,13 +339,9 @@ class MainWindow(QMainWindow):
         splitter.setSizes([LEFT_PANEL_PREF, WIN_DEFAULT_W - LEFT_PANEL_PREF])
         self._course_panel.setMinimumWidth(LEFT_PANEL_MIN)
 
-        # Void container — panels float on the near-black background with
-        # visible negative space around them (matches setup dialog depth cues)
-        from gui.styles import BG_VOID
-        from PySide6.QtWidgets import QVBoxLayout
+        from PySide6.QtGui import QPalette
         courses_container = QWidget()
         courses_container.setAutoFillBackground(True)
-        from PySide6.QtGui import QPalette
         pal = courses_container.palette()
         pal.setColor(QPalette.ColorRole.Window, QColor(BG_VOID))
         courses_container.setPalette(pal)
@@ -200,15 +349,58 @@ class MainWindow(QMainWindow):
         cl.setContentsMargins(8, 8, 8, 8)
         cl.setSpacing(0)
         cl.addWidget(splitter)
-        tabs.addTab(courses_container, "Courses")
+        self._stack.addWidget(courses_container)   # index 0
 
-        # Tab 1 — Automation
+        # ── Page 1: Automation ────────────────────────────────────────────
         self._automation_panel = AutomationPanel(api=self._api)
-        tabs.addTab(self._automation_panel, "Automation")
+        self._stack.addWidget(self._automation_panel)  # index 1
 
-        # Tab 2 — Settings
+        # ── Page 2: Settings ──────────────────────────────────────────────
         self._settings_panel = SettingsPanel(api=self._api)
-        tabs.addTab(self._settings_panel, "Settings")
+        self._stack.addWidget(self._settings_panel)    # index 2
+
+        # ── Page 3: Prior Runs ────────────────────────────────────────────
+        self._stack.addWidget(self._build_prior_runs_page())  # index 3
+
+        self._stack.setCurrentIndex(0)
+
+    def _build_prior_runs_page(self) -> QWidget:
+        """Simple page pointing users to the output folder for run history."""
+        from gui.styles import make_secondary_button
+        from PySide6.QtGui import QPalette
+
+        page = QWidget()
+        page.setAutoFillBackground(True)
+        pal = page.palette()
+        pal.setColor(QPalette.ColorRole.Window, QColor(BG_VOID))
+        page.setPalette(pal)
+
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(32, 32, 32, 32)
+        layout.setSpacing(12)
+
+        title = QLabel("PRIOR RUNS")
+        title.setProperty("heading", "true")
+        layout.addWidget(title)
+
+        desc = QLabel(
+            "Grading results are saved to your configured output folder. "
+            "Open it to browse run history, reports, and CSVs."
+        )
+        desc.setProperty("muted", "true")
+        desc.setWordWrap(True)
+        layout.addWidget(desc)
+
+        layout.addSpacing(8)
+
+        open_btn = QPushButton("Open Output Folder")
+        make_secondary_button(open_btn)
+        open_btn.setFixedWidth(200)
+        open_btn.clicked.connect(self._open_output_folder)
+        layout.addWidget(open_btn)
+
+        layout.addStretch()
+        return page
 
     def _build_statusbar(self) -> None:
         sb = QStatusBar()
@@ -224,10 +416,8 @@ class MainWindow(QMainWindow):
         self._course_panel.course_selected.connect(self._on_course_selected)
         self._course_panel.term_selected.connect(self._on_term_selected)
         self._assignment_panel.run_requested.connect(self._open_run_dialog)
-        self._assignment_panel.has_selection.connect(self._run_toolbar_action.setEnabled)
         self._assignment_panel.edit_completed.connect(self._on_edit_completed)
         self._settings_panel.settings_saved.connect(self._on_settings_saved)
-        self._settings_panel.open_folder_requested.connect(self._open_output_folder)
 
         # Pass editor to panels that support Canvas mutations
         if self._editor:
@@ -248,8 +438,6 @@ class MainWindow(QMainWindow):
 
         from gui.workers import LoadCoursesWorker
         w = LoadCoursesWorker(self._api)
-        # Use the atomic signal so the panel is populated in one shot —
-        # avoids the flash of empty term rows before courses arrive.
         w.terms_loaded.connect(self._course_panel.populate_terms)
         w.courses_loaded.connect(self._course_panel.add_courses_for_term)
         w.courses_loaded.connect(lambda tid, c: self._set_status(f"Loaded {len(c)} courses.") if c else None)
@@ -262,9 +450,7 @@ class MainWindow(QMainWindow):
         self._current_course_id = course_id
         self._assignment_panel.set_course(course_id, course_name)
         self._assignment_panel.show_loading()
-        self._run_toolbar_action.setEnabled(False)
 
-        # Cancel any in-flight workers
         if self._assignment_worker:
             self._assignment_worker.cancel()
 
@@ -282,14 +468,14 @@ class MainWindow(QMainWindow):
         self._assignment_panel.populate_tree(groups)
         self._set_status("Assignments loaded.")
 
-
     # ------------------------------------------------------------------
     # Run dialog
     # ------------------------------------------------------------------
 
     def _open_run_dialog(self, selected: list, course_name: str, course_id: int,
                          mark_incomplete_no_sub: bool = False,
-                         run_aic: bool = False) -> None:
+                         run_aic: bool = False,
+                         preserve_grades: bool = True) -> None:
         if not self._api:
             QMessageBox.warning(self, "No Credentials",
                                 "Configure Canvas credentials in the Settings tab first.")
@@ -305,6 +491,7 @@ class MainWindow(QMainWindow):
             course_id=course_id,
             term_id=term_id,
             run_aic_default=run_aic,
+            preserve_grades_default=preserve_grades,
             parent=self,
         )
         dlg.exec()
@@ -323,13 +510,10 @@ class MainWindow(QMainWindow):
         dlg = BulkRunDialog(api=self._api, courses_by_term=courses_by_term, parent=self)
         dlg.exec()
 
-    def _on_run_from_toolbar(self) -> None:
-        self._assignment_panel._on_run_clicked()
-
     def _on_term_selected(self, term_id: int) -> None:
         self._current_term_id = term_id
 
-# ------------------------------------------------------------------
+    # ------------------------------------------------------------------
     # Settings saved
     # ------------------------------------------------------------------
 
@@ -347,7 +531,6 @@ class MainWindow(QMainWindow):
 
     def _on_settings_saved(self) -> None:
         self._set_status("Settings saved.")
-        # Re-init API with new credentials
         self._init_api()
         if self._editor:
             self._assignment_panel.set_editor(self._editor)
