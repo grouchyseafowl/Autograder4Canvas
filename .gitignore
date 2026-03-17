@@ -109,6 +109,18 @@ test_data/
 sample_submissions/
 submissions/
 
+# Student run output data (grade reports, flag files)
+autograder_flags*.xlsx
+autograder_output*/
+Autograder_Output*/
+Canvas_Autograder_Output*/
+grading_rationales*/
+
+# Local dev/preview scripts (not part of the app)
+dev_preview.py
+dev_*.py
+preview_*.py
+
 # Build and deployment
 run_automation_wrapper.sh
 setup_automation.sh
