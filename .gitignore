@@ -109,8 +109,10 @@ test_data/
 sample_submissions/
 submissions/
 
-# Student run output data (grade reports, flag files)
-autograder_flags*.xlsx
+# Student run output data — never commit grade/flag files or GUI state
+# (RunStore/InsightsStore are SQLite, covered by *.db / *.sqlite above)
+*.xlsx
+*.csv
 autograder_output*/
 Autograder_Output*/
 Canvas_Autograder_Output*/
