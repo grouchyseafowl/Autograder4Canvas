@@ -10,6 +10,41 @@ Aesthetic direction: Retro-Futurist Amber Terminal
 """
 
 # ---------------------------------------------------------------------------
+# Font scale — global accessibility multiplier
+# ---------------------------------------------------------------------------
+# Loaded from settings once at startup.  Every pixel-based font size and
+# scale-sensitive dimension should go through px() so the entire UI
+# respects the user's text-size preference.
+#
+# Values:  1.0 = default,  1.25 = large,  1.5 = extra large
+
+_FONT_SCALE: float = 1.0
+
+def _load_font_scale() -> float:
+    """Read font_scale from settings (safe to call at import time)."""
+    try:
+        from settings import load_settings
+        s = load_settings()
+        v = float(s.get("font_scale", 1.0))
+        return max(0.75, min(2.0, v))   # clamp to sane range
+    except Exception:
+        return 1.0
+
+_FONT_SCALE = _load_font_scale()
+
+
+def px(base: int) -> int:
+    """Scale a pixel value by the user's font-size preference."""
+    return max(1, round(base * _FONT_SCALE))
+
+
+def set_font_scale(scale: float) -> None:
+    """Update the global font scale (takes effect on next QSS rebuild)."""
+    global _FONT_SCALE
+    _FONT_SCALE = max(0.75, min(2.0, scale))
+
+
+# ---------------------------------------------------------------------------
 # Spacing scale
 # ---------------------------------------------------------------------------
 SPACING_XS = 4
@@ -18,7 +53,7 @@ SPACING_MD = 16
 SPACING_LG = 24
 
 # ---------------------------------------------------------------------------
-# Font sizes
+# Font sizes (base values — pass through px() when used in stylesheets)
 # ---------------------------------------------------------------------------
 FONT_SMALL  = 11
 FONT_NORMAL = 13
@@ -48,13 +83,14 @@ BG_INSET      = "#0E0A02"   # recessed areas (inputs, data)
 
 # Phosphor text hierarchy
 PHOSPHOR_HOT  = "#F0A830"   # bright — primary text, highlights
-PHOSPHOR_MID  = "#A06A10"   # mid — secondary text
-PHOSPHOR_DIM  = "#5A3C08"   # dim — placeholders, muted labels
-PHOSPHOR_GLOW = "#2E1C06"   # barely-there — subtle bg tint
+PHOSPHOR_MID  = "#C08820"   # mid — secondary text
+PHOSPHOR_DIM  = "#7A5418"   # dim — placeholders, muted labels
+PHOSPHOR_GLOW = "#4A3210"   # subtle — disabled text, faint hints
 
 # Accents
 AMBER_BTN     = "#C87C10"   # amber — secondary action buttons
-ROSE_ACCENT   = "#CC5282"   # rose — primary run/go action
+ROSE_ACCENT   = "#CC5282"   # rose — primary run/go action (resting text)
+ROSE_HOT      = "#E8709E"   # bright rose — run button hover text / active glow
 ROSE_DIM      = "#7A3458"   # rose hover / border
 WARN_PINK     = "#C4708A"   # soft rose — warning toast text
 
@@ -114,17 +150,47 @@ MONO_FONT = '"Menlo", "Consolas", "Courier New", monospace'
 
 # ---------------------------------------------------------------------------
 # Application-wide QSS
+# Button gradients — CRT phosphor glow from centre, matching ViewToggle style
 # ---------------------------------------------------------------------------
-_BTN_BG      = "qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #201A0A,stop:1 #181205)"
-_BTN_HOV_BG  = "qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #2A220E,stop:1 #1E1808)"
-_BTN_PRE_BG  = "qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #181205,stop:1 #131003)"
+# Resting: faint warm ember at centre, near-void at edges
+_BTN_BG     = ("qradialgradient(cx:0.38,cy:0.36,radius:0.90,"
+               "stop:0.00 rgba(240,168,48,30),stop:0.55 #111003,stop:1.00 #0E0A02)")
+# Hover: pronounced amber radial bloom — same glow as ViewToggle active side
+_BTN_HOV_BG = ("qradialgradient(cx:0.38,cy:0.36,radius:0.90,"
+               "stop:0.00 rgba(240,168,48,65),stop:0.50 #1C1608,stop:1.00 #0E0A02)")
+# Pressed: inset — glow collapses inward
+_BTN_PRE_BG = ("qradialgradient(cx:0.38,cy:0.36,radius:0.60,"
+               "stop:0.00 rgba(240,168,48,28),stop:0.55 #0E0A02,stop:1.00 #0E0A02)")
+# Checked: strong phosphor backlight
+_BTN_CHK_BG = ("qradialgradient(cx:0.38,cy:0.36,radius:0.90,"
+               "stop:0.00 rgba(240,168,48,90),stop:0.50 #2A1C06,stop:1.00 #0E0A02)")
+# Rose-accent resting (faint rose ember at centre)
+_BTN_RUN_BG     = ("qradialgradient(cx:0.38,cy:0.36,radius:0.90,"
+                   "stop:0.00 rgba(204,82,130,30),stop:0.55 #120610,stop:1.00 #0E0A02)")
+# Rose-accent hover
+_BTN_RUN_HOV_BG = ("qradialgradient(cx:0.38,cy:0.36,radius:0.90,"
+                   "stop:0.00 rgba(204,82,130,65),stop:0.50 #1C0A14,stop:1.00 #0E0A02)")
+# Rose-accent pressed
+_BTN_RUN_PRE_BG = ("qradialgradient(cx:0.38,cy:0.36,radius:0.60,"
+                   "stop:0.00 rgba(204,82,130,28),stop:0.55 #0E0A0C,stop:1.00 #0E0A02)")
+# Rose-accent checked
+_BTN_RUN_CHK_BG = ("qradialgradient(cx:0.38,cy:0.36,radius:0.90,"
+                   "stop:0.00 rgba(204,82,130,90),stop:0.50 #241018,stop:1.00 #0E0A02)")
+# Secondary-amber hover
+_BTN_SEC_HOV_BG = ("qradialgradient(cx:0.50,cy:0.50,radius:0.90,"
+                   "stop:0.00 rgba(200,124,16,65),stop:0.50 #1A1406,stop:1.00 #0E0A02)")
+# Secondary-amber checked
+_BTN_SEC_CHK_BG = ("qradialgradient(cx:0.50,cy:0.50,radius:0.90,"
+                   "stop:0.00 rgba(200,124,16,90),stop:0.50 #251806,stop:1.00 #0E0A02)")
 
-APP_QSS = f"""
+def build_app_qss() -> str:
+    """Build the application-wide QSS with current px() scale."""
+    return f"""
 
 /* ── Global ──────────────────────────────────────────────────────────────── */
 QWidget {{
     font-family: "Menlo", "Consolas", "Courier New", monospace;
-    font-size: 13px;
+    font-size: {px(13)}px;
     color: {TEXT_PRIMARY};
     background: {CONTENT_BG};
 }}
@@ -146,7 +212,8 @@ QMenuBar::item {{
     margin: 2px 2px;
 }}
 QMenuBar::item:selected {{
-    background: {SIDEBAR_SEL_BG};
+    background: qradialgradient(cx:0.50,cy:0.50,radius:0.90,
+        stop:0.00 #3A2408,stop:0.65 #2C1C08,stop:1.00 {SIDEBAR_BG});
     color: {SIDEBAR_SEL_TEXT};
 }}
 QMenu {{
@@ -184,7 +251,7 @@ QToolBar QToolButton {{
     border: 1px solid transparent;
     border-radius: 5px;
     padding: 5px 10px;
-    font-size: 12px;
+    font-size: {px(12)}px;
 }}
 QToolBar QToolButton:hover {{
     background: {SIDEBAR_HOVER};
@@ -214,12 +281,14 @@ QTabBar::tab {{
     color: {PHOSPHOR_DIM};
     padding: 8px 20px;
     border-bottom: 2px solid transparent;
-    font-size: 13px;
+    font-size: {px(13)}px;
 }}
 QTabBar::tab:selected {{
     color: {PHOSPHOR_HOT};
     border-bottom: 2px solid {ROSE_ACCENT};
     font-weight: bold;
+    background: qradialgradient(cx:0.50,cy:1.00,radius:1.10,
+        stop:0.00 #2A1E08,stop:0.70 #181408,stop:1.00 {SIDEBAR_BG});
 }}
 QTabBar::tab:hover:!selected {{
     background: {SIDEBAR_HOVER};
@@ -231,7 +300,7 @@ QStatusBar {{
     background: {SIDEBAR_BG};
     color: {SIDEBAR_TEXT};
     border-top: 1px solid {SIDEBAR_BORDER};
-    font-size: 12px;
+    font-size: {px(12)}px;
 }}
 QStatusBar QLabel {{
     padding: 3px 6px;
@@ -241,7 +310,7 @@ QStatusBar QLabel {{
 /* ── Group boxes ──────────────────────────────────────────────────────────── */
 QGroupBox {{
     font-weight: 600;
-    font-size: 11px;
+    font-size: {px(11)}px;
     color: {PHOSPHOR_DIM};
     border: 1px solid {BORDER_DARK};
     border-radius: 6px;
@@ -256,18 +325,19 @@ QGroupBox::title {{
     color: {PHOSPHOR_DIM};
     text-transform: uppercase;
     letter-spacing: 1px;
-    font-size: 11px;
+    font-size: {px(11)}px;
 }}
 
 /* ── Buttons ──────────────────────────────────────────────────────────────── */
+/* Radial gradient gives a warm backlit phosphor glow from the centre.        */
 QPushButton {{
     background: {_BTN_BG};
     color: {PHOSPHOR_MID};
     border: 1px solid rgba(90, 60, 8, 0.55);
     border-radius: 4px;
     padding: 6px 14px;
-    font-size: 13px;
-    min-height: 22px;
+    font-size: {px(13)}px;
+    min-height: {px(22)}px;
 }}
 QPushButton:hover {{
     background: {_BTN_HOV_BG};
@@ -280,34 +350,47 @@ QPushButton:pressed {{
     padding-left: 15px; padding-right: 13px;
     border-color: rgba(90, 60, 8, 0.35);
 }}
+QPushButton:checked {{
+    background: {_BTN_CHK_BG};
+    color: {PHOSPHOR_HOT};
+    border: 1px solid rgba(106,74,18,0.85);
+    font-weight: 600;
+}}
 QPushButton:disabled {{
     color: {PHOSPHOR_GLOW};
     border-color: rgba(58, 40, 8, 0.3);
     background: {_BTN_BG};
 }}
 
-/* Run / primary accent (rose) */
+/* Run / primary accent (rose/pink) */
 QPushButton#runButton, QPushButton[accent="true"] {{
-    background: {_BTN_BG};
+    background: {_BTN_RUN_BG};
     color: {ROSE_ACCENT};
-    border: 1px solid rgba(204, 82, 130, 0.50);
+    border: 1px solid rgba(204, 82, 130, 0.65);
     font-weight: 600;
     padding: 7px 18px;
 }}
 QPushButton#runButton:hover, QPushButton[accent="true"]:hover {{
-    background: {_BTN_HOV_BG};
-    border-color: rgba(204, 82, 130, 0.90);
-    color: {ROSE_ACCENT};
+    background: {_BTN_RUN_HOV_BG};
+    border-color: rgba(232, 112, 158, 0.90);
+    color: {ROSE_HOT};
 }}
 QPushButton#runButton:pressed, QPushButton[accent="true"]:pressed {{
-    background: {_BTN_PRE_BG};
+    background: {_BTN_RUN_PRE_BG};
     padding-top: 8px; padding-bottom: 6px;
     padding-left: 19px; padding-right: 17px;
     border-color: rgba(204, 82, 130, 0.35);
+    color: {ROSE_ACCENT};
+}}
+QPushButton#runButton:checked, QPushButton[accent="true"]:checked {{
+    background: {_BTN_RUN_CHK_BG};
+    color: {ROSE_HOT};
+    border: 1px solid rgba(204, 82, 130, 0.85);
+    font-weight: 600;
 }}
 QPushButton#runButton:disabled, QPushButton[accent="true"]:disabled {{
-    color: rgba(122, 52, 88, 0.45);
-    border-color: rgba(122, 52, 88, 0.25);
+    color: rgba(80, 40, 60, 0.50);
+    border-color: rgba(60, 20, 40, 0.30);
 }}
 
 /* Secondary amber buttons */
@@ -318,9 +401,15 @@ QPushButton[secondary="true"] {{
     font-weight: 500;
 }}
 QPushButton[secondary="true"]:hover {{
-    background: {_BTN_HOV_BG};
+    background: {_BTN_SEC_HOV_BG};
     border-color: rgba(200, 124, 16, 0.90);
     color: {PHOSPHOR_HOT};
+}}
+QPushButton[secondary="true"]:checked {{
+    background: {_BTN_SEC_CHK_BG};
+    color: {PHOSPHOR_HOT};
+    border: 1px solid rgba(200, 124, 16, 0.80);
+    font-weight: 600;
 }}
 QPushButton[secondary="true"]:disabled {{
     color: rgba(200, 124, 16, 0.30);
@@ -353,7 +442,7 @@ QComboBox {{
     border-radius: 4px;
     padding: 5px 8px;
     color: {PHOSPHOR_HOT};
-    min-height: 22px;
+    min-height: {px(22)}px;
 }}
 QComboBox:focus {{
     border-color: {PHOSPHOR_HOT};
@@ -392,15 +481,18 @@ QCheckBox:disabled, QRadioButton:disabled {{
     color: {PHOSPHOR_DIM};
 }}
 QCheckBox::indicator, QRadioButton::indicator {{
-    width: 14px;
-    height: 14px;
+    width: {px(14)}px;
+    height: {px(14)}px;
     border: 1px solid {BORDER_AMBER};
     border-radius: 3px;
     background: {BG_INSET};
 }}
 QCheckBox::indicator:checked, QRadioButton::indicator:checked {{
-    background: {AMBER_BTN};
-    border-color: {PHOSPHOR_HOT};
+    background: qradialgradient(cx:0.50,cy:0.50,radius:0.75,
+        stop:0.00 rgba(200,130,20,0.80),
+        stop:0.60 rgba(140,90,14,0.55),
+        stop:1.00 rgba(30,20,4,0.60));
+    border-color: rgba(200,140,30,0.70);
 }}
 
 /* ── List widget (course list) ────────────────────────────────────────────── */
@@ -410,7 +502,7 @@ QListWidget {{
     border-right: 1px solid {SIDEBAR_BORDER};
     color: {SIDEBAR_TEXT};
     outline: none;
-    font-size: 13px;
+    font-size: {px(13)}px;
 }}
 QListWidget::item {{
     padding: 7px 10px;
@@ -418,12 +510,14 @@ QListWidget::item {{
     border-left: 3px solid transparent;
 }}
 QListWidget::item:selected {{
-    background: {SIDEBAR_SEL_BG};
+    background: qradialgradient(cx:0.15,cy:0.50,radius:1.30,
+        stop:0.00 #3A2408,stop:0.65 #2C1C08,stop:1.00 #1A1205);
     color: {SIDEBAR_SEL_TEXT};
     border-left: 3px solid {ROSE_ACCENT};
 }}
 QListWidget::item:hover:!selected {{
-    background: {SIDEBAR_HOVER};
+    background: qradialgradient(cx:0.15,cy:0.50,radius:1.20,
+        stop:0.00 #231A06,stop:0.70 #191406,stop:1.00 #141003);
     color: {PHOSPHOR_HOT};
 }}
 
@@ -441,11 +535,13 @@ QTreeWidget::item {{
     color: {PHOSPHOR_MID};
 }}
 QTreeWidget::item:selected {{
-    background: {SIDEBAR_SEL_BG};
+    background: qradialgradient(cx:0.15,cy:0.50,radius:1.30,
+        stop:0.00 #3A2408,stop:0.65 #2C1C08,stop:1.00 #1A1205);
     color: {PHOSPHOR_HOT};
 }}
 QTreeWidget::item:hover:!selected {{
-    background: {GROUP_HEADER_BG};
+    background: qradialgradient(cx:0.15,cy:0.50,radius:1.20,
+        stop:0.00 #231A06,stop:0.70 #191406,stop:1.00 #141003);
 }}
 QHeaderView::section {{
     background: {GROUP_HEADER_BG};
@@ -455,7 +551,7 @@ QHeaderView::section {{
     border-bottom: 1px solid {BORDER_DARK};
     padding: 5px 8px;
     font-weight: 600;
-    font-size: 11px;
+    font-size: {px(11)}px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }}
@@ -520,7 +616,7 @@ QTextEdit[monospace="true"] {{
     background: {BG_INSET};
     color: {PHOSPHOR_MID};
     font-family: "JetBrains Mono", "Cascadia Code", "Menlo", "Consolas", monospace;
-    font-size: 12px;
+    font-size: {px(12)}px;
     border-color: {BORDER_DARK};
     border-radius: 4px;
     padding: 4px;
@@ -538,13 +634,13 @@ QMessageBox {{
 
 /* ── Labels ───────────────────────────────────────────────────────────────── */
 QLabel[heading="true"] {{
-    font-size: 15px;
+    font-size: {px(15)}px;
     font-weight: 700;
     color: {PHOSPHOR_HOT};
 }}
 QLabel[muted="true"] {{
     color: {PHOSPHOR_DIM};
-    font-size: 12px;
+    font-size: {px(12)}px;
 }}
 QLabel[status_ok="true"] {{
     color: {STATUS_OK};
@@ -558,7 +654,7 @@ QLabel[status_err="true"] {{
 /* ── Form layout label column ─────────────────────────────────────────────── */
 QFormLayout QLabel {{
     color: {PHOSPHOR_DIM};
-    font-size: 11px;
+    font-size: {px(11)}px;
     font-weight: 500;
     letter-spacing: 1px;
     padding-right: 4px;
@@ -567,22 +663,59 @@ QFormLayout QLabel {{
 
 """
 
+# Built once at import time; rebuild with build_app_qss() after changing scale
+APP_QSS = build_app_qss()
+
 # ---------------------------------------------------------------------------
 # Convenience: apply visual property shorthand
 # ---------------------------------------------------------------------------
 
+def apply_phosphor_glow(widget, color: str = PHOSPHOR_MID,
+                        blur: int = 12, strength: float = 0.55,
+                        xOffset: float = 0.0, yOffset: float = 0.0) -> None:
+    """Wrap a widget in a QGraphicsDropShadowEffect to produce an outer
+    phosphor halo — the warm light that bleeds beyond the button edge on
+    a real CRT phosphor screen.
+
+    Parameters
+    ----------
+    widget  : any QWidget subclass
+    color   : hex colour string for the glow (default: amber PHOSPHOR_MID)
+    blur    : blur radius in pixels (larger = softer / wider spread)
+    strength: alpha 0–1 for the glow colour
+    xOffset : horizontal bloom shift (small values give uneven phosphor feel)
+    yOffset : vertical bloom shift
+    """
+    from PySide6.QtWidgets import QGraphicsDropShadowEffect
+    from PySide6.QtGui import QColor
+    effect = QGraphicsDropShadowEffect(widget)
+    effect.setBlurRadius(blur)
+    effect.setOffset(xOffset, yOffset)
+    c = QColor(color)
+    c.setAlphaF(strength)
+    effect.setColor(c)
+    widget.setGraphicsEffect(effect)
+
+
+def remove_glow(widget) -> None:
+    """Remove any QGraphicsEffect applied to a widget."""
+    widget.setGraphicsEffect(None)
+
+
 def make_run_button(btn) -> None:
-    """Style a QPushButton as the primary Run action (rose accent)."""
+    """Style a QPushButton as the primary Run action (rose/pink glow)."""
     btn.setProperty("accent", "true")
     btn.style().unpolish(btn)
     btn.style().polish(btn)
+    apply_phosphor_glow(btn, color=ROSE_ACCENT, blur=14, strength=0.50)
 
 
 def make_secondary_button(btn) -> None:
-    """Style a QPushButton as an amber secondary action."""
+    """Style a QPushButton as an amber secondary action (amber glow)."""
     btn.setProperty("secondary", "true")
     btn.style().unpolish(btn)
     btn.style().polish(btn)
+    apply_phosphor_glow(btn, color=AMBER_BTN, blur=10, strength=0.45)
 
 
 def make_monospace_textedit(te) -> None:
@@ -590,3 +723,122 @@ def make_monospace_textedit(te) -> None:
     te.setProperty("monospace", "true")
     te.style().unpolish(te)
     te.style().polish(te)
+
+
+def make_glow_label(label, color: str = PHOSPHOR_HOT,
+                    blur: int = 8, strength: float = 0.60) -> None:
+    """Apply a phosphor text-glow to a QLabel.
+
+    Works by adding a QGraphicsDropShadowEffect with zero offset so the
+    shadow radiates symmetrically — mimicking how phosphor text blooms on
+    a CRT screen.
+    """
+    apply_phosphor_glow(label, color=color, blur=blur, strength=strength)
+
+
+# ---------------------------------------------------------------------------
+# Shared panel / section building blocks
+#
+# Use these in every panel and page to keep the amber terminal aesthetic
+# consistent without duplicating QSS strings.
+# ---------------------------------------------------------------------------
+
+#: Radial gradient string for content pane backgrounds.
+PANE_BG_GRADIENT = (
+    "qradialgradient(cx:0.5,cy:0.5,radius:0.9,"
+    "stop:0.00 #201A08,stop:0.70 #130E04,stop:1.00 #090702)"
+)
+
+
+def make_section_label(text: str) -> "QLabel":
+    """Return an all-caps muted section header label (SCOPE / OUTPUT / etc.)."""
+    from PySide6.QtWidgets import QLabel
+    lbl = QLabel(text.upper())
+    lbl.setStyleSheet(
+        f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
+        f" letter-spacing: 1.5px; background: transparent; border: none;"
+        f" padding: 6px 0 2px 0;"
+    )
+    return lbl
+
+
+def make_h_rule() -> "QFrame":
+    """Return a 1 px horizontal separator in BORDER_DARK colour."""
+    from PySide6.QtWidgets import QFrame
+    rule = QFrame()
+    rule.setFrameShape(QFrame.Shape.HLine)
+    rule.setStyleSheet(f"background: {BORDER_DARK}; border: none;")
+    rule.setFixedHeight(1)
+    return rule
+
+
+def make_content_pane(object_name: str = "contentPane") -> "QFrame":
+    """Return a QFrame styled as a content pane (radial gradient + amber top border).
+
+    The object_name must be unique per call site so the stylesheet selector
+    ``QFrame#<name>`` targets only this frame.
+    """
+    from PySide6.QtWidgets import QFrame
+    pane = QFrame()
+    pane.setObjectName(object_name)
+    pane.setStyleSheet(
+        f"QFrame#{object_name} {{"
+        f"  background: {PANE_BG_GRADIENT};"
+        f"  border: 1px solid {BORDER_DARK};"
+        f"  border-top-color: {BORDER_AMBER};"
+        f"  border-radius: 8px;"
+        f"}}"
+    )
+    return pane
+
+
+# ---------------------------------------------------------------------------
+# Shared splitter with grip-dot handle
+# ---------------------------------------------------------------------------
+
+class GripSplitter:
+    """Factory that returns a QSplitter with a custom void-background handle.
+
+    Usage::
+
+        from gui.styles import GripSplitter
+        splitter = GripSplitter.create(Qt.Orientation.Horizontal)
+    """
+
+    @staticmethod
+    def create(orientation):
+        from PySide6.QtWidgets import QSplitter, QSplitterHandle
+        from PySide6.QtGui import QPainter, QColor
+        from PySide6.QtCore import Qt
+
+        class _GripHandle(QSplitterHandle):
+            _BG    = QColor(BG_VOID)
+            _DOT   = QColor(PHOSPHOR_DIM)
+            _DOT_H = QColor("#8A5E1A")
+
+            def paintEvent(self, event):
+                p = QPainter(self)
+                p.fillRect(self.rect(), self._BG)
+                p.fillRect(0, 0, 1, self.height(), QColor(BORDER_DARK))
+                dot = self._DOT_H if self.underMouse() else self._DOT
+                p.setBrush(dot)
+                p.setPen(Qt.PenStyle.NoPen)
+                cx = self.width() // 2
+                cy = self.height() // 2
+                for dy in (-6, 0, 6):
+                    p.drawEllipse(cx - 2, cy + dy - 2, 4, 4)
+                p.end()
+
+            def enterEvent(self, event):
+                self.update()
+                super().enterEvent(event)
+
+            def leaveEvent(self, event):
+                self.update()
+                super().leaveEvent(event)
+
+        class _GripSplitter(QSplitter):
+            def createHandle(self):
+                return _GripHandle(self.orientation(), self)
+
+        return _GripSplitter(orientation)

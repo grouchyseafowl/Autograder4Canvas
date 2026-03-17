@@ -8,19 +8,23 @@ import json
 from pathlib import Path
 
 from PySide6.QtWidgets import (
-    QFrame, QVBoxLayout, QLabel, QTreeWidget, QTreeWidgetItem,
+    QFrame, QVBoxLayout, QHBoxLayout, QLabel, QTreeWidget, QTreeWidgetItem,
     QStyledItemDelegate, QStyleOptionViewItem, QStyle,
     QInputDialog, QMenu, QMessageBox,
 )
+from gui.dialogs.message_dialog import show_info, show_warning, show_critical
 from PySide6.QtCore import Signal, Qt, QSize, QRect
-from PySide6.QtGui import QFont, QColor, QPainter, QPen
+from PySide6.QtGui import QFont, QColor, QPainter, QPen, QRadialGradient, QPainterPath
 
 from gui.styles import (
+    SPACING_SM,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM,
     SIDEBAR_SEL_BG, SIDEBAR_SEL_TEXT, SIDEBAR_HOVER,
     ROSE_ACCENT, BORDER_DARK, BORDER_AMBER,
-    PANEL_GRADIENT,
+    PANEL_GRADIENT, BG_INSET, PANE_BG_GRADIENT,
+    make_section_label,
 )
+from gui.widgets.status_pip import draw_pip
 
 # ---------------------------------------------------------------------------
 # Item data roles
@@ -33,8 +37,11 @@ _ROLE_TITLE    = Qt.ItemDataRole.UserRole + 4   # extracted title
 _ROLE_BADGE    = Qt.ItemDataRole.UserRole + 5   # ungraded count (int)
 _ROLE_FORMAT   = Qt.ItemDataRole.UserRole + 6   # effective modality: "online"|"blended"|""
 _ROLE_NICKNAME = Qt.ItemDataRole.UserRole + 7   # user-set nickname (str or "")
+_ROLE_PUBLISHED = Qt.ItemDataRole.UserRole + 8  # bool: True = available/published
 
 _COURSE_ROW_H = 46  # px — tall enough for two text lines
+_PILL_SLOT_W  = 26  # fixed width for modality pill slot (matches bulk run)
+_PILL_GAP     = 6   # gap between pill and code text
 
 # ---------------------------------------------------------------------------
 # Modality tag definitions  (label, pill-border-color)
@@ -195,19 +202,66 @@ class _CourseDelegate(QStyledItemDelegate):
         is_sel   = bool(opt.state & QStyle.StateFlag.State_Selected)
         is_hover = bool(opt.state & QStyle.StateFlag.State_MouseOver)
 
-        # ── background ──────────────────────────────────────────────────────
-        if is_sel:
-            painter.fillRect(opt.rect, QColor(SIDEBAR_SEL_BG))
-            painter.fillRect(
-                QRect(opt.rect.x(), opt.rect.y(), 3, opt.rect.height()),
-                QColor(ROSE_ACCENT),
-            )
-        elif is_hover:
-            painter.fillRect(opt.rect, QColor(SIDEBAR_HOVER))
-            painter.fillRect(
-                QRect(opt.rect.x(), opt.rect.y(), 3, opt.rect.height()),
-                QColor(BORDER_AMBER),
-            )
+        # ── background — edge-to-edge void band + radial glow + pip ────────
+        if is_sel or is_hover:
+            # Span the full viewport width so the glow band goes edge-to-edge
+            # instead of creating a floating black box against the tree gradient.
+            from PySide6.QtCore import QRect as _QRect
+            vp_w = painter.device().width()
+            full_rect = _QRect(0, opt.rect.y(), vp_w, opt.rect.height())
+            painter.setClipping(False)
+            painter.fillRect(full_rect, QColor("#0A0800"))
+
+            # Left-biased radial glow: origin anchored near the left edge
+            # so the light radiates from behind the pip indicator.
+            glow_cx = vp_w * 0.18
+            glow_cy = opt.rect.y() + opt.rect.height() * 0.50
+            glow_r  = vp_w * 0.90
+
+            if is_sel:
+                center_col = QColor(204, 82, 130, 72)    # rose primary
+                mid_col    = QColor(204, 82, 130, 20)
+                bloom_col  = QColor(204, 82, 130, 38)
+            else:
+                center_col = QColor(240, 168, 48, 50)    # amber hover
+                mid_col    = QColor(240, 168, 48, 15)
+                bloom_col  = QColor(240, 168, 48, 24)
+
+            clip = QPainterPath()
+            clip.addRect(full_rect)
+
+            # Primary glow pass
+            grad = QRadialGradient(glow_cx, glow_cy, glow_r)
+            grad.setColorAt(0.0, center_col)
+            grad.setColorAt(0.6, mid_col)
+            grad.setColorAt(1.0, QColor(0, 0, 0, 0))
+            painter.save()
+            painter.setClipPath(clip)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(grad)
+            painter.drawRect(full_rect)
+
+            # Bloom pass
+            bloom = QRadialGradient(glow_cx, glow_cy, glow_r * 0.50)
+            bloom.setColorAt(0.0, bloom_col)
+            bloom.setColorAt(1.0, QColor(0, 0, 0, 0))
+            painter.setBrush(bloom)
+            painter.drawRect(full_rect)
+            painter.restore()
+
+            painter.setClipping(True)
+
+            # Pip indicator — anchored near the left edge of the full band
+            pip_cx = float(opt.rect.x() // 2 + 4)   # midpoint of branch area
+            pip_cy = float(opt.rect.y() + opt.rect.height() / 2)
+            painter.save()
+            if is_sel:
+                draw_pip(painter, pip_cx, pip_cy, 10,
+                         r=204, g=82, b=130, bloom_alpha=60, core_alpha=200)
+            else:
+                draw_pip(painter, pip_cx, pip_cy, 8,
+                         r=240, g=168, b=48, bloom_alpha=28, core_alpha=130)
+            painter.restore()
 
         # ── bottom separator ─────────────────────────────────────────────────
         p = QPen(QColor(BORDER_DARK), 1)
@@ -242,61 +296,44 @@ class _CourseDelegate(QStyledItemDelegate):
 
         code_h, title_h, gap = 16, 13, 3
         block_h = code_h + gap + title_h
-        x  = opt.rect.x() + 20
-        w  = opt.rect.width() - x - 8
         y0 = opt.rect.y() + (opt.rect.height() - block_h) // 2
 
-        # ── draw code ─────────────────────────────────────────────────────────
-        painter.setFont(code_font)
-        painter.setPen(code_col)
-        fm = painter.fontMetrics()
-        code_w = fm.horizontalAdvance(code)
+        # Pill occupies a fixed-width slot at the left, code text follows
+        pill_x = opt.rect.x() + 2
+        x  = pill_x + _PILL_SLOT_W + _PILL_GAP
+        w  = opt.rect.x() + opt.rect.width() - x - 8
 
-        # Elide code if needed (leaving room for tag)
-        tag_w = 0
-        if tag_info:
-            tag_label, tag_hex = tag_info
-            tag_font = _mono(8)
-            tfm = QFont(tag_font)
-            from PySide6.QtGui import QFontMetrics
-            tag_w = QFontMetrics(tag_font).horizontalAdvance(tag_label) + 10   # padding
-            tag_w += 4   # gap before tag
-
-        available_code_w = w - tag_w
-        painter.drawText(
-            QRect(x, y0, available_code_w, code_h),
-            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-            fm.elidedText(code, Qt.TextElideMode.ElideRight, available_code_w),
-        )
-
-        # ── draw modality tag ────────────────────────────────────────────────
+        # ── draw modality pill (left-aligned, before code) ───────────────────
         if tag_info:
             tag_label, tag_hex = tag_info
             tag_font = _mono(8)
             tag_color = QColor(tag_hex)
-            tag_text_w = QFont(tag_font)
-
-            from PySide6.QtGui import QFontMetrics
-            actual_tag_w = QFontMetrics(tag_font).horizontalAdvance(tag_label)
-            pill_w  = actual_tag_w + 8
-            pill_h  = 12
-            pill_x  = opt.rect.x() + opt.rect.width() - 8 - pill_w
+            pill_w  = _PILL_SLOT_W
+            pill_h  = 14
             pill_y  = y0 + (code_h - pill_h) // 2
 
-            # Pill border
             painter.setFont(tag_font)
             pen2 = QPen(tag_color, 1)
             pen2.setCosmetic(True)
             painter.setPen(pen2)
             painter.drawRoundedRect(pill_x, pill_y, pill_w, pill_h, 3, 3)
 
-            # Pill text
             painter.setPen(tag_color)
             painter.drawText(
                 QRect(pill_x, pill_y, pill_w, pill_h),
                 Qt.AlignmentFlag.AlignCenter,
                 tag_label,
             )
+
+        # ── draw code ─────────────────────────────────────────────────────────
+        painter.setFont(code_font)
+        painter.setPen(code_col)
+        fm = painter.fontMetrics()
+        painter.drawText(
+            QRect(x, y0, w, code_h),
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            fm.elidedText(code, Qt.TextElideMode.ElideRight, w),
+        )
 
         # ── draw title ────────────────────────────────────────────────────────
         painter.setFont(title_font)
@@ -320,13 +357,17 @@ class _CourseDelegate(QStyledItemDelegate):
 # Stylesheet
 # ---------------------------------------------------------------------------
 
+# Side-origin gradient: light bleeds in from the left edge (CRT backlight effect)
+_SIDE_GRADIENT = ("qradialgradient(cx:0.08,cy:0.45,radius:1.20,fx:0.03,fy:0.40,"
+                  "stop:0.00 #201A08,stop:0.55 #130E04,stop:1.00 #090702)")
+
 _TREE_QSS = f"""
     QTreeWidget {{
-        background: {PANEL_GRADIENT};
+        background: {BG_INSET};
         color: {PHOSPHOR_MID};
         border: none;
-        border-bottom-left-radius: 8px;
-        border-bottom-right-radius: 8px;
+        border-bottom-left-radius: 6px;
+        border-bottom-right-radius: 6px;
         outline: none;
     }}
     QTreeWidget::item {{
@@ -335,16 +376,22 @@ _TREE_QSS = f"""
         padding-left: 1px;
     }}
     QTreeWidget::item:selected {{
-        background: {SIDEBAR_SEL_BG};
+        background: transparent;
         color: {SIDEBAR_SEL_TEXT};
-        border-left: 3px solid {ROSE_ACCENT};
+        border-left: 3px solid transparent;
     }}
     QTreeWidget::item:hover:!selected {{
-        background: {SIDEBAR_HOVER};
+        background: transparent;
         color: {PHOSPHOR_HOT};
-        border-left: 3px solid {BORDER_AMBER};
+        border-left: 3px solid transparent;
     }}
     QTreeWidget::branch {{
+        background: transparent;
+    }}
+    QTreeWidget::branch:selected {{
+        background: transparent;
+    }}
+    QTreeWidget::branch:hover:!selected {{
         background: transparent;
     }}
     QMenu {{
@@ -360,11 +407,10 @@ _TREE_QSS = f"""
 
 _PANEL_QSS = f"""
     QFrame#coursePanel {{
-        background: {PANEL_GRADIENT};
+        background: {PANE_BG_GRADIENT};
         border: 1px solid {BORDER_DARK};
         border-top-color: {BORDER_AMBER};
-        border-left-color: {BORDER_AMBER};
-        border-radius: 10px;
+        border-radius: 8px;
     }}
     QFrame#coursePanel QLabel {{
         background: transparent;
@@ -402,15 +448,10 @@ class CoursePanel(QFrame):
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(6, 12, 6, 8)
-        layout.setSpacing(0)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(SPACING_SM)
 
-        header = QLabel(">  COURSES")
-        header.setFont(_mono(11, bold=True))
-        header.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; letter-spacing: 1.5px;"
-            f" padding: 0 12px 6px 12px; background: transparent;"
-        )
+        header = make_section_label("Courses")
         layout.addWidget(header)
 
         sep = QFrame()
@@ -430,7 +471,7 @@ class CoursePanel(QFrame):
 
         self._tree = QTreeWidget()
         self._tree.setHeaderHidden(True)
-        self._tree.setRootIsDecorated(True)
+        self._tree.setRootIsDecorated(False)
         self._tree.setIndentation(14)
         self._tree.setAnimated(True)
         self._tree.setMouseTracking(True)
@@ -443,6 +484,7 @@ class CoursePanel(QFrame):
         self._tree.setItemDelegate(self._delegate)
 
         self._tree.itemExpanded.connect(self._on_item_expanded)
+        self._tree.itemCollapsed.connect(self._on_item_collapsed)
         self._tree.itemClicked.connect(self._on_item_clicked)
         self._tree.customContextMenuRequested.connect(self._on_context_menu)
         layout.addWidget(self._tree)
@@ -456,12 +498,14 @@ class CoursePanel(QFrame):
 
         for term_id, term_name, is_current in terms:
             term_item = QTreeWidgetItem()
-            label = f">  {term_name.upper()}" + ("  ●" if is_current else "")
+            arrow = "v" if is_current else ">"
+            label = f"{arrow}  {term_name.upper()}" + ("  ●" if is_current else "")
             term_item.setText(0, label)
             term_item.setForeground(0, QColor(PHOSPHOR_HOT if is_current else PHOSPHOR_DIM))
             term_item.setFont(0, _mono(11, bold=is_current))
             term_item.setData(0, _ROLE_ID,   term_id)
             term_item.setData(0, _ROLE_TYPE, "term")
+            term_item.setFlags(term_item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
             term_item.setBackground(0, QColor(SIDEBAR_SEL_BG if is_current else "#0E0A02"))
             self._tree.addTopLevelItem(term_item)
             if is_current:
@@ -493,17 +537,19 @@ class CoursePanel(QFrame):
                 user_fmt   = _meta.get_format(cid) if cid else ""
                 eff_fmt    = user_fmt or canvas_fmt
 
-                nickname = _meta.get_nickname(cid) if cid else ""
+                nickname  = _meta.get_nickname(cid) if cid else ""
+                published = c.get("workflow_state", "available") == "available"
 
                 child = QTreeWidgetItem([""])   # text drawn by delegate
-                child.setData(0, _ROLE_ID,       cid)
-                child.setData(0, _ROLE_TYPE,     "course")
-                child.setData(0, _ROLE_NAME,     name)
-                child.setData(0, _ROLE_CODE,     disp_code)
-                child.setData(0, _ROLE_TITLE,    disp_title)
-                child.setData(0, _ROLE_BADGE,    0)
-                child.setData(0, _ROLE_FORMAT,   eff_fmt)
-                child.setData(0, _ROLE_NICKNAME, nickname)
+                child.setData(0, _ROLE_ID,        cid)
+                child.setData(0, _ROLE_TYPE,      "course")
+                child.setData(0, _ROLE_NAME,      name)
+                child.setData(0, _ROLE_CODE,      disp_code)
+                child.setData(0, _ROLE_TITLE,     disp_title)
+                child.setData(0, _ROLE_BADGE,     0)
+                child.setData(0, _ROLE_FORMAT,    eff_fmt)
+                child.setData(0, _ROLE_NICKNAME,  nickname)
+                child.setData(0, _ROLE_PUBLISHED, published)
                 child.setSizeHint(0, QSize(200, _COURSE_ROW_H))
                 item.addChild(child)
                 if cid is not None:
@@ -511,7 +557,7 @@ class CoursePanel(QFrame):
 
             if item.isExpanded():
                 self.term_selected.emit(term_id)
-            return
+                return
 
     def populate(self, terms: list, courses_by_term: dict) -> None:
         """
@@ -531,12 +577,14 @@ class CoursePanel(QFrame):
                 continue   # skip empty terms entirely — no flash, no removal
 
             term_item = QTreeWidgetItem()
-            label = f">  {term_name.upper()}" + ("  ●" if is_current else "")
+            arrow = "v" if is_current else ">"
+            label = f"{arrow}  {term_name.upper()}" + ("  ●" if is_current else "")
             term_item.setText(0, label)
             term_item.setForeground(0, QColor(PHOSPHOR_HOT if is_current else PHOSPHOR_DIM))
             term_item.setFont(0, _mono(11, bold=is_current))
             term_item.setData(0, _ROLE_ID,   term_id)
             term_item.setData(0, _ROLE_TYPE, "term")
+            term_item.setFlags(term_item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
             term_item.setBackground(0, QColor(SIDEBAR_SEL_BG if is_current else "#0E0A02"))
             self._tree.addTopLevelItem(term_item)
 
@@ -550,16 +598,18 @@ class CoursePanel(QFrame):
                 user_fmt   = _meta.get_format(cid) if cid else ""
                 eff_fmt    = user_fmt or canvas_fmt
                 nickname   = _meta.get_nickname(cid) if cid else ""
+                published  = c.get("workflow_state", "available") == "available"
 
                 child = QTreeWidgetItem([""])
-                child.setData(0, _ROLE_ID,       cid)
-                child.setData(0, _ROLE_TYPE,     "course")
-                child.setData(0, _ROLE_NAME,     name)
-                child.setData(0, _ROLE_CODE,     disp_code)
-                child.setData(0, _ROLE_TITLE,    disp_title)
-                child.setData(0, _ROLE_BADGE,    0)
-                child.setData(0, _ROLE_FORMAT,   eff_fmt)
-                child.setData(0, _ROLE_NICKNAME, nickname)
+                child.setData(0, _ROLE_ID,        cid)
+                child.setData(0, _ROLE_TYPE,      "course")
+                child.setData(0, _ROLE_NAME,      name)
+                child.setData(0, _ROLE_CODE,      disp_code)
+                child.setData(0, _ROLE_TITLE,     disp_title)
+                child.setData(0, _ROLE_BADGE,     0)
+                child.setData(0, _ROLE_FORMAT,    eff_fmt)
+                child.setData(0, _ROLE_NICKNAME,  nickname)
+                child.setData(0, _ROLE_PUBLISHED, published)
                 child.setSizeHint(0, QSize(200, _COURSE_ROW_H))
                 term_item.addChild(child)
                 if cid is not None:
@@ -643,6 +693,31 @@ class CoursePanel(QFrame):
         clear_fmt = fmt_menu.addAction("Clear (not set)")
         clear_fmt.setEnabled(bool(fmt))
         clear_fmt.triggered.connect(lambda: self._clear_format(item, cid))
+
+        # ── Publish / Unpublish course ────────────────────────────────
+        menu.addSeparator()
+        is_published = item.data(0, _ROLE_PUBLISHED)
+        if is_published is None:
+            is_published = True
+
+        if is_published:
+            unpub_act = menu.addAction("Unpublish Course…")
+            unpub_act.setEnabled(bool(self._editor))
+            if not self._editor:
+                unpub_act.setToolTip("Connect to Canvas in Settings to enable this action.")
+            else:
+                unpub_act.triggered.connect(
+                    lambda: self._toggle_course_publish(item, cid, False)
+                )
+        else:
+            pub_act = menu.addAction("Publish Course")
+            pub_act.setEnabled(bool(self._editor))
+            if not self._editor:
+                pub_act.setToolTip("Connect to Canvas in Settings to enable this action.")
+            else:
+                pub_act.triggered.connect(
+                    lambda: self._toggle_course_publish(item, cid, True)
+                )
 
         menu.exec(self._tree.viewport().mapToGlobal(pos))
 
@@ -804,23 +879,132 @@ class CoursePanel(QFrame):
         if result.ok:
             # Update stored name so subsequent pushes show the right "current" value
             item.setData(0, _ROLE_NAME, nickname)
-            QMessageBox.information(
+            show_info(
                 self,
                 "Name Updated",
                 f"Canvas course name updated to:\n{nickname}",
             )
         else:
-            QMessageBox.warning(
+            show_warning(
                 self,
                 "Could Not Update Canvas",
                 result.message or "The name could not be changed on Canvas.",
+            )
+
+    # ── Course publish / unpublish ─────────────────────────────────────────
+
+    def _toggle_course_publish(
+        self, item: QTreeWidgetItem, cid: int, publish: bool
+    ) -> None:
+        """Publish or unpublish a course on Canvas, running preflight first."""
+        if not self._editor:
+            return
+        if not publish:
+            # Preflight: check for enrolled students before unpublishing
+            from gui.workers import EditAssignmentWorker
+            w = EditAssignmentWorker(
+                api=None,
+                editor=self._editor,
+                fn=lambda: self._editor.preflight_unpublish_course(cid),
+            )
+            w.result_ready.connect(
+                lambda result, _item=item, _cid=cid, _pub=publish:
+                    self._handle_course_publish_preflight(result, _item, _cid, _pub)
+            )
+            w.finished.connect(
+                lambda: self._active_workers.remove(w)
+                if w in self._active_workers else None
+            )
+            self._active_workers.append(w)
+            w.start()
+        else:
+            self._execute_course_publish(item, cid, True)
+
+    def _handle_course_publish_preflight(
+        self, result, item: QTreeWidgetItem, cid: int, publish: bool
+    ) -> None:
+        if hasattr(result, "safe"):
+            if result.safe:
+                self._execute_course_publish(item, cid, publish)
+                return
+            if not result.can_proceed:
+                msgs = "\n\n".join(w.message for w in result.blocking_warnings)
+                show_critical(self, "Cannot Unpublish", msgs)
+                return
+            if result.advisory_warnings:
+                msgs = "\n\n".join(w.message for w in result.advisory_warnings)
+                reply = show_warning(
+                    self, "Unpublish Course?",
+                    msgs + "\n\nUnpublish course anyway?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+                )
+                if reply == QMessageBox.StandardButton.Yes:
+                    self._execute_course_publish(item, cid, publish)
+                return
+            self._execute_course_publish(item, cid, publish)
+        else:
+            if hasattr(result, "ok") and not result.ok:
+                show_warning(self, "Preflight Error", result.message)
+                return
+            self._execute_course_publish(item, cid, publish)
+
+    def _execute_course_publish(
+        self, item: QTreeWidgetItem, cid: int, publish: bool
+    ) -> None:
+        from gui.workers import EditAssignmentWorker
+        w = EditAssignmentWorker(
+            api=None,
+            editor=self._editor,
+            fn=lambda: self._editor.set_course_published(cid, publish),
+        )
+        w.result_ready.connect(
+            lambda result, _item=item, _pub=publish:
+                self._on_course_publish_result(result, _item, _pub)
+        )
+        w.finished.connect(
+            lambda: self._active_workers.remove(w)
+            if w in self._active_workers else None
+        )
+        self._active_workers.append(w)
+        w.start()
+
+    def _on_course_publish_result(
+        self, result, item: QTreeWidgetItem, publish: bool
+    ) -> None:
+        if result.ok:
+            item.setData(0, _ROLE_PUBLISHED, publish)
+            action = "published" if publish else "unpublished"
+            show_info(
+                self,
+                "Course Updated",
+                f"Course successfully {action} on Canvas.",
+            )
+        else:
+            action = "publish" if publish else "unpublish"
+            show_warning(
+                self,
+                "Could Not Update Canvas",
+                f"Could not {action} course:\n\n{result.message}",
             )
 
     # ── Signal handlers ────────────────────────────────────────────────────
 
     def _on_item_expanded(self, item: QTreeWidgetItem) -> None:
         if item.data(0, _ROLE_TYPE) == "term":
+            self._update_term_arrow(item, expanded=True)
             self.term_selected.emit(item.data(0, _ROLE_ID))
+
+    def _on_item_collapsed(self, item: QTreeWidgetItem) -> None:
+        if item.data(0, _ROLE_TYPE) == "term":
+            self._update_term_arrow(item, expanded=False)
+
+    def _update_term_arrow(self, item: QTreeWidgetItem, expanded: bool) -> None:
+        """Swap the leading arrow character: v expanded, > collapsed."""
+        text = item.text(0)
+        old_arrow = "v" if not expanded else ">"
+        new_arrow = "v" if expanded else ">"
+        if text.startswith(f"{old_arrow}  "):
+            item.setText(0, f"{new_arrow}  {text[3:]}")
 
     def get_all_courses_by_term(self) -> list:
         """Return [(term_id, term_name, is_current, [course_dicts]), ...] from tree data."""
@@ -833,8 +1017,11 @@ class CoursePanel(QFrame):
             term_id = term_item.data(0, _ROLE_ID)
             raw_label = term_item.text(0)
             is_current = "●" in raw_label
-            # Strip ">  " prefix and "  ●" suffix to get clean term name
-            clean_name = raw_label.replace(">  ", "").replace("  ●", "").strip()
+            # Strip arrow prefix ("v  " or ">  ") and "  ●" suffix to get clean term name
+            clean_name = raw_label
+            for pfx in ("v  ", ">  "):
+                clean_name = clean_name.replace(pfx, "", 1)
+            clean_name = clean_name.replace("  ●", "").strip()
             courses = []
             for j in range(term_item.childCount()):
                 child = term_item.child(j)
@@ -870,5 +1057,7 @@ class CoursePanel(QFrame):
         if parent:
             self.term_selected.emit(parent.data(0, _ROLE_ID))
 
-        full_name = item.data(0, _ROLE_NAME) or item.data(0, _ROLE_CODE) or ""
-        self.course_selected.emit(item.data(0, _ROLE_ID), full_name)
+        title = item.data(0, _ROLE_NICKNAME) or item.data(0, _ROLE_TITLE) or ""
+        code  = item.data(0, _ROLE_CODE) or ""
+        display_name = f"{title} ({code})" if title and code else title or code or ""
+        self.course_selected.emit(item.data(0, _ROLE_ID), display_name)

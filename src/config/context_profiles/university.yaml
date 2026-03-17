@@ -1,0 +1,37 @@
+# Research University Context Profile
+# Version: 3.0.0
+# Education level profile: per-marker base weights for a research university student.
+#
+# Similar to four-year college but with slightly lower outlier threshold —
+# larger class sizes mean the peer comparison can be more precise.
+
+profile_id: university
+profile_name: "Research University"
+description: |
+  Per-marker base weights for a typical research university student.
+  Larger classes and higher academic expectations. Similar weights to
+  four-year college, but lower outlier_percentile is viable due to
+  larger cohort sizes enabling more precise statistical detection.
+
+# v3 format: absolute per-match weights (not multipliers).
+# Used by WeightComposer. Orthogonal to MarkerLoader multipliers.
+marker_weights:
+  suspicious:
+    ai_transitions: 0.50          # Same as four-year — formal transitions are suspicious
+    generic_phrases: 0.40         # Generic phrases are suspicious
+    inflated_vocabulary: 0.30     # Same as four-year
+    ai_specific_org: 1.00         # Full weight — no adjustment
+
+  authenticity:
+    personal_voice: 0.50          # Personal voice expected
+    emotional_language: 0.80      # Strong signal
+    cognitive_diversity: 0.60     # Strong signal
+
+thresholds:
+  outlier_percentile: 90          # Lower threshold possible with larger class sizes
+  cognitive_protection_floor: 0.5 # Standard floor
+
+notes: |
+  Research university weights. Similar to four-year college.
+  Lower outlier_percentile takes advantage of larger class sizes for
+  more precise peer comparison. Apply population overlays as appropriate.

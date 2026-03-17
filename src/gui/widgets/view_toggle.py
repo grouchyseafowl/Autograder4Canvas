@@ -1,4 +1,4 @@
-"""CRT-style rocker toggle for switching between Deadline and Group views."""
+"""CRT-style rocker toggle for switching between two labelled views."""
 
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, Signal
 from PySide6.QtGui import (
@@ -25,14 +25,6 @@ BORDER_DARK = "#3A2808"
 BORDER_AMBER = "#6A4A12"
 BG_INSET = "#0E0A02"
 
-# Labels
-_LABEL_LEFT = "\u25C8 Deadline"  # ◈ Deadline
-_LABEL_RIGHT = "Group"
-
-# Modes emitted with the signal
-_MODE_LEFT = "deadline"
-_MODE_RIGHT = "group"
-
 
 class ViewToggle(QWidget):
     """A rocker toggle painted as a single rounded rectangle with two zones.
@@ -40,7 +32,7 @@ class ViewToggle(QWidget):
     Signals
     -------
     mode_changed(str)
-        Emitted with ``"deadline"`` or ``"group"`` when the active side changes.
+        Emitted with the active mode string when the active side changes.
     """
 
     mode_changed = Signal(str)
@@ -48,12 +40,29 @@ class ViewToggle(QWidget):
     # ------------------------------------------------------------------
     # Construction
     # ------------------------------------------------------------------
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: QWidget | None = None, *,
+                 left_label: str = "Deadline",
+                 right_label: str = "Group",
+                 left_mode: str = "deadline",
+                 right_mode: str = "group") -> None:
         super().__init__(parent)
-        self._mode: str = _MODE_LEFT  # default active side
+        self._label_left = left_label
+        self._label_right = right_label
+        self._mode_left = left_mode
+        self._mode_right = right_mode
+        self._mode: str = self._mode_left  # default active side
         self._hover_side: str | None = None  # which side the cursor is over
 
-        self.setFixedSize(180, 24)
+        # Auto-size width from label text
+        font = QFont()
+        font.setPixelSize(11)
+        font.setWeight(QFont.Weight.Medium)
+        fm = QFontMetrics(font)
+        left_w = fm.horizontalAdvance(left_label) + 24
+        right_w = fm.horizontalAdvance(right_label) + 24
+        total_w = max(left_w + right_w, 140)
+
+        self.setFixedSize(total_w, 24)
         self.setMouseTracking(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
@@ -66,7 +75,7 @@ class ViewToggle(QWidget):
 
     def set_mode(self, mode: str) -> None:
         """Programmatically switch the toggle without emitting a signal."""
-        if mode not in (_MODE_LEFT, _MODE_RIGHT):
+        if mode not in (self._mode_left, self._mode_right):
             return
         if mode != self._mode:
             self._mode = mode
@@ -76,10 +85,10 @@ class ViewToggle(QWidget):
     # Size hints
     # ------------------------------------------------------------------
     def sizeHint(self) -> QSize:  # noqa: N802 (Qt naming)
-        return QSize(180, 24)
+        return self.size()
 
     def minimumSizeHint(self) -> QSize:  # noqa: N802
-        return QSize(180, 24)
+        return self.size()
 
     # ------------------------------------------------------------------
     # Geometry helpers
@@ -93,8 +102,8 @@ class ViewToggle(QWidget):
 
     def _side_at(self, pos: QPoint) -> str:
         if pos.x() < self.width() // 2:
-            return _MODE_LEFT
-        return _MODE_RIGHT
+            return self._mode_left
+        return self._mode_right
 
     # ------------------------------------------------------------------
     # Interaction
@@ -138,29 +147,44 @@ class ViewToggle(QWidget):
         p.setBrush(QColor(BG_INSET))
         p.drawRoundedRect(outer, radius, radius)
 
-        # --- active side fill (radial glow) ---
-        active_rect = self._left_rect() if self._mode == _MODE_LEFT else self._right_rect()
-        cx = active_rect.center().x()
-        cy = active_rect.center().y()
-        grad = QRadialGradient(cx, cy, max(active_rect.width(), active_rect.height()) * 0.8)
-        grad.setColorAt(0.0, QColor(240, 168, 48, 64))   # rgba(240,168,48,0.25)
-        grad.setColorAt(1.0, QColor(240, 168, 48, 0))     # fade to transparent
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(grad)
-        # Clip to the rounded rect so the fill doesn't bleed outside
-        p.save()
-        path = p.clipPath()
+        # Clip path used for all fills
         from PySide6.QtGui import QPainterPath
         clip = QPainterPath()
         clip.addRoundedRect(outer.adjusted(1, 1, 0, 0), radius, radius)
+
+        # --- hover fill on inactive hovered side ---
+        if self._hover_side is not None and self._hover_side != self._mode:
+            hover_rect = self._left_rect() if self._hover_side == self._mode_left else self._right_rect()
+            hx = hover_rect.center().x()
+            hy = hover_rect.center().y()
+            hover_grad = QRadialGradient(hx, hy, max(hover_rect.width(), hover_rect.height()) * 0.8)
+            hover_grad.setColorAt(0.0, QColor(240, 168, 48, 36))
+            hover_grad.setColorAt(1.0, QColor(240, 168, 48, 0))
+            p.save()
+            p.setClipPath(clip)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(hover_grad)
+            p.drawRect(hover_rect)
+            p.restore()
+
+        # --- active side fill (radial glow) ---
+        active_rect = self._left_rect() if self._mode == self._mode_left else self._right_rect()
+        cx = active_rect.center().x()
+        cy = active_rect.center().y()
+        grad = QRadialGradient(cx, cy, max(active_rect.width(), active_rect.height()) * 0.8)
+        grad.setColorAt(0.0, QColor(240, 168, 48, 80))
+        grad.setColorAt(1.0, QColor(240, 168, 48, 0))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(grad)
+        p.save()
         p.setClipPath(clip)
         p.drawRect(active_rect)
         p.restore()
 
         # --- bloom halo on active side ---
         bloom = QRadialGradient(cx, cy, max(active_rect.width(), active_rect.height()) * 0.5)
-        bloom.setColorAt(0.0, QColor(240, 168, 48, 30))
-        bloom.setColorAt(0.6, QColor(240, 168, 48, 10))
+        bloom.setColorAt(0.0, QColor(240, 168, 48, 40))
+        bloom.setColorAt(0.6, QColor(240, 168, 48, 14))
         bloom.setColorAt(1.0, QColor(240, 168, 48, 0))
         p.save()
         p.setClipPath(clip)
@@ -182,8 +206,8 @@ class ViewToggle(QWidget):
         fm = QFontMetrics(font)
 
         for side, label, rect in (
-            (_MODE_LEFT, _LABEL_LEFT, self._left_rect()),
-            (_MODE_RIGHT, _LABEL_RIGHT, self._right_rect()),
+            (self._mode_left, self._label_left, self._left_rect()),
+            (self._mode_right, self._label_right, self._right_rect()),
         ):
             is_active = self._mode == side
             is_hovered = self._hover_side == side and not is_active
@@ -199,9 +223,9 @@ class ViewToggle(QWidget):
                 # Main bright text
                 p.setPen(QColor(PHOSPHOR_HOT))
             elif is_hovered:
-                p.setPen(QColor(PHOSPHOR_DIM))
+                p.setPen(QColor(PHOSPHOR_MID))
             else:
-                p.setPen(QColor(BORDER_DARK))
+                p.setPen(QColor("#4A3010"))
 
             p.drawText(rect, Qt.AlignmentFlag.AlignCenter, label)
 

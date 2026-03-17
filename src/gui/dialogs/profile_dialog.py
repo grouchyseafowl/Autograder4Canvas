@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QPushButton, QFormLayout, QLabel, QLineEdit, QGroupBox,
     QDialogButtonBox, QInputDialog, QMessageBox,
 )
+from gui.dialogs.message_dialog import show_question
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 
@@ -157,8 +158,8 @@ class ProfileDialog(QDialog):
         if not item:
             return
         name = item.data(Qt.ItemDataRole.UserRole)
-        if QMessageBox.question(self, "Delete Profile",
-                                f"Delete profile '{name}'?") != QMessageBox.StandardButton.Yes:
+        if show_question(self, "Delete Profile",
+                         f"Delete profile '{name}'?") != QMessageBox.StandardButton.Yes:
             return
         data = self._load_data()
         data.get("profiles", {}).pop(name, None)

@@ -372,27 +372,18 @@ class CanvasEditor:
         if has_graded:
             old_label = GRADING_TYPE_LABELS.get(current_grading_type, current_grading_type)
             new_label = GRADING_TYPE_LABELS.get(new_grading_type, new_grading_type)
+            lossy = (current_grading_type, new_grading_type) in _LOSSY_PAIRS
+            message = (
+                f"Existing grades won't be re-scored — they'll be reinterpreted under "
+                f"{new_label} scale."
+            )
+            if lossy:
+                message += " Some values may be truncated; review SpeedGrader afterward."
             warnings.append(PreflightWarning(
                 code="has_graded_submissions",
                 severity="warn",
-                message=(
-                    f"Students already have grades for this assignment. Changing from "
-                    f"{old_label} to {new_label} does not re-grade them — existing scores "
-                    f"will be reinterpreted under the new scale. Run the autograder again "
-                    f"afterward to correct any affected grades."
-                ),
+                message=message,
             ))
-
-            if (current_grading_type, new_grading_type) in _LOSSY_PAIRS:
-                warnings.append(PreflightWarning(
-                    code="lossy_grading_transition",
-                    severity="warn",
-                    message=(
-                        "This grading type conversion is lossy: some existing grade values "
-                        "may be truncated or displayed incorrectly to students. Review "
-                        "SpeedGrader after making this change."
-                    ),
-                ))
 
         return PreflightResult(safe=(len(warnings) == 0), warnings=warnings)
 
@@ -664,6 +655,60 @@ class CanvasEditor:
     # -----------------------------------------------------------------------
     # COURSE MUTATIONS
     # -----------------------------------------------------------------------
+
+    def preflight_unpublish_course(self, course_id: int) -> PreflightResult:
+        """
+        Warn if students are actively enrolled — unpublishing immediately hides
+        the course from all enrolled students.
+        """
+        try:
+            r = self._get(
+                f"/courses/{course_id}/enrollments",
+                params={"type[]": "StudentEnrollment", "state[]": "active", "per_page": 1},
+            )
+            has_students = bool(r.ok and r.json())
+        except Exception:
+            has_students = False
+
+        if has_students:
+            return PreflightResult(
+                safe=False,
+                warnings=[PreflightWarning(
+                    code="has_enrolled_students",
+                    severity="warn",
+                    message=(
+                        "This course has enrolled students. Unpublishing will immediately "
+                        "hide the course from all students — they will lose access to course "
+                        "materials, grades, and announcements until the course is re-published."
+                    ),
+                )],
+            )
+        return PreflightResult.safe_result()
+
+    def set_course_published(self, course_id: int, publish: bool) -> EditResult:
+        """
+        Publish (offer) or unpublish (claim) a course on Canvas.
+
+        Canvas uses the 'event' field on the course object:
+          "offer"  — publish the course (visible to students)
+          "claim"  — unpublish (hidden from students)
+
+        Run preflight_unpublish_course before unpublishing.
+        """
+        event = "offer" if publish else "claim"
+        data, err_code, msg = self._request(
+            "PUT",
+            f"/courses/{course_id}",
+            {"course": {"event": event}},
+        )
+        if err_code == "permission_denied":
+            msg = (
+                "Your institution has not granted teachers permission to publish or "
+                "unpublish courses. This action may require admin permissions."
+            )
+        elif err_code == "not_found":
+            msg = "Course not found on Canvas — it may have been deleted."
+        return EditResult(ok=(data is not None), data=data, error_code=err_code, message=msg)
 
     def rename_course(self, course_id: int, new_name: str) -> EditResult:
         """

@@ -318,17 +318,23 @@ class AutomationEngine:
         students = autograder_ci.get_active_students(course_id)
         submissions = autograder_ci.get_submissions(course_id, assignment_id)
 
-        # Filter out students who never submitted
-        submissions = {
+        # Build student name lookup and active student id set
+        student_names = {}
+        active_student_ids = set()
+        for enrollment in students:
+            user = enrollment.get('user', {})
+            uid = user.get('id')
+            student_names[uid] = user.get('name', f"Student {uid!r}")
+            if uid is not None:
+                active_student_ids.add(uid)
+
+        # Filter out students who never submitted (keep for absent-grading check below)
+        submitted = {
             user_id: sub for user_id, sub in submissions.items()
             if sub.get('submitted_at') is not None
         }
-
-        # Build student name lookup
-        student_names = {}
-        for enrollment in students:
-            user = enrollment.get('user', {})
-            student_names[user.get('id')] = user.get('name', f"Student {user.get('id', '?')}")
+        absent_ids = active_student_ids - set(submitted.keys())
+        submissions = submitted
 
         # Apply grade preservation filter
         if rule.preserve_existing_grades:
@@ -374,6 +380,13 @@ class AutomationEngine:
                         required_words=rule.min_word_count or 0,
                         category="ci"
                     ))
+
+        # If mark_missing_as_incomplete is set, grade absent students as Incomplete
+        if rule.mark_missing_as_incomplete:
+            for user_id in absent_ids:
+                grade_data[user_id] = {"posted_grade": "incomplete"}
+            if absent_ids:
+                self.logger.info(f"      ℹ️  {len(absent_ids)} absent student(s) marked Incomplete")
 
         # Submit grades to Canvas (unless dry-run)
         if not self.dry_run and grade_data:
@@ -1427,28 +1440,181 @@ class AutomationEngine:
 
     def _run_adc(self, course_id: int, assignment: Dict[str, Any], course_name: str) -> List[Dict[str, Any]]:
         """
-        Run Academic Dishonesty Check on graded submissions.
+        Run Academic Integrity Check on all text submissions for this assignment.
 
-        Args:
-            course_id: Canvas course ID
-            assignment: Assignment dictionary
-            course_name: Course name
+        Fetches submissions from Canvas, runs DishonestyAnalyzer on each, saves
+        results to RunStore (SQLite), runs peer comparison, then returns flag dicts
+        for backwards-compatibility with FlagAggregator.
 
-        Returns:
-            List of flag dictionaries
+        Invocation note: AIC can also be triggered directly via
+        Academic_Dishonesty_Check_v2.analyze_assignment() from the GUI or CLI.
+        RunStore.save_result() is called from both paths.
         """
-        # Note: ADC integration would require importing and running Academic_Dishonesty_Check_v2
-        # This is a placeholder that returns empty list
-        # Full implementation would involve:
-        # 1. Import AcademicDishonestyDetector from Academic_Dishonesty_Check_v2
-        # 2. Analyze each submission
-        # 3. Return flagged results
+        assignment_id = assignment["id"]
+        assignment_name = assignment["name"]
 
-        self.logger.info(f"      🔍 Running academic dishonesty check...")
+        self.logger.info(f"      🔍 Running Academic Integrity Check: {assignment_name}")
 
-        # For now, return empty list
-        # TODO: Implement full ADC integration
-        return []
+        # ── Import AIC engine and RunStore ─────────────────────────────────
+        try:
+            from Academic_Dishonesty_Check_v2 import DishonestyAnalyzer, PeerComparisonAnalyzer
+            from automation.run_store import RunStore
+        except ImportError as e:
+            self.logger.warning(f"      ⚠ AIC skipped — import failed: {e}")
+            return []
+
+        # ── Fetch submissions with student user info ────────────────────────
+        url = (f"{self.base_url}/api/v1/courses/{course_id}"
+               f"/assignments/{assignment_id}/submissions")
+        try:
+            resp = requests.get(
+                url,
+                headers=self.headers,
+                params={"per_page": 100, "include[]": "user"},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            submissions = resp.json()
+        except requests.RequestException as e:
+            self.logger.warning(f"      ⚠ AIC skipped — could not fetch submissions: {e}")
+            return []
+
+        # ── Open RunStore ──────────────────────────────────────────────────
+        try:
+            store = RunStore()
+        except Exception as e:
+            self.logger.warning(f"      ⚠ AIC skipped — could not open RunStore: {e}")
+            return []
+
+        try:
+            from settings import load_settings as _load_settings
+            context_profile = _load_settings().get("context_profile", "community_college")
+        except Exception:
+            context_profile = "community_college"
+
+        # Phase 8: Compose per-marker weights from active credential profile
+        composed_weights = None
+        try:
+            from modules.weight_composer import compose_from_profile
+            from credentials import get_active_profile
+            _, active_profile = get_active_profile()
+            if active_profile:
+                composed_weights = compose_from_profile(active_profile)
+                self.logger.info(
+                    f"      📊 Weight system: {composed_weights.education_level} "
+                    f"(ESL={composed_weights.population.esl_level}, "
+                    f"first_gen={composed_weights.population.first_gen_level}, "
+                    f"ND={composed_weights.population.neurodivergent_aware})"
+                )
+        except Exception as e:
+            self.logger.debug(f"      Weight composer unavailable, using legacy path: {e}")
+
+        analyzer = DishonestyAnalyzer(
+            context_profile=context_profile,
+            composed_weights=composed_weights,
+        )
+
+        results = []
+        submitted_at_by_student: Dict[str, Optional[str]] = {}
+        skipped = 0
+
+        # ── Analyze each submission ────────────────────────────────────────
+        for sub in submissions:
+            student_id = str(sub.get("user_id", ""))
+            body = sub.get("body") or ""
+            submitted_at = sub.get("submitted_at")
+            workflow_state = sub.get("workflow_state", "")
+            user_info = sub.get("user") or {}
+            student_name = (
+                user_info.get("name")
+                or user_info.get("short_name")
+                or f"Student {student_id}"
+            )
+
+            # Skip unsubmitted or empty text
+            if workflow_state in ("unsubmitted", "deleted") or not body.strip():
+                skipped += 1
+                continue
+
+            # Skip if same submission was already analyzed (re-run on resubmission)
+            if not store.should_reanalyze(student_id, str(assignment_id), submitted_at):
+                skipped += 1
+                continue
+
+            submitted_at_by_student[student_id] = submitted_at
+
+            try:
+                result = analyzer.analyze_text(
+                    body,
+                    student_id=student_id,
+                    student_name=student_name,
+                )
+                store.save_result(
+                    result,
+                    course_id=str(course_id),
+                    course_name=course_name,
+                    assignment_id=str(assignment_id),
+                    assignment_name=assignment_name,
+                    submitted_at=submitted_at,
+                    context_profile=context_profile,
+                )
+                results.append(result)
+            except Exception as e:
+                self.logger.warning(
+                    f"      ⚠ AIC failed for student {student_id}: {e}"
+                )
+
+        # ── Peer comparison — updates results in-place with percentiles ────
+        if len(results) >= 3:
+            try:
+                outlier_pct = (
+                    composed_weights.outlier_percentile
+                    if composed_weights is not None else 95.0
+                )
+                peer_analyzer = PeerComparisonAnalyzer(outlier_percentile=outlier_pct)
+                peer_analyzer.analyze_cohort(results)
+                # Re-save results that were flagged as outliers
+                for r in results:
+                    if r.is_outlier:
+                        store.save_result(
+                            r,
+                            course_id=str(course_id),
+                            course_name=course_name,
+                            assignment_id=str(assignment_id),
+                            assignment_name=assignment_name,
+                            submitted_at=submitted_at_by_student.get(str(r.student_id)),
+                            context_profile=context_profile,
+                        )
+            except Exception as e:
+                self.logger.warning(f"      ⚠ Peer comparison skipped: {e}")
+
+        # ── Log summary ────────────────────────────────────────────────────
+        concern_counts: Dict[str, int] = {}
+        for r in results:
+            concern_counts[r.concern_level] = concern_counts.get(r.concern_level, 0) + 1
+        smoking_guns = sum(1 for r in results if r.smoking_gun)
+
+        self.logger.info(
+            f"      ✅ AIC complete: {len(results)} analyzed, {skipped} skipped"
+            f" | concern breakdown: {concern_counts}"
+            + (f" | !! SMOKING GUNS: {smoking_guns}" if smoking_guns else "")
+        )
+
+        # ── Return flag dicts for FlagAggregator backwards compatibility ───
+        flags = []
+        for r in results:
+            if r.concern_level in ("high", "elevated", "moderate"):
+                flags.append({
+                    "student_id": r.student_id,
+                    "student_name": r.student_name,
+                    "course_name": course_name,
+                    "assignment_name": assignment_name,
+                    "concern_level": r.concern_level.capitalize(),
+                    "suspicious_score": r.suspicious_score,
+                    "authenticity_score": r.authenticity_score,
+                    "smoking_gun": r.smoking_gun,
+                })
+        return flags
 
     def _check_for_new_assignments(self):
         """Check for new assignment groups in configured courses."""

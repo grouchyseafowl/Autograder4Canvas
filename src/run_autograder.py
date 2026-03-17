@@ -13,6 +13,41 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import getpass
 
+# Import shared modules (credentials, settings, cleanup) so the GUI can use them too.
+# These are imported before the autograder_utils block so they're always available.
+try:
+    from credentials import (
+        get_credentials_file as _get_credentials_file_impl,
+        load_credentials as _load_credentials_impl,
+        save_credentials as _save_credentials_impl,
+        profile_name_from_url as _profile_name_from_url_impl,
+        get_active_profile as _get_active_profile_impl,
+        set_env_from_profile as _set_env_from_profile_impl,
+        save_canvas_url_permanently as _save_url_impl,
+        save_token_permanently as _save_token_impl,
+        remove_saved_canvas_url as _remove_url_impl,
+        remove_saved_token as _remove_token_impl,
+    )
+    _HAS_CREDS_MODULE = True
+except ImportError:
+    _HAS_CREDS_MODULE = False
+
+try:
+    from settings import load_settings as _load_settings_impl, save_settings as _save_settings_impl
+    _HAS_SETTINGS_MODULE = True
+except ImportError:
+    _HAS_SETTINGS_MODULE = False
+
+try:
+    from cleanup import (
+        cleanup_old_files as _cleanup_old_files_impl,
+        archive_files_by_type as _archive_files_by_type_impl,
+        trash_files_by_type as _trash_files_by_type_impl,
+    )
+    _HAS_CLEANUP_MODULE = True
+except ImportError:
+    _HAS_CLEANUP_MODULE = False
+
 # Windows cmd.exe defaults to cp1252; switch stdout/stderr to UTF-8 so
 # emoji in print() doesn't crash with UnicodeEncodeError.
 if sys.platform == "win32":

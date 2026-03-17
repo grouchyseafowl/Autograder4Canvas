@@ -5,19 +5,19 @@ import os
 from typing import Optional
 
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QSplitter, QSplitterHandle, QStackedWidget,
+    QMainWindow, QWidget, QStackedWidget,
     QStatusBar, QLabel, QMenuBar, QMessageBox, QHBoxLayout, QVBoxLayout,
     QPushButton, QButtonGroup, QFrame,
 )
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QAction, QKeySequence, QPainter, QColor
+from PySide6.QtGui import QAction, QKeySequence, QColor
 
 from gui.styles import (
     WIN_MIN_W, WIN_MIN_H, WIN_DEFAULT_W, WIN_DEFAULT_H,
     LEFT_PANEL_MIN, LEFT_PANEL_PREF,
     BG_VOID, BG_PANEL, BORDER_DARK, BORDER_AMBER,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM,
-    ROSE_ACCENT,
+    ROSE_ACCENT, GripSplitter,
 )
 from gui.panels.course_panel import CoursePanel
 from gui.panels.assignment_panel import AssignmentPanel
@@ -80,67 +80,39 @@ _ACTION_BTN_QSS = f"""
 
 
 # ---------------------------------------------------------------------------
-# Custom splitter handle
-# ---------------------------------------------------------------------------
-
-class _GripHandle(QSplitterHandle):
-    """Splitter handle — void background so negative space reads between panels."""
-
-    _BG    = QColor(BG_VOID)
-    _DOT   = QColor(PHOSPHOR_DIM)
-    _DOT_H = QColor("#8A5E1A")   # amber when hovered
-
-    def paintEvent(self, event):
-        p = QPainter(self)
-        p.fillRect(self.rect(), self._BG)
-
-        # thin border line on the left edge
-        p.fillRect(0, 0, 1, self.height(), QColor(BORDER_DARK))
-
-        # three grip dots centred vertically
-        dot = self._DOT_H if self.underMouse() else self._DOT
-        p.setBrush(dot)
-        p.setPen(Qt.PenStyle.NoPen)
-        cx = self.width() // 2
-        cy = self.height() // 2
-        for dy in (-6, 0, 6):
-            p.drawEllipse(cx - 2, cy + dy - 2, 4, 4)
-        p.end()
-
-    def enterEvent(self, event):
-        self.update()
-        super().enterEvent(event)
-
-    def leaveEvent(self, event):
-        self.update()
-        super().leaveEvent(event)
-
-
-class _GripSplitter(QSplitter):
-    def createHandle(self):
-        return _GripHandle(self.orientation(), self)
-
-
-# ---------------------------------------------------------------------------
 # Main window
 # ---------------------------------------------------------------------------
 
+_PROFILE_LABEL = {"hs": "High School", "cc": "Community College"}
+
+
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, demo_mode: bool = False, demo_profile: str = "hs"):
         super().__init__()
+        self._demo_mode    = demo_mode
+        self._demo_profile = demo_profile
         self._api = None
         self._editor = None
         self._current_course_id: Optional[int] = None
+        self._current_course_name: Optional[str] = None
         self._current_term_id: Optional[int] = None
         self._courses_worker = None
         self._assignment_worker = None
+        self._prefetch_worker = None
+        self._assignments_cache: dict = {}  # course_id → [group_dicts]
         self._active_workers: list = []  # prevent premature GC of running workers
 
-        self.setWindowTitle("Autograder4Canvas")
+        if demo_mode:
+            label = _PROFILE_LABEL.get(demo_profile, demo_profile)
+            title = f"Autograder4Canvas — Demo ({label})"
+        else:
+            title = "Autograder4Canvas"
+        self.setWindowTitle(title)
         self.setMinimumSize(WIN_MIN_W, WIN_MIN_H)
         self.resize(WIN_DEFAULT_W, WIN_DEFAULT_H)
 
-        self._init_api()
+        if not demo_mode:
+            self._init_api()
         self._build_ui()
         self._connect_signals()
         self._refresh_courses()
@@ -271,10 +243,11 @@ class MainWindow(QMainWindow):
         self._nav_group.addButton(self._btn_courses)
         h.addWidget(self._btn_courses)
 
-        # Bulk Run → opens dialog (action, not a page)
-        btn_bulk = _action_btn("Bulk Run")
-        btn_bulk.clicked.connect(self._open_bulk_run_dialog)
-        h.addWidget(btn_bulk)
+        # Bulk Run → page 4
+        self._btn_bulk = _nav_btn("Bulk Run")
+        self._btn_bulk.clicked.connect(self._show_bulk_run_page)
+        self._nav_group.addButton(self._btn_bulk)
+        h.addWidget(self._btn_bulk)
 
         # Review Prior Runs → page 3
         self._btn_prior = _nav_btn("Review Prior Runs")
@@ -282,11 +255,18 @@ class MainWindow(QMainWindow):
         self._nav_group.addButton(self._btn_prior)
         h.addWidget(self._btn_prior)
 
+        # Generate Insights → page 5
+        self._btn_insights = _nav_btn("Generate Insights")
+        self._btn_insights.clicked.connect(self._show_insights_page)
+        self._nav_group.addButton(self._btn_insights)
+        h.addWidget(self._btn_insights)
+
         # Automation → page 1
         self._btn_automation = _nav_btn("Automation")
         self._btn_automation.clicked.connect(lambda: self._stack.setCurrentIndex(1))
         self._nav_group.addButton(self._btn_automation)
-        h.addWidget(self._btn_automation)
+        if not self._demo_mode:
+            h.addWidget(self._btn_automation)
 
         # Settings → page 2
         self._btn_settings = _nav_btn("Settings")
@@ -303,8 +283,9 @@ class MainWindow(QMainWindow):
         sep.setStyleSheet(f"background: {BORDER_DARK};")
         h.addWidget(sep, 0, Qt.AlignmentFlag.AlignVCenter)
 
-        # Refresh from Canvas → action
-        btn_refresh = _action_btn("Refresh from Canvas")
+        # Refresh → action (label differs in demo mode)
+        refresh_label = "Refresh" if self._demo_mode else "Refresh from Canvas"
+        btn_refresh = _action_btn(refresh_label)
         btn_refresh.clicked.connect(self._refresh_courses)
         h.addWidget(btn_refresh)
 
@@ -330,13 +311,13 @@ class MainWindow(QMainWindow):
         # ── Page 0: Courses ───────────────────────────────────────────────
         self._course_panel = CoursePanel()
         self._assignment_panel = AssignmentPanel()
-        splitter = _GripSplitter(Qt.Orientation.Horizontal)
-        splitter.setHandleWidth(10)
-        splitter.addWidget(self._course_panel)
-        splitter.addWidget(self._assignment_panel)
-        splitter.setStretchFactor(0, 0)
-        splitter.setStretchFactor(1, 1)
-        splitter.setSizes([LEFT_PANEL_PREF, WIN_DEFAULT_W - LEFT_PANEL_PREF])
+        self._course_splitter = GripSplitter.create(Qt.Orientation.Horizontal)
+        self._course_splitter.setHandleWidth(10)
+        self._course_splitter.addWidget(self._course_panel)
+        self._course_splitter.addWidget(self._assignment_panel)
+        self._course_splitter.setStretchFactor(0, 0)
+        self._course_splitter.setStretchFactor(1, 1)
+        self._course_splitter.setSizes([LEFT_PANEL_PREF, WIN_DEFAULT_W - LEFT_PANEL_PREF])
         self._course_panel.setMinimumWidth(LEFT_PANEL_MIN)
 
         from PySide6.QtGui import QPalette
@@ -346,9 +327,30 @@ class MainWindow(QMainWindow):
         pal.setColor(QPalette.ColorRole.Window, QColor(BG_VOID))
         courses_container.setPalette(pal)
         cl = QVBoxLayout(courses_container)
-        cl.setContentsMargins(8, 8, 8, 8)
-        cl.setSpacing(0)
-        cl.addWidget(splitter)
+        cl.setContentsMargins(16, 16, 16, 16)
+        cl.setSpacing(12)
+
+        # Page header (matches Bulk Run's title bar)
+        cs_title = QLabel("COURSE SELECT")
+        cs_title.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+            f" background: transparent; border: none; letter-spacing: 2px;"
+        )
+        cs_sub = QLabel(
+            "Select a course to view assignments and run the autograder."
+        )
+        cs_sub.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f" background: transparent; border: none;"
+        )
+        cs_sub.setWordWrap(True)
+        cl.addWidget(cs_title)
+        cl.addWidget(cs_sub)
+
+        from gui.styles import make_h_rule
+        cl.addWidget(make_h_rule())
+
+        cl.addWidget(self._course_splitter, 1)
         self._stack.addWidget(courses_container)   # index 0
 
         # ── Page 1: Automation ────────────────────────────────────────────
@@ -359,54 +361,57 @@ class MainWindow(QMainWindow):
         self._settings_panel = SettingsPanel(api=self._api)
         self._stack.addWidget(self._settings_panel)    # index 2
 
-        # ── Page 3: Prior Runs ────────────────────────────────────────────
-        self._stack.addWidget(self._build_prior_runs_page())  # index 3
+        # ── Page 3: Review (Grading Results + AIC) ────────────────────────
+        from gui.panels.review_panel import ReviewPanel
+        if self._demo_mode:
+            from automation.demo_store import DemoRunStore
+            self._review_panel = ReviewPanel(
+                api=None, store=DemoRunStore(profile=self._demo_profile)
+            )
+        else:
+            self._review_panel = ReviewPanel(api=self._api)
+        self._stack.addWidget(self._review_panel)  # index 3
+
+        # ── Page 4: Bulk Run ──────────────────────────────────────────────
+        from gui.dialogs.bulk_run_dialog import BulkRunPage
+        self._bulk_run_page = BulkRunPage(api=self._api, demo_mode=self._demo_mode)
+        self._stack.addWidget(self._bulk_run_page)            # index 4
+
+        # ── Page 5: Generate Insights ─────────────────────────────────────
+        from insights.insights_store import InsightsStore
+        from gui.panels.insights_panel import InsightsPanel
+        self._insights_store = InsightsStore()
+        self._insights_panel = InsightsPanel(
+            api=self._api, store=self._insights_store, demo_mode=self._demo_mode
+        )
+        self._stack.addWidget(self._insights_panel)           # index 5
 
         self._stack.setCurrentIndex(0)
 
-    def _build_prior_runs_page(self) -> QWidget:
-        """Simple page pointing users to the output folder for run history."""
-        from gui.styles import make_secondary_button
-        from PySide6.QtGui import QPalette
 
-        page = QWidget()
-        page.setAutoFillBackground(True)
-        pal = page.palette()
-        pal.setColor(QPalette.ColorRole.Window, QColor(BG_VOID))
-        page.setPalette(pal)
-
-        layout = QVBoxLayout(page)
-        layout.setContentsMargins(32, 32, 32, 32)
-        layout.setSpacing(12)
-
-        title = QLabel("PRIOR RUNS")
-        title.setProperty("heading", "true")
-        layout.addWidget(title)
-
-        desc = QLabel(
-            "Grading results are saved to your configured output folder. "
-            "Open it to browse run history, reports, and CSVs."
+    def _show_insights_page(self) -> None:
+        """Switch to the Generate Insights page, refreshing course data."""
+        courses_by_term = self._course_panel.get_all_courses_by_term()
+        self._insights_panel.refresh_courses(
+            courses_by_term, self._assignments_cache
         )
-        desc.setProperty("muted", "true")
-        desc.setWordWrap(True)
-        layout.addWidget(desc)
-
-        layout.addSpacing(8)
-
-        open_btn = QPushButton("Open Output Folder")
-        make_secondary_button(open_btn)
-        open_btn.setFixedWidth(200)
-        open_btn.clicked.connect(self._open_output_folder)
-        layout.addWidget(open_btn)
-
-        layout.addStretch()
-        return page
+        self._stack.setCurrentIndex(5)
 
     def _build_statusbar(self) -> None:
         sb = QStatusBar()
         self.setStatusBar(sb)
         self._status_label = QLabel("Ready")
         sb.addWidget(self._status_label)
+        if self._demo_mode:
+            label = _PROFILE_LABEL.get(self._demo_profile, self._demo_profile)
+            demo_badge = QLabel(f"  DEMO — {label}  ")
+            demo_badge.setStyleSheet(
+                f"color: {PHOSPHOR_HOT}; background: rgba(90,60,8,0.35);"
+                f" border: 1px solid {BORDER_AMBER}; border-radius: 3px;"
+                f" font-family: 'Menlo','Consolas','Courier New',monospace;"
+                f" font-size: 11px; font-weight: bold; padding: 1px 4px;"
+            )
+            sb.addPermanentWidget(demo_badge)
 
     # ------------------------------------------------------------------
     # Signal wiring
@@ -419,6 +424,10 @@ class MainWindow(QMainWindow):
         self._assignment_panel.edit_completed.connect(self._on_edit_completed)
         self._settings_panel.settings_saved.connect(self._on_settings_saved)
 
+        # Sync course-panel width between Course Select and Bulk Run
+        self._course_splitter.splitterMoved.connect(self._sync_to_bulk_run)
+        self._bulk_run_page._pane_splitter.splitterMoved.connect(self._sync_to_course_select)
+
         # Pass editor to panels that support Canvas mutations
         if self._editor:
             self._assignment_panel.set_editor(self._editor)
@@ -429,11 +438,15 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _refresh_courses(self) -> None:
+        if self._demo_mode:
+            self._load_demo_courses()
+            return
         if not self._api:
             self._set_status("No Canvas credentials configured — check Settings.")
             return
         self._cancel_workers()
         self._course_panel.clear()
+        self._assignments_cache.clear()
         self._set_status("Loading courses…")
 
         from gui.workers import LoadCoursesWorker
@@ -442,27 +455,116 @@ class MainWindow(QMainWindow):
         w.courses_loaded.connect(self._course_panel.add_courses_for_term)
         w.courses_loaded.connect(lambda tid, c: self._set_status(f"Loaded {len(c)} courses.") if c else None)
         w.error.connect(lambda msg: self._set_status(f"Error loading courses: {msg}"))
+        w.finished.connect(self._on_courses_loaded_start_prefetch)
         w.start()
         self._courses_worker = w
         self._track_worker(w)
 
+    def _load_demo_courses(self) -> None:
+        """Synchronously populate the course panel with demo data."""
+        from demo_data import get_demo_terms, get_demo_courses, get_demo_assignment_groups
+        p = self._demo_profile
+        self._course_panel.clear()
+        self._assignments_cache.clear()
+
+        terms = get_demo_terms(profile=p)
+        self._course_panel.populate_terms(terms)
+
+        for term_id, term_name, is_current in terms:
+            courses = get_demo_courses(term_id, profile=p)
+            self._course_panel.add_courses_for_term(term_id, courses)
+            for c in courses:
+                cid = c["id"]
+                self._assignments_cache[cid] = get_demo_assignment_groups(cid, profile=p)
+
+        self._set_status("Demo courses loaded. Select a course to get started.")
+
     def _on_course_selected(self, course_id: int, course_name: str) -> None:
         self._current_course_id = course_id
+        self._current_course_name = course_name
         self._assignment_panel.set_course(course_id, course_name)
-        self._assignment_panel.show_loading()
+        self._review_panel.set_course(course_id, course_name)
 
+        # Serve from prefetch cache instantly — no API call needed.
+        if course_id in self._assignments_cache:
+            self._on_assignments_loaded(self._assignments_cache[course_id])
+            return
+
+        if self._demo_mode:
+            # Demo data should already be cached; nothing to fetch
+            self._on_assignments_loaded([])
+            return
+
+        # Cache miss: prefetch hasn't reached this course yet — fetch on demand.
+        self._assignment_panel.show_loading()
         if self._assignment_worker:
             self._assignment_worker.cancel()
-
         self._set_status(f"Loading assignments for {course_name}…")
 
         from gui.workers import LoadAssignmentsWorker
         w = LoadAssignmentsWorker(self._api, course_id)
         w.assignments_loaded.connect(self._on_assignments_loaded)
+        w.assignments_loaded.connect(
+            lambda groups, cid=course_id: self._assignments_cache.update({cid: groups})
+        )
         w.error.connect(lambda msg: self._set_status(f"Error: {msg}"))
         w.start()
         self._assignment_worker = w
         self._track_worker(w)
+
+    def _refresh_assignments(self) -> None:
+        """Re-fetch assignments for the currently selected course (bypasses cache)."""
+        if not self._current_course_id or not self._api or self._demo_mode:
+            return
+        if self._assignment_worker:
+            self._assignment_worker.cancel()
+        self._set_status("Refreshing assignments…")
+        cid = self._current_course_id
+        from gui.workers import LoadAssignmentsWorker
+        w = LoadAssignmentsWorker(self._api, cid)
+        w.assignments_loaded.connect(self._on_assignments_loaded)
+        w.assignments_loaded.connect(
+            lambda groups, _cid=cid: self._assignments_cache.update({_cid: groups})
+        )
+        w.error.connect(lambda msg: self._set_status(f"Error: {msg}"))
+        w.start()
+        self._assignment_worker = w
+        self._track_worker(w)
+
+    def _on_courses_loaded_start_prefetch(self) -> None:
+        """Called when the course list finishes loading. Refreshes any selected
+        course then kicks off a background fetch for all other courses."""
+        self._refresh_assignments()
+        self._start_assignment_prefetch()
+
+    def _start_assignment_prefetch(self) -> None:
+        """Fetch assignments for every course in the sidebar in the background."""
+        if not self._api or self._demo_mode:
+            return
+        courses_by_term = self._course_panel.get_all_courses_by_term()
+        course_ids = [
+            c["id"]
+            for _, _, _, courses in courses_by_term
+            for c in courses
+            if c.get("id") and c["id"] != self._current_course_id
+        ]
+        if not course_ids:
+            return
+        from gui.workers import LoadAllAssignmentsWorker
+        w = LoadAllAssignmentsWorker(self._api, course_ids)
+        w.course_assignments_loaded.connect(self._on_prefetched_assignments)
+        w.start()
+        self._prefetch_worker = w
+        self._track_worker(w)
+
+    def _on_prefetched_assignments(self, course_id: int, groups: list) -> None:
+        """Store prefetched assignments in cache. If the user already navigated
+        to this course while the prefetch was running, populate the panel now."""
+        self._assignments_cache[course_id] = groups
+        if (course_id == self._current_course_id
+                and (self._assignment_worker is None
+                     or not self._assignment_worker.isRunning())):
+            self._on_assignments_loaded(groups)
 
     def _on_assignments_loaded(self, groups: list) -> None:
         self._assignment_panel.populate_tree(groups)
@@ -472,13 +574,11 @@ class MainWindow(QMainWindow):
     # Run dialog
     # ------------------------------------------------------------------
 
-    def _open_run_dialog(self, selected: list, course_name: str, course_id: int,
-                         mark_incomplete_no_sub: bool = False,
-                         run_aic: bool = False,
-                         preserve_grades: bool = True) -> None:
-        if not self._api:
-            QMessageBox.warning(self, "No Credentials",
-                                "Configure Canvas credentials in the Settings tab first.")
+    def _open_run_dialog(self, selected: list, course_name: str, course_id: int) -> None:
+        if not self._api and not self._demo_mode:
+            from gui.dialogs.message_dialog import show_warning
+            show_warning(self, "No Credentials",
+                         "Configure Canvas credentials in the Settings tab first.")
             return
 
         term_id = self._current_term_id or 0
@@ -490,28 +590,77 @@ class MainWindow(QMainWindow):
             course_name=course_name,
             course_id=course_id,
             term_id=term_id,
-            run_aic_default=run_aic,
-            preserve_grades_default=preserve_grades,
+            demo_mode=self._demo_mode,
             parent=self,
         )
         dlg.exec()
+        if self._demo_mode:
+            # Zero out needs_grading_count badges for the graded assignments
+            selected_ids = {a.get("id") for a in selected}
+            if course_id in self._assignments_cache:
+                for group in self._assignments_cache[course_id]:
+                    for a in group.get("assignments", []):
+                        if a.get("id") in selected_ids:
+                            a["needs_grading_count"] = 0
+                self._on_assignments_loaded(self._assignments_cache[course_id])
+            self._set_status(
+                "Grading complete — 1 student flagged for review. See Review Prior Runs \u2192"
+            )
+        else:
+            self._refresh_assignments()
 
-    def _open_bulk_run_dialog(self) -> None:
-        if not self._api:
-            QMessageBox.warning(self, "No Credentials",
-                                "Configure Canvas credentials in the Settings tab first.")
-            return
+    def _show_bulk_run_page(self) -> None:
+        # Refresh the course list from whatever is currently loaded
         courses_by_term = self._course_panel.get_all_courses_by_term()
-        if not courses_by_term:
-            QMessageBox.information(self, "No Courses",
-                                    "No courses loaded yet. Refresh first.")
-            return
-        from gui.dialogs.bulk_run_dialog import BulkRunDialog
-        dlg = BulkRunDialog(api=self._api, courses_by_term=courses_by_term, parent=self)
-        dlg.exec()
+        self._bulk_run_page.refresh_courses(courses_by_term)
+        if self._demo_mode:
+            # Pre-seed mapping panel cache so it doesn't try to call the API
+            from demo_data import SPRING_2026, FALL_2025, get_demo_courses, get_demo_assignment_groups
+            p  = self._demo_profile
+            mp = self._bulk_run_page._mapping_panel
+            for term_id in (SPRING_2026, FALL_2025):
+                for c in get_demo_courses(term_id, profile=p):
+                    mp._groups_cache[c["id"]] = get_demo_assignment_groups(c["id"], profile=p)
+        self._stack.setCurrentIndex(4)
 
     def _on_term_selected(self, term_id: int) -> None:
         self._current_term_id = term_id
+
+    # ------------------------------------------------------------------
+    # Splitter width sync
+    # ------------------------------------------------------------------
+
+    def _sync_to_bulk_run(self, pos: int, index: int) -> None:
+        """Course Select splitter moved → update Bulk Run left pane width."""
+        cs_sizes = self._course_splitter.sizes()
+        if not cs_sizes:
+            return
+        br_sizes = self._bulk_run_page._pane_splitter.sizes()
+        if len(br_sizes) < 3:
+            return
+        delta = cs_sizes[0] - br_sizes[0]
+        br_sizes[0] = cs_sizes[0]
+        br_sizes[1] = max(100, br_sizes[1] - delta)
+        self._bulk_run_page._pane_splitter.blockSignals(True)
+        self._bulk_run_page._pane_splitter.setSizes(br_sizes)
+        self._bulk_run_page._pane_splitter.blockSignals(False)
+
+    def _sync_to_course_select(self, pos: int, index: int) -> None:
+        """Bulk Run splitter moved → update Course Select left pane width."""
+        if index != 1:
+            return  # only sync when the left handle moves
+        br_sizes = self._bulk_run_page._pane_splitter.sizes()
+        if not br_sizes:
+            return
+        cs_sizes = self._course_splitter.sizes()
+        if len(cs_sizes) < 2:
+            return
+        total = sum(cs_sizes)
+        cs_sizes[0] = br_sizes[0]
+        cs_sizes[1] = total - cs_sizes[0]
+        self._course_splitter.blockSignals(True)
+        self._course_splitter.setSizes(cs_sizes)
+        self._course_splitter.blockSignals(False)
 
     # ------------------------------------------------------------------
     # Settings saved
@@ -519,24 +668,17 @@ class MainWindow(QMainWindow):
 
     def _on_edit_completed(self) -> None:
         """Re-fetch assignments after a Canvas edit to get fresh data."""
-        if self._current_course_id and self._api:
-            self._set_status("Refreshing assignments…")
-            from gui.workers import LoadAssignmentsWorker
-            w = LoadAssignmentsWorker(self._api, self._current_course_id)
-            w.assignments_loaded.connect(self._on_assignments_loaded)
-            w.error.connect(lambda msg: self._set_status(f"Error: {msg}"))
-            w.start()
-            self._assignment_worker = w
-            self._track_worker(w)
+        self._refresh_assignments()
 
     def _on_settings_saved(self) -> None:
         self._set_status("Settings saved.")
-        self._init_api()
-        if self._editor:
-            self._assignment_panel.set_editor(self._editor)
-            self._course_panel.set_editor(self._editor)
-        if self._automation_panel._api is None:
-            self._automation_panel._api = self._api
+        if not self._demo_mode:
+            self._init_api()
+            if self._editor:
+                self._assignment_panel.set_editor(self._editor)
+                self._course_panel.set_editor(self._editor)
+            if self._automation_panel._api is None:
+                self._automation_panel._api = self._api
         self._refresh_courses()
 
     # ------------------------------------------------------------------
@@ -544,13 +686,13 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _track_worker(self, w) -> None:
-        """Keep a reference to w until its thread finishes (prevents premature GC)."""
+        """Keep a strong Python reference until the thread finishes (prevents GC crash)."""
         self._active_workers.append(w)
         w.finished.connect(lambda: self._active_workers.remove(w)
                            if w in self._active_workers else None)
 
     def _cancel_workers(self) -> None:
-        for w in (self._courses_worker, self._assignment_worker):
+        for w in (self._courses_worker, self._assignment_worker, self._prefetch_worker):
             if w:
                 w.cancel()
 
@@ -585,5 +727,15 @@ class MainWindow(QMainWindow):
         )
 
     def closeEvent(self, event) -> None:
-        self._cancel_workers()
+        # Cancel then wait — must call wait() so the OS thread fully exits before
+        # Python GC can destroy the QThread C++ object (avoids "Destroyed while running").
+        for w in list(self._active_workers):
+            w.cancel()
+        for w in list(self._active_workers):
+            w.wait(3000)
+        # Also stop workers not tracked by _active_workers
+        if hasattr(self._bulk_run_page, "_mapping_panel"):
+            self._bulk_run_page._mapping_panel.stop_and_wait()
+        if hasattr(self, "_insights_panel"):
+            self._insights_panel.cleanup()
         event.accept()

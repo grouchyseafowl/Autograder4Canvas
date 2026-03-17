@@ -1,0 +1,125 @@
+# Population Overlay Multipliers
+# Version: 3.0.0
+#
+# These multipliers are applied ON TOP of education level base weights.
+# Default "none" = your school is typical for this institution type.
+# Use higher levels when your specific school deviates from the typical.
+#
+# Formula per marker:
+#   effective_weight[m] = edu_level[m] × esl_overlay[m] × first_gen_overlay[m] × nd_overlay[m]
+#
+# Composition for per-student overrides: max(class_level, student_level)
+# Student always gets the MORE protective setting.
+#
+# All weight values are hypotheses. Calibration with DAIGT/ASAP data refines them.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ESL / Multilingual Population
+# ─────────────────────────────────────────────────────────────────────────────
+
+esl:
+  description: |
+    ESL/multilingual student population adjustment.
+    ESL students learn formal transitions as "academic English" (linguistic capital,
+    not deficit). Thesaurus use is legitimate vocabulary expansion. Personal voice
+    absence may reflect cultural norms about the self in academic writing.
+  affected_markers:
+    - ai_transitions        # ESL students learn formal transitions as academic English
+    - inflated_vocabulary   # Thesaurus use is legitimate vocabulary expansion
+    - personal_voice        # Cultural norms about self in academic writing
+
+  levels:
+    none:
+      # No deviation from typical — trust education level defaults
+      ai_transitions: 1.0
+      inflated_vocabulary: 1.0
+      personal_voice: 1.0
+
+    low:
+      # Modestly above-average ESL population for this institution type
+      ai_transitions: 0.85
+      inflated_vocabulary: 0.85
+      personal_voice: 0.90
+
+    moderate:
+      # Significantly above-average ESL population
+      ai_transitions: 0.70
+      inflated_vocabulary: 0.70
+      personal_voice: 0.80
+
+    high:
+      # Very high ESL population — a majority or defining feature of the school
+      ai_transitions: 0.55
+      inflated_vocabulary: 0.55
+      personal_voice: 0.70
+
+# ─────────────────────────────────────────────────────────────────────────────
+# First-Generation College Students
+# ─────────────────────────────────────────────────────────────────────────────
+
+first_gen:
+  description: |
+    First-generation college student population adjustment.
+    First-gen students follow rigid essay formulas from developmental courses —
+    that is navigational capital (learning the rules of academic writing),
+    not dishonesty. Generic phrases and formal transitions are the result
+    of instruction, not AI assistance.
+  affected_markers:
+    - generic_phrases   # Rigid formulas from developmental English are navigational capital
+    - ai_transitions    # Formal transition use taught explicitly in dev courses
+
+  levels:
+    none:
+      # No deviation from typical
+      generic_phrases: 1.0
+      ai_transitions: 1.0
+
+    low:
+      # Modestly above-average first-gen population
+      generic_phrases: 0.90
+      ai_transitions: 0.95
+
+    moderate:
+      # Significantly above-average first-gen population
+      generic_phrases: 0.80
+      ai_transitions: 0.85
+
+    high:
+      # Very high first-gen population — a majority or defining feature of the school
+      generic_phrases: 0.70
+      ai_transitions: 0.75
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Neurodivergent-Aware Mode
+# ─────────────────────────────────────────────────────────────────────────────
+
+neurodivergent:
+  description: |
+    Neurodivergent-aware mode.
+    Autistic writers can be highly structured OR quite nonlinear.
+    ADHD writers produce uneven quality with bursts of sophistication.
+    The overlay protects atypical organizational patterns in both directions.
+
+    When on:
+    - ai_specific_org weight is reduced (autistic writers CAN produce highly
+      uniform, structured text authentically)
+    - cognitive_diversity authenticity weight is boosted (metacognitive commentary,
+      associative thinking are stronger signals for neurodivergent writers)
+    - cognitive_protection_floor is lower (stronger protection from org bias markers
+      when cognitive diversity markers are present)
+
+    Note: This overrides the original design decision that ai_specific_organization
+    is "NOT subject to cognitive diversity protection." For neurodivergent populations,
+    even organizational uniformity can be authentic.
+
+  settings:
+    # IMPORTANT: "on" and "off" must be quoted — YAML parses bare on/off as booleans.
+    "off":
+      ai_specific_org: 1.0            # No reduction — full weight
+      cognitive_diversity: 1.0        # Standard authenticity weight
+      cognitive_protection_floor: 0.5 # Standard floor (strong protection = 50% multiplier)
+
+    "on":
+      ai_specific_org: 0.70           # Reduced — autistic writers can be genuinely structured
+      cognitive_diversity: 1.50       # Boosted — stronger authenticity signal for ND writers
+      cognitive_protection_floor: 0.30 # Lower floor — stronger protection (70% reduction)

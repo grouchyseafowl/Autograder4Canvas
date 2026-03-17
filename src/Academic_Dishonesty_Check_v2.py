@@ -36,6 +36,15 @@ except ImportError:
     HAS_CONTEXT_ANALYZER = False
     print("⚠ Warning: Context analyzer module not available. ESL detection disabled.")
 
+# Import two-axis weight composer (Phase 8: per-marker calibration system)
+try:
+    from modules.weight_composer import ComposedWeights, PopulationSettings
+    HAS_WEIGHT_COMPOSER = True
+except ImportError:
+    HAS_WEIGHT_COMPOSER = False
+    ComposedWeights = None  # type: ignore
+    PopulationSettings = None  # type: ignore
+
 # Import feedback tracker for instructor feedback
 try:
     from modules.feedback_tracker import FeedbackTracker, FeedbackRecord, print_feedback_summary
@@ -357,10 +366,20 @@ class AnalysisResult:
     student_context_applied: bool = False
     student_context_adjustments: List[str] = field(default_factory=list)
 
+    # Smoking gun: raw chatbot artifacts (HTML/markdown paste)
+    # Detected BEFORE text cleaning — evidence is destroyed by HTML stripping.
+    # When True, concern_level is forced to 'high' regardless of other scores.
+    smoking_gun: bool = False
+    smoking_gun_details: List[str] = field(default_factory=list)
+
     # Guidance
     conversation_starters: List[str] = field(default_factory=list)
     revision_guidance: List[str] = field(default_factory=list)
     verification_questions: List[str] = field(default_factory=list)
+
+    # Phase 8: Two-axis weight system provenance
+    education_level: Optional[str] = None       # which edu level profile was used
+    population_settings: Optional[Dict] = None  # effective population settings dict
 
 
 # =============================================================================
@@ -383,16 +402,26 @@ class DishonestyAnalyzer:
                  context_profile: str = "community_college",
                  assignment_type: Optional[str] = None,
                  course_level: Optional[str] = None,
-                 institutional_context: Optional[str] = None):
+                 institutional_context: Optional[str] = None,
+                 composed_weights=None,
+                 aic_config: Optional[dict] = None):
         """
         Initialize the analyzer.
 
         Args:
             profile_id: Assignment profile to use (legacy)
             context_profile: Student population context (legacy)
-            assignment_type: PHASE 7 - Assignment type (e.g., 'discussion_post', 'research_paper')
-            course_level: PHASE 7 - Course level (e.g., 'introductory', 'advanced')
-            institutional_context: PHASE 7 - Institution type (e.g., 'community_college')
+            assignment_type: PHASE 7 - Assignment type (legacy yaml path)
+            course_level: PHASE 7 - Course level
+            institutional_context: PHASE 7 - Institution type
+            composed_weights: PHASE 8 - ComposedWeights from WeightComposer.
+            aic_config: PHASE 9 - Template-sourced AIC config dict (from
+                        assignment_templates.get_aic_config). When provided,
+                        overrides Phase 7 yaml flags and Phase 8 marker weights
+                        with the teacher-configured values stored in the template.
+                        Keys: aic_mode, personal_voice_authentic, invert_sentence_signals,
+                        weight_personal_voice, weight_ai_patterns, weight_course_content,
+                        weight_rough_work.
         """
         self.profile_id = profile_id
         self.context_profile = context_profile
@@ -404,11 +433,19 @@ class DishonestyAnalyzer:
         self.institutional_context = institutional_context or context_profile  # Backward compatible
 
         # Load assignment configuration
+        # v3.0: also load mode flags (personal_voice_authentic, invert_sentence_signals)
+        self._personal_voice_authentic = True   # default: personal voice = authenticity signal
+        self._invert_sentence_signals = False   # default: smooth prose = suspicious (normal polarity)
         if HAS_ASSIGNMENT_CONFIG:
             self.config_loader = AssignmentConfigLoader()
             # Get multipliers from course level and institutional context
             self.config_multiplier, self.authenticity_boost = \
                 self.config_loader.get_combined_multiplier(course_level, self.institutional_context)
+            # Load mode-specific signal flags
+            if assignment_type and assignment_type != 'auto':
+                pva, iss = self.config_loader.get_mode_flags(assignment_type)
+                self._personal_voice_authentic = pva
+                self._invert_sentence_signals = iss
         else:
             self.config_loader = None
             self.config_multiplier = 1.0
@@ -419,7 +456,58 @@ class DishonestyAnalyzer:
 
         # Combine legacy and new multipliers
         self.context_multiplier = legacy_multiplier * self.config_multiplier
-    
+
+        # PHASE 8: Two-axis weight system
+        self.composed_weights = composed_weights
+        if composed_weights is not None:
+            # Per-marker weights from WeightComposer replace hardcoded defaults
+            self._marker_weights = composed_weights.marker_weights
+            self._cognitive_protection_floor = composed_weights.cognitive_protection_floor
+        else:
+            # Hardcoded defaults (backward-compat path — identical to pre-Phase 8 behavior)
+            self._marker_weights = {
+                'ai_transitions': 0.5,
+                'generic_phrases': 0.4,
+                'inflated_vocabulary': 0.3,
+                'ai_specific_org': 1.0,
+                'personal_voice': 0.5,
+                'emotional_language': 0.8,
+                'cognitive_diversity': 0.6,
+            }
+            self._cognitive_protection_floor = 0.5
+
+        # PHASE 9: Template-sourced AIC config (highest priority — overrides all above)
+        # aic_config comes from assignment_templates.get_aic_config(template).
+        # It carries the teacher's saved weight values; ignore yaml path entirely.
+        self._aic_config = aic_config
+        if aic_config is not None:
+            # Signal polarity flags — override Phase 7 yaml values
+            self._personal_voice_authentic = aic_config.get(
+                "personal_voice_authentic", self._personal_voice_authentic
+            )
+            self._invert_sentence_signals = aic_config.get(
+                "invert_sentence_signals", self._invert_sentence_signals
+            )
+            # Apply weight multipliers to _marker_weights
+            # (skip if composed_weights is active — Phase 8 already owns those)
+            if composed_weights is None:
+                w_pv = aic_config.get("weight_personal_voice", 1.0)
+                w_ai = aic_config.get("weight_ai_patterns",  1.0)
+                if w_pv != 1.0:
+                    self._marker_weights['personal_voice'] = (
+                        self._marker_weights.get('personal_voice', 0.5) * w_pv
+                    )
+                    self._marker_weights['emotional_language'] = (
+                        self._marker_weights.get('emotional_language', 0.8) * w_pv
+                    )
+                if w_ai != 1.0:
+                    self._marker_weights['ai_transitions'] = (
+                        self._marker_weights.get('ai_transitions', 0.5) * w_ai
+                    )
+                    self._marker_weights['generic_phrases'] = (
+                        self._marker_weights.get('generic_phrases', 0.4) * w_ai
+                    )
+
     def analyze_text(self,
                      text: str,
                      student_id: str = "unknown",
@@ -435,6 +523,10 @@ class DishonestyAnalyzer:
             student_context: Optional context from student about their writing process
                            (e.g., "I tend to write in a non-linear way" or "English is my second language")
         """
+        # Detect raw AI artifacts BEFORE cleaning destroys HTML/markdown evidence
+        smoking_gun, smoking_gun_details, artifact_counts = \
+            self._detect_raw_ai_artifacts(text)
+
         # Clean text
         text = self._clean_text(text)
         word_count = len(text.split())
@@ -443,8 +535,11 @@ class DishonestyAnalyzer:
         suspicious_score, authenticity_score, marker_counts, markers_found = \
             self._analyze_with_builtin_patterns(text)
 
-        # Apply profile weight multipliers
-        suspicious_score = self._apply_profile_weights(suspicious_score, marker_counts)
+        # Apply profile weight multipliers (legacy path only)
+        # When ComposedWeights are active, per-marker weights are already correct —
+        # skip _apply_profile_weights which would recalculate from base_weight=0.3
+        if self.composed_weights is None:
+            suspicious_score = self._apply_profile_weights(suspicious_score, marker_counts)
 
         # Analyze organizational patterns (AI-specific signatures)
         # These are patterns that don't overlap with neurodivergent writing
@@ -457,9 +552,11 @@ class DishonestyAnalyzer:
                 org_analysis = org_analyzer.analyze(text)
                 ai_org_score = org_analysis.total_ai_organizational_score
 
-                # Add to suspicious score
+                # Add to suspicious score (scaled by ai_specific_org weight)
                 # NOTE: This score is NOT subject to cognitive diversity protection
-                suspicious_score += ai_org_score
+                # (except via the ai_specific_org weight in ComposedWeights ND-aware mode)
+                ai_org_weight = self._marker_weights.get('ai_specific_org', 1.0)
+                suspicious_score += ai_org_score * ai_org_weight
 
                 # Track in marker counts for transparency
                 if ai_org_score > 0:
@@ -504,6 +601,30 @@ class DishonestyAnalyzer:
                         course_level=self.course_level,
                         institutional_context=self.institutional_context
                     )
+
+                # PHASE 9: Apply template weight overrides to HPD category weights
+                # weight_course_content → contextual_grounding
+                # weight_rough_work    → cognitive_struggle + productive_messiness
+                if self._aic_config is not None:
+                    _w_cc = self._aic_config.get("weight_course_content", 1.0)
+                    _w_rw = self._aic_config.get("weight_rough_work", 1.0)
+                    if (_w_cc != 1.0 or _w_rw != 1.0) and hasattr(hp_detector, 'CATEGORY_WEIGHTS'):
+                        if not hasattr(hp_detector, '_original_weights'):
+                            hp_detector._original_weights = hp_detector.CATEGORY_WEIGHTS.copy()
+                        if _w_cc != 1.0 and 'contextual_grounding' in hp_detector.CATEGORY_WEIGHTS:
+                            hp_detector.CATEGORY_WEIGHTS['contextual_grounding'] = (
+                                hp_detector._original_weights['contextual_grounding'] * _w_cc
+                            )
+                        if _w_rw != 1.0:
+                            for _k in ('cognitive_struggle', 'productive_messiness'):
+                                if _k in hp_detector.CATEGORY_WEIGHTS:
+                                    hp_detector.CATEGORY_WEIGHTS[_k] = (
+                                        hp_detector._original_weights[_k] * _w_rw
+                                    )
+                        _total = sum(hp_detector.CATEGORY_WEIGHTS.values())
+                        if _total > 0:
+                            for _k in hp_detector.CATEGORY_WEIGHTS:
+                                hp_detector.CATEGORY_WEIGHTS[_k] /= _total
 
                 # Analyze with configured weights
                 human_presence_result = hp_detector.analyze(
@@ -557,7 +678,13 @@ class DishonestyAnalyzer:
             authenticity_score *= self.authenticity_boost
 
         # Apply context adjustments (ESL, community college, etc.)
-        adjusted_suspicious = suspicious_score * self.context_multiplier * esl_adjustment
+        # When ComposedWeights are active: adjustments baked into per-marker weights;
+        # context_multiplier is skipped. ESL error pattern adjustment also skipped
+        # (population-level ESL overlay in ComposedWeights handles calibration).
+        if self.composed_weights is not None:
+            adjusted_suspicious = suspicious_score
+        else:
+            adjusted_suspicious = suspicious_score * self.context_multiplier * esl_adjustment
         
         # Determine concern level
         concern_level = self._determine_concern_level(suspicious_score, authenticity_score)
@@ -569,10 +696,20 @@ class DishonestyAnalyzer:
         verification_questions = self._get_verification_questions(concern_level)
         
         context_applied = []
-        if self.context_profile == "community_college":
+        if self.composed_weights is not None:
+            # Phase 8: Two-axis weight system active — log composition summary
+            cw = self.composed_weights
+            context_applied.append(
+                f"Two-axis weight system active: "
+                f"education_level={cw.education_level}, "
+                f"esl={cw.population.esl_level}, "
+                f"first_gen={cw.population.first_gen_level}, "
+                f"nd_aware={cw.population.neurodivergent_aware}"
+            )
+        elif self.context_profile == "community_college":
             context_applied = ["Community college population adjustment (30% more lenient)"]
         if esl_detected:
-            context_applied.append("ESL error patterns detected - strong indicator of human authorship (40% reduction)")
+            context_applied.append("ESL error patterns detected - strong indicator of human authorship")
             context_applied.append("Note: AI models don't make article errors or tense mixing")
         if student_context_applied:
             context_applied.extend(student_context_adjustments)
@@ -594,6 +731,17 @@ class DishonestyAnalyzer:
 
             context_applied.append(
                 f"AI-specific organizational patterns detected (NOT subject to cognitive protection): {'; '.join(org_details)}"
+            )
+
+        # Smoking gun overrides concern level — chatbot paste artifacts are definitive
+        if smoking_gun:
+            concern_level = 'high'
+            adjusted_concern = 'high'
+            for k, v in artifact_counts.items():
+                if v > 0:
+                    marker_counts[f'sg_{k}'] = v
+            context_applied.append(
+                "⚠ SMOKING GUN: Raw chatbot artifact(s) detected — concern level forced to HIGH"
             )
 
         return AnalysisResult(
@@ -619,9 +767,117 @@ class DishonestyAnalyzer:
             student_context_adjustments=student_context_adjustments,
             conversation_starters=conversation_starters,
             revision_guidance=revision_guidance,
-            verification_questions=verification_questions
+            verification_questions=verification_questions,
+            smoking_gun=smoking_gun,
+            smoking_gun_details=smoking_gun_details,
+            education_level=(
+                self.composed_weights.education_level
+                if self.composed_weights is not None else None
+            ),
+            population_settings=(
+                self.composed_weights.population.to_dict()
+                if self.composed_weights is not None else None
+            ),
         )
     
+    def _detect_raw_ai_artifacts(self, raw_text: str) -> tuple:
+        """
+        Detect copy-paste artifacts from chatbot output before HTML cleaning destroys them.
+
+        Three scenarios:
+          1. Structural HTML from AI generation (h2/h3 headers, bullet lists in prose)
+          2. HTML-as-text (student pasted raw HTML source — &lt;div&gt; etc. appear as content)
+          3. Unprocessed markdown in text (** bold **, ## headers, - bullet lists)
+
+        Returns:
+            (smoking_gun: bool, details: List[str], artifact_counts: Dict[str, int])
+        """
+        if not raw_text:
+            return False, [], {}
+
+        details = []
+        counts: dict = {}
+
+        # ── Scenario 1: Structural HTML indicating AI-generated document structure ──
+        # Normal Canvas submissions have <p> tags. AI pastes add headers and lists.
+        h_tags       = re.findall(r'<h[1-3][^>]*>', raw_text, re.I)
+        ul_ol_tags   = re.findall(r'<[uo]l[^>]*>',  raw_text, re.I)
+        li_tags      = re.findall(r'<li[^>]*>',      raw_text, re.I)
+        strong_hdrs  = re.findall(
+            r'<strong[^>]*>[^<]{3,60}</strong>\s*(?:<br\s*/?>|</p>)',
+            raw_text, re.I
+        )  # <strong>Section Title</strong> used as pseudo-headers
+
+        counts['html_headers']    = len(h_tags)
+        counts['html_lists']      = len(ul_ol_tags)
+        counts['html_list_items'] = len(li_tags)
+        counts['strong_headers']  = len(strong_hdrs)
+
+        if len(h_tags) >= 2:
+            details.append(
+                f"Structural HTML headers detected ({len(h_tags)} <h1>/<h2>/<h3> tags) — "
+                f"indicates document generated outside Canvas"
+            )
+        elif len(h_tags) == 1 and (ul_ol_tags or strong_hdrs):
+            details.append(
+                f"AI document structure: 1 HTML header + list/strong-header combo"
+            )
+        if ul_ol_tags and len(li_tags) >= 3:
+            details.append(
+                f"Bullet/numbered list in submission ({len(li_tags)} <li> items) — "
+                f"unusual for prose assignments; common in AI-generated outlines"
+            )
+        if len(strong_hdrs) >= 2:
+            details.append(
+                f"<strong> tags used as section headers ({len(strong_hdrs)} instances) — "
+                f"structural pattern typical of AI output"
+            )
+
+        # ── Scenario 2: HTML-as-text (double-encoded / raw HTML source pasted) ──
+        # When a student pastes HTML source code, Canvas stores it as
+        # &lt;div&gt; etc. in the submission body.
+        encoded_tags = re.findall(r'&lt;/?[a-z]{1,10}(?:\s[^&]{0,30})?&gt;', raw_text, re.I)
+        counts['encoded_html_tags'] = len(encoded_tags)
+
+        if encoded_tags:
+            samples = list({t.lower() for t in encoded_tags[:6]})
+            details.append(
+                f"HTML code pasted as literal text ({len(encoded_tags)} encoded tags: "
+                f"{', '.join(samples)}) — student likely copied raw HTML source from chatbot"
+            )
+
+        # ── Scenario 3: Unprocessed markdown in plain text ──
+        # Detect after partial unescape (doesn't need full clean)
+        unescaped = unescape(raw_text)
+        # Strip HTML so we're only looking at text content
+        text_only = re.sub(r'<[^>]+>', ' ', unescaped)
+
+        bold_md   = re.findall(r'\*\*[^*\n]{3,80}\*\*', text_only)
+        h_md      = re.findall(r'(?:^|\n)#{1,3}\s+\S', text_only)
+        bullet_md = re.findall(r'(?:^|\n)\s*[-*]\s+\w', text_only)
+
+        counts['markdown_bold']    = len(bold_md)
+        counts['markdown_headers'] = len(h_md)
+        counts['markdown_bullets'] = len(bullet_md)
+
+        if len(bold_md) >= 3:
+            details.append(
+                f"Unprocessed markdown bold syntax ({len(bold_md)} **text** instances) — "
+                f"markdown not rendered; likely pasted from a chatbot text response"
+            )
+        if h_md:
+            details.append(
+                f"Markdown headers in submission ({len(h_md)} ## / # lines) — "
+                f"indicates text pasted directly from chatbot output"
+            )
+        if len(bullet_md) >= 3:
+            details.append(
+                f"Markdown bullet list ({len(bullet_md)} - / * items) in prose assignment"
+            )
+
+        smoking_gun = len(details) > 0
+        return smoking_gun, details, counts
+
     def _clean_text(self, text: str) -> str:
         """Clean and normalize text for analysis."""
         if not text:
@@ -664,17 +920,21 @@ class DishonestyAnalyzer:
             markers_found['cognitive_diversity'] = cognitive_matches[:5]
 
         # Determine protection level
+        # Uses self._cognitive_protection_floor (0.5 standard; 0.3 with ND-aware overlay)
         cognitive_protection_multiplier = 1.0
         if len(cognitive_matches) >= 2:
             if len(cognitive_matches) >= 4:
-                cognitive_protection_multiplier = 0.5  # Strong: 50% reduction
+                cognitive_protection_multiplier = self._cognitive_protection_floor  # Strong protection
             else:
                 cognitive_protection_multiplier = 0.7  # Moderate: 30% reduction
 
         # Cognitive diversity markers boost authenticity
-        authenticity_score += min(len(cognitive_matches) * 0.6, 6.0)
+        # Weight from _marker_weights (boosted by ND-aware overlay to 0.9 when on)
+        cog_div_weight = self._marker_weights.get('cognitive_diversity', 0.6)
+        authenticity_score += min(len(cognitive_matches) * cog_div_weight, 9.0)
 
         # Check AI transitions (ORGANIZATIONAL BIAS - subject to protection)
+        # Notes mode: smooth transitions are EXTRA suspicious (amplified 2×)
         transition_matches = []
         for phrase in AI_TRANSITIONS:
             count = text_lower.count(phrase.lower())
@@ -683,8 +943,8 @@ class DishonestyAnalyzer:
         marker_counts['ai_transitions'] = len(transition_matches)
         if transition_matches:
             markers_found['ai_transitions'] = transition_matches[:5]
-        # Apply cognitive protection
-        suspicious_score += len(transition_matches) * 0.5 * cognitive_protection_multiplier
+        transition_amplifier = 2.0 if self._invert_sentence_signals else 1.0
+        suspicious_score += len(transition_matches) * self._marker_weights.get('ai_transitions', 0.5) * cognitive_protection_multiplier * transition_amplifier
 
         # Clustering bonus: multiple AI markers in short text is very suspicious
         # Also subject to cognitive protection
@@ -692,6 +952,7 @@ class DishonestyAnalyzer:
             suspicious_score += 2.0 * cognitive_protection_multiplier
 
         # Check generic phrases (ORGANIZATIONAL BIAS - subject to protection)
+        # Notes mode: generic essay-summary phrases are EXTRA suspicious (amplified 2×)
         generic_matches = []
         for phrase in GENERIC_PHRASES:
             count = text_lower.count(phrase.lower())
@@ -700,8 +961,8 @@ class DishonestyAnalyzer:
         marker_counts['generic_phrases'] = len(generic_matches)
         if generic_matches:
             markers_found['generic_phrases'] = generic_matches[:5]
-        # Apply cognitive protection
-        suspicious_score += len(generic_matches) * 0.4 * cognitive_protection_multiplier
+        generic_amplifier = 2.0 if self._invert_sentence_signals else 1.0
+        suspicious_score += len(generic_matches) * self._marker_weights.get('generic_phrases', 0.4) * cognitive_protection_multiplier * generic_amplifier
 
         # Check inflated vocabulary (ORGANIZATIONAL BIAS - subject to protection)
         inflated_matches = []
@@ -712,10 +973,11 @@ class DishonestyAnalyzer:
         marker_counts['inflated_vocabulary'] = len(inflated_matches)
         if inflated_matches:
             markers_found['inflated_vocabulary'] = inflated_matches[:5]
-        # Apply cognitive protection
-        suspicious_score += len(inflated_matches) * 0.3 * cognitive_protection_multiplier
+        # Apply cognitive protection (weight from _marker_weights)
+        suspicious_score += len(inflated_matches) * self._marker_weights.get('inflated_vocabulary', 0.3) * cognitive_protection_multiplier
 
-        # Check personal markers (presence is GOOD)
+        # Check personal markers (presence is GOOD — unless personal_voice_authentic=False)
+        # personal_voice_authentic=False: notes/essays where first-person ≠ authenticity signal
         personal_count = 0
         personal_matches = []
         for pattern in PERSONAL_MARKERS:
@@ -726,9 +988,10 @@ class DishonestyAnalyzer:
         marker_counts['personal_voice'] = personal_count
         if personal_matches:
             markers_found['personal_voice'] = personal_matches[:5]
-        authenticity_score += min(personal_count * 0.5, 5.0)
+        if self._personal_voice_authentic:
+            authenticity_score += min(personal_count * self._marker_weights.get('personal_voice', 0.5), 5.0)
 
-        # Check emotional markers (presence is GOOD)
+        # Check emotional markers (presence is GOOD — unless personal_voice_authentic=False)
         emotional_count = 0
         emotional_matches = []
         for phrase in EMOTIONAL_MARKERS:
@@ -739,7 +1002,8 @@ class DishonestyAnalyzer:
         marker_counts['emotional_language'] = emotional_count
         if emotional_matches:
             markers_found['emotional_language'] = emotional_matches[:5]
-        authenticity_score += min(emotional_count * 0.8, 4.0)
+        if self._personal_voice_authentic:
+            authenticity_score += min(emotional_count * self._marker_weights.get('emotional_language', 0.8), 4.0)
 
         # Check for specific details (proper nouns are GOOD)
         proper_nouns = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b', text)
@@ -1112,7 +1376,10 @@ RECOMMENDED APPROACH:
         moderate = [r for r in results if r.concern_level == 'moderate']
         low = [r for r in results if r.concern_level == 'low']
         clean = [r for r in results if r.concern_level == 'none']
-        
+        smoking_guns = [r for r in results if r.smoking_gun]
+
+        if smoking_guns:
+            lines.append(f"  !! SMOKING GUNS:  {len(smoking_guns):3d} (raw chatbot paste artifacts detected!)")
         lines.append(f"  HIGH CONCERN:     {len(high_concern):3d} (recommend structured conversation)")
         lines.append(f"  ELEVATED:         {len(elevated):3d} (recommend brief check-in)")
         lines.append(f"  MODERATE:         {len(moderate):3d} (note for pattern tracking)")
@@ -1170,11 +1437,32 @@ RECOMMENDED APPROACH:
         emoji = concern_emoji.get(result.concern_level, '⚪')
         
         lines.append("-" * 50)
+
+        # Smoking gun banner — shown before everything else
+        if result.smoking_gun:
+            lines.append("  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            lines.append("  !! SMOKING GUN: CHATBOT PASTE DETECTED !!")
+            lines.append("  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            for detail in result.smoking_gun_details:
+                lines.append(f"    >> {detail}")
+            lines.append("  Note: Raw chatbot artifacts were found in the submission.")
+            lines.append("  This is distinct from 'AI-assisted writing' — the student")
+            lines.append("  literally copied output from a chatbot interface.")
+            lines.append("")
+
         lines.append(f"{emoji} {result.student_name}")
         lines.append(f"   Concern Level: {result.concern_level.upper()}")
+        if result.smoking_gun:
+            lines.append(f"   (Forced HIGH due to smoking gun artifact detection)")
         lines.append(f"   Word Count: {result.word_count}")
         lines.append("")
-        
+
+        # Human presence confidence
+        if result.human_presence_confidence is not None:
+            lines.append(f"   HUMAN PRESENCE: {result.human_presence_confidence:.0f}% "
+                         f"({result.human_presence_level or 'unknown'})")
+            lines.append("")
+
         lines.append("   SCORES:")
         lines.append(f"     Suspicious Markers: {result.suspicious_score:.2f}")
         if result.suspicious_percentile is not None:
@@ -1257,6 +1545,46 @@ def get_assignments(course_id: int):
         return []
 
 
+def _extract_attachment_text(attachment: Dict[str, Any]) -> str:
+    """
+    Download a submission attachment and extract its text content.
+    Supports .txt, .docx, and .pdf files.
+    Returns empty string on failure or unsupported file type.
+    """
+    url = attachment.get("url")
+    if not url:
+        return ""
+    filename = (attachment.get("filename") or "").lower()
+    content_type = (attachment.get("content-type") or "").lower()
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=60)
+        resp.raise_for_status()
+        data = resp.content
+
+        # Plain text
+        if filename.endswith(".txt") or content_type.startswith("text/plain"):
+            return data.decode("utf-8", errors="replace")
+
+        # Word document (.docx)
+        if filename.endswith(".docx") or "openxmlformats-officedocument.wordprocessingml" in content_type:
+            import io
+            from docx import Document
+            doc = Document(io.BytesIO(data))
+            return "\n".join(p.text for p in doc.paragraphs if p.text.strip())
+
+        # PDF — extract raw text
+        if filename.endswith(".pdf") or content_type.startswith("application/pdf"):
+            import io
+            from pdfminer.high_level import extract_text as _pdf_extract
+            return _pdf_extract(io.BytesIO(data)) or ""
+
+    except ImportError:
+        pass  # dependency not installed — degrade gracefully
+    except Exception:
+        pass
+    return ""
+
+
 def get_submissions(course_id: int, assignment_id: int):
     """Fetch all submissions for an assignment."""
     if not HAS_REQUESTS or not API_TOKEN:
@@ -1293,27 +1621,50 @@ def get_submissions(course_id: int, assignment_id: int):
 # BATCH PROCESSING
 # =============================================================================
 
-def analyze_assignment(course_id: int, 
+def analyze_assignment(course_id: int,
                        assignment_id: int,
                        profile_id: str = "standard",
-                       context_profile: str = "community_college") -> Tuple[List[AnalysisResult], Path]:
+                       context_profile: str = "community_college",
+                       assignment_type: Optional[str] = None,
+                       composed_weights=None,
+                       aic_config: Optional[dict] = None,
+                       course_name: str = "",
+                       generate_report: bool = True) -> Tuple[List[AnalysisResult], Path]:
     """
     Analyze all submissions for an assignment.
-    
+
+    Args:
+        course_id: Canvas course ID
+        assignment_id: Canvas assignment ID
+        profile_id: Assignment profile (legacy)
+        context_profile: Population context profile (legacy)
+        assignment_type: v3.0 AIC mode ('notes', 'discussion', 'draft', 'personal',
+                         'essay', 'lab'). When provided, configures signal polarity
+                         and personal-voice handling for the specific assignment type.
+        composed_weights: Optional ComposedWeights from WeightComposer (Phase 8).
+
     Returns:
         Tuple of (list of results, path to report file)
     """
     print(f"\nFetching submissions...")
     submissions = get_submissions(course_id, assignment_id)
-    
+
     if not submissions:
         print("No submissions found.")
         return [], None
-    
+
     print(f"Found {len(submissions)} submissions.")
-    
+
     # Initialize analyzer
-    analyzer = DishonestyAnalyzer(profile_id=profile_id, context_profile=context_profile)
+    # aic_config (Phase 9) takes precedence; assignment_type (Phase 7) is legacy fallback
+    _at = None if aic_config else assignment_type
+    analyzer = DishonestyAnalyzer(
+        profile_id=profile_id,
+        context_profile=context_profile,
+        assignment_type=_at,
+        composed_weights=composed_weights,
+        aic_config=aic_config,
+    )
     
     # Analyze each submission
     results = []
@@ -1325,10 +1676,14 @@ def analyze_assignment(course_id: int,
             student_id = str(sub.get("user_id", "unknown"))
             student_name = user.get("name", f"Student {student_id}")
 
-            # Get submission text
+            # Get submission text — inline body first, then attached files
             body = sub.get("body", "") or ""
+            if not body.strip():
+                for att in (sub.get("attachments") or []):
+                    body += "\n" + _extract_attachment_text(att)
+                body = body.strip()
 
-            # Skip empty submissions
+            # Skip if still no text after extraction
             if not body.strip():
                 continue
 
@@ -1354,6 +1709,31 @@ def analyze_assignment(course_id: int,
     )
     cohort_stats = peer_analyzer.analyze_cohort(results)
 
+    # Save results to RunStore (SQLite) so they appear in the Prior Runs dashboard
+    try:
+        from automation.run_store import RunStore
+        store = RunStore()
+        # Get assignment name for storage (reuse what we fetched for the report below)
+        _assignments = get_assignments(course_id)
+        _assignment_name = next(
+            (a.get("name", "Unknown") for a in _assignments if a.get("id") == assignment_id),
+            "Unknown Assignment",
+        )
+        _course_name = course_name or f"Course {course_id}"
+        for result in results:
+            _sub = next((s for s in submissions if str(s.get("user_id")) == str(result.student_id)), {})
+            store.save_result(
+                result,
+                course_id=str(course_id),
+                course_name=_course_name,
+                assignment_id=str(assignment_id),
+                assignment_name=_assignment_name,
+                submitted_at=_sub.get("submitted_at"),
+                context_profile=context_profile,
+            )
+    except Exception as _e:
+        print(f"  ⚠ RunStore save skipped: {_e}")
+
     # Report any errors that occurred
     if errors:
         print(f"\n⚠ Warning: {len(errors)} submission(s) had errors during analysis:")
@@ -1362,9 +1742,12 @@ def analyze_assignment(course_id: int,
         if len(errors) > 5:
             print(f"  ... and {len(errors) - 5} more")
 
+    if not generate_report:
+        return results, None
+
     # Generate report
     print("Generating report...")
-    
+
     # Get assignment name
     assignments = get_assignments(course_id)
     assignment_name = "Unknown Assignment"
@@ -1372,7 +1755,7 @@ def analyze_assignment(course_id: int,
         if a.get("id") == assignment_id:
             assignment_name = a.get("name", "Unknown Assignment")
             break
-    
+
     report_gen = ReportGenerator()
     profile_name = ASSIGNMENT_PROFILES.get(profile_id, {}).get("name", profile_id)
     report_path = report_gen.generate_report(
@@ -1382,9 +1765,9 @@ def analyze_assignment(course_id: int,
         cohort_stats=cohort_stats,
         context_profile=context_profile
     )
-    
+
     print(f"\nReport saved to: {report_path}")
-    
+
     return results, report_path
 
 

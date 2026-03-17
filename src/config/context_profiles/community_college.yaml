@@ -1,7 +1,12 @@
 # Community College Context Profile
-# Version 2.0.0
+# Version 3.0.0
 # Population-aware adjustments to prevent false positives
 # for diverse student populations.
+#
+# v3 change: Added marker_weights section (absolute per-match weights used by
+# WeightComposer). The marker_adjustments section is kept for backward
+# compatibility with MarkerLoader (which uses multipliers).
+# These weights bake in the typical CC population (high ESL, high first-gen).
 
 profile_id: community_college
 profile_name: "Community College Context"
@@ -49,6 +54,36 @@ demographics:
       - "Five-paragraph essay structure is explicitly taught"
       - "Transition phrases are drilled as 'good writing'"
       - "Formulaic structure reflects instruction, not AI"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# v3: Absolute per-match weights for WeightComposer
+# ─────────────────────────────────────────────────────────────────────────────
+# These weights already bake in the typical CC population context
+# (high ESL + high first-gen = typical for CC). Use population overlays
+# only when your specific school deviates from this typical CC profile.
+#
+# Backward-compat: ai_transitions 0.35 ≈ 0.5×0.7 (old hardcoded × CC mult)
+#                  inflated_vocabulary 0.20 ≈ 0.3×0.67 (old hardcoded × CC mult)
+
+marker_weights:
+  suspicious:
+    ai_transitions: 0.35          # Typical CC ESL/dev-English context baked in
+    generic_phrases: 0.40         # Generic phrases still meaningful even at CC
+    inflated_vocabulary: 0.20     # Very low — thesaurus use is legitimate at CC
+    ai_specific_org: 1.00         # Full weight — no institution adjusts this
+
+  authenticity:
+    personal_voice: 0.40          # Reduced — cultural/linguistic factors affect voice
+    emotional_language: 0.80      # Strong signal everywhere
+    cognitive_diversity: 0.60     # Strong signal everywhere
+
+thresholds:
+  outlier_percentile: 95          # Slightly lenient for diverse CC population
+  cognitive_protection_floor: 0.5
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Legacy: Multiplier-based adjustments for MarkerLoader (backward compat)
+# ─────────────────────────────────────────────────────────────────────────────
 
 marker_adjustments:
   ai_transitions:

@@ -82,6 +82,61 @@ class CanvasAutomationAPI:
 
         return items
 
+    def get_all_terms(self) -> List[Dict[str, Any]]:
+        """
+        Get all enrollment terms that have a start date, sorted newest first.
+        Each dict includes an 'is_current' bool.
+        """
+        # Collect all pages — Canvas default page size can be as low as 10
+        all_raw: list = []
+        url = f"{self.base_url}/api/v1/accounts/1/terms"
+        params = {'per_page': 100}
+        while url:
+            try:
+                response = requests.get(url, headers=self.headers,
+                                        params=params, timeout=30)
+                response.raise_for_status()
+                all_raw.extend(response.json().get('enrollment_terms', []))
+                # Follow Canvas Link: <url>; rel="next" pagination
+                link = response.headers.get('Link', '')
+                url = None
+                for part in link.split(','):
+                    part = part.strip()
+                    if 'rel="next"' in part:
+                        url = part.split(';')[0].strip().strip('<>')
+                        break
+                params = {}  # page token is already in the next URL
+            except requests.exceptions.RequestException as e:
+                print(f"Failed to fetch terms: {e}")
+                break
+
+        now = datetime.now(pytz.UTC)
+        result = []
+        for term in all_raw:
+            start_str = term.get('start_at')
+            if not start_str:
+                continue
+            try:
+                start = parser.isoparse(start_str)
+                end_str = term.get('end_at')
+                end = parser.isoparse(end_str) if end_str else None
+                is_current = end is not None and start <= now <= end
+                result.append({
+                    'id': term['id'],
+                    'name': term['name'],
+                    'start_at': start_str,
+                    'end_at': end_str,
+                    'is_current': is_current,
+                    '_sort_key': start,   # parsed datetime for reliable sort
+                })
+            except (ValueError, TypeError):
+                continue
+
+        result.sort(key=lambda t: t['_sort_key'], reverse=True)
+        for t in result:
+            del t['_sort_key']
+        return result
+
     def get_current_term_ids(self) -> List[Dict[str, Any]]:
         """
         Get enrollment terms for current semester.
@@ -126,6 +181,29 @@ class CanvasAutomationAPI:
 
         return current_terms
 
+    def get_all_teacher_courses(self) -> Dict[int, List[Dict[str, Any]]]:
+        """
+        Fetch every course where the user is a teacher in one request,
+        then group them by enrollment_term_id client-side.
+
+        Returns:
+            {term_id: [course_dict, ...]}
+        """
+        url = f"{self.base_url}/api/v1/courses"
+        params = {
+            'enrollment_type': 'teacher',
+            'state[]': ['available', 'unpublished'],
+            'include[]': 'total_students',
+            'per_page': 100,
+        }
+        courses = self._get_paginated(url, params)
+        grouped: Dict[int, list] = {}
+        for course in courses:
+            tid = course.get('enrollment_term_id')
+            if tid is not None:
+                grouped.setdefault(tid, []).append(course)
+        return grouped
+
     def get_courses_in_term(self, term_id: int) -> List[Dict[str, Any]]:
         """
         Get courses in term where user is teacher.
@@ -161,7 +239,7 @@ class CanvasAutomationAPI:
         logger = logging.getLogger('autograder_automation')
 
         url = f"{self.base_url}/api/v1/courses/{course_id}/assignment_groups"
-        params = {'include[]': ['assignments', 'discussion_topic']}
+        params = {'include[]': ['assignments', 'discussion_topic', 'needs_grading_count']}
 
         try:
             response = requests.get(url, headers=self.headers, params=params, timeout=30)

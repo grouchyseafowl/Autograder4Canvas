@@ -456,9 +456,10 @@ def grade_discussion_topic(course_id: int, topic_id: int, topic_name: str,
         
         # Evaluate posts
         if user_id in student_posts:
-            # Combine all messages for word count
-            combined_message = " ".join(student_posts[user_id])
-            status, flags, word_count = evaluate_discussion_post(combined_message, min_word_count)
+            grading_criteria = {"complete": {"total_words": min_word_count, "min_replies": 0}}
+            status, flags, word_count, _num_posts, _avg = evaluate_discussion_post(
+                student_posts[user_id], grading_criteria, grading_type
+            )
             
             if status == "complete":
                 if grading_type == "pass_fail":
@@ -551,9 +552,12 @@ def grade_discussion_topic(course_id: int, topic_id: int, topic_name: str,
     return flagged_submissions, student_grades
 
 
-def export_rationale(course_id: int, topic_id: int, topic_name: str, 
-                    student_grades: Dict, students: List[Dict]):
+def export_rationale(course_id: int, topic_id: int, topic_name: str,
+                    student_grades: Dict, students: List[Dict],
+                    legacy_csv: bool = False):
     """Export grading rationale to CSV."""
+    if not legacy_csv:
+        return
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     safe_name = "".join(c if c.isalnum() or c in " _-" else "_" for c in topic_name)
     filename = f"discussion_rationale_{course_id}_{safe_name}_{timestamp}.csv"

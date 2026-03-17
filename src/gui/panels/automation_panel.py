@@ -8,10 +8,41 @@ from PySide6.QtWidgets import (
     QLabel, QTreeWidget, QTreeWidgetItem, QPushButton, QCheckBox,
     QComboBox, QTimeEdit, QLineEdit, QSizePolicy, QMessageBox,
 )
+from gui.dialogs.message_dialog import show_info, show_warning, show_question
 from PySide6.QtCore import Qt, QTime, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QPainter, QColor
 
-from gui.styles import SPACING_SM, SPACING_MD
+from gui.styles import (
+    SPACING_SM, SPACING_MD, PHOSPHOR_HOT, PHOSPHOR_DIM, make_h_rule,
+)
+
+
+class _ComingSoonOverlay(QWidget):
+    """Semi-transparent overlay that covers its parent with a COMING SOON message."""
+
+    def __init__(self, parent: QWidget):
+        super().__init__(parent)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, False)
+        self.setGeometry(parent.rect())
+        self.raise_()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # Semi-transparent dark scrim
+        p.fillRect(self.rect(), QColor(20, 15, 5, 200))
+
+        # "COMING SOON" text
+        font = QFont("Courier New", 36, QFont.Weight.Bold)
+        font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 6)
+        p.setFont(font)
+        p.setPen(QColor(255, 176, 0, 230))  # amber
+        p.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "COMING SOON")
 
 
 class AutomationPanel(QWidget):
@@ -24,10 +55,31 @@ class AutomationPanel(QWidget):
         self._api = api
         self._setup_ui()
         self._load_config()
+        self._overlay = _ComingSoonOverlay(self)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._overlay.setGeometry(self.rect())
 
     def _setup_ui(self) -> None:
         outer = QVBoxLayout(self)
-        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setContentsMargins(16, 16, 16, 16)
+        outer.setSpacing(12)
+
+        title = QLabel("AUTOMATION")
+        title.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+            f" background: transparent; border: none; letter-spacing: 2px;"
+        )
+        sub = QLabel("Schedule automatic grading runs for your configured courses.")
+        sub.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f" background: transparent; border: none;"
+        )
+        sub.setWordWrap(True)
+        outer.addWidget(title)
+        outer.addWidget(sub)
+        outer.addWidget(make_h_rule())
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -191,32 +243,32 @@ class AutomationPanel(QWidget):
             pass
 
     def _on_add_course(self) -> None:
-        QMessageBox.information(self, "Add Course",
+        show_info(self, "Add Course",
             "Connect to Canvas first (set credentials in Settings tab), "
             "then courses will be available to configure here.")
 
     def _on_edit_course(self) -> None:
         sel = self._courses_tree.selectedItems()
         if not sel:
-            QMessageBox.information(self, "Edit Course", "Select a course first.")
+            show_info(self, "Edit Course", "Select a course first.")
             return
-        QMessageBox.information(self, "Edit Course",
-            "Course rule editing is available in the full automation config file.\n"
+        show_info(self, "Edit Course",
+            "Course rule editing is available in the full automation config file.\n\n"
             "Use Run Autograder from the Courses tab to run a one-shot grading.")
 
     def _on_remove_course(self) -> None:
         sel = self._courses_tree.selectedItems()
         if not sel:
             return
-        if QMessageBox.question(self, "Remove Course",
-                                "Remove this course from automation config?") == QMessageBox.StandardButton.Yes:
+        if show_question(self, "Remove Course",
+                         "Remove this course from automation config?") == QMessageBox.StandardButton.Yes:
             for item in sel:
                 idx = self._courses_tree.indexOfTopLevelItem(item)
                 self._courses_tree.takeTopLevelItem(idx)
 
     def _on_apply_schedule(self) -> None:
         if not self._sched_enabled.isChecked():
-            QMessageBox.information(self, "Schedule", "Enable scheduled runs first.")
+            show_info(self, "Schedule", "Enable scheduled runs first.")
             return
         t = self._time_edit.time()
         try:
@@ -229,9 +281,9 @@ class AutomationPanel(QWidget):
                 python_path=sys.executable,
                 script_path=str(__import__("pathlib").Path(__file__).parent.parent / "gui_main.py"),
             )
-            QMessageBox.information(self, "Schedule", "Schedule applied successfully.")
+            show_info(self, "Schedule", "Schedule applied successfully.")
         except Exception as exc:
-            QMessageBox.warning(self, "Schedule Error", str(exc))
+            show_warning(self, "Schedule Error", str(exc))
 
     def _on_save_config(self) -> None:
         try:
@@ -273,12 +325,12 @@ class AutomationPanel(QWidget):
 
             config.save(config_path)
             self.config_saved.emit()
-            QMessageBox.information(self, "Saved", "Automation configuration saved.")
+            show_info(self, "Saved", "Automation configuration saved.")
 
         except Exception as exc:
-            QMessageBox.warning(self, "Save Error", str(exc))
+            show_warning(self, "Save Error", str(exc))
 
     def _on_dry_run(self) -> None:
-        QMessageBox.information(self, "Dry Run",
-            "Dry run for all configured courses is not yet implemented in the GUI.\n"
+        show_info(self, "Dry Run",
+            "Dry run for all configured courses is not yet implemented in the GUI.\n\n"
             "Use the Courses tab to run individual assignments in dry-run mode.")

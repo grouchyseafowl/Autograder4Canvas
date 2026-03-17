@@ -1,153 +1,137 @@
-# Assignment Type Configuration
-# PHASE 7: Configurable assignment type profiles
+# AIC Assignment Mode Profiles
+# Version 3.0 — unified mode system replacing old 8-profile taxonomy
 #
-# Each profile adjusts human presence marker weights based on assignment context.
-# Different assignments call for different forms of engagement.
+# Each mode calibrates the AI-integrity checker for a specific assignment context.
+#
+# personal_voice_authentic: when true, first-person voice and emotional
+#   language are treated as authenticity signals. Set true for personal,
+#   discussion, and draft writing.
+#
+# invert_sentence_signals: when true (notes mode), smooth transitions and
+#   complete sentences are SUSPICIOUS; fragments and bullets are AUTHENTIC.
+#   This is the inverse of the normal essay signal polarity.
 
-version: "2.1.0"
-last_updated: "2025-12-27"
+version: "3.0.0"
+last_updated: "2026-03-15"
 
 # =============================================================================
-# ASSIGNMENT TYPE PROFILES
+# AIC ASSIGNMENT MODE PROFILES
 # =============================================================================
 
-discussion_post:
-  name: "Discussion Forum Post"
-  description: "Short, informal responses to readings or prompts"
+notes:
+  name: "Notes / Summary"
+  description: "Lecture notes, reading summaries, study outlines"
+  expected_word_count: [50, 600]
+  personal_voice_authentic: false
+  invert_sentence_signals: true
+
+  marker_weight_adjustments:
+    contextual_grounding: 1.4    # Must reference specific course material
+    emotional_stakes: 0.6        # Rarely expected in notes
+    authentic_voice: 0.8         # Informal fragments are normal
+    cognitive_struggle: 1.3      # Working to understand material
+    productive_messiness: 1.4    # Incomplete thoughts are authentic
+
+  notes: |
+    In notes and summaries, polished complete sentences are suspicious —
+    AI-generated notes look like mini-essays. Authentic notes use fragments,
+    abbreviations, and non-linear structure. invert_sentence_signals=true
+    amplifies AI transition signals and silences personal voice as an
+    authenticity marker.
+
+discussion:
+  name: "Discussion / Response"
+  description: "Discussion board posts, peer responses, class participation"
   expected_word_count: [100, 500]
+  personal_voice_authentic: true
+  invert_sentence_signals: false
 
   marker_weight_adjustments:
-    # Discussion posts: High on emotion/voice, lower on formal cognitive struggle
-    contextual_grounding: 1.4        # Course material references VERY important
-    emotional_stakes: 1.3            # Personal connection expected
-    authentic_voice: 1.2             # Informal voice is appropriate
-    cognitive_struggle: 0.8          # May be less visible in short posts
-    productive_messiness: 0.9        # Less revision expected in informal posts
+    contextual_grounding: 1.4    # Must engage with course readings/peers
+    emotional_stakes: 1.3        # Personal connection expected
+    authentic_voice: 1.2         # Informal engaged voice appropriate
+    cognitive_struggle: 0.9      # May be less visible in short responses
+    productive_messiness: 0.9    # Less revision expected in informal posts
 
   notes: |
-    Discussion posts should show direct engagement with course materials
-    and peers. Expect more informal voice and personal connection.
-    Cognitive struggle may be implicit rather than explicit.
+    Discussion posts should show direct engagement with course materials and
+    peers. Personal voice and emotional connection are authenticity markers.
 
-reflection_paper:
-  name: "Reflection Paper"
-  description: "Personal reflection on experience, reading, or learning"
-  expected_word_count: [500, 2000]
+draft:
+  name: "Draft (any stage)"
+  description: "Rough drafts, in-progress writing, brainstorms"
+  expected_word_count: [200, 2000]
+  personal_voice_authentic: true
+  invert_sentence_signals: false
 
   marker_weight_adjustments:
-    contextual_grounding: 1.3        # Should reference specific experiences
-    emotional_stakes: 1.5            # HIGHEST - personal investment central
-    authentic_voice: 1.4             # Personal voice expected
-    cognitive_struggle: 1.2          # Processing experience/learning
-    productive_messiness: 1.1        # Authentic reflection is messy
+    contextual_grounding: 1.0    # Standard
+    emotional_stakes: 1.0        # Standard
+    authentic_voice: 1.1         # Voice more visible in drafts
+    cognitive_struggle: 1.5      # HIGHEST — thinking-in-progress
+    productive_messiness: 1.5    # HIGHEST — drafts should be messy
 
   notes: |
-    Reflection papers should show personal engagement with material.
-    Expect strong emotional stakes and authentic voice. AI reflections
-    tend to be generic; human reflections are specific and messy.
+    Drafts should show thinking-in-progress. AI drafts are suspiciously
+    polished; authentic human drafts show visible revision and struggle.
 
-research_paper:
-  name: "Research Paper"
-  description: "Formal academic research with sources"
-  expected_word_count: [1500, 5000]
+personal:
+  name: "Personal / Reflective"
+  description: "Journals, personal reflections, narrative essays"
+  expected_word_count: [200, 1500]
+  personal_voice_authentic: true
+  invert_sentence_signals: false
 
   marker_weight_adjustments:
-    contextual_grounding: 1.2        # Citations and course context
-    emotional_stakes: 0.7            # Less personal, more analytical
-    authentic_voice: 0.8             # Formal register may limit voice
-    cognitive_struggle: 1.1          # Synthesis and analysis visible
-    productive_messiness: 0.9        # More polished, but revisions visible
+    contextual_grounding: 1.2    # Should reference specific experiences
+    emotional_stakes: 1.5        # HIGHEST — personal investment central
+    authentic_voice: 1.4         # Strong personal voice expected
+    cognitive_struggle: 1.1      # Processing experience and meaning
+    productive_messiness: 1.1    # Authentic reflection is sometimes messy
 
   notes: |
-    Research papers use formal academic register which may limit
-    emotional expression and authentic voice. Look for struggle with
-    synthesis, genuine engagement with sources, and course-specific angles.
+    Personal writing should show genuine emotional engagement and specific
+    experience. First-person voice and emotional language are strong
+    authenticity signals. AI personal writing is generic; human writing is
+    specific and idiosyncratic.
 
-rough_draft:
-  name: "Rough Draft"
-  description: "Early draft of longer assignment"
-  expected_word_count: [500, 3000]
+essay:
+  name: "Formal Essay / Research"
+  description: "Analytical essays, research papers, formal academic writing"
+  expected_word_count: [500, 5000]
+  personal_voice_authentic: false
+  invert_sentence_signals: false
 
   marker_weight_adjustments:
-    contextual_grounding: 1.0        # Standard weight
-    emotional_stakes: 1.0            # Standard weight
-    authentic_voice: 1.1             # May be more visible in drafts
-    cognitive_struggle: 1.4          # HIGHEST - working through ideas
-    productive_messiness: 1.5        # HIGHEST - expected in drafts
+    contextual_grounding: 1.3    # Specific sources and evidence
+    emotional_stakes: 0.8        # Formal register limits overt emotion
+    authentic_voice: 0.9         # Academic voice may constrain expression
+    cognitive_struggle: 1.3      # Synthesis and analysis visible
+    productive_messiness: 0.9    # More polished but revision still visible
 
   notes: |
-    Rough drafts should show thinking-in-progress. Expect high cognitive
-    struggle and productive messiness. AI drafts tend to be too polished;
-    human drafts show the work.
+    Formal essays use academic register which limits some markers.
+    Look for genuine grappling with sources, course-specific angles,
+    and intellectual struggle with complex ideas.
 
-essay_exam:
-  name: "Essay Exam / Timed Writing"
-  description: "Timed essay response to prompt"
-  expected_word_count: [300, 1500]
+lab:
+  name: "Lab / Technical"
+  description: "Lab reports, technical analysis, scientific writing"
+  expected_word_count: [500, 2500]
+  personal_voice_authentic: false
+  invert_sentence_signals: false
 
   marker_weight_adjustments:
-    contextual_grounding: 1.3        # Must use course knowledge
-    emotional_stakes: 0.9            # Less personal, more demonstrative
-    authentic_voice: 1.1             # Time pressure shows through
-    cognitive_struggle: 1.2          # Working under time constraint
-    productive_messiness: 1.3        # Less time to polish
+    contextual_grounding: 1.5    # HIGHEST — specific experimental details essential
+    emotional_stakes: 0.5        # Scientific register; personal emotion absent
+    authentic_voice: 0.6         # Genre conventions limit voice
+    cognitive_struggle: 1.1      # Analysis of results
+    productive_messiness: 0.8    # Structured format but imperfect data is authentic
 
   notes: |
-    Timed writing should show course knowledge applied under time pressure.
-    Expect less polish, more struggle, evidence of time constraint.
-    AI can't replicate the specific imperfections of timed writing.
-
-analytical_essay:
-  name: "Analytical Essay"
-  description: "Analysis of text, film, artwork, or concept"
-  expected_word_count: [1000, 3000]
-
-  marker_weight_adjustments:
-    contextual_grounding: 1.3        # Specific textual evidence
-    emotional_stakes: 0.9            # Analysis more than feeling
-    authentic_voice: 1.0             # Balanced
-    cognitive_struggle: 1.3          # Working through interpretation
-    productive_messiness: 1.0        # Some revision visible
-
-  notes: |
-    Analytical essays should show genuine grappling with interpretation.
-    Look for specific textual engagement, evolution of understanding,
-    and unique analytical angles tied to course discussions.
-
-creative_writing:
-  name: "Creative Writing"
-  description: "Fiction, poetry, creative nonfiction"
-  expected_word_count: [500, 3000]
-
-  marker_weight_adjustments:
-    contextual_grounding: 0.7        # May not reference course directly
-    emotional_stakes: 1.3            # Personal investment in craft
-    authentic_voice: 1.5             # HIGHEST - voice is central
-    cognitive_struggle: 1.2          # Craft decisions visible
-    productive_messiness: 1.2        # Drafting process visible
-
-  notes: |
-    Creative writing should show unique voice and craft decisions.
-    May not reference course materials directly, but should show
-    engagement with craft concepts. Look for revision thinking.
-
-lab_report:
-  name: "Lab Report"
-  description: "Scientific lab report with data and analysis"
-  expected_word_count: [1000, 2500]
-
-  marker_weight_adjustments:
-    contextual_grounding: 1.4        # Specific experimental details
-    emotional_stakes: 0.6            # Formal scientific register
-    authentic_voice: 0.7             # Limited by genre conventions
-    cognitive_struggle: 1.1          # Analysis of results
-    productive_messiness: 0.8        # More structured format
-
-  notes: |
-    Lab reports use highly structured format which limits some markers.
-    Look for specific experimental details, genuine data analysis,
-    and interpretation tied to course concepts. AI lab reports lack
-    the messiness of real experimental data.
+    Lab reports follow strict format which limits several markers.
+    Focus on specific experimental details, genuine data interpretation,
+    and course-specific methodology. AI lab reports lack real data irregularities.
 
 # =============================================================================
 # COURSE LEVEL ADJUSTMENTS
@@ -223,6 +207,17 @@ course_levels:
 
 institutional_contexts:
 
+  high_school:
+    name: "High School"
+    description: "Secondary school courses (grades 9-12)"
+    adjustments:
+      suspicious_threshold_multiplier: 0.6    # 40% more lenient — formula writing is taught
+      authenticity_boost: 1.3
+      notes: |
+        High school students are explicitly taught formal transitions and
+        five-paragraph structure. Inflated vocabulary is the stronger signal.
+        Peer comparison on calibrated metrics catches genuine outliers.
+
   community_college:
     name: "Community College"
     description: "2-year colleges, diverse student populations"
@@ -265,10 +260,10 @@ institutional_contexts:
 # =============================================================================
 
 default:
-  assignment_type: "analytical_essay"
+  aic_mode: "essay"
   course_level: "intermediate"
   institutional_context: "liberal_arts"
 
   notes: |
-    If no specific configuration provided, system uses intermediate-level
-    analytical essay expectations at a liberal arts college context.
+    If no specific mode provided, system uses intermediate-level essay
+    expectations at a liberal arts college context.

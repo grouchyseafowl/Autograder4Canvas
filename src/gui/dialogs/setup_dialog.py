@@ -5,7 +5,7 @@ Retro-futurist amber terminal aesthetic.
 """
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QFrame, QSizePolicy, QToolButton,
+    QPushButton, QFrame, QSizePolicy, QToolButton, QCheckBox, QSpinBox, QComboBox,
 )
 from PySide6.QtCore import Qt, QObject, QEvent
 from PySide6.QtGui import QFont, QPainter, QPen, QColor, QPainterPath
@@ -365,8 +365,10 @@ class SetupDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Welcome to Autograder4Canvas")
-        self.setMinimumSize(860, 500)
+        self.setMinimumSize(860, 680)
         self.setModal(True)
+        self.demo_requested = False  # set True when user clicks a demo button
+        self.demo_profile   = "hs"   # "hs" or "cc"
         self._setup_ui()
 
     # ── UI construction ─────────────────────────────────────────────────────
@@ -401,6 +403,16 @@ class SetupDialog(QDialog):
         self._cancel_btn = _make_ghost_btn("CANCEL")
         self._cancel_btn.clicked.connect(self.reject)
         footer.addWidget(self._cancel_btn)
+
+        self._demo_hs_btn = _make_ghost_btn("HIGH SCHOOL DEMO")
+        self._demo_hs_btn.setToolTip("Sample high school courses — no Canvas account needed")
+        self._demo_hs_btn.clicked.connect(lambda: self._on_try_demo("hs"))
+        footer.addWidget(self._demo_hs_btn)
+
+        self._demo_cc_btn = _make_ghost_btn("COMMUNITY COLLEGE DEMO")
+        self._demo_cc_btn.setToolTip("Sample community college courses — no Canvas account needed")
+        self._demo_cc_btn.clicked.connect(lambda: self._on_try_demo("cc"))
+        footer.addWidget(self._demo_cc_btn)
 
         self._save_btn = _make_btn("SAVE + CONTINUE", AMBER_BTN)
         self._save_btn.setEnabled(False)
@@ -456,9 +468,10 @@ class SetupDialog(QDialog):
         lay.addWidget(url_lbl)
 
         self._url_row, self._url_edit = _make_url_row()
+        self._url_row.setMinimumHeight(34)
         lay.addWidget(self._url_row)
 
-        lay.addSpacing(4)
+        lay.addSpacing(8)
 
         # API Token
         tok_lbl = QLabel("API TOKEN")
@@ -471,80 +484,150 @@ class SetupDialog(QDialog):
         self._token_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         lay.addWidget(self._token_edit)
 
+        # ── Institution Profile ──────────────────────────────────────────
+        lay.addSpacing(10)
+        lay.addWidget(_make_scanline_sep())
+        lay.addSpacing(8)
+
+        inst_hdr = QLabel("INSTITUTION PROFILE")
+        inst_hdr.setFont(ulf)
+        inst_hdr.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; letter-spacing: 1.5px; font-weight: 600; font-size: 11px;"
+        )
+        lay.addWidget(inst_hdr)
+
+        inst_desc = QLabel(
+            "Calibrates Academic Integrity (AIC) analysis thresholds for your student population."
+        )
+        inst_desc.setWordWrap(True)
+        _f11 = QFont("Menlo, Consolas, Courier New, monospace")
+        _f11.setPointSize(11)
+        inst_desc.setFont(_f11)
+        inst_desc.setStyleSheet(f"color: {PHOSPHOR_DIM};")
+        lay.addWidget(inst_desc)
+
         lay.addSpacing(4)
 
-        # Output Folder (optional)
-        folder_lbl = QLabel("OUTPUT FOLDER")
-        folder_lbl.setFont(ulf)
-        folder_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; letter-spacing: 1px;")
-        lay.addWidget(folder_lbl)
+        inst_type_row = QHBoxLayout()
+        inst_type_lbl = QLabel("INSTITUTION TYPE")
+        inst_type_lbl.setFont(ulf)
+        inst_type_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; letter-spacing: 1px; font-size: 11px;")
+        inst_type_row.addWidget(inst_type_lbl)
+        inst_type_row.addSpacing(8)
 
-        folder_row = QFrame()
-        folder_row.setStyleSheet(f"""
-            QFrame {{
-                background: transparent;
-                border: none;
-                border-bottom: 1px solid {BORDER_AMBER};
-            }}
-            QFrame QLineEdit, QFrame QPushButton {{
-                background: transparent;
-                border: none;
-            }}
-        """)
-        folder_h = QHBoxLayout(folder_row)
-        folder_h.setContentsMargins(0, 0, 0, 0)
-        folder_h.setSpacing(6)
-
-        self._folder_edit = QLineEdit()
-        self._folder_edit.setPlaceholderText("optional — leave blank to use default")
-        f_mono = QFont("Menlo, Consolas, Courier New, monospace")
-        f_mono.setPointSize(13)
-        self._folder_edit.setFont(f_mono)
-        self._folder_edit.setFixedHeight(30)
-        self._folder_edit.setStyleSheet(f"""
-            QLineEdit {{
-                background: transparent; border: none; border-radius: 0;
-                padding: 4px 2px 3px 2px;
+        self._institution_combo = QComboBox()
+        self._institution_combo.setFont(_f11)
+        self._institution_combo.addItem("Community College",        userData="community_college")
+        self._institution_combo.addItem("Four-Year College",        userData="four_year")
+        self._institution_combo.addItem("University / Research",    userData="university")
+        self._institution_combo.addItem("Other",                    userData="other")
+        self._institution_combo.setFixedWidth(200)
+        self._institution_combo.setStyleSheet(f"""
+            QComboBox {{
+                background: {BG_INSET};
                 color: {PHOSPHOR_HOT};
-                selection-background-color: {PHOSPHOR_GLOW};
-                selection-color: {PHOSPHOR_HOT};
-            }}
-        """)
-        folder_row.setFixedHeight(34)
-        folder_h.addWidget(self._folder_edit, 1)
-
-        browse_btn = QPushButton("Browse…")
-        browse_btn.setFont(f_mono)
-        browse_btn.setFixedHeight(26)
-        browse_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: transparent;
-                color: {PHOSPHOR_DIM};
-                border: 1px solid rgba(90,60,8,0.40);
+                border: 1px solid {BORDER_AMBER};
                 border-radius: 3px;
-                padding: 2px 8px;
-                font-size: 12px;
+                padding: 4px 8px;
+                font-size: 11px;
             }}
-            QPushButton:hover {{
-                color: {PHOSPHOR_MID};
-                border-color: rgba(90,60,8,0.80);
+            QComboBox::drop-down {{ border: none; }}
+            QComboBox QAbstractItemView {{
+                background: {BG_INSET};
+                color: {PHOSPHOR_HOT};
+                border: 1px solid {BORDER_AMBER};
+                selection-background-color: {PHOSPHOR_GLOW};
             }}
         """)
-        browse_btn.clicked.connect(self._on_browse_folder)
-        folder_h.addWidget(browse_btn)
+        inst_type_row.addWidget(self._institution_combo)
+        inst_type_row.addStretch()
+        lay.addLayout(inst_type_row)
 
-        lay.addWidget(folder_row)
+        # ── Data Retention ───────────────────────────────────────────────
+        lay.addSpacing(10)
+        lay.addWidget(_make_scanline_sep())
+        lay.addSpacing(8)
+
+        ret_hdr = QLabel("DATA RETENTION")
+        ret_hdr.setFont(ulf)
+        ret_hdr.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; letter-spacing: 1.5px; font-weight: 600; font-size: 11px;"
+        )
+        lay.addWidget(ret_hdr)
+
+        ret_desc = QLabel(
+            "Grading reports and Academic Integrity (AIC) data are stored internally "
+            "and only exported as external reports on demand. "
+            "Configure auto-deletion of aged internal data below."
+        )
+        ret_desc.setWordWrap(True)
+        ret_desc.setFont(_f11)
+        ret_desc.setStyleSheet(f"color: {PHOSPHOR_DIM};")
+        lay.addWidget(ret_desc)
+
+        lay.addSpacing(4)
+
+        auto_row = QHBoxLayout()
+        self._retention_enabled_cb = QCheckBox("Auto-delete internal data older than")
+        self._retention_enabled_cb.setFont(_f11)
+        self._retention_enabled_cb.setStyleSheet(f"color: {PHOSPHOR_HOT};")
+        auto_row.addWidget(self._retention_enabled_cb)
+
+        self._retention_days = QSpinBox()
+        self._retention_days.setRange(1, 3650)
+        self._retention_days.setValue(90)
+        self._retention_days.setSuffix(" days")
+        self._retention_days.setFont(_f11)
+        self._retention_days.setMinimumHeight(28)
+        self._retention_days.setMinimumWidth(90)
+        self._retention_days.setStyleSheet(f"""
+            QSpinBox {{
+                background: {BG_INSET};
+                color: {PHOSPHOR_HOT};
+                border: 1px solid {BORDER_AMBER};
+                border-radius: 3px;
+                padding: 2px 4px;
+                font-weight: 600;
+            }}
+        """)
+        auto_row.addWidget(self._retention_days)
+        auto_row.addStretch()
+        lay.addLayout(auto_row)
+
+        cats_row = QHBoxLayout()
+        cats_row.addSpacing(24)
+        self._retention_grading_cb = QCheckBox("Grading Reports")
+        self._retention_grading_cb.setFont(_f11)
+        self._retention_grading_cb.setStyleSheet(f"color: {PHOSPHOR_MID};")
+        self._retention_grading_cb.setChecked(True)
+        cats_row.addWidget(self._retention_grading_cb)
+
+        cats_row.addSpacing(12)
+        self._retention_aic_cb = QCheckBox("Academic Integrity (AIC) data")
+        self._retention_aic_cb.setFont(_f11)
+        self._retention_aic_cb.setStyleSheet(f"color: {PHOSPHOR_MID};")
+        self._retention_aic_cb.setChecked(True)
+        cats_row.addWidget(self._retention_aic_cb)
+        cats_row.addStretch()
+        lay.addLayout(cats_row)
+
+        self._retention_enabled_cb.toggled.connect(self._on_retention_toggled)
+        self._on_retention_toggled(False)
 
         lay.addStretch()
+
+        multi_note = QLabel("You can add profiles for additional institutions later in Settings.")
+        multi_note.setWordWrap(True)
+        multi_note.setFont(_f11)
+        multi_note.setStyleSheet(f"color: {PHOSPHOR_DIM};")
+        lay.addWidget(multi_note)
+
         return panel
 
-    def _on_browse_folder(self) -> None:
-        from PySide6.QtWidgets import QFileDialog
-        folder = QFileDialog.getExistingDirectory(
-            self, "Select Output Folder", self._folder_edit.text()
-        )
-        if folder:
-            self._folder_edit.setText(folder)
+    def _on_retention_toggled(self, enabled: bool) -> None:
+        self._retention_days.setEnabled(enabled)
+        self._retention_grading_cb.setEnabled(enabled)
+        self._retention_aic_cb.setEnabled(enabled)
 
     def _build_guide_panel(self) -> QFrame:
         panel = QFrame()
@@ -576,8 +659,14 @@ class SetupDialog(QDialog):
                 l.setWordWrap(True)
             return l
 
-        lay.addWidget(_lbl("> ABOUT API TOKEN", PHOSPHOR_HOT, size=14, bold=True))
+        lay.addWidget(_lbl("> ABOUT API TOKENS", PHOSPHOR_HOT, size=14, bold=True))
         lay.addSpacing(4)
+        lay.addWidget(_lbl(
+            "An API token lets this app talk to Canvas on your behalf \u2014 "
+            "reading courses, downloading submissions, and posting grades.",
+            PHOSPHOR_MID, size=12, wrap=True
+        ))
+        lay.addSpacing(6)
         lay.addWidget(_make_warning_toast(
             "Treat this like a password \u2014 anyone with it can access "
             "your Canvas account as you. Stored locally on this machine only."
@@ -667,14 +756,41 @@ class SetupDialog(QDialog):
         os.environ["CANVAS_BASE_URL"] = url
         os.environ["CANVAS_API_TOKEN"] = token
 
-        # Save output folder if specified
-        folder = self._folder_edit.text().strip() if hasattr(self, "_folder_edit") else ""
-        if folder:
-            try:
-                from autograder_utils import set_output_directory
-                from pathlib import Path
-                set_output_directory(Path(folder))
-            except Exception:
-                pass
+        # Save institution profile + data retention settings
+        try:
+            from settings import load_settings, save_settings
+            s = load_settings()
 
+            inst_type = self._institution_combo.currentData()
+            s["institution_type"] = inst_type
+            # Map institution type to context profile id
+            s["context_profile"] = "community_college" if inst_type == "community_college" else "standard"
+
+            enabled = self._retention_enabled_cb.isChecked()
+            days = self._retention_days.value()
+            incl_grading = self._retention_grading_cb.isChecked()
+            incl_aic = self._retention_aic_cb.isChecked()
+
+            s["data_retention_enabled"] = enabled
+            s["data_retention_days"] = days
+            s["data_retention_grading"] = incl_grading
+            s["data_retention_aic"] = incl_aic
+            s["cleanup_mode"] = "trash" if enabled else "none"
+            s["cleanup_threshold_days"] = days
+            targets = []
+            if incl_grading:
+                targets += ["ci_csv", "df_csv"]
+            if incl_aic:
+                targets += ["ad_csv", "ad_excel", "ad_txt"]
+            s["cleanup_targets"] = "all" if len(targets) == 5 else ",".join(targets)
+
+            save_settings(s)
+        except Exception:
+            pass
+
+        self.accept()
+
+    def _on_try_demo(self, profile: str = "hs") -> None:
+        self.demo_requested = True
+        self.demo_profile   = profile
         self.accept()

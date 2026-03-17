@@ -1203,6 +1203,29 @@ case "${1:-all}" in
         mkdir -p "$BUILD_DIR" "$DIST_DIR"
         build_linux
         ;;
+    gui)
+        # Build the GUI as a standalone windowed app using PyInstaller.
+        # Produces:
+        #   macOS:   dist/Autograder4Canvas-GUI.app  (--windowed)
+        #   Windows: dist/Autograder4Canvas-GUI.exe  (--windowed)
+        #   Linux:   dist/Autograder4Canvas-GUI       (--windowed)
+        echo -e "${BLUE}Building GUI with PyInstaller...${NC}"
+        cd "$SRC_DIR"
+        python3 -m PyInstaller \
+            --name "Autograder4Canvas-GUI" \
+            --windowed \
+            --onedir \
+            --add-data "Programs:Programs" \
+            --add-data "automation:automation" \
+            --add-data "modules:modules" \
+            --add-data "config:config" \
+            --hidden-import "PySide6.QtSvg" \
+            --hidden-import "PySide6.QtPrintSupport" \
+            --hidden-import "dateutil" \
+            "gui_main.py"
+        echo -e "${GREEN}✓ GUI build complete. Output: $SRC_DIR/dist/${NC}"
+        cd "$SCRIPT_DIR"
+        ;;
     release)
         # Tags the repo and pushes to GitHub, which triggers the Actions workflow
         # to build standalone .exe / .app / Linux binaries via PyInstaller.
@@ -1275,13 +1298,14 @@ case "${1:-all}" in
         ls -lh "$DIST_DIR/"
         ;;
     *)
-        echo "Usage: $0 [clean|local|mac|win|linux|all|release]"
+        echo "Usage: $0 [clean|local|mac|win|linux|gui|all|release]"
         echo ""
         echo "  clean        Remove build artifacts"
         echo "  local        Build/update the local .app in this folder"
         echo "  mac          Build Mac distribution (DMG with .app)"
         echo "  win          Build Windows distribution (zip with INSTALL.bat, requires Python)"
         echo "  linux        Build Linux distribution (tar.gz with install.sh)"
+        echo "  gui          Build GUI with PyInstaller (--windowed, all platforms)"
         echo "  all          Build everything (default)"
         echo "  release [v]  Tag + push to GitHub → triggers standalone .exe/.app build"
         exit 1

@@ -1,5 +1,9 @@
 """
 Small dialog for changing an assignment's due date via context menu.
+
+Uses an inline QCalendarWidget (never a popup) to avoid the macOS/PySide6
+bug where setCalendarPopup(True) opens a calendar that immediately loses
+focus and closes.
 """
 from __future__ import annotations
 
@@ -7,13 +11,15 @@ from datetime import datetime, timezone
 from typing import Optional, Tuple
 
 from dateutil.parser import isoparse
-from PySide6.QtCore import QDateTime, Qt
+from PySide6.QtCore import QDate, QTime, Qt
 from PySide6.QtWidgets import (
+    QCalendarWidget,
     QDialog,
     QDialogButtonBox,
     QHBoxLayout,
-    QDateTimeEdit,
+    QLabel,
     QPushButton,
+    QTimeEdit,
     QVBoxLayout,
 )
 
@@ -40,31 +46,37 @@ class DatePickerDialog(QDialog):
         layout.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
         layout.setSpacing(SPACING_SM)
 
-        # Date/time editor
-        self._dt_edit = QDateTimeEdit()
-        self._dt_edit.setDisplayFormat("MMM dd, yyyy hh:mm AP")
-        self._dt_edit.setCalendarPopup(True)
+        # Inline calendar — always visible, no popup (fixes macOS focus-loss bug)
+        self._cal = QCalendarWidget()
+        self._cal.setGridVisible(False)
+        self._cal.setVerticalHeaderFormat(
+            QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader
+        )
+        layout.addWidget(self._cal)
 
+        # Time row
+        time_row = QHBoxLayout()
+        time_row.setSpacing(SPACING_SM)
+        time_lbl = QLabel("Time:")
+        time_lbl.setFixedWidth(40)
+        time_row.addWidget(time_lbl)
+        self._time_edit = QTimeEdit()
+        self._time_edit.setDisplayFormat("hh:mm AP")
+        self._time_edit.setFixedWidth(100)
+        time_row.addWidget(self._time_edit)
+        time_row.addStretch()
+        layout.addLayout(time_row)
+
+        # Populate initial date / time
         if current_due_at is not None:
             try:
-                dt = isoparse(current_due_at)
-                # Convert to local time for display
-                dt_local = dt.astimezone()
-                qdt = QDateTime(
-                    dt_local.year,
-                    dt_local.month,
-                    dt_local.day,
-                    dt_local.hour,
-                    dt_local.minute,
-                    dt_local.second,
-                )
-                self._dt_edit.setDateTime(qdt)
+                dt = isoparse(current_due_at).astimezone()
+                self._cal.setSelectedDate(QDate(dt.year, dt.month, dt.day))
+                self._time_edit.setTime(QTime(dt.hour, dt.minute, dt.second))
             except (ValueError, TypeError):
-                self._dt_edit.setDateTime(QDateTime.currentDateTime())
+                self._time_edit.setTime(QTime(23, 59, 0))
         else:
-            self._dt_edit.setDateTime(QDateTime.currentDateTime())
-
-        layout.addWidget(self._dt_edit)
+            self._time_edit.setTime(QTime(23, 59, 0))
 
         # Button row: Clear on the left, OK/Cancel on the right
         btn_row = QHBoxLayout()
@@ -114,14 +126,15 @@ class DatePickerDialog(QDialog):
         if self._cleared:
             return True, None
 
-        qdt = self._dt_edit.dateTime()
+        qdate = self._cal.selectedDate()
+        qtime = self._time_edit.time()
         py_dt = datetime(
-            qdt.date().year(),
-            qdt.date().month(),
-            qdt.date().day(),
-            qdt.time().hour(),
-            qdt.time().minute(),
-            qdt.time().second(),
+            qdate.year(),
+            qdate.month(),
+            qdate.day(),
+            qtime.hour(),
+            qtime.minute(),
+            qtime.second(),
             tzinfo=datetime.now().astimezone().tzinfo,
         )
         utc_dt = py_dt.astimezone(timezone.utc)

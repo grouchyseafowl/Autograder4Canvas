@@ -39,6 +39,9 @@ class AssignmentRule:
     # Grade preservation
     preserve_existing_grades: bool = True
 
+    # Whether to grade unsubmitted past-due assignments as Incomplete
+    mark_missing_as_incomplete: bool = False
+
     # LLM reply quality check
     use_llm_reply_check: bool = False
 

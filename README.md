@@ -11,30 +11,32 @@ A Canvas LMS integration tool for community college instructors to streamline gr
 
 ## Download
 
-### Pre-built Applications
+**No Python or technical setup required.** Just download and run.
 
-Download the latest release for your platform:
+**[Download the latest release](https://github.com/grouchyseafowl/Autograder4Canvas/releases/latest)**
 
-- **macOS**: [Autograder4Canvas.app](#) (Coming soon)
-- **Windows**: [Autograder4Canvas.exe](#) (Coming soon)
-- **Linux**: [Autograder4Canvas.tar.gz](#) (Coming soon)
+| Platform | File |
+|----------|------|
+| macOS    | `Autograder4Canvas-Mac.dmg` |
+| Windows  | `Autograder4Canvas-Windows.zip` |
+| Linux    | `Autograder4Canvas-Linux.tar.gz` |
 
 ### Installation
 
 **macOS:**
-1. Download `Autograder4Canvas.app`
-2. Move to Applications folder
-3. Right-click and select "Open" (first time only, to bypass Gatekeeper)
+1. Download `Autograder4Canvas-Mac.dmg`
+2. Open the DMG and drag the app to your Applications folder
+3. Right-click the app and select "Open" (first time only, to bypass Gatekeeper)
 
 **Windows:**
-1. Download `Autograder4Canvas.exe`
-2. Run the installer
-3. Follow the installation wizard
+1. Download `Autograder4Canvas-Windows.zip` and extract it
+2. Run `Autograder4Canvas.exe`
+3. If Windows SmartScreen appears, click "More info" → "Run anyway" (the app is not code-signed)
 
 **Linux:**
-1. Download `Autograder4Canvas.tar.gz`
-2. Extract: `tar -xzf Autograder4Canvas.tar.gz`
-3. Run install script: `./install.sh`
+1. Download `Autograder4Canvas-Linux.tar.gz`
+2. Extract: `tar -xzf Autograder4Canvas-Linux.tar.gz`
+3. Run the `Autograder4Canvas` executable inside
 
 ## Quick Start
 
@@ -83,7 +85,7 @@ See [Development Guide](docs/INTEGRATION_GUIDE.md) for build instructions.
 
 ## Support
 
-For questions or issues, please [open an issue](https://github.com/yourusername/Autograder4Canvas/issues) on GitHub.
+For questions or issues, please [open an issue](https://github.com/grouchyseafowl/Autograder4Canvas/issues) on GitHub.
 
 ## License
 

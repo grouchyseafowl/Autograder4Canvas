@@ -125,6 +125,47 @@ def has_pdf_annotations(submission: Dict[str, Any]) -> Tuple[bool, str]:
     
     return False, f"Not annotation type (type: {submission_type})"
 
+
+def _extract_attachment_text(attachment: Dict[str, Any]) -> str:
+    """
+    Download a submission attachment and extract its text content.
+    Supports .txt, .docx, and .pdf files.
+    Returns empty string on failure or unsupported file type.
+    """
+    url = attachment.get("url")
+    if not url:
+        return ""
+    filename = (attachment.get("filename") or "").lower()
+    content_type = (attachment.get("content-type") or "").lower()
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=60)
+        resp.raise_for_status()
+        data = resp.content
+
+        # Plain text
+        if filename.endswith(".txt") or content_type.startswith("text/plain"):
+            return data.decode("utf-8", errors="replace")
+
+        # Word document (.docx)
+        if filename.endswith(".docx") or "openxmlformats-officedocument.wordprocessingml" in content_type:
+            import io
+            from docx import Document
+            doc = Document(io.BytesIO(data))
+            return "\n".join(p.text for p in doc.paragraphs if p.text.strip())
+
+        # PDF — extract raw text
+        if filename.endswith(".pdf") or content_type.startswith("application/pdf"):
+            import io
+            from pdfminer.high_level import extract_text as _pdf_extract
+            return _pdf_extract(io.BytesIO(data)) or ""
+
+    except ImportError:
+        pass  # dependency not installed — degrade gracefully
+    except Exception:
+        pass
+    return ""
+
+
 def evaluate_submission(submission: Dict[str, Any], all_submissions: List[Dict[str, Any]], min_word_count: int) -> Tuple[bool, List[str]]:
     """
     Determine if submission shows good faith effort.
@@ -153,7 +194,7 @@ def evaluate_submission(submission: Dict[str, Any], all_submissions: List[Dict[s
         if word_count > 0 and word_count < min_word_count:
             flags.append(f"Very short text ({word_count} words)")
     
-    # Check attachments (non-PDF or PDF without annotations)
+    # Check attachments — extract text for word-count checking
     attachments = submission.get("attachments", [])
     if attachments:
         has_content = True
@@ -161,17 +202,19 @@ def evaluate_submission(submission: Dict[str, Any], all_submissions: List[Dict[s
             file_size = file.get("size", 0)
             file_name = file.get("filename", "unknown")
             content_type = file.get("content-type", "")
-            
-            # Check if it's a PDF (these would have been caught above if annotated)
             is_pdf = content_type.startswith("application/pdf") or file_name.lower().endswith(".pdf")
-            
-            # If it's a PDF without annotations, flag it
-            if is_pdf and not file.get("canvadoc_document_id") and not file.get("preview_url"):
-                flags.append(f"PDF '{file_name}' uploaded without annotations - may need manual review")
-            
-            # Small file check (but not for PDFs)
-            if not is_pdf and file_size > 0 and file_size < MIN_FILE_SIZE:
-                flags.append(f"Small file '{file_name}' ({file_size} bytes)")
+
+            extracted = _extract_attachment_text(file)
+            if extracted.strip():
+                word_count = count_words(extracted)
+                if word_count > 0 and word_count < min_word_count:
+                    flags.append(f"Short submission '{file_name}' ({word_count} words, min: {min_word_count})")
+            else:
+                # Text extraction unavailable — fall back to heuristic checks
+                if is_pdf and not file.get("canvadoc_document_id") and not file.get("preview_url"):
+                    flags.append(f"PDF '{file_name}' uploaded without annotations — may need manual review")
+                elif not is_pdf and file_size > 0 and file_size < MIN_FILE_SIZE:
+                    flags.append(f"Small file '{file_name}' ({file_size} bytes)")
     
     # Check URL submissions
     url = submission.get("url")
@@ -542,7 +585,9 @@ def grade_assignment(course_id: int, assignment_id: int, students: List[Dict],
     print(f"✅ Assignment {assignment_id}: Grades processed!")
     return flagged_submissions
 
-def export_rationale(course_id: int, assignment_id: int, assignment_name: str, rationale_rows: List[Dict]):
+def export_rationale(course_id: int, assignment_id: int, assignment_name: str, rationale_rows: List[Dict], legacy_csv: bool = False):
+    if not legacy_csv:
+        return
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     safe_name = "".join(c if c.isalnum() or c in " _-" else "_" for c in assignment_name)
     filename = f"complete_incomplete_rationale_{course_id}_{safe_name}_{timestamp}.csv"

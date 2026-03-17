@@ -18,7 +18,7 @@ Public API (same names as before so MainWindow doesn't need changes):
     set_editor(editor)             ← wire in CanvasEditor for mutations
 
 Signals:
-    run_requested(selected_items, course_name, course_id, mark_incomplete_no_sub)
+    run_requested(selected_items, course_name, course_id)
     has_selection(bool)
     edit_completed()               ← emitted after a successful Canvas mutation
 """
@@ -36,7 +36,9 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame,
     QPushButton, QCheckBox, QScrollArea, QSizePolicy,
     QMenu, QInputDialog, QMessageBox, QDateTimeEdit,
+    QDialog, QFormLayout, QComboBox, QSpinBox,
 )
+from gui.dialogs.message_dialog import show_info, show_warning, show_critical, show_question
 from PySide6.QtCore import (
     Signal, Qt, QSize, QTimer, QMimeData, QDateTime,
     QPropertyAnimation, QEasingCurve,
@@ -44,14 +46,22 @@ from PySide6.QtCore import (
 from PySide6.QtGui import (
     QFont, QColor, QBrush, QPainter, QPainterPath, QPen,
     QDrag, QPixmap, QAction, QDesktopServices, QCursor,
+    QLinearGradient, QRadialGradient,
 )
 
 from gui.styles import (
     SPACING_SM, SPACING_MD, FONT_LARGE, make_run_button,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM, PHOSPHOR_GLOW,
     ROSE_ACCENT, BORDER_DARK, BORDER_AMBER,
-    BG_CARD, BG_VOID, BG_INSET,
+    BG_CARD, BG_VOID, BG_INSET, PANE_BG_GRADIENT,
+    make_glow_label, apply_phosphor_glow, remove_glow,
+    make_section_label,
 )
+from gui.widgets.phosphor_chip import PhosphorChip
+from gui.widgets.status_pip import draw_pip
+
+_ROSE_HOT  = "#FF6090"   # bright pink for hover/active glow
+_ROSE_DIM  = "#6B2040"   # faded pink — AIC resting state (mirrors PHOSPHOR_MID in amber)
 
 # ---------------------------------------------------------------------------
 # Colour constants — no green anywhere
@@ -90,12 +100,10 @@ _GRADING_LABELS = {
 
 _PANEL_QSS = f"""
     QFrame#assignmentPanel {{
-        background: qradialgradient(cx:0.52,cy:0.44,radius:0.90,fx:0.48,fy:0.40,
-            stop:0.00 #2C2212, stop:0.60 #171208, stop:1.00 #100C03);
+        background: {PANE_BG_GRADIENT};
         border: 1px solid {BORDER_DARK};
-        border-top-color:  {BORDER_AMBER};
-        border-left-color: {BORDER_AMBER};
-        border-radius: 10px;
+        border-top-color: {BORDER_AMBER};
+        border-radius: 8px;
     }}
     QFrame#assignmentPanel > QLabel {{
         background: transparent;
@@ -115,26 +123,33 @@ _SCROLL_QSS = f"""
 
 _PILL_QSS = f"""
     QPushButton {{
-        background: rgba(58,40,8,0.30);
+        background: qradialgradient(cx:0.50,cy:0.50,radius:0.85,
+            stop:0.00 rgba(80,55,12,0.35),
+            stop:0.65 rgba(40,28,6,0.25),
+            stop:1.00 rgba(10,7,2,0.30));
         color: {PHOSPHOR_MID};
-        border: 1px solid {BORDER_AMBER};
+        border: 1px solid rgba(106,74,18,0.40);
         border-radius: 10px;
         padding: 2px 11px;
         font-size: 11px;
         min-height: 22px;
     }}
     QPushButton:hover:!checked {{
-        background: rgba(80,55,12,0.45);
+        background: qradialgradient(cx:0.50,cy:0.50,radius:0.85,
+            stop:0.00 rgba(120,80,16,0.55),
+            stop:0.65 rgba(65,45,10,0.35),
+            stop:1.00 rgba(15,10,3,0.35));
         color: {PHOSPHOR_HOT};
-        border-color: {PHOSPHOR_MID};
+        border-color: rgba(106,74,18,0.65);
     }}
     QPushButton:checked {{
-        background: rgba(240,168,48,0.18);
+        background: qradialgradient(cx:0.50,cy:0.50,radius:0.85,
+            stop:0.00 rgba(240,168,48,0.32),
+            stop:0.50 rgba(180,110,20,0.16),
+            stop:1.00 rgba(10,7,2,0.20));
         color: {PHOSPHOR_HOT};
-        border: 1px solid {PHOSPHOR_HOT};
-    }}
-    QPushButton:checked:hover {{
-        background: rgba(240,168,48,0.26);
+        border: 1px solid rgba(200,140,30,0.68);
+        font-weight: 600;
     }}
 """
 
@@ -166,22 +181,30 @@ _CLEAR_QSS = f"""
 _UI_STATE_FILE = Path.home() / ".canvas_autograder_ui_state.json"
 
 
-def _load_group_ui_state(course_id: int) -> Tuple[List[int], Set[int]]:
-    """Return (group_order, collapsed_group_ids) for this course, or empty defaults."""
+def _load_group_ui_state(
+    course_id: int,
+) -> Tuple[List[int], Set[int], Dict[int, List[int]]]:
+    """Return (group_order, collapsed_group_ids, assignment_order) for this course."""
     try:
         data = json.loads(_UI_STATE_FILE.read_text())
         key = str(course_id)
         order = data.get("group_order", {}).get(key, [])
         collapsed = set(data.get("collapsed_groups", {}).get(key, []))
-        return order, collapsed
+        raw_asgn = data.get("assignment_order", {}).get(key, {})
+        # JSON keys are strings; convert to int
+        asgn_order = {int(gid): [int(a) for a in aids] for gid, aids in raw_asgn.items()}
+        return order, collapsed, asgn_order
     except Exception:
-        return [], set()
+        return [], set(), {}
 
 
 def _save_group_ui_state(
-    course_id: int, group_order: List[int], collapsed_groups: Set[int]
+    course_id: int,
+    group_order: List[int],
+    collapsed_groups: Set[int],
+    assignment_order: Optional[Dict[int, List[int]]] = None,
 ) -> None:
-    """Persist group order and collapsed state for this course to disk."""
+    """Persist group order, collapsed state, and per-group assignment order."""
     try:
         data: Dict = {}
         if _UI_STATE_FILE.exists():
@@ -192,6 +215,10 @@ def _save_group_ui_state(
         key = str(course_id)
         data.setdefault("group_order", {})[key] = group_order
         data.setdefault("collapsed_groups", {})[key] = list(collapsed_groups)
+        if assignment_order is not None:
+            data.setdefault("assignment_order", {})[key] = {
+                str(gid): aids for gid, aids in assignment_order.items()
+            }
         _UI_STATE_FILE.write_text(json.dumps(data))
     except Exception:
         pass
@@ -228,103 +255,34 @@ def _is_autogradeable(grading_type: str, submission_types: List[str]) -> bool:
 
 
 def _type_label(grading_type: str, submission_types: List[str]) -> str:
-    if "discussion_topic" in (submission_types or []):
-        return "Discussion"
     return _GRADING_LABELS.get(grading_type, "Points")
 
 
+def _kind_label(submission_types: List[str]) -> str:
+    """Return a short submission-category tag shown in the KIND column."""
+    stypes = submission_types or []
+    if "discussion_topic" in stypes:
+        return "DISC"
+    if "online_quiz" in stypes:
+        return "QUIZ"
+    return "—"
+
+
 # ---------------------------------------------------------------------------
-# _SwitchToggle  — sliding pill switch widget
+# _ClickableLabel — QLabel that emits clicked() on left mouse press
 # ---------------------------------------------------------------------------
 
-class _SwitchTrack(QWidget):
-    """Painted sliding-pill track — 36 × 20 px."""
+class _ClickableLabel(QLabel):
+    """QLabel that emits clicked() when the user left-clicks it."""
 
-    _W, _H = 36, 20
+    clicked = Signal()
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._on = False
-        self.setFixedSize(self._W, self._H)
-
-    def set_on(self, v: bool) -> None:
-        self._on = v
-        self.update()
-
-    def paintEvent(self, _event) -> None:
-        p = QPainter(self)
-        p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        w, h = self._W, self._H
-        r = h / 2
-
-        track = QPainterPath()
-        track.addRoundedRect(0.5, 0.5, w - 1, h - 1, r, r)
-
-        # Track fill
-        if self._on:
-            p.fillPath(track, QColor(240, 168, 48, 55))
-            p.setPen(QColor(240, 168, 48))
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
+            event.accept()
         else:
-            p.fillPath(track, QColor(58, 40, 8, 160))
-            p.setPen(QColor(106, 74, 18))
-        p.drawPath(track)
-
-        # Knob
-        knob_d = h - 6
-        knob_x = w - knob_d - 4 if self._on else 4
-        knob_color = QColor(240, 168, 48) if self._on else QColor(90, 62, 14)
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(knob_color)
-        p.drawEllipse(int(knob_x), 3, knob_d, knob_d)
-        p.end()
-
-
-class _SwitchToggle(QWidget):
-    """A labelled toggle switch — drop-in for QCheckBox in the toolbar."""
-
-    toggled = Signal(bool)
-
-    def __init__(self, label: str, parent=None):
-        super().__init__(parent)
-        self._checked = False
-
-        lo = QHBoxLayout(self)
-        lo.setContentsMargins(0, 0, 0, 0)
-        lo.setSpacing(7)
-
-        self._track = _SwitchTrack()
-        lo.addWidget(self._track)
-
-        self._lbl = QLabel(label)
-        self._lbl.setMinimumWidth(0)   # don't let label text expand the toolbar
-        self._lbl.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 11px;"
-            f" background: transparent; border: none;"
-        )
-        lo.addWidget(self._lbl)
-
-        self.setMinimumWidth(0)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._refresh()
-
-    def mousePressEvent(self, _event) -> None:
-        self.setChecked(not self._checked)
-        self.toggled.emit(self._checked)
-
-    def isChecked(self) -> bool:
-        return self._checked
-
-    def setChecked(self, v: bool) -> None:
-        self._checked = v
-        self._track.set_on(v)
-        self._refresh()
-
-    def _refresh(self) -> None:
-        color = PHOSPHOR_HOT if self._checked else PHOSPHOR_MID
-        self._lbl.setStyleSheet(
-            f"color: {color}; font-size: 11px;"
-            f" background: transparent; border: none;"
-        )
+            super().mousePressEvent(event)
 
 
 # ---------------------------------------------------------------------------
@@ -360,6 +318,8 @@ class _AssignmentRow(QFrame):
 
     toggled = Signal(int, bool)   # (assignment_id, is_checked)
     deadline_edit_requested = Signal(int, object)  # (assignment_id, new_due_at_str_or_None)
+    publish_badge_clicked = Signal(int)    # (assignment_id)
+    type_badge_clicked = Signal(int)       # (assignment_id)
 
     # name-column foreground by situation
     _NAME_PAST_UNGRADED = "#F0A830"   # bright amber — urgent
@@ -376,11 +336,12 @@ class _AssignmentRow(QFrame):
         self._aid  = assignment["id"]
         self._data = assignment
         self._section_key = section_key
-        self._inline_editing = False
         self._drag_enabled = drag_enabled
 
         ngr  = assignment["needs_grading_count"]
         auto = assignment["autogradeable"]
+        self._auto = auto
+        self._ngr  = ngr
 
         # Row background tint
         tint = {"PAST": _PAST_BG, "WEEK": _WEEK_BG}.get(section_key)
@@ -390,21 +351,12 @@ class _AssignmentRow(QFrame):
         else:
             bg_css = "transparent"
 
+        self._tint   = tint   # QColor or None — used in paintEvent
+        self._bg_css = bg_css
+        self._hovered = False
         self.setFixedHeight(32)
-        self.setStyleSheet(f"""
-            QFrame {{
-                background: {bg_css};
-                border: none;
-                border-bottom: 1px solid rgba(58,40,8,0.25);
-            }}
-            QFrame QLabel {{
-                background: transparent;
-                border: none;
-            }}
-            QFrame QCheckBox {{
-                background: transparent;
-            }}
-        """)
+        self.setMouseTracking(True)
+        self._apply_row_qss(False)
 
         self._drag_start = None
 
@@ -413,11 +365,14 @@ class _AssignmentRow(QFrame):
         row.setSpacing(6)
         self._row_layout = row
 
-        # ── Checkbox ────────────────────────────────────────────────────
-        self._cb = QCheckBox()
-        self._cb.setFixedSize(16, 16)
-        self._cb.toggled.connect(lambda v: self.toggled.emit(self._aid, v))
-        row.addWidget(self._cb)
+        # ── Selection state — no QCheckBox; pip drawn in paintEvent ─────
+        self._is_checked = False
+        # 16-px transparent spacer keeps column alignment (header indent = 36px)
+        _pip_spacer = QWidget()
+        _pip_spacer.setFixedSize(16, 16)
+        _pip_spacer.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        _pip_spacer.setStyleSheet("background: transparent;")
+        row.addWidget(_pip_spacer)
 
         # ── Name ────────────────────────────────────────────────────────
         if not auto:
@@ -440,10 +395,17 @@ class _AssignmentRow(QFrame):
         self._due_lbl = QLabel(_fmt_due(assignment["due_dt"]))
         self._due_lbl.setFixedWidth(70)
         self._due_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._due_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px;")
+        if section_key == "PAST" and ngr > 0:
+            self._due_lbl.setStyleSheet(f"color: {_PAST_COLOR}; font-size: 11px;")
+            apply_phosphor_glow(self._due_lbl, color=_PAST_COLOR, blur=7, strength=0.40,
+                                xOffset=-2, yOffset=1)
+        elif section_key == "PAST":
+            self._due_lbl.setStyleSheet(f"color: #7A5520; font-size: 11px;")
+        else:
+            self._due_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px;")
         row.addWidget(self._due_lbl)
 
-        # ── Published status badge ───────────────────────────────────────
+        # ── Published status badge (clickable) ──────────────────────────
         published = assignment.get("published", True)
         if published:
             pub_text  = "✓"
@@ -451,19 +413,32 @@ class _AssignmentRow(QFrame):
         else:
             pub_text  = "✗"
             pub_color = PHOSPHOR_GLOW
-        pub_lbl = QLabel(pub_text)
-        pub_lbl.setFixedWidth(80)
-        pub_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        pub_lbl.setStyleSheet(f"color: {pub_color}; font-size: 10px;")
-        row.addWidget(pub_lbl)
+        self._pub_lbl = _ClickableLabel(pub_text)
+        self._pub_lbl.setFixedWidth(80)
+        self._pub_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._pub_lbl.setStyleSheet(f"color: {pub_color}; font-size: 10px;")
+        self._pub_lbl.setToolTip("Click to toggle publish state")
+        self._pub_lbl.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._pub_lbl.clicked.connect(lambda: self.publish_badge_clicked.emit(self._aid))
+        row.addWidget(self._pub_lbl)
 
-        # ── Type badge ──────────────────────────────────────────────────
+        # ── Kind indicator (DISC / QUIZ / —) ────────────────────────────
+        kind = _kind_label(assignment["submission_types"])
+        kind_col = PHOSPHOR_MID if kind != "—" else PHOSPHOR_DIM
+        kind_lbl = QLabel(kind)
+        kind_lbl.setFixedWidth(50)
+        kind_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        kind_lbl.setStyleSheet(f"color: {kind_col}; font-size: 10px;")
+        kind_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        row.addWidget(kind_lbl)
+
+        # ── Type badge (clickable) ───────────────────────────────────────
         tag = _type_label(assignment["grading_type"], assignment["submission_types"])
         badge_col = PHOSPHOR_DIM if not auto else PHOSPHOR_MID
-        tag_lbl = QLabel(tag)
-        tag_lbl.setFixedWidth(95)
-        tag_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        tag_lbl.setStyleSheet(f"""
+        self._tag_lbl = _ClickableLabel(tag)
+        self._tag_lbl.setFixedWidth(95)
+        self._tag_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._tag_lbl.setStyleSheet(f"""
             color: {badge_col};
             background: rgba(58,40,8,0.45);
             border: 1px solid rgba(90,60,8,0.30);
@@ -471,7 +446,10 @@ class _AssignmentRow(QFrame):
             font-size: 10px;
             padding: 1px 4px;
         """)
-        row.addWidget(tag_lbl)
+        self._tag_lbl.setToolTip("Click to change grading type")
+        self._tag_lbl.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._tag_lbl.clicked.connect(lambda: self.type_badge_clicked.emit(self._aid))
+        row.addWidget(self._tag_lbl)
 
         # ── To-grade count ──────────────────────────────────────────────
         if ngr > 0:
@@ -492,21 +470,25 @@ class _AssignmentRow(QFrame):
         # through directly to this frame, so mousePressEvent / mouseMoveEvent
         # fire without any event-propagation or event-filter complexity.
         # QCheckBox is intentionally left interactive.
+        if not auto:
+            self.setCursor(Qt.CursorShape.ForbiddenCursor)
+
         if drag_enabled:
             self.setAcceptDrops(True)
-            self.setCursor(Qt.CursorShape.OpenHandCursor)
+            if auto:
+                self.setCursor(Qt.CursorShape.OpenHandCursor)
             self.setToolTip(assignment["name"])
             for lbl in self.findChildren(QLabel):
-                lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+                if not isinstance(lbl, _ClickableLabel):
+                    lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
     # public helpers
     def set_checked(self, v: bool) -> None:
-        self._cb.blockSignals(True)
-        self._cb.setChecked(v)
-        self._cb.blockSignals(False)
+        self._is_checked = bool(v)
+        self.update()
 
     def is_checked(self) -> bool:
-        return self._cb.isChecked()
+        return self._is_checked
 
     def assignment_id(self) -> int:
         return self._aid
@@ -514,101 +496,117 @@ class _AssignmentRow(QFrame):
     def data(self) -> dict:
         return self._data
 
-    # -- Double-click to edit deadline inline --
+    # -- Hover + pip painting ------------------------------------------------
+
+    def enterEvent(self, event) -> None:
+        self._hovered = True
+        self.update()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event) -> None:
+        self._hovered = False
+        self.update()
+        super().leaveEvent(event)
+
+    def paintEvent(self, _event) -> None:
+        is_checked = self._is_checked
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        w, h = float(self.width()), float(self.height())
+        cy = h / 2.0
+
+        # 1. Section tint base (PAST / WEEK amber wash)
+        if self._tint is not None:
+            if self._section_key == "PAST":
+                # Asymmetric phosphor bloom: hot spot near left edge, bleeds unevenly rightward
+                r, g, b = self._tint.red(), self._tint.green(), self._tint.blue()
+                tint_grad = QRadialGradient(w * 0.22, h, w * 1.50)
+                tint_grad.setColorAt(0.00, QColor(r, g, b, 14))
+                tint_grad.setColorAt(0.50, QColor(r, g, b, 6))
+                tint_grad.setColorAt(1.00, QColor(r, g, b, 1))
+                p.fillRect(self.rect(), QBrush(tint_grad))
+            else:
+                p.fillRect(self.rect(), self._tint)
+
+        # 2. Selection / hover radial glow (left-biased origin behind pip)
+        if is_checked or self._hovered:
+            glow_cx = w * 0.25
+            glow_cy = cy
+            if is_checked:
+                mid_r, mid_g, mid_b = 204, 82, 130   # rose
+                glow_a, bloom_a = 72, 35
+            else:
+                mid_r, mid_g, mid_b = 240, 168, 48   # amber
+                glow_a, bloom_a = 50, 20
+
+            grad = QRadialGradient(glow_cx, glow_cy, w * 0.8)
+            grad.setColorAt(0.00, QColor(mid_r, mid_g, mid_b, glow_a))
+            grad.setColorAt(0.40, QColor(mid_r, mid_g, mid_b, glow_a // 4))
+            grad.setColorAt(1.00, QColor(0, 0, 0, 0))
+            p.fillRect(self.rect(), QBrush(grad))
+
+            bloom = QRadialGradient(glow_cx, glow_cy, w * 0.40)
+            bloom.setColorAt(0.00, QColor(mid_r, mid_g, mid_b, bloom_a))
+            bloom.setColorAt(1.00, QColor(0, 0, 0, 0))
+            p.fillRect(self.rect(), QBrush(bloom))
+
+        # 3. Pip at x=22 (14px left margin + 8px = center of old checkbox area)
+        pip_x = 22.0
+        if is_checked:
+            draw_pip(p, pip_x, cy, 5, 204, 82, 130, 60, 200)
+        elif self._hovered:
+            draw_pip(p, pip_x, cy, 5, 240, 168, 48, 25, 140)
+        else:
+            draw_pip(p, pip_x, cy, 5, 58, 40, 8, 0, 90)
+
+        p.end()
+        # Do NOT call super() — that would repaint transparent background over our painting
+
+    # -- Double-click to edit deadline (opens DatePickerDialog) --
 
     def mouseDoubleClickEvent(self, event):
-        if self._inline_editing:
+        if event.button() != Qt.MouseButton.LeftButton:
+            super().mouseDoubleClickEvent(event)
             return
-        self._start_inline_date_edit()
-
-    def _start_inline_date_edit(self) -> None:
-        """Replace the due-date label with an inline QDateTimeEdit."""
-        self._inline_editing = True
-        due_dt = self._data.get("due_dt")
-
-        self._date_edit = QDateTimeEdit()
-        self._date_edit.setFixedWidth(140)
-        self._date_edit.setDisplayFormat("MMM dd, yyyy hh:mm AP")
-        self._date_edit.setCalendarPopup(True)
-        self._date_edit.setStyleSheet(f"""
-            QDateTimeEdit {{
-                background: {BG_INSET};
-                color: {PHOSPHOR_HOT};
-                border: 1px solid {PHOSPHOR_HOT};
-                border-radius: 3px;
-                font-size: 10px;
-                padding: 1px 4px;
-            }}
-        """)
-
-        if due_dt:
-            qdt = QDateTime(
-                due_dt.year, due_dt.month, due_dt.day,
-                due_dt.hour, due_dt.minute, due_dt.second,
-            )
-            self._date_edit.setDateTime(qdt)
-        else:
-            self._date_edit.setDateTime(QDateTime.currentDateTime())
-
-        # Swap the label for the editor
-        idx = self._row_layout.indexOf(self._due_lbl)
-        self._due_lbl.hide()
-        self._row_layout.insertWidget(idx + 1, self._date_edit)
-        self._date_edit.setFocus()
-
-        self._date_edit.editingFinished.connect(self._finish_inline_date_edit)
-        self._date_edit.installEventFilter(self)
-
-    def eventFilter(self, obj, event):
-        """Catch Escape key to cancel inline date editing."""
-        if obj is getattr(self, '_date_edit', None):
-            from PySide6.QtCore import QEvent
-            if event.type() == QEvent.Type.KeyPress:
-                if event.key() == Qt.Key.Key_Escape:
-                    self._cancel_inline_date_edit()
-                    return True
-        return super().eventFilter(obj, event)
-
-    def _finish_inline_date_edit(self) -> None:
-        if not self._inline_editing:
-            return
-        self._inline_editing = False
-
-        qdt = self._date_edit.dateTime()
-        py_dt = datetime(
-            qdt.date().year(), qdt.date().month(), qdt.date().day(),
-            qdt.time().hour(), qdt.time().minute(), qdt.time().second(),
-            tzinfo=timezone.utc,
+        from gui.dialogs.date_picker_dialog import DatePickerDialog
+        dlg = DatePickerDialog(
+            current_due_at=self._data.get("due_at"),
+            parent=self.window(),
         )
-        new_due_str = py_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        if dlg.exec():
+            accepted, iso_str = dlg.get_result()
+            if accepted:
+                new_due = _parse_due(iso_str) if iso_str else None
+                self._due_lbl.setText(_fmt_due(new_due))
+                self._data["due_at"] = iso_str
+                self.deadline_edit_requested.emit(self._aid, iso_str)
+        event.accept()
 
-        # Check if actually changed
-        old_due = self._data.get("due_at")
-        changed = True
-        if old_due:
-            try:
-                old_dt = dateutil_parser.isoparse(old_due)
-                if abs((py_dt - old_dt).total_seconds()) < 60:
-                    changed = False
-            except (ValueError, TypeError):
-                pass
+    # -- Stylesheet helpers --
 
-        self._date_edit.hide()
-        self._date_edit.deleteLater()
-        del self._date_edit
-        self._due_lbl.show()
-
-        if changed:
-            self.deadline_edit_requested.emit(self._aid, new_due_str)
-
-    def _cancel_inline_date_edit(self) -> None:
-        if not self._inline_editing:
-            return
-        self._inline_editing = False
-        self._date_edit.hide()
-        self._date_edit.deleteLater()
-        del self._date_edit
-        self._due_lbl.show()
+    def _apply_row_qss(self, drop_target: bool) -> None:
+        # Background and section tint are painted in paintEvent.
+        # QSS only handles child transparency and the separator line.
+        if drop_target:
+            self.setStyleSheet(f"""
+                QFrame {{
+                    background: transparent;
+                    border: none;
+                    border-top: 2px solid {PHOSPHOR_HOT};
+                    border-bottom: 1px solid rgba(58,40,8,0.25);
+                }}
+                QFrame QLabel {{ background: transparent; border: none; }}
+            """)
+        else:
+            self.setStyleSheet(f"""
+                QFrame {{
+                    background: transparent;
+                    border: none;
+                    border-bottom: 1px solid rgba(58,40,8,0.25);
+                }}
+                QFrame QLabel {{ background: transparent; border: none; }}
+            """)
 
     # -- Drag support (group view) --
 
@@ -636,16 +634,59 @@ class _AssignmentRow(QFrame):
             self._start_drag()
 
     def mousePressEvent(self, event):
-        if self._drag_enabled and event.button() == Qt.MouseButton.LeftButton:
-            self._drag_start = event.pos()
+        if event.button() == Qt.MouseButton.LeftButton:
+            if not self._auto:
+                self._show_not_gradeable_notice()
+                event.accept()
+                return
+            if self._ngr == 0:
+                event.accept()
+                return
+            if self._drag_enabled and event.pos().x() >= 36:
+                # Click outside pip zone in drag view → record for potential drag
+                self._drag_start = event.pos()
+            else:
+                # Full-row click in normal view, or pip-zone click in drag view → toggle
+                self._is_checked = not self._is_checked
+                self.toggled.emit(self._aid, self._is_checked)
+                self.update()
             event.accept()
         else:
             super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and self._drag_start is not None:
+            # If we released without dragging, treat it as a toggle click
+            if (event.pos() - self._drag_start).manhattanLength() < 10:
+                self._is_checked = not self._is_checked
+                self.toggled.emit(self._aid, self._is_checked)
+                self.update()
+            self._drag_start = None
+            event.accept()
+        else:
+            super().mouseReleaseEvent(event)
+
+    def _show_not_gradeable_notice(self) -> None:
+        gtype = self._data.get("grading_type", "points")
+        type_label = _GRADING_LABELS.get(gtype, "Points")
+        show_warning(
+            self.window(),
+            "Cannot Autograde",
+            f"{self._data['name']} cannot be autograded.\n\n"
+            f"This assignment uses {type_label} grading, which is not supported. "
+            f"The autograder only supports Complete / Incomplete and "
+            f"Discussion Forum assignments.\n\n"
+            f"To autograde this assignment, change its grading type to "
+            f"Complete / Incomplete in Canvas first.",
+        )
 
     # Drag-and-drop target (for inserting above this row in group view)
     def dragEnterEvent(self, event):
         if event.mimeData().hasFormat("application/x-assignment-id"):
             event.acceptProposedAction()
+            parent = self.parent()
+            if isinstance(parent, _CollapsibleRows):
+                parent.show_drop_at(self.y())
         else:
             event.ignore()
 
@@ -655,8 +696,16 @@ class _AssignmentRow(QFrame):
         else:
             event.ignore()
 
+    def dragLeaveEvent(self, event):
+        # Don't hide here — let _CollapsibleRows.dragLeaveEvent handle it when
+        # the drag truly exits the container.  This prevents flicker between rows.
+        event.accept()
+
     def dropEvent(self, event):
         md = event.mimeData()
+        parent = self.parent()
+        if isinstance(parent, _CollapsibleRows):
+            parent.hide_drop()
         if md.hasFormat("application/x-assignment-id"):
             source_aid = int(md.data("application/x-assignment-id").data().decode())
             event.acceptProposedAction()
@@ -737,6 +786,78 @@ class _SectionBand(QFrame):
 
 
 # ---------------------------------------------------------------------------
+# _DropLine — floating insertion indicator drawn between assignment rows
+# ---------------------------------------------------------------------------
+
+def _paint_insertion_glow(p: QPainter, w: int, cy: int, h: int) -> None:
+    """Paint the shared phosphor-glow insertion indicator.
+
+    Three layers (back → front):
+      1. Wide bloom  — soft amber haze filling the full height, fades left
+      2. Inner glow  — tighter band centred on the line, fades left
+      3. Core line   — 2 px bright gradient, fades left → full amber right
+    The effect mimics backlit CRT phosphor: most intense on the right,
+    bleeding light leftward, nearly transparent at the far left.
+    """
+    p.setPen(Qt.PenStyle.NoPen)
+
+    # 1. Bloom — full widget height
+    bloom = QLinearGradient(0, 0, w, 0)
+    bloom.setColorAt(0.00, QColor(240, 168, 48, 42))
+    bloom.setColorAt(0.45, QColor(240, 168, 48, 22))
+    bloom.setColorAt(0.82, QColor(240, 168, 48,  8))
+    bloom.setColorAt(1.00, QColor(240, 168, 48,  0))
+    p.setBrush(QBrush(bloom))
+    p.drawRect(0, 0, w, h)
+
+    # 2. Inner glow — 8 px band around the core
+    inner = QLinearGradient(0, 0, w, 0)
+    inner.setColorAt(0.00, QColor(240, 168, 48, 85))
+    inner.setColorAt(0.45, QColor(240, 168, 48, 55))
+    inner.setColorAt(0.82, QColor(240, 168, 48, 18))
+    inner.setColorAt(1.00, QColor(240, 168, 48,  0))
+    p.setBrush(QBrush(inner))
+    p.drawRect(0, cy - 4, w, 8)
+
+    # 3. Core line — 2 px
+    core = QLinearGradient(0, 0, w, 0)
+    core.setColorAt(0.00, QColor(240, 168, 48, 255))
+    core.setColorAt(0.68, QColor(240, 168, 48, 220))
+    core.setColorAt(0.90, QColor(240, 168, 48, 130))
+    core.setColorAt(1.00, QColor(240, 168, 48,   0))
+    p.setBrush(QBrush(core))
+    p.drawRect(0, cy - 1, w, 2)
+
+
+class _DropLine(QWidget):
+    """Phosphor-glow insertion indicator floating above assignment rows.
+
+    Absolutely positioned inside _CollapsibleRows; sits on top of sibling
+    _AssignmentRow widgets because it is a non-layout child added last.
+    """
+    _H = 14   # total height — gives bloom room to breathe
+
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.setFixedHeight(self._H)
+        self.hide()
+
+    def show_at(self, y: int) -> None:
+        pw = self.parent().width() if self.parent() else 300
+        self.setGeometry(0, max(0, y - self._H // 2), pw, self._H)
+        self.show()
+        self.raise_()
+        self.update()
+
+    def paintEvent(self, event) -> None:  # noqa: N802
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        _paint_insertion_glow(p, self.width(), self._H // 2, self._H)
+        p.end()
+
+
+# ---------------------------------------------------------------------------
 # _CollapsibleRows — animated container for a group's rows
 # ---------------------------------------------------------------------------
 
@@ -765,6 +886,9 @@ class _CollapsibleRows(QWidget):
         self._anim.setDuration(self._ANIM_MS)
         self._anim.setEasingCurve(QEasingCurve.Type.OutCubic)
 
+        # Floating insertion indicator (child widget, paints on top of rows)
+        self._drop_line = _DropLine(self)
+
     def set_collapsed(self, collapsed: bool, animate: bool = True) -> None:
         if collapsed == self._collapsed:
             return
@@ -781,47 +905,91 @@ class _CollapsibleRows(QWidget):
     def is_collapsed(self) -> bool:
         return self._collapsed
 
-    # Forward drag events to children — prevents silent rejection when cursor
-    # is between rows (in layout margins).
+    def move_row(self, source_aid: int, target_aid: int) -> None:
+        """Move the row for source_aid to just before the row for target_aid."""
+        aids = [r._aid for r in self._rows]
+        if source_aid not in aids or target_aid not in aids or source_aid == target_aid:
+            return
+        src_idx = aids.index(source_aid)
+        src_row = self._rows.pop(src_idx)
+        layout = self.layout()
+        layout.removeWidget(src_row)
+        new_tgt_idx = [r._aid for r in self._rows].index(target_aid)
+        self._rows.insert(new_tgt_idx, src_row)
+        layout.insertWidget(new_tgt_idx, src_row)
+
+    # -- Insertion indicator helpers -----------------------------------------
+
+    def show_drop_at(self, y: int) -> None:
+        """Show the ◈─── indicator at pixel y within this container."""
+        self._drop_line.show_at(y)
+
+    def hide_drop(self) -> None:
+        self._drop_line.hide()
+
+    def _indicator_y_for_cursor(self, cursor_y: int) -> Optional[int]:
+        """Return the y pixel where the indicator should appear for cursor_y."""
+        for row in self._rows:
+            if row.isVisible() and cursor_y <= row.y() + row.height() // 2:
+                return row.y()
+        # Below all visible rows — append position
+        visible = [r for r in self._rows if r.isVisible()]
+        if visible:
+            return visible[-1].y() + visible[-1].height()
+        return None
+
+    # -- Drag events (gaps between rows / container margins) -----------------
+
     def dragEnterEvent(self, event) -> None:
         if event.mimeData().hasFormat("application/x-assignment-id"):
             event.acceptProposedAction()
+            y = self._indicator_y_for_cursor(event.position().toPoint().y())
+            if y is not None:
+                self.show_drop_at(y)
         else:
             event.ignore()
 
     def dragMoveEvent(self, event) -> None:
         if event.mimeData().hasFormat("application/x-assignment-id"):
             event.acceptProposedAction()
+            y = self._indicator_y_for_cursor(event.position().toPoint().y())
+            if y is not None:
+                self.show_drop_at(y)
         else:
             event.ignore()
 
+    def dragLeaveEvent(self, event) -> None:
+        self.hide_drop()
+        event.accept()
+
     def dropEvent(self, event) -> None:
-        """Drop between rows: find the nearest row and forward the drop."""
+        """Drop between rows: use indicator position to pick the target row."""
+        self.hide_drop()
         md = event.mimeData()
         if not md.hasFormat("application/x-assignment-id"):
             event.ignore()
             return
         source_aid = int(md.data("application/x-assignment-id").data().decode())
         event.acceptProposedAction()
-        # Find the closest row to the drop y position
         cursor_y = event.position().toPoint().y()
-        best_row = None
-        best_dist = float("inf")
+        # Find target row: first row whose midpoint is below cursor
+        target_row = None
         for row in self._rows:
-            if not row.isVisible():
-                continue
-            dist = abs(row.y() + row.height() // 2 - cursor_y)
-            if dist < best_dist:
-                best_dist = dist
-                best_row = row
-        if best_row is None:
+            if row.isVisible() and cursor_y <= row.y() + row.height() // 2:
+                target_row = row
+                break
+        if target_row is None:
+            # Dropped below all rows — use last visible row as target
+            visible = [r for r in self._rows if r.isVisible()]
+            if visible:
+                target_row = visible[-1]
+        if target_row is None:
             return
         panel = self.parent()
         while panel and not isinstance(panel, AssignmentPanel):
             panel = panel.parent()
         if panel:
-            target_group_id = best_row.data().get("group_id")
-            panel._handle_assignment_drop(source_aid, best_row._aid, target_group_id)
+            panel._handle_assignment_drop(source_aid, target_row._aid, target_row.data().get("group_id"))
 
 
 # ---------------------------------------------------------------------------
@@ -894,6 +1062,7 @@ class _GroupBand(QFrame):
         self._item_count = item_count
         self._collapsed  = False
         self._drag_start_pos = None
+        self._is_drop_target = False
 
         self.setFixedHeight(28)
         self.setAcceptDrops(True)
@@ -991,6 +1160,15 @@ class _GroupBand(QFrame):
             color=self._color, glow=PHOSPHOR_GLOW, hot=PHOSPHOR_HOT
         ))
 
+    def paintEvent(self, event) -> None:  # noqa: N802
+        super().paintEvent(event)
+        if self._is_drop_target:
+            # Phosphor glow at the top edge — same visual language as _DropLine
+            p = QPainter(self)
+            p.setRenderHint(QPainter.RenderHint.Antialiasing)
+            _paint_insertion_glow(p, self.width(), 0, 10)
+            p.end()
+
     def _find_panel(self):
         w = self.parent()
         while w and not isinstance(w, AssignmentPanel):
@@ -1065,13 +1243,16 @@ class _GroupBand(QFrame):
 
     # -- Drop target (assignment drops + group reorder drops) ---------------
 
+    def _set_drop_target(self, active: bool) -> None:
+        self._is_drop_target = active
+        self._apply_qss(False)   # base stylesheet; paintEvent adds the glow
+        self.update()
+
     def dragEnterEvent(self, event) -> None:
         md = event.mimeData()
         if md.hasFormat("application/x-assignment-id") or md.hasFormat("application/x-group-id"):
             event.acceptProposedAction()
-            self.setStyleSheet(self._DROP_TOP_QSS.format(
-                color=self._color, glow=PHOSPHOR_GLOW, hot=PHOSPHOR_HOT
-            ))
+            self._set_drop_target(True)
         else:
             event.ignore()
 
@@ -1083,12 +1264,12 @@ class _GroupBand(QFrame):
             event.ignore()
 
     def dragLeaveEvent(self, event) -> None:
-        self._apply_qss(False)
+        self._set_drop_target(False)
         event.accept()
 
     def dropEvent(self, event) -> None:
         md = event.mimeData()
-        self._apply_qss(False)
+        self._set_drop_target(False)
 
         if md.hasFormat("application/x-group-id"):
             dragged_gid = int(md.data("application/x-group-id").data().decode())
@@ -1235,7 +1416,7 @@ class _MessageRow(QLabel):
 class AssignmentPanel(QFrame):
     """Right pane: timeline of assignments for the selected course."""
 
-    run_requested  = Signal(list, str, int, bool, bool)  # items, name, id, mark_incomplete, run_aic
+    run_requested  = Signal(list, str, int)  # items, course_name, course_id
     has_selection  = Signal(bool)
     edit_completed = Signal()                       # emitted after a successful Canvas mutation
 
@@ -1244,17 +1425,18 @@ class AssignmentPanel(QFrame):
         self.setObjectName("assignmentPanel")
         self.setStyleSheet(_PANEL_QSS)
 
-        self._course_id:   int = 0
-        self._course_name: str = ""
-        self._groups_data: List[dict] = []
-        self._checked_ids: Set[int] = set()
-        self._view_mode:   str = "deadline"        # "deadline" | "group"
-        self._editor = None                        # CanvasEditor instance
-        self._active_edit_workers: list = []       # prevent premature GC
+        self._course_id:          int = 0
+        self._course_name:        str = ""
+        self._groups_data:        List[dict] = []
+        self._checked_ids:        Set[int] = set()
+        self._view_mode:          str = "deadline"   # "deadline" | "group"
+        self._editor              = None              # CanvasEditor instance
+        self._active_edit_workers: list = []          # prevent premature GC
 
         # By-Group view state (keyed by course_id str)
         self._group_order: List[int] = []          # ordered group IDs for current course
         self._collapsed_groups: Set[int] = set()   # collapsed group IDs for current course
+        self._saved_assignment_order: Dict[int, List[int]] = {}  # gid → saved aid order
         self._col_containers: Dict[int, _CollapsibleRows] = {}  # gid → container
         self._group_assignment_order: Dict[int, List[int]] = {}  # gid → [aid, ...] display order
 
@@ -1272,16 +1454,18 @@ class AssignmentPanel(QFrame):
         outer.setContentsMargins(12, 12, 12, 12)
         outer.setSpacing(SPACING_SM)
 
-        # ── Header: course name + ungraded summary ──────────────────────
+        # ── Header: section label + course name + ungraded badge ────────
+        section_lbl = make_section_label("Assignments")
+        outer.addWidget(section_lbl)
+
         header_row = QHBoxLayout()
         header_row.setSpacing(8)
 
-        self._course_label = QLabel("Select a course")
-        self._course_label.setProperty("heading", "true")
-        f = QFont()
-        f.setPointSize(FONT_LARGE)
-        f.setBold(True)
-        self._course_label.setFont(f)
+        self._course_label = QLabel("")
+        self._course_label.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: 12px; font-weight: bold;"
+            f" background: transparent; border: none;"
+        )
         self._course_label.setWordWrap(True)
         header_row.addWidget(self._course_label, 1)
 
@@ -1293,6 +1477,8 @@ class AssignmentPanel(QFrame):
             f" border: 1px solid rgba(240,168,48,0.30);"
             f" border-radius: 4px; padding: 2px 8px;"
         )
+        apply_phosphor_glow(self._ungraded_badge, color=PHOSPHOR_HOT, blur=10, strength=0.50,
+                            xOffset=-3, yOffset=1)
         self._ungraded_badge.hide()
         header_row.addWidget(self._ungraded_badge)
 
@@ -1360,6 +1546,7 @@ class AssignmentPanel(QFrame):
         hdr_row.addWidget(_col_hdr_lbl("ASSIGNMENT"), 1)
         hdr_row.addWidget(_col_hdr_lbl("DUE",       70, Qt.AlignmentFlag.AlignCenter))
         hdr_row.addWidget(_col_hdr_lbl("PUBLISHED", 80, Qt.AlignmentFlag.AlignCenter))
+        hdr_row.addWidget(_col_hdr_lbl("KIND",      50, Qt.AlignmentFlag.AlignCenter))
         hdr_row.addWidget(_col_hdr_lbl("TYPE",      95, Qt.AlignmentFlag.AlignCenter))
         hdr_row.addWidget(_col_hdr_lbl("UNGRADED",  48, Qt.AlignmentFlag.AlignCenter))
         wrap_layout.addWidget(col_hdr)
@@ -1391,12 +1578,22 @@ class AssignmentPanel(QFrame):
         self._scroll.viewport().setAcceptDrops(True)
         outer.addWidget(scroll_wrap, 1)
 
-        # ── Bottom bar ──────────────────────────────────────────────────
+        # ── Footer ──────────────────────────────────────────────────────
+        footer_sep = QFrame()
+        footer_sep.setFixedHeight(1)
+        footer_sep.setStyleSheet(f"background: {BORDER_DARK}; border: none;")
+        outer.addWidget(footer_sep)
+
+        # Single bottom row: count label | stretch | Run button
         bottom = QHBoxLayout()
+        bottom.setContentsMargins(0, 8, 0, 0)
+        bottom.setSpacing(10)
+
         self._count_label = QLabel("0 selected")
         self._count_label.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px;")
-        bottom.addWidget(self._count_label)
+        bottom.addWidget(self._count_label, 0, Qt.AlignmentFlag.AlignVCenter)
         bottom.addStretch()
+
         self._run_btn = QPushButton("▶  Run Autograder")
         self._run_btn.setEnabled(False)
         self._run_btn.clicked.connect(self._on_run_clicked)
@@ -1426,19 +1623,10 @@ class AssignmentPanel(QFrame):
         row.addSpacing(4)
         self._toggle_sep = _tsep
 
-        def _pill(label: str) -> QPushButton:
-            btn = QPushButton(f"○  {label}")
-            btn.setCheckable(True)
-            btn.setStyleSheet(_PILL_QSS)
-            btn.toggled.connect(
-                lambda v, b=btn, t=label: b.setText(f"{'●' if v else '○'}  {t}")
-            )
-            return btn
-
-        # ── Selection filter pills ───────────────────────────────────────
-        self._btn_past_due = _pill("Past Due")
-        self._btn_ungraded = _pill("Has Submissions")
-        self._btn_all      = _pill("All")
+        # ── Selection filter chips ───────────────────────────────────────
+        self._btn_past_due = PhosphorChip("Past Due",        accent="amber")
+        self._btn_ungraded = PhosphorChip("Has Submissions", accent="amber")
+        self._btn_all      = PhosphorChip("All",             accent="amber")
         self._btn_past_due.setToolTip("Select / deselect all past-due assignments")
         self._btn_ungraded.setToolTip("Select / deselect assignments with ungraded submissions")
         self._btn_all.setToolTip("Select / deselect every assignment")
@@ -1451,68 +1639,13 @@ class AssignmentPanel(QFrame):
         row.addWidget(self._btn_ungraded)
         row.addWidget(self._btn_all)
 
-        # Clear
-        clr = QPushButton("✕  Clear")
-        clr.setFlat(True)
-        clr.setStyleSheet(_CLEAR_QSS)
+        # Clear — rose action chip (hover-only, no toggle state)
+        clr = PhosphorChip("✕  Clear", accent="rose", action=True)
         clr.setToolTip("Deselect all")
-        clr.clicked.connect(self._select_none)
+        clr.toggled.connect(lambda _: self._select_none())
         row.addWidget(clr)
 
         row.addStretch()
-
-        # ── Separator ────────────────────────────────────────────────────
-        vsep = QFrame()
-        vsep.setFrameShape(QFrame.Shape.VLine)
-        vsep.setFixedWidth(1)
-        vsep.setStyleSheet(f"background: {BORDER_DARK}; border: none;")
-        row.addWidget(vsep)
-        row.addSpacing(4)
-
-        # ── Grading behaviour toggle (distinct from selection) ───────────
-        # TODO: wire mark_incomplete into RunWorker / automation_engine when backend is ready
-        self._mark_incomplete_cb = _SwitchToggle("Grade missing submissions as Incomplete")
-        self._mark_incomplete_cb.setToolTip(
-            "When running the autograder, also assign an Incomplete grade\n"
-            "to students who never submitted on past-due assignments."
-        )
-
-        # Load persisted state
-        try:
-            from settings import load_settings
-            self._mark_incomplete_cb.setChecked(
-                bool(load_settings().get("grade_missing_as_incomplete", False))
-            )
-        except Exception:
-            pass
-
-        # Persist on change
-        self._mark_incomplete_cb.toggled.connect(self._save_mark_incomplete)
-
-        row.addWidget(self._mark_incomplete_cb)
-
-        row.addSpacing(6)
-        _aic_sep = QFrame()
-        _aic_sep.setFrameShape(QFrame.Shape.VLine)
-        _aic_sep.setFixedWidth(1)
-        _aic_sep.setStyleSheet(f"background: {BORDER_DARK}; border: none;")
-        row.addWidget(_aic_sep)
-        row.addSpacing(4)
-
-        self._run_aic_cb = _SwitchToggle("Run academic integrity check")
-        self._run_aic_cb.setToolTip(
-            "Run the academic integrity checker alongside grading.\n"
-            "Flags are reported but do not affect grades."
-        )
-        try:
-            from settings import load_settings
-            self._run_aic_cb.setChecked(
-                bool(load_settings().get("run_aic_default", False))
-            )
-        except Exception:
-            pass
-        self._run_aic_cb.toggled.connect(self._save_run_aic)
-        row.addWidget(self._run_aic_cb)
 
         return bar
 
@@ -1525,7 +1658,8 @@ class AssignmentPanel(QFrame):
         self._course_name = course_name
         self._course_label.setText(course_name)
         # Load persisted group UI state for this course
-        self._group_order, self._collapsed_groups = _load_group_ui_state(course_id)
+        self._group_order, self._collapsed_groups, self._saved_assignment_order = \
+            _load_group_ui_state(course_id)
         self.clear_assignments()
 
     def show_loading(self) -> None:
@@ -1644,8 +1778,7 @@ class AssignmentPanel(QFrame):
             _insert(band)
             for a in items:
                 row = _AssignmentRow(a, sec_key)
-                row.toggled.connect(self._on_row_toggled)
-                row.deadline_edit_requested.connect(self._on_deadline_edit)
+                self._connect_row(row)
                 if a["id"] is not None:
                     self._rows[a["id"]] = row
                 _insert(row)
@@ -1672,8 +1805,7 @@ class AssignmentPanel(QFrame):
             _insert(band)
             for a in items:
                 row = _AssignmentRow(a, sec_key)
-                row.toggled.connect(self._on_row_toggled)
-                row.deadline_edit_requested.connect(self._on_deadline_edit)
+                self._connect_row(row)
                 if a["id"] is not None:
                     self._rows[a["id"]] = row
                 _insert(row)
@@ -1748,6 +1880,7 @@ class AssignmentPanel(QFrame):
                     "autogradeable":       auto,
                     "published":           bool(a.get("published", True)),
                     "points_possible":     a.get("points_possible"),
+                    "discussion_topic":    a.get("discussion_topic"),
                 })
         return result
 
@@ -1767,22 +1900,31 @@ class AssignmentPanel(QFrame):
     # ------------------------------------------------------------------
 
     def _ids_for_filter(self, filter_name: str) -> set:
-        """Return the set of row IDs matched by the named filter."""
+        """Return the set of autogradeable row IDs matched by the named filter.
+
+        Autogradeability is determined by the row's pre-computed ``autogradeable``
+        field (set by ``_is_autogradeable``).  When support for new grading types
+        is added, only ``_is_autogradeable`` needs updating — this method
+        automatically reflects the change.
+        """
         now = datetime.now(timezone.utc)
         if filter_name == "past_due":
-            ids = set()
-            for aid, row in self._rows.items():
-                dt = row.data().get("due_dt")
-                if dt and dt < now:
-                    ids.add(aid)
-            return ids
+            return {
+                aid for aid, row in self._rows.items()
+                if row.data().get("autogradeable")
+                and (dt := row.data().get("due_dt")) and dt < now
+            }
         if filter_name == "ungraded":
             return {
                 aid for aid, row in self._rows.items()
-                if row.data().get("needs_grading_count", 0) > 0
+                if row.data().get("autogradeable")
+                and row.data().get("needs_grading_count", 0) > 0
             }
         # "all"
-        return set(self._rows.keys())
+        return {
+            aid for aid, row in self._rows.items()
+            if row.data().get("autogradeable")
+        }
 
     def _ids_from_active_filters(self, exclude: str = None) -> set:
         """Union of IDs from all currently-active filters except *exclude*."""
@@ -1810,15 +1952,10 @@ class AssignmentPanel(QFrame):
         self._update_run_btn()
 
     def _reset_filter_buttons(self) -> None:
-        """Silently uncheck all filter pills and reset their labels."""
-        for btn, label in (
-            (self._btn_past_due, "Past Due"),
-            (self._btn_ungraded, "Has Submissions"),
-            (self._btn_all,      "All"),
-        ):
+        """Silently uncheck all filter chips."""
+        for btn in (self._btn_past_due, self._btn_ungraded, self._btn_all):
             btn.blockSignals(True)
             btn.setChecked(False)
-            btn.setText(f"○  {label}")
             btn.blockSignals(False)
 
     # ------------------------------------------------------------------
@@ -1861,33 +1998,10 @@ class AssignmentPanel(QFrame):
     # Layout helpers
     # ------------------------------------------------------------------
 
-    def _save_mark_incomplete(self, value: bool) -> None:
-        try:
-            from settings import load_settings, save_settings
-            s = load_settings()
-            s["grade_missing_as_incomplete"] = value
-            save_settings(s)
-        except Exception:
-            pass
-
-    def _save_run_aic(self, value: bool) -> None:
-        try:
-            from settings import load_settings, save_settings
-            s = load_settings()
-            s["run_aic_default"] = value
-            save_settings(s)
-        except Exception:
-            pass
-
     def _on_run_clicked(self) -> None:
         selected = self._get_selected_assignments()
         if selected:
-            mark_incomplete = self._mark_incomplete_cb.isChecked()
-            run_aic = self._run_aic_cb.isChecked()
-            self.run_requested.emit(
-                selected, self._course_name, self._course_id,
-                mark_incomplete, run_aic,
-            )
+            self.run_requested.emit(selected, self._course_name, self._course_id)
 
     # ------------------------------------------------------------------
     # By Group view
@@ -1949,7 +2063,18 @@ class AssignmentPanel(QFrame):
 
         for gid in sorted_gids:
             items = groups.get(gid, [])
-            items.sort(key=lambda a: (a["due_dt"] or _far, a["name"].lower()))
+            saved_order = self._saved_assignment_order.get(gid, [])
+            if saved_order:
+                # Respect user's manual reorder; new assignments go at end sorted by date
+                aid_to_item = {a["id"]: a for a in items if a["id"] is not None}
+                ordered_items = [aid_to_item[aid] for aid in saved_order if aid in aid_to_item]
+                new_items = sorted(
+                    [a for a in items if a["id"] not in set(saved_order)],
+                    key=lambda a: (a["due_dt"] or _far, a["name"].lower()),
+                )
+                items = ordered_items + new_items
+            else:
+                items.sort(key=lambda a: (a["due_dt"] or _far, a["name"].lower()))
 
             gname = group_names.get(gid, "Unknown Group")
             weight = group_weights.get(gid)
@@ -1981,8 +2106,7 @@ class AssignmentPanel(QFrame):
                 else:
                     sk = "FUTURE"
                 row = _AssignmentRow(a, sk, drag_enabled=True)
-                row.toggled.connect(self._on_row_toggled)
-                row.deadline_edit_requested.connect(self._on_deadline_edit)
+                self._connect_row(row)
                 if a["id"] is not None:
                     self._rows[a["id"]] = row
                     aid_order.append(a["id"])
@@ -2239,7 +2363,7 @@ class AssignmentPanel(QFrame):
         checked = self._get_selected_assignments()
         if not checked:
             return
-        reply = QMessageBox.question(
+        reply = show_question(
             self, "Change Grading Type",
             f"Change grading type to "
             f"'{_GRADING_LABELS.get(new_type, new_type)}' "
@@ -2261,7 +2385,7 @@ class AssignmentPanel(QFrame):
         if not checked:
             return
         action = "Publish" if publish else "Unpublish"
-        reply = QMessageBox.question(
+        reply = show_question(
             self, f"{action} All",
             f"{action} {len(checked)} assignments?",
         )
@@ -2328,19 +2452,25 @@ class AssignmentPanel(QFrame):
             # Cross-group move
             self._ctx_move_to_group(data, target_group_id)
         else:
-            # Within-group reorder via Canvas position field
-            if not self._editor or not self._course_id:
+            # Within-group reorder — local only (Canvas date-sort would undo API changes)
+            order = list(self._group_assignment_order.get(target_group_id, []))
+            if target_aid not in order or source_aid not in order:
                 return
-            order = self._group_assignment_order.get(target_group_id, [])
-            if target_aid not in order:
-                return
-            # Position is 1-based; drop before the target
-            new_pos = order.index(target_aid) + 1
-            course_id = self._course_id
-            self._run_edit(
-                lambda: self._editor.set_assignment_position(course_id, source_aid, new_pos),
-                refresh=True,
+            # Move source before target in the order list
+            order.remove(source_aid)
+            tgt_idx = order.index(target_aid)
+            order.insert(tgt_idx, source_aid)
+            # Persist
+            self._group_assignment_order[target_group_id] = order
+            self._saved_assignment_order[target_group_id] = order
+            _save_group_ui_state(
+                self._course_id, self._group_order, self._collapsed_groups,
+                self._saved_assignment_order,
             )
+            # Visual reorder without a full rebuild
+            container = self._col_containers.get(target_group_id)
+            if container:
+                container.move_row(source_aid, target_aid)
 
     # ------------------------------------------------------------------
     # Group collapse
@@ -2404,6 +2534,54 @@ class AssignmentPanel(QFrame):
     # Edit execution plumbing
     # ------------------------------------------------------------------
 
+    def _connect_row(self, row: "_AssignmentRow") -> None:
+        """Wire all signals from a newly created _AssignmentRow."""
+        row.toggled.connect(self._on_row_toggled)
+        row.deadline_edit_requested.connect(self._on_deadline_edit)
+        row.publish_badge_clicked.connect(self._on_inline_publish_click)
+        row.type_badge_clicked.connect(self._on_inline_type_click)
+
+    def _on_inline_publish_click(self, aid: int) -> None:
+        """Toggle publish state when user clicks the ✓/✗ badge."""
+        if not self._editor:
+            show_info(
+                self, "Not Connected",
+                "Connect to Canvas in the Settings tab to edit assignments.",
+            )
+            return
+        row = self._rows.get(aid)
+        if row is None:
+            return
+        self._ctx_toggle_publish(row.data())
+
+    def _on_inline_type_click(self, aid: int) -> None:
+        """Show a grading-type popup menu when the type badge is clicked."""
+        if not self._editor:
+            show_info(
+                self, "Not Connected",
+                "Connect to Canvas in the Settings tab to edit assignments.",
+            )
+            return
+        row = self._rows.get(aid)
+        if row is None:
+            return
+        data = row.data()
+        current_gt = data.get("grading_type", "points")
+
+        menu = QMenu(self)
+        for gt_key, gt_label in _GRADING_LABELS.items():
+            act = menu.addAction(gt_label)
+            act.setEnabled(gt_key != current_gt)
+            act.triggered.connect(
+                lambda checked, k=gt_key: self._ctx_change_grading_type(data, k)
+            )
+        # Position the popup near the badge
+        if row.isVisible():
+            badge_global = row._tag_lbl.mapToGlobal(row._tag_lbl.rect().bottomLeft())
+            menu.exec(badge_global)
+        else:
+            menu.exec(QCursor.pos())
+
     def _run_edit(self, fn, refresh: bool = True) -> None:
         """Run a CanvasEditor mutation in a worker thread."""
         if not self._editor:
@@ -2445,13 +2623,13 @@ class AssignmentPanel(QFrame):
                 return
             if not result.can_proceed:
                 msgs = "\n\n".join(w.message for w in result.blocking_warnings)
-                QMessageBox.critical(self, "Cannot Proceed", msgs)
+                show_critical(self, "Cannot Proceed", msgs)
                 return
             if result.advisory_warnings:
                 msgs = "\n\n".join(
                     w.message for w in result.advisory_warnings
                 )
-                reply = QMessageBox.warning(
+                reply = show_warning(
                     self, "Warning",
                     msgs + "\n\nApply anyway?",
                     QMessageBox.StandardButton.Yes
@@ -2464,9 +2642,7 @@ class AssignmentPanel(QFrame):
         else:
             # Unexpected type — treat as error
             if hasattr(result, 'ok') and not result.ok:
-                QMessageBox.warning(
-                    self, "Preflight Error", result.message
-                )
+                show_warning(self, "Preflight Error", result.message)
                 return
             self._run_edit(edit_fn)
 
@@ -2476,7 +2652,7 @@ class AssignmentPanel(QFrame):
             if result.ok:
                 self.edit_completed.emit()
             else:
-                QMessageBox.warning(
+                show_warning(
                     self, "Edit Failed",
                     result.message or "The change could not be applied."
                 )
@@ -2484,7 +2660,7 @@ class AssignmentPanel(QFrame):
     def _on_edit_result_quiet(self, result) -> None:
         """Handle EditResult without emitting edit_completed (bulk use)."""
         if hasattr(result, 'ok') and not result.ok:
-            QMessageBox.warning(
+            show_warning(
                 self, "Edit Failed",
                 result.message or "The change could not be applied."
             )

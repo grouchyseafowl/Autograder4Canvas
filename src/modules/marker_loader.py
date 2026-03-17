@@ -65,18 +65,34 @@ class MarkerLoader:
         self._assignment_profile: Optional[Dict] = None
         
     def _get_default_config_dir(self) -> Path:
-        """Get the default configuration directory."""
+        """Get the default configuration directory.
+
+        Preference order:
+        1. Platform user-data dir (production / installed app)
+        2. src/config/ relative to this module (dev / running from source)
+        """
         import platform
         import os
         system = platform.system()
-        
+
         if system == "Windows":
             base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
-            return base / "CanvasAutograder"
+            user_dir = base / "CanvasAutograder"
         elif system == "Darwin":
-            return Path.home() / "Library" / "Application Support" / "CanvasAutograder"
+            user_dir = Path.home() / "Library" / "Application Support" / "CanvasAutograder"
         else:
-            return Path.home() / ".config" / "CanvasAutograder"
+            user_dir = Path.home() / ".config" / "CanvasAutograder"
+
+        # If the user-data markers directory exists and has content, use it
+        if (user_dir / "dishonesty_markers").exists():
+            return user_dir
+
+        # Fall back to src/config/ (running from source / dev environment)
+        src_config = Path(__file__).parent.parent / "config"
+        if (src_config / "dishonesty_markers").exists():
+            return src_config
+
+        return user_dir
     
     def load_all_markers(self, 
                          profile_id: str = "standard",

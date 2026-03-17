@@ -1,0 +1,40 @@
+# Online / Distance Learning Context Profile
+# Version: 3.0.0
+# Education level profile: per-marker base weights for online/distance learning.
+#
+# Online courses attract diverse student populations with varying access to
+# in-person academic support. Slightly more lenient calibration than
+# traditional campus settings.
+
+profile_id: online
+profile_name: "Online / Distance Learning"
+description: |
+  Per-marker base weights for online/distance learning students.
+  Online courses attract diverse demographics: returning adults,
+  working students, rural students with limited campus access.
+  Slightly more lenient than campus equivalents to reflect
+  less access to writing center support and different writing contexts.
+
+# v3 format: absolute per-match weights (not multipliers).
+# Used by WeightComposer. Orthogonal to MarkerLoader multipliers.
+marker_weights:
+  suspicious:
+    ai_transitions: 0.40          # Slightly reduced — async discussion norms
+    generic_phrases: 0.35         # Reduced — less access to writing feedback
+    inflated_vocabulary: 0.25     # Reduced — often adult learners using polished vocabulary
+    ai_specific_org: 0.95         # Slightly reduced for online context
+
+  authenticity:
+    personal_voice: 0.45          # Slightly reduced — genre conventions vary online
+    emotional_language: 0.80      # Strong signal everywhere
+    cognitive_diversity: 0.60     # Strong signal everywhere
+
+thresholds:
+  outlier_percentile: 94          # Slightly lenient for heterogeneous online populations
+  cognitive_protection_floor: 0.5 # Standard floor
+
+notes: |
+  Online course weights. Reflect diverse adult learner demographics and
+  limited access to writing center support. Apply population overlays
+  for schools with specific demographic characteristics.
+  Discussion posts and async engagement are central to online courses.

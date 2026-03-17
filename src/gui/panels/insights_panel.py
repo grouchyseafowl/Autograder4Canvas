@@ -1,0 +1,4619 @@
+"""
+Insights Panel — Generate Insights feature.
+
+Three states: Setup, Running, Review.
+  Setup:   select assignments + configure analysis options
+  Running: progress display with early Quick Analysis results
+  Review:  left sidebar of completed runs, right layered content
+
+UX language is intentional:
+  - "hear what your students said" (subtitle)
+  - "What are you listening for?" (teacher input header)
+  - "Patterns" not "Quick Stats", "Student Work" not "Codings"
+  - Frames student work as thinking worth hearing, not data to extract.
+
+Phase 1: Patterns layer (non-LLM Quick Analysis).
+Phase 2: Student Work, Themes, Outliers, Report layers (LLM pipeline).
+Phase 3+: Feedback layer (placeholder).
+"""
+
+import json
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
+from PySide6.QtWidgets import (
+    QCheckBox, QComboBox, QDialog, QDialogButtonBox,
+    QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
+    QPushButton, QScrollArea, QSizePolicy, QStackedWidget,
+    QTextEdit, QVBoxLayout, QWidget,
+)
+from PySide6.QtCore import QObject, Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QPainter, QPainterPath, QRadialGradient
+
+from gui.widgets.status_pip import draw_pip
+
+from gui.styles import (
+    SPACING_XS, SPACING_SM, SPACING_MD, SPACING_LG,
+    PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM, PHOSPHOR_GLOW,
+    ROSE_ACCENT, ROSE_DIM, TERM_GREEN, BURN_RED, AMBER_BTN,
+    STATUS_WARN,
+    BG_VOID, BG_CARD, BG_PANEL, BG_INSET,
+    BORDER_DARK, BORDER_AMBER, PANE_BG_GRADIENT,
+    make_run_button, make_secondary_button,
+    make_section_label, make_h_rule, make_content_pane,
+    GripSplitter,
+)
+from gui.widgets.switch_toggle import SwitchToggle
+from gui.widgets.segmented_toggle import SegmentedToggle
+from gui.dialogs.bulk_run_dialog import _CourseRow, _TermSection
+from gui.widgets.view_toggle import ViewToggle
+from gui.widgets.phosphor_chip import PhosphorChip
+
+
+# ---------------------------------------------------------------------------
+# Local stylesheets
+# ---------------------------------------------------------------------------
+
+_SCROLL_QSS = f"""
+    QScrollArea {{ background: transparent; border: none; }}
+    QScrollArea > QWidget > QWidget {{ background: {BG_INSET}; }}
+"""
+
+# Timeline section colors (match assignment_panel.py)
+_PAST_COLOR   = "#F0A830"   # amber hot  — deadline passed
+_WEEK_COLOR   = "#C87C10"   # deep gold  — due this week
+_FUTURE_COLOR = "#6B4F2A"   # warm brown — upcoming
+_NONE_COLOR   = "#3A2808"   # barely-there — no deadline
+
+_SEVEN_DAYS = 7 * 24 * 3600   # seconds
+
+
+def _classify_deadline(due_at: str) -> str:
+    """Return 'PAST', 'WEEK', 'FUTURE', or 'NONE'."""
+    if not due_at:
+        return "NONE"
+    try:
+        dt = datetime.fromisoformat(due_at.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        delta = (dt - datetime.now(timezone.utc)).total_seconds()
+        if delta < 0:
+            return "PAST"
+        if delta <= _SEVEN_DAYS:
+            return "WEEK"
+        return "FUTURE"
+    except Exception:
+        return "NONE"
+
+
+# ---------------------------------------------------------------------------
+# _AssignRow — two-line selectable assignment item
+# ---------------------------------------------------------------------------
+
+class _AssignRow(QWidget):
+    """Two-line assignment row mirroring _CourseRow style.
+
+    Top line:    assignment name (PHOSPHOR_MID bold)
+    Bottom line: course code + due date (PHOSPHOR_DIM)
+    Defaults to checked=True when added to the list.
+    Rose glow when checked; amber glow on hover.
+    """
+
+    toggled = Signal(bool)
+
+    def __init__(self, course: dict, assignment: dict, course_pill: str = "", parent=None):
+        super().__init__(parent)
+        self._hovered = False
+        self.course_dict = course
+        self.assign_dict = assignment
+
+        name = assignment.get("name", "Unknown")
+        due  = assignment.get("due_at", "")
+        if due:
+            try:
+                dt  = datetime.fromisoformat(due.replace("Z", "+00:00"))
+                due = dt.strftime("due %m/%d")
+            except (ValueError, TypeError):
+                due = ""
+
+        outer = QHBoxLayout(self)
+        outer.setContentsMargins(8, 5, 8, 5)
+        outer.setSpacing(0)
+
+        self._cb = QCheckBox()
+        self._cb.setStyleSheet(
+            "QCheckBox { spacing: 0; background: transparent; border: none; }"
+            "QCheckBox::indicator { width: 0px; height: 0px; border: none; }"
+        )
+        self._cb.setChecked(False)
+        self._cb.toggled.connect(self.toggled)
+        self._cb.toggled.connect(lambda _: self.update())
+        outer.addWidget(self._cb)
+        outer.addSpacing(18)
+
+        _PILL_W = 44
+        if course_pill:
+            cpill = QLabel(course_pill)
+            cpill.setFixedSize(_PILL_W, 16)
+            cpill.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            cpill.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: 9px; font-weight: bold;"
+                f" border: 1px solid {BORDER_DARK}; border-radius: 3px;"
+                f" background: transparent;"
+            )
+            outer.addWidget(cpill)
+        else:
+            outer.addSpacing(_PILL_W)
+        outer.addSpacing(6)
+
+        text = QVBoxLayout()
+        text.setContentsMargins(0, 0, 0, 0)
+        text.setSpacing(2)
+
+        name_lbl = QLabel(name)
+        name_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_MID}; font-size: 12px;"
+            f" font-weight: bold; background: transparent; border: none;"
+        )
+        text.addWidget(name_lbl)
+
+        # Subtitle: due date + submission count (count populated async)
+        self._sub_lbl = QLabel(due if due else "")
+        self._sub_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+            f" background: transparent; border: none;"
+        )
+        self._due_text = due
+        text.addWidget(self._sub_lbl)
+
+    def set_submission_count(self, count: int) -> None:
+        """Update the subtitle with actual submission count (called async)."""
+        if count < 0:
+            return  # Error fetching — don't change display
+        parts = []
+        if self._due_text:
+            parts.append(self._due_text)
+        parts.append(f"{count} submissions")
+        self._sub_lbl.setText("  \u00b7  ".join(parts))
+
+        outer.addLayout(text, 1)
+        self.setStyleSheet("background: transparent;")
+        self.setMouseTracking(True)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def is_checked(self) -> bool:
+        return self._cb.isChecked()
+
+    def set_checked(self, v: bool) -> None:
+        self._cb.blockSignals(True)
+        self._cb.setChecked(v)
+        self._cb.blockSignals(False)
+        self.update()
+
+    def mousePressEvent(self, event) -> None:
+        self._cb.setChecked(not self._cb.isChecked())
+
+    def enterEvent(self, event) -> None:
+        self._hovered = True
+        self.update()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event) -> None:
+        self._hovered = False
+        self.update()
+        super().leaveEvent(event)
+
+    def paintEvent(self, event) -> None:
+        is_checked = self._cb.isChecked()
+        is_hovered = self._hovered
+
+        if is_checked or is_hovered:
+            p = QPainter(self)
+            p.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+            p.fillRect(self.rect(), QColor("#0A0800"))
+
+            glow_cx = self.width() * 0.25
+            glow_cy = self.height() * 0.50
+            if is_checked:
+                center_col = QColor(204, 82, 130, 65)
+                bloom_col  = QColor(204, 82, 130, 30)
+            else:
+                center_col = QColor(240, 168, 48, 45)
+                bloom_col  = QColor(240, 168, 48, 18)
+
+            clip = QPainterPath()
+            clip.addRect(self.rect())
+            p.save()
+            p.setClipPath(clip)
+            p.setPen(Qt.PenStyle.NoPen)
+
+            grad = QRadialGradient(glow_cx, glow_cy, self.width() * 0.85)
+            grad.setColorAt(0.0, center_col)
+            grad.setColorAt(0.6, QColor(center_col.red(), center_col.green(),
+                                        center_col.blue(), 15))
+            grad.setColorAt(1.0, QColor(0, 0, 0, 0))
+            p.setBrush(grad)
+            p.drawRect(self.rect())
+
+            bloom = QRadialGradient(glow_cx, glow_cy, self.width() * 0.42)
+            bloom.setColorAt(0.0, bloom_col)
+            bloom.setColorAt(1.0, QColor(0, 0, 0, 0))
+            p.setBrush(bloom)
+            p.drawRect(self.rect())
+            p.restore()
+
+            pip_cx = 10.0
+            pip_cy = self.height() / 2.0
+            if is_checked:
+                draw_pip(p, pip_cx, pip_cy, 10, 204, 82, 130,
+                         bloom_alpha=55, core_alpha=200)
+            else:
+                draw_pip(p, pip_cx, pip_cy, 8, 240, 168, 48,
+                         bloom_alpha=28, core_alpha=130)
+            p.end()
+        else:
+            super().paintEvent(event)
+
+
+# ---------------------------------------------------------------------------
+# _DeadlineSection — non-collapsible timeline bucket header
+# ---------------------------------------------------------------------------
+
+class _DeadlineSection(QWidget):
+    """Non-collapsible colored header for a deadline timeline bucket."""
+
+    def __init__(self, label: str, color: str, parent=None):
+        super().__init__(parent)
+        lo = QHBoxLayout(self)
+        lo.setContentsMargins(8, 8, 8, 2)
+        lo.setSpacing(6)
+
+        # Colored left accent bar
+        bar = QFrame()
+        bar.setFixedSize(2, 12)
+        bar.setStyleSheet(f"background: {color}; border: none;")
+        lo.addWidget(bar)
+
+        lbl = QLabel(label)
+        lbl.setStyleSheet(
+            f"color: {color}; font-size: 9px; font-weight: bold;"
+            f" letter-spacing: 1.5px; background: transparent; border: none;"
+        )
+        lo.addWidget(lbl)
+        lo.addStretch()
+
+
+# ---------------------------------------------------------------------------
+# _GroupSection — collapsible assignment-group section
+# ---------------------------------------------------------------------------
+
+class _GroupSection(QWidget):
+    """Collapsible assignment-group section for the 'group' view."""
+
+    def __init__(self, group_name: str, parent=None):
+        super().__init__(parent)
+        self._group_name = group_name.upper()
+        self._collapsed = False
+
+        lo = QVBoxLayout(self)
+        lo.setContentsMargins(0, 0, 0, 0)
+        lo.setSpacing(0)
+
+        self._hdr_btn = QPushButton()
+        self._hdr_btn.setFlat(True)
+        self._hdr_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._hdr_btn.clicked.connect(self._toggle)
+        self._hdr_btn.setStyleSheet(
+            f"QPushButton {{"
+            f"  color: {PHOSPHOR_MID};"
+            f"  font-size: 10px; font-weight: bold; letter-spacing: 1px;"
+            f"  background: transparent; border: none;"
+            f"  text-align: left; padding: 8px 8px 3px 8px;"
+            f"}}"
+            f"QPushButton:hover {{ color: {PHOSPHOR_HOT}; }}"
+        )
+        lo.addWidget(self._hdr_btn)
+
+        self._container = QWidget()
+        self._container.setStyleSheet("background: transparent;")
+        self._container_lo = QVBoxLayout(self._container)
+        self._container_lo.setContentsMargins(0, 0, 0, 4)
+        self._container_lo.setSpacing(2)
+        lo.addWidget(self._container)
+
+        self._refresh_header()
+
+    def add_row(self, row) -> None:
+        self._container_lo.addWidget(row)
+
+    def _toggle(self) -> None:
+        self._collapsed = not self._collapsed
+        self._container.setVisible(not self._collapsed)
+        self._refresh_header()
+
+    def _refresh_header(self) -> None:
+        arrow = "v" if not self._collapsed else ">"
+        self._hdr_btn.setText(f"{arrow}  {self._group_name}")
+
+
+# ---------------------------------------------------------------------------
+# Local helpers
+# ---------------------------------------------------------------------------
+
+def _field_label(text: str) -> QLabel:
+    lbl = QLabel(text)
+    lbl.setStyleSheet(
+        f"color: {PHOSPHOR_DIM}; font-size: 11px; font-weight: 500;"
+        f" letter-spacing: 0.8px; background: transparent; border: none;"
+        f" text-transform: uppercase;"
+    )
+    return lbl
+
+
+def _muted_label(text: str, wrap: bool = True) -> QLabel:
+    lbl = QLabel(text)
+    lbl.setWordWrap(wrap)
+    lbl.setStyleSheet(
+        f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+        f" background: transparent; border: none; padding: 2px 0;"
+    )
+    return lbl
+
+
+def _placeholder_layer(name: str) -> QWidget:
+    """Styled placeholder for layers not yet implemented."""
+    w = QWidget()
+    lo = QVBoxLayout(w)
+    lo.setContentsMargins(SPACING_LG, SPACING_LG * 2, SPACING_LG, SPACING_LG)
+    lo.addStretch()
+    title = QLabel(name.upper())
+    title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    title.setStyleSheet(
+        f"color: {PHOSPHOR_DIM}; font-size: 16px; letter-spacing: 4px;"
+        f" background: transparent; border: none;"
+    )
+    lo.addWidget(title)
+    sub = QLabel("Available after LLM analysis (Phase 2)")
+    sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    sub.setStyleSheet(
+        f"color: {PHOSPHOR_GLOW}; font-size: 11px;"
+        f" background: transparent; border: none;"
+    )
+    lo.addWidget(sub)
+    lo.addStretch()
+    return w
+
+
+# ---------------------------------------------------------------------------
+# InsightsPanel
+# ---------------------------------------------------------------------------
+
+class InsightsPanel(QWidget):
+    """Main panel for the Generate Insights feature.
+
+    Replaces the placeholder in main_window.py.
+    """
+
+    analysis_started = Signal()
+
+    def __init__(self, api=None, store=None, demo_mode: bool = False, parent=None):
+        super().__init__(parent)
+        self._api = api
+        self._store = store
+        self._demo_mode = demo_mode
+        self._courses_by_term: list = []
+        self._assignments_cache: dict = {}
+        self._current_run_id: Optional[str] = None
+        self._loaded_layers: set = set()
+        self._worker = None
+        self._rerun_worker = None
+        self._profile_mgr = None  # lazily initialized on first review
+        self._assign_view_mode: str = "deadline"
+        self._course_rows: list = []   # list of _CourseRow widgets
+        self._assign_rows: list = []   # list of _AssignRow widgets
+        self._course_scroll: QScrollArea = None
+        self._assign_scroll: QScrollArea = None
+        self._setup_ui()
+
+    # ------------------------------------------------------------------
+    # UI construction
+    # ------------------------------------------------------------------
+
+    def _setup_ui(self) -> None:
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
+
+        self._state_stack = QStackedWidget()
+        root.addWidget(self._state_stack, 1)
+
+        # Three states
+        self._state_stack.addWidget(self._build_setup_view())     # 0
+        self._state_stack.addWidget(self._build_running_view())   # 1
+        self._state_stack.addWidget(self._build_review_view())    # 2
+
+        self._state_stack.setCurrentIndex(0)
+
+    # ── Setup view ─────────────────────────────────────────────────────
+
+    def _build_setup_view(self) -> QWidget:
+        from PySide6.QtGui import QPalette, QColor
+
+        page = QWidget()
+        page.setAutoFillBackground(True)
+        pal = page.palette()
+        pal.setColor(QPalette.ColorRole.Window, QColor(BG_VOID))
+        page.setPalette(pal)
+
+        outer = QVBoxLayout(page)
+        outer.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
+        outer.setSpacing(SPACING_MD)
+
+        # Header
+        title = QLabel("GENERATE INSIGHTS")
+        title.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+            f" background: transparent; border: none; letter-spacing: 2px;"
+        )
+        sub = QLabel("Hear what your students said.")
+        sub.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f" background: transparent; border: none;"
+        )
+        outer.addWidget(title)
+        outer.addWidget(sub)
+        outer.addWidget(make_h_rule())
+
+        # Two-column: left = assignment selection, right = options
+        splitter = GripSplitter.create(Qt.Orientation.Horizontal)
+        splitter.setHandleWidth(10)
+
+        # ── Left: assignment selection ──
+        left_pane = make_content_pane("insightsSelectPane")
+        left_lo = QVBoxLayout(left_pane)
+        left_lo.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+        left_lo.setSpacing(SPACING_SM)
+        self._build_selection_pane(left_lo)
+        splitter.addWidget(left_pane)
+
+        # ── Right: options ──
+        right_scroll = QScrollArea()
+        right_scroll.setWidgetResizable(True)
+        right_scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+
+        right_pane = make_content_pane("insightsOptionsPane")
+        right_lo = QVBoxLayout(right_pane)
+        right_lo.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+        right_lo.setSpacing(SPACING_SM)
+        self._build_options_pane(right_lo)
+        right_scroll.setWidget(right_pane)
+        splitter.addWidget(right_scroll)
+
+        splitter.setStretchFactor(0, 3)
+        splitter.setStretchFactor(1, 2)
+        outer.addWidget(splitter, 1)
+
+        # Footer
+        outer.addWidget(make_h_rule())
+
+        footer = QHBoxLayout()
+        footer.setContentsMargins(0, SPACING_SM, 0, 0)
+        self._setup_summary = QLabel("")
+        self._setup_summary.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f" background: transparent; border: none;"
+        )
+        footer.addWidget(self._setup_summary)
+        footer.addStretch()
+
+        self._review_btn = QPushButton("View Prior Insights")
+        make_secondary_button(self._review_btn)
+        self._review_btn.clicked.connect(self._show_prior_insights)
+        footer.addWidget(self._review_btn)
+
+        setup_assistant_btn = QPushButton("Setup Assistant")
+        make_secondary_button(setup_assistant_btn)
+        setup_assistant_btn.clicked.connect(self._show_setup_assistant)
+        footer.addWidget(setup_assistant_btn)
+
+        self._start_btn = QPushButton("▶  Start Analysis")
+        self._start_btn.clicked.connect(self._on_start_analysis)
+        make_run_button(self._start_btn)
+        footer.addWidget(self._start_btn)
+        outer.addLayout(footer)
+
+        return page
+
+    def _build_selection_pane(self, lo: QVBoxLayout) -> None:
+        lo.addWidget(make_section_label("Select Assignments"))
+        lo.addWidget(make_h_rule())
+        lo.addWidget(_muted_label(
+            "Check courses, then check assignments to analyze. "
+            "Each course is analyzed separately — results never conflated."
+        ))
+
+        lists = QHBoxLayout()
+        lists.setSpacing(SPACING_SM)
+
+        # ── Course column ─────────────────────────────────────────────────
+        course_col = QVBoxLayout()
+        course_col.setSpacing(2)
+        course_col.addWidget(_field_label("Courses"))
+
+        self._course_scroll = QScrollArea()
+        self._course_scroll.setWidgetResizable(True)
+        self._course_scroll.setStyleSheet(_SCROLL_QSS)
+        _empty_courses = QWidget()
+        _empty_courses.setStyleSheet(f"background: {BG_INSET};")
+        self._course_scroll.setWidget(_empty_courses)
+        course_col.addWidget(self._course_scroll, 1)
+        lists.addLayout(course_col, 1)
+
+        # ── Assignment column ─────────────────────────────────────────────
+        assign_col = QVBoxLayout()
+        assign_col.setSpacing(2)
+
+        # Header row: label + view toggle
+        assign_hdr = QHBoxLayout()
+        assign_hdr.setSpacing(SPACING_SM)
+        assign_hdr.addWidget(_field_label("Assignments"))
+        assign_hdr.addStretch()
+        self._assign_view_toggle = ViewToggle(
+            left_label="Deadline", right_label="Group",
+            left_mode="deadline", right_mode="group",
+        )
+        self._assign_view_toggle.mode_changed.connect(self._on_assign_view_changed)
+        assign_hdr.addWidget(self._assign_view_toggle)
+        assign_col.addLayout(assign_hdr)
+
+        # Quick-select chips
+        qs_row = QHBoxLayout()
+        qs_row.setSpacing(4)
+        qs_row.setContentsMargins(0, 2, 0, 2)
+        self._qs_this_week = PhosphorChip("This Week", accent="amber", action=True)
+        self._qs_this_week.toggled.connect(self._qs_select_this_week)
+        self._qs_past_due = PhosphorChip("Past Due", accent="amber", action=True)
+        self._qs_past_due.toggled.connect(self._qs_select_past_due)
+        self._qs_with_subs = PhosphorChip("With Submissions", accent="amber", action=True)
+        self._qs_with_subs.toggled.connect(self._qs_select_with_submissions)
+        _qs_none = PhosphorChip("None", accent="rose", action=True)
+        _qs_none.toggled.connect(lambda _: [r.set_checked(False) for r in self._assign_rows] or self._update_summary())
+        qs_row.addWidget(self._qs_this_week)
+        qs_row.addWidget(self._qs_past_due)
+        qs_row.addWidget(self._qs_with_subs)
+        qs_row.addWidget(_qs_none)
+        qs_row.addStretch()
+        assign_col.addLayout(qs_row)
+
+        self._assign_scroll = QScrollArea()
+        self._assign_scroll.setWidgetResizable(True)
+        self._assign_scroll.setStyleSheet(_SCROLL_QSS)
+        _empty_assigns = QWidget()
+        _empty_assigns.setStyleSheet(f"background: {BG_INSET};")
+        self._assign_scroll.setWidget(_empty_assigns)
+        assign_col.addWidget(self._assign_scroll, 1)
+        lists.addLayout(assign_col, 2)
+
+        lo.addLayout(lists, 1)
+
+    def _build_options_pane(self, lo: QVBoxLayout) -> None:
+        lo.addWidget(make_section_label("Analysis Options"))
+        lo.addWidget(make_h_rule())
+
+        # Analysis depth
+        lo.addWidget(_field_label("Analysis Depth"))
+        self._depth_toggle = SegmentedToggle(
+            ("Quick", "quick"),
+            ("Lightweight", "lightweight"),
+            ("Medium", "medium"),
+            ("Deep Thinking", "deep_thinking"),
+            accent="amber",
+        )
+        self._depth_toggle.mode_changed.connect(self._on_depth_changed)
+        self._depth_toggle.mode_changed.connect(lambda _: self._update_summary())
+        lo.addWidget(self._depth_toggle)
+        self._depth_desc = _muted_label(
+            "Quick: patterns only, no AI — instant results. "
+            "Lightweight: local 8B model, many focused prompts, best overnight."
+        )
+        lo.addWidget(self._depth_desc)
+
+        lo.addWidget(make_h_rule())
+        lo.addWidget(make_section_label("Preprocessing"))
+
+        self._translate_toggle = SwitchToggle(
+            "Translate non-English submissions", wrap_width=200
+        )
+        self._translate_toggle.setChecked(True)
+        lo.addWidget(self._translate_toggle)
+
+        self._transcribe_toggle = SwitchToggle(
+            "Transcribe audio/video submissions", wrap_width=200
+        )
+        self._transcribe_toggle.setChecked(True)
+        lo.addWidget(self._transcribe_toggle)
+
+        lo.addWidget(make_h_rule())
+        lo.addWidget(make_section_label("Draft Feedback"))
+
+        self._feedback_toggle = SwitchToggle(
+            "Generate draft feedback for each student", wrap_width=220
+        )
+        lo.addWidget(self._feedback_toggle)
+        lo.addWidget(_muted_label(
+            "Based on your analysis lens. You review and approve before posting."
+        ))
+
+        lo.addWidget(make_h_rule())
+
+        # Subject template picker
+        lo.addWidget(make_section_label("Subject Area"))
+        self._subject_combo = QComboBox()
+        from insights.lens_templates import get_template_choices, get_template
+        for key, display in get_template_choices():
+            self._subject_combo.addItem(display, key)
+        self._subject_combo.currentIndexChanged.connect(self._on_template_changed)
+        lo.addWidget(self._subject_combo)
+        lo.addWidget(_muted_label(
+            "Populates defaults below. You can edit everything."
+        ))
+
+        lo.addWidget(make_h_rule())
+
+        # Teacher input (collapsible sections — autopopulated from template)
+        lo.addWidget(make_section_label("What are you listening for?"))
+        lo.addWidget(_muted_label(
+            "Defaults from your subject template. Edit to customize."
+        ))
+
+        self._lens_input = self._build_collapsible("Analysis Lens", lo,
+            "What kinds of thinking are you looking for?")
+        self._focus_input = self._build_collapsible("Focus Areas", lo,
+            "What matters most? Rank your top priorities.")
+        self._equity_input = self._build_collapsible("Equity Surfacing", lo,
+            "What structural patterns should the analysis surface?")
+        self._week_input = self._build_collapsible("This Week", lo,
+            "Context for the analysis. e.g., 'We just discussed racial formation theory'")
+        self._next_week_input = self._build_collapsible("Next Week", lo,
+            "What's coming next? Helps forward-looking recommendations.")
+
+        # Word count warning for teacher inputs (8B context budget)
+        self._input_warning = QLabel("")
+        self._input_warning.setWordWrap(True)
+        self._input_warning.setStyleSheet(
+            f"color: {STATUS_WARN}; font-size: 11px;"
+            f" background: transparent; border: none; padding: 2px 0;"
+        )
+        self._input_warning.setVisible(False)
+        lo.addWidget(self._input_warning)
+
+        # Connect text changes to word count check
+        for te in (self._lens_input, self._focus_input, self._equity_input,
+                    self._week_input, self._next_week_input):
+            te.textChanged.connect(self._check_input_length)
+
+        # Restore defaults button
+        restore_btn = QPushButton("Restore Defaults")
+        restore_btn.setStyleSheet(
+            f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
+            f" border: 1px solid {BORDER_DARK}; border-radius: 4px;"
+            f" padding: 3px 10px; font-size: 11px; }}"
+            f"QPushButton:hover {{ color: {PHOSPHOR_MID};"
+            f" border-color: {BORDER_AMBER}; }}"
+        )
+        restore_btn.clicked.connect(self._restore_template_defaults)
+        lo.addWidget(restore_btn)
+
+        # Populate from default template
+        self._on_template_changed(0)
+
+        lo.addStretch()
+
+    def _on_template_changed(self, index: int) -> None:
+        """Autopopulate fields from the selected subject template."""
+        from insights.lens_templates import get_template
+        key = self._subject_combo.currentData()
+        if not key:
+            return
+        tmpl = get_template(key)
+        if not tmpl:
+            return
+
+        # Populate analysis lens
+        self._lens_input.setPlainText("\n".join(tmpl.analysis_lens))
+
+        # Populate focus areas
+        self._focus_input.setPlainText("\n".join(tmpl.default_interests))
+
+        # Populate equity surfacing with teacher-facing framing
+        self._equity_input.setPlainText(tmpl.equity_attention_framing)
+
+        # Save subject to profile
+        if self._profile_mgr:
+            self._profile_mgr.record_subject_area(key)
+
+    def _restore_template_defaults(self) -> None:
+        """Reset all teacher input fields to the current template defaults."""
+        self._on_template_changed(self._subject_combo.currentIndex())
+
+    def _check_input_length(self) -> None:
+        """Warn if combined teacher input is too long for 8B context."""
+        total_words = 0
+        for te in (self._lens_input, self._focus_input, self._equity_input,
+                    self._week_input, self._next_week_input):
+            total_words += len(te.toPlainText().split())
+
+        if total_words > 300:
+            self._input_warning.setText(
+                f"Your instructions are {total_words} words. For Lightweight "
+                f"(8B) models, keeping this under 200 words gives the best "
+                f"results — the model needs room to think about your students' "
+                f"work. Medium and Deep Thinking models handle longer "
+                f"instructions well."
+            )
+            self._input_warning.setVisible(True)
+        elif total_words > 200:
+            self._input_warning.setText(
+                f"Your instructions are {total_words} words. This works fine "
+                f"for Medium and Deep Thinking, but a Lightweight (8B) model "
+                f"may not be able to attend to all of it. The most important "
+                f"items should be near the top."
+            )
+            self._input_warning.setVisible(True)
+        else:
+            self._input_warning.setVisible(False)
+
+    def _on_depth_changed(self, mode: str) -> None:
+        """Enable/disable LLM-dependent options based on analysis depth."""
+        is_quick = (mode == "quick")
+
+        # Translation needs an LLM for the translation calls
+        self._translate_toggle.setChecked(not is_quick and self._translate_toggle.isChecked())
+        self._translate_toggle.setEnabled(not is_quick)
+
+        # Draft feedback requires LLM
+        self._feedback_toggle.setChecked(False if is_quick else self._feedback_toggle.isChecked())
+        self._feedback_toggle.setEnabled(not is_quick)
+
+        # Transcription uses Whisper (not an LLM) — stays available at all tiers
+        # self._transcribe_toggle stays enabled
+
+        # Update description
+        descriptions = {
+            "quick": (
+                "Patterns only — no AI model needed. Keyword analysis, "
+                "sentiment, clusters, and concern signals. Instant results."
+            ),
+            "lightweight": (
+                "Uses your local 8B model. Breaks analysis into many "
+                "focused prompts. Best run overnight."
+            ),
+            "medium": (
+                "Uses a ~70B local model or institutional API. Fewer, "
+                "richer prompts. Better at nuanced concerns and themes."
+            ),
+            "deep_thinking": (
+                "Uses a frontier model (institutional API). Maximum "
+                "analytical depth — nuanced cultural analysis, subtle "
+                "pattern detection, interpretive synthesis."
+            ),
+        }
+        self._depth_desc.setText(descriptions.get(mode, ""))
+
+    def _build_collapsible(
+        self, title: str, parent_lo: QVBoxLayout, placeholder: str
+    ) -> QTextEdit:
+        """Build a collapsible text input section. Returns the QTextEdit."""
+        btn = QPushButton(f"▸ {title}")
+        btn.setStyleSheet(
+            f"QPushButton {{ background: transparent; color: {PHOSPHOR_MID};"
+            f" border: none; text-align: left; padding: 4px 0;"
+            f" font-size: 12px; }}"
+            f"QPushButton:hover {{ color: {PHOSPHOR_HOT}; }}"
+        )
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        te = QTextEdit()
+        te.setPlaceholderText(placeholder)
+        te.setMaximumHeight(60)
+        te.setVisible(False)
+        te.setStyleSheet(
+            f"QTextEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: 12px;"
+            f" padding: 4px; }}"
+        )
+
+        def _toggle():
+            visible = not te.isVisible()
+            te.setVisible(visible)
+            btn.setText(f"{'▾' if visible else '▸'} {title}")
+
+        btn.clicked.connect(_toggle)
+        parent_lo.addWidget(btn)
+        parent_lo.addWidget(te)
+        return te
+
+    # ── Running view ───────────────────────────────────────────────────
+
+    def _build_running_view(self) -> QWidget:
+        from PySide6.QtGui import QPalette, QColor
+        from PySide6.QtWidgets import QProgressBar
+
+        page = QWidget()
+        page.setAutoFillBackground(True)
+        pal = page.palette()
+        pal.setColor(QPalette.ColorRole.Window, QColor(BG_VOID))
+        page.setPalette(pal)
+
+        lo = QVBoxLayout(page)
+        lo.setContentsMargins(SPACING_LG, SPACING_SM, SPACING_LG, SPACING_SM)
+        lo.setSpacing(SPACING_XS)
+
+        # Header row: title + stage label
+        header = QHBoxLayout()
+        title = QLabel("GENERATE INSIGHTS")
+        title.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+            f" background: transparent; border: none; letter-spacing: 2px;"
+        )
+        header.addWidget(title)
+        header.addStretch()
+
+        self._progress_label = QLabel("Preparing analysis...")
+        self._progress_label.setStyleSheet(
+            f"color: {PHOSPHOR_MID}; font-size: 12px;"
+            f" background: transparent; border: none;"
+        )
+        header.addWidget(self._progress_label)
+        lo.addLayout(header)
+
+        # Progress bar — thin amber gradient
+        self._progress_bar = QProgressBar()
+        self._progress_bar.setRange(0, 100)
+        self._progress_bar.setValue(0)
+        self._progress_bar.setFixedHeight(10)
+        self._progress_bar.setTextVisible(False)
+        self._progress_bar.setStyleSheet(
+            f"QProgressBar {{"
+            f"  background: {BG_INSET};"
+            f"  border: 1px solid {BORDER_DARK};"
+            f"  border-radius: 3px;"
+            f"}}"
+            f"QProgressBar::chunk {{"
+            f"  background: qlineargradient(x1:0,y1:0,x2:1,y2:0,"
+            f"    stop:0 {AMBER_BTN}, stop:1 {PHOSPHOR_HOT});"
+            f"  border-radius: 2px;"
+            f"}}"
+        )
+        lo.addWidget(self._progress_bar)
+
+        # Split pane: left = system log, right = live results
+        splitter = GripSplitter.create(Qt.Orientation.Horizontal)
+
+        # ── Left: system log ──
+        log_frame = QFrame()
+        log_frame.setStyleSheet(f"QFrame {{ background: transparent; border: none; }}")
+        log_lo = QVBoxLayout(log_frame)
+        log_lo.setContentsMargins(0, SPACING_XS, 0, 0)
+        log_lo.setSpacing(SPACING_XS)
+        log_lo.addWidget(make_section_label("System Log"))
+
+        self._log_output = QTextEdit()
+        self._log_output.setReadOnly(True)
+        self._log_output.setStyleSheet(
+            f"QTextEdit {{"
+            f"  background: {BG_INSET};"
+            f"  border: 1px solid {BORDER_DARK};"
+            f"  border-radius: 6px;"
+            f"  color: {PHOSPHOR_DIM};"
+            f"  font-family: 'JetBrains Mono', 'Cascadia Code', 'Menlo',"
+            f"   'Consolas', monospace;"
+            f"  font-size: 10px;"
+            f"  padding: 6px;"
+            f"  selection-background-color: {PHOSPHOR_GLOW};"
+            f"  selection-color: {PHOSPHOR_HOT};"
+            f"}}"
+        )
+        log_lo.addWidget(self._log_output, 1)
+        splitter.addWidget(log_frame)
+
+        # ── Right: live results feed ──
+        results_frame = QFrame()
+        results_frame.setStyleSheet(f"QFrame {{ background: transparent; border: none; }}")
+        results_lo = QVBoxLayout(results_frame)
+        results_lo.setContentsMargins(0, SPACING_XS, 0, 0)
+        results_lo.setSpacing(SPACING_XS)
+        results_lo.addWidget(make_section_label("Live Results"))
+
+        # Assignment header — updated when analysis starts
+        self._live_header = QLabel("")
+        self._live_header.setWordWrap(True)
+        self._live_header.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: 12px; font-weight: bold;"
+            f" background: transparent; border: none; padding: 2px 0;"
+        )
+        self._live_header.setVisible(False)
+        results_lo.addWidget(self._live_header)
+
+        self._live_scroll = QScrollArea()
+        self._live_scroll.setWidgetResizable(True)
+        self._live_scroll.setStyleSheet(
+            "QScrollArea { border: none; background: transparent; }"
+        )
+        self._live_container = QWidget()
+        self._live_container.setStyleSheet(f"background: {BG_VOID};")
+        self._live_lo = QVBoxLayout(self._live_container)
+        self._live_lo.setContentsMargins(0, 0, SPACING_SM, 0)
+        self._live_lo.setSpacing(SPACING_SM)
+        self._live_lo.addStretch()
+        self._live_scroll.setWidget(self._live_container)
+        results_lo.addWidget(self._live_scroll, 1)
+
+        splitter.addWidget(results_frame)
+        splitter.setSizes([300, 600])
+        lo.addWidget(splitter, 1)
+
+        # Kept for compatibility
+        self._progress_detail = QLabel("")
+        self._progress_detail.setVisible(False)
+
+        # Footer: cancel only — teacher navigates away freely
+        footer = QHBoxLayout()
+        footer.addStretch()
+        self._cancel_btn = QPushButton("Cancel Analysis")
+        self._cancel_btn.clicked.connect(self._on_cancel)
+        footer.addWidget(self._cancel_btn)
+        lo.addLayout(footer)
+
+        return page
+
+    def _append_log(self, message: str) -> None:
+        """Append a line to the system log and auto-scroll."""
+        from PySide6.QtGui import QTextCursor
+        from datetime import datetime
+        ts = datetime.now().strftime("%H:%M:%S")
+        if message.startswith("[") or "Stage" in message or "complete" in message.lower():
+            color = PHOSPHOR_HOT
+        elif "error" in message.lower() or "failed" in message.lower():
+            color = BURN_RED
+        elif "✓" in message or "ready" in message.lower():
+            color = TERM_GREEN
+        else:
+            color = PHOSPHOR_DIM
+        html = (
+            f'<span style="color:{PHOSPHOR_DIM};">{ts}</span>'
+            f'  <span style="color:{color};">{message}</span>'
+        )
+        self._log_output.append(html)
+        cursor = self._log_output.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        self._log_output.setTextCursor(cursor)
+
+    def _append_live_result(self, result_type: str, data) -> None:
+        """Add a live result card to the results feed as it comes in."""
+        try:
+            self._append_live_result_inner(result_type, data)
+        except Exception as e:
+            # Don't let a rendering error kill the live feed
+            self._append_log(f"Live preview error: {e}")
+
+    def _append_live_result_inner(self, result_type: str, data) -> None:
+        if not isinstance(data, dict):
+            try:
+                data = data if isinstance(data, dict) else {}
+            except Exception:
+                data = {}
+
+        # Insert before the stretch at the bottom
+        insert_idx = max(0, self._live_lo.count() - 1)
+
+        if result_type == "coding":
+            # Per-student coding result — show name, themes, quote
+            name = data.get("student_name", "Unknown")
+            tags = data.get("theme_tags", [])
+            quotes = data.get("notable_quotes", [])
+            register = data.get("emotional_register", "")
+            concerns = data.get("concerns", [])
+
+            accent_color = ROSE_ACCENT if concerns else BORDER_AMBER
+            card = QFrame()
+            card.setStyleSheet(
+                f"QFrame {{ background: {BG_CARD};"
+                f" border: 1px solid {BORDER_DARK}; border-radius: 6px;"
+                f" border-left: 3px solid {accent_color}; }}"
+            )
+            clo = QVBoxLayout(card)
+            clo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+            clo.setSpacing(2)
+
+            # Name + register on one line
+            reg_text = f"  \u00b7  {register}" if register else ""
+            header = QLabel(f"{name}{reg_text}")
+            header.setStyleSheet(
+                f"color: {PHOSPHOR_HOT}; font-size: 12px; font-weight: bold;"
+                f" background: transparent; border: none;"
+            )
+            clo.addWidget(header)
+
+            # Student's original text (so teacher sees what was analyzed)
+            orig_text = data.get("_original_text", "")
+            if orig_text:
+                display_orig = orig_text[:250]
+                if len(orig_text) > 250:
+                    display_orig += "..."
+                orig_lbl = QLabel(display_orig)
+                orig_lbl.setWordWrap(True)
+                orig_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+                    f" background: transparent; border: none;"
+                    f" padding: 2px 0 4px 0;"
+                )
+                clo.addWidget(orig_lbl)
+
+            # Theme tags as inline wrapped text (subtle, not glowy chips)
+            if tags:
+                tag_text = "  \u00b7  ".join(tags[:5])
+                tag_lbl = QLabel(tag_text)
+                tag_lbl.setWordWrap(True)
+                tag_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: 10px;"
+                    f" background: transparent; border: none;"
+                    f" padding: 1px 0;"
+                )
+                clo.addWidget(tag_lbl)
+
+            # Best quote — or original text if model returned nothing
+            quote_text = ""
+            if quotes:
+                q = quotes[0]
+                quote_text = q.get("text", "") if isinstance(q, dict) else str(q)
+
+            if not quote_text and not tags:
+                # Sparse result — show the student's own words
+                orig = data.get("_original_text", "")
+                if orig:
+                    quote_text = orig
+                    sparse_note = QLabel("(model returned limited analysis — student text shown)")
+                    sparse_note.setWordWrap(True)
+                    sparse_note.setStyleSheet(
+                        f"color: {PHOSPHOR_DIM}; font-size: 9px;"
+                        f" background: transparent; border: none;"
+                    )
+                    clo.addWidget(sparse_note)
+
+            if quote_text:
+                display = quote_text[:300]
+                if len(quote_text) > 300:
+                    display += "..."
+                qlbl = QLabel(f"\u201c{display}\u201d")
+                qlbl.setWordWrap(True)
+                qlbl.setStyleSheet(
+                    f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+                    f" font-style: italic;"
+                    f" background: transparent; border: none;"
+                    f" padding: 2px 0;"
+                )
+                clo.addWidget(qlbl)
+
+            # Concern flag
+            if concerns:
+                flag = QLabel(f"\u26a0 {len(concerns)} passage{'s' if len(concerns) != 1 else ''} flagged for review")
+                flag.setWordWrap(True)
+                flag.setStyleSheet(
+                    f"color: {ROSE_ACCENT}; font-size: 10px;"
+                    f" background: transparent; border: none;"
+                )
+                clo.addWidget(flag)
+
+            self._live_lo.insertWidget(insert_idx, card)
+
+        elif result_type == "theme":
+            # Theme result — show theme name + student count
+            name = data.get("name", "Unnamed")
+            freq = data.get("frequency", 0)
+            desc = data.get("description", "")
+
+            card = QFrame()
+            card.setStyleSheet(
+                f"QFrame {{ background: {BG_CARD};"
+                f" border: 1px solid {AMBER_BTN}; border-radius: 6px;"
+                f" border-left: 3px solid {AMBER_BTN}; }}"
+            )
+            clo = QVBoxLayout(card)
+            clo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+            clo.setSpacing(2)
+
+            header = QLabel(f"\u25c6 {name}  ({freq} students)")
+            header.setStyleSheet(
+                f"color: {PHOSPHOR_HOT}; font-size: 12px; font-weight: bold;"
+                f" background: transparent; border: none;"
+            )
+            clo.addWidget(header)
+
+            if desc:
+                dlbl = QLabel(desc[:150])
+                dlbl.setWordWrap(True)
+                dlbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: 10px;"
+                    f" background: transparent; border: none;"
+                )
+                clo.addWidget(dlbl)
+
+            self._live_lo.insertWidget(insert_idx, card)
+
+        elif result_type == "contradiction":
+            card = QFrame()
+            card.setStyleSheet(
+                f"QFrame {{ background: {BG_CARD};"
+                f" border: 1px solid {STATUS_WARN}; border-radius: 6px;"
+                f" border-left: 3px solid {STATUS_WARN}; }}"
+            )
+            clo = QVBoxLayout(card)
+            clo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+            clo.setSpacing(2)
+
+            header = QLabel(f"\u26a1 Tension: {data.get('description', '')[:100]}")
+            header.setWordWrap(True)
+            header.setStyleSheet(
+                f"color: {STATUS_WARN}; font-size: 11px; font-weight: bold;"
+                f" background: transparent; border: none;"
+            )
+            clo.addWidget(header)
+            self._live_lo.insertWidget(insert_idx, card)
+
+        elif result_type == "outlier":
+            name = data.get("student_name", "Unknown")
+            why = data.get("why_notable", "")
+
+            card = QFrame()
+            card.setStyleSheet(
+                f"QFrame {{ background: {BG_CARD};"
+                f" border: 1px solid {TERM_GREEN}; border-radius: 6px;"
+                f" border-left: 3px solid {TERM_GREEN}; }}"
+            )
+            clo = QVBoxLayout(card)
+            clo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+            clo.setSpacing(2)
+
+            header = QLabel(f"\u2726 {name} — unique voice")
+            header.setStyleSheet(
+                f"color: {TERM_GREEN}; font-size: 11px; font-weight: bold;"
+                f" background: transparent; border: none;"
+            )
+            clo.addWidget(header)
+
+            if why:
+                wlbl = QLabel(why[:120])
+                wlbl.setWordWrap(True)
+                wlbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: 10px;"
+                    f" background: transparent; border: none;"
+                )
+                clo.addWidget(wlbl)
+
+            self._live_lo.insertWidget(insert_idx, card)
+
+        elif result_type == "reading":
+            # Student's actual text — shown while LLM is processing
+            name = data.get("student_name", "")
+            text = data.get("text", "")
+            wc = data.get("word_count", 0)
+
+            card = QFrame()
+            card.setStyleSheet(
+                f"QFrame {{ background: {BG_INSET};"
+                f" border: 1px solid {BORDER_DARK}; border-radius: 6px;"
+                f" border-left: 3px solid {PHOSPHOR_DIM}; }}"
+            )
+            clo = QVBoxLayout(card)
+            clo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+            clo.setSpacing(2)
+
+            header = QLabel(f"{name}  ·  {wc} words  ·  reading...")
+            header.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: 11px; font-weight: bold;"
+                f" background: transparent; border: none;"
+            )
+            clo.addWidget(header)
+
+            # Show the actual student text (truncated)
+            preview = text[:400]
+            if len(text) > 400:
+                preview += "..."
+            txt_lbl = QLabel(preview)
+            txt_lbl.setWordWrap(True)
+            txt_lbl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+                f" background: transparent; border: none;"
+                f" font-style: italic; padding: 2px 0;"
+            )
+            clo.addWidget(txt_lbl)
+
+            self._live_lo.insertWidget(insert_idx, card)
+
+        elif result_type == "stage":
+            # Stage transition marker
+            label = QLabel(f"── {data.get('stage', '')} ──")
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            label.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: bold;"
+                f" letter-spacing: 1px; background: transparent; border: none;"
+                f" padding: 4px 0;"
+            )
+            self._live_lo.insertWidget(insert_idx, label)
+
+        # Auto-scroll to bottom
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(50, lambda: self._live_scroll.verticalScrollBar().setValue(
+            self._live_scroll.verticalScrollBar().maximum()
+        ))
+
+    # ── Review view ────────────────────────────────────────────────────
+
+    def _build_review_view(self) -> QWidget:
+        from PySide6.QtGui import QPalette, QColor
+
+        page = QWidget()
+        page.setAutoFillBackground(True)
+        pal = page.palette()
+        pal.setColor(QPalette.ColorRole.Window, QColor(BG_VOID))
+        page.setPalette(pal)
+
+        outer = QVBoxLayout(page)
+        outer.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
+        outer.setSpacing(SPACING_MD)
+
+        title = QLabel("GENERATE INSIGHTS")
+        title.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+            f" background: transparent; border: none; letter-spacing: 2px;"
+        )
+        outer.addWidget(title)
+        outer.addWidget(make_h_rule())
+
+        splitter = GripSplitter.create(Qt.Orientation.Horizontal)
+        splitter.setHandleWidth(10)
+
+        # ── Left: run sidebar ──
+        sidebar = make_content_pane("insightsRunSidebar")
+        sidebar_lo = QVBoxLayout(sidebar)
+        sidebar_lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+        sidebar_lo.setSpacing(SPACING_XS)
+        sidebar_lo.addWidget(make_section_label("Completed Runs"))
+        sidebar_lo.addWidget(make_h_rule())
+
+        self._run_list = QListWidget()
+        self._run_list.setStyleSheet(
+            f"QListWidget {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+            f" border-radius: 4px; color: {PHOSPHOR_MID}; outline: none; }}"
+            f"QListWidget::item {{ padding: 5px 8px; }}"
+            f"QListWidget::item:selected {{ background: rgba(90,60,8,0.3);"
+            f" color: {PHOSPHOR_HOT}; border-left: 3px solid {ROSE_ACCENT}; }}"
+        )
+        self._run_list.currentRowChanged.connect(self._on_run_selected)
+        sidebar_lo.addWidget(self._run_list, 1)
+
+        new_btn = QPushButton("▶  New Analysis")
+        new_btn.clicked.connect(lambda: self._state_stack.setCurrentIndex(0))
+        make_secondary_button(new_btn)
+        sidebar_lo.addWidget(new_btn)
+        splitter.addWidget(sidebar)
+
+        # ── Right: layer content ──
+        right = QWidget()
+        right_lo = QVBoxLayout(right)
+        right_lo.setContentsMargins(0, 0, 0, 0)
+        right_lo.setSpacing(SPACING_SM)
+
+        # Layer tabs
+        self._layer_toggle = SegmentedToggle(
+            ("Patterns", "patterns"),
+            ("Student Work", "codings"),
+            ("Themes", "themes"),
+            ("Outliers", "outliers"),
+            ("Report", "report"),
+            ("Feedback", "feedback"),
+            ("Semester", "semester"),
+            accent="amber",
+        )
+        self._layer_toggle.mode_changed.connect(self._on_layer_changed)
+        right_lo.addWidget(self._layer_toggle)
+
+        # Layer content stack
+        self._layer_stack = QStackedWidget()
+        self._patterns_scroll = self._build_patterns_layer()
+        self._layer_stack.addWidget(self._patterns_scroll)           # 0: patterns
+        self._codings_scroll = self._build_scrollable_layer()
+        self._layer_stack.addWidget(self._codings_scroll)            # 1: codings
+        self._themes_scroll = self._build_scrollable_layer()
+        self._layer_stack.addWidget(self._themes_scroll)             # 2: themes
+        self._outliers_scroll = self._build_scrollable_layer()
+        self._layer_stack.addWidget(self._outliers_scroll)           # 3: outliers
+        self._report_scroll = self._build_scrollable_layer()
+        self._layer_stack.addWidget(self._report_scroll)             # 4: report
+        self._feedback_scroll = self._build_scrollable_layer()
+        self._layer_stack.addWidget(self._feedback_scroll)              # 5: feedback
+        self._semester_scroll = self._build_scrollable_layer()
+        self._layer_stack.addWidget(self._semester_scroll)              # 6: semester
+        right_lo.addWidget(self._layer_stack, 1)
+
+        splitter.addWidget(right)
+        splitter.setStretchFactor(0, 0)
+        splitter.setStretchFactor(1, 1)
+        splitter.setSizes([220, 700])
+
+        outer.addWidget(splitter, 1)
+        return page
+
+    def _build_patterns_layer(self) -> QScrollArea:
+        """Build the scrollable Patterns layer for the review view."""
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+
+        container = QWidget()
+        container.setStyleSheet(f"background: {BG_VOID};")
+        self._patterns_lo = QVBoxLayout(container)
+        self._patterns_lo.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_MD)
+        self._patterns_lo.setSpacing(SPACING_MD)
+
+        # Placeholder until results are loaded
+        self._patterns_placeholder = QLabel("Select a completed run to view patterns.")
+        self._patterns_placeholder.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: 12px;"
+            f" background: transparent; border: none; padding: 20px;"
+        )
+        self._patterns_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._patterns_lo.addWidget(self._patterns_placeholder)
+        self._patterns_lo.addStretch()
+
+        scroll.setWidget(container)
+        return scroll
+
+    # ------------------------------------------------------------------
+    # Populate patterns from QuickAnalysisResult
+    # ------------------------------------------------------------------
+
+    def _display_patterns(self, qa_json: str) -> None:
+        """Populate the Patterns layer from a QuickAnalysisResult JSON."""
+        try:
+            from insights.models import QuickAnalysisResult
+            qa = QuickAnalysisResult.model_validate_json(qa_json)
+        except Exception as e:
+            self._patterns_placeholder.setText(f"Error loading results: {e}")
+            return
+
+        # Clear existing content
+        while self._patterns_lo.count():
+            item = self._patterns_lo.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        # ── Header ──
+        header = QLabel(
+            f"{qa.assignment_name}  ·  {qa.stats.total_submissions} submissions"
+        )
+        header.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: 14px; font-weight: bold;"
+            f" background: transparent; border: none;"
+        )
+        self._patterns_lo.addWidget(header)
+
+        # ── Submission Patterns ──
+        self._add_stats_card(qa)
+
+        # ── Top Terms ──
+        self._add_terms_card(qa)
+
+        # ── Sentiment Distribution ──
+        self._add_sentiment_card(qa)
+
+        # ── Natural Clusters ──
+        self._add_clusters_card(qa)
+
+        # ── Keyword Patterns ──
+        self._add_keywords_card(qa)
+
+        # ── Concern Signals ──
+        self._add_concerns_card(qa)
+
+        # ── Shared References ──
+        self._add_references_card(qa)
+
+        # ── Contradictions ──
+        if qa.contradictions:
+            self._add_contradictions_card(qa)
+
+        self._patterns_lo.addStretch()
+
+    def _add_stats_card(self, qa) -> None:
+        pane = make_content_pane("patternsStats")
+        lo = QVBoxLayout(pane)
+        lo.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
+        lo.setSpacing(4)
+        lo.addWidget(make_section_label("Submission Patterns"))
+
+        s = qa.stats
+        lines = [
+            f"Word count:  avg {s.word_count_mean:.0f},  "
+            f"median {s.word_count_median:.0f},  "
+            f"range {s.word_count_min}–{s.word_count_max}",
+        ]
+        if s.format_breakdown:
+            parts = [f"{c} {fmt}" for fmt, c in sorted(
+                s.format_breakdown.items(), key=lambda x: -x[1]
+            )]
+            lines.append(f"Formats:  {', '.join(parts)}")
+        if s.timing:
+            parts = [f"{c} {k.replace('_', ' ')}" for k, c in s.timing.items() if c > 0]
+            lines.append(f"Timing:  {', '.join(parts)}")
+
+        for line in lines:
+            lbl = QLabel(line)
+            lbl.setStyleSheet(
+                f"color: {PHOSPHOR_MID}; font-size: 12px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(lbl)
+
+        self._patterns_lo.addWidget(pane)
+
+    def _add_terms_card(self, qa) -> None:
+        if not qa.top_terms and not qa.tfidf_terms:
+            return
+        pane = make_content_pane("patternsTerms")
+        lo = QVBoxLayout(pane)
+        lo.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
+        lo.setSpacing(4)
+        lo.addWidget(make_section_label("Top Terms"))
+
+        if qa.tfidf_terms:
+            terms_str = ", ".join(
+                f"{t.term} ({t.score:.3f})" for t in qa.tfidf_terms[:15]
+            )
+            lbl = QLabel(f"TF-IDF:  {terms_str}")
+            lbl.setWordWrap(True)
+            lbl.setStyleSheet(
+                f"color: {PHOSPHOR_MID}; font-size: 12px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(lbl)
+
+        if qa.top_terms:
+            terms_str = ", ".join(
+                f"{t.term} ({t.count})" for t in qa.top_terms[:15]
+            )
+            lbl = QLabel(f"Frequency:  {terms_str}")
+            lbl.setWordWrap(True)
+            lbl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(lbl)
+
+        self._patterns_lo.addWidget(pane)
+
+    def _add_sentiment_card(self, qa) -> None:
+        if not qa.sentiment_distribution:
+            return
+        pane = make_content_pane("patternsSentiment")
+        lo = QVBoxLayout(pane)
+        lo.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
+        lo.setSpacing(4)
+        lo.addWidget(make_section_label("Sentiment Distribution"))
+
+        parts = [
+            f"{k.title()}: {v}" for k, v in
+            sorted(qa.sentiment_distribution.items(), key=lambda x: -x[1])
+        ]
+        lbl = QLabel("  |  ".join(parts))
+        lbl.setStyleSheet(
+            f"color: {PHOSPHOR_MID}; font-size: 12px;"
+            f" background: transparent; border: none;"
+        )
+        lo.addWidget(lbl)
+
+        self._patterns_lo.addWidget(pane)
+
+    def _add_clusters_card(self, qa) -> None:
+        if not qa.clusters:
+            return
+        pane = make_content_pane("patternsClusters")
+        lo = QVBoxLayout(pane)
+        lo.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
+        lo.setSpacing(4)
+        lo.addWidget(make_section_label("Natural Clusters"))
+        lo.addWidget(_muted_label("Embedding-based groupings of similar submissions"))
+
+        for cl in qa.clusters:
+            names = ", ".join(cl.student_names[:5])
+            if len(cl.student_names) > 5:
+                names += f" + {len(cl.student_names) - 5} more"
+            terms = ", ".join(cl.top_terms[:5]) if cl.top_terms else "—"
+            text = (
+                f"Cluster {cl.cluster_id + 1}  ({cl.size} students):  "
+                f"top terms: {terms}\n    {names}"
+            )
+            lbl = QLabel(text)
+            lbl.setWordWrap(True)
+            lbl.setStyleSheet(
+                f"color: {PHOSPHOR_MID}; font-size: 12px;"
+                f" background: transparent; border: none; padding: 2px 0;"
+            )
+            lo.addWidget(lbl)
+
+        if qa.embedding_outlier_ids:
+            outlier_names = []
+            for sid in qa.embedding_outlier_ids:
+                sub = qa.per_submission.get(sid)
+                if sub:
+                    outlier_names.append(sub.student_name)
+                else:
+                    outlier_names.append(f"Student {sid}")
+            lbl = QLabel(
+                f"Outliers ({len(outlier_names)} students — may contain unique "
+                f"perspectives):  {', '.join(outlier_names)}"
+            )
+            lbl.setWordWrap(True)
+            lbl.setStyleSheet(
+                f"color: {AMBER_BTN}; font-size: 12px;"
+                f" background: transparent; border: none; padding: 2px 0;"
+            )
+            lo.addWidget(lbl)
+
+        self._patterns_lo.addWidget(pane)
+
+    def _add_keywords_card(self, qa) -> None:
+        if not qa.keyword_hits:
+            return
+        pane = make_content_pane("patternsKeywords")
+        lo = QVBoxLayout(pane)
+        lo.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
+        lo.setSpacing(4)
+        lo.addWidget(make_section_label("Keyword Patterns"))
+
+        for name, hit in sorted(
+            qa.keyword_hits.items(), key=lambda x: -x[1].count
+        ):
+            display = name.replace("_", " ").title()
+            n_students = len(hit.student_ids)
+            lbl = QLabel(
+                f"{display}:  {hit.count} hits across {n_students} submissions"
+            )
+            lbl.setStyleSheet(
+                f"color: {PHOSPHOR_MID}; font-size: 12px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(lbl)
+            if hit.examples:
+                for ex in hit.examples[:2]:
+                    ex_lbl = QLabel(f"    {ex}")
+                    ex_lbl.setWordWrap(True)
+                    ex_lbl.setStyleSheet(
+                        f"color: {PHOSPHOR_DIM}; font-size: 11px; font-style: italic;"
+                        f" background: transparent; border: none;"
+                    )
+                    lo.addWidget(ex_lbl)
+
+        self._patterns_lo.addWidget(pane)
+
+    def _add_concerns_card(self, qa) -> None:
+        if not qa.concern_signals:
+            return
+        pane = make_content_pane("patternsConcerns")
+        lo = QVBoxLayout(pane)
+        lo.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
+        lo.setSpacing(4)
+        lo.addWidget(make_section_label("Concern Signals"))
+        lo.addWidget(_muted_label(
+            "Pre-screening from VADER sentiment + keyword patterns. "
+            "These are signals for teacher review, not verdicts."
+        ))
+
+        # Group by signal type
+        by_type: Dict[str, list] = {}
+        for sig in qa.concern_signals:
+            by_type.setdefault(sig.signal_type, []).append(sig)
+
+        for stype in ("CONCERN", "CHECK IN", "POSSIBLE CONCERN",
+                       "LOW ENGAGEMENT", "VERIFY", "SURFACE COMPLIANCE"):
+            sigs = by_type.get(stype, [])
+            if not sigs:
+                continue
+            # Color by severity
+            if stype in ("CONCERN",):
+                color = ROSE_ACCENT
+            elif stype in ("CHECK IN", "POSSIBLE CONCERN"):
+                color = AMBER_BTN
+            else:
+                color = PHOSPHOR_DIM
+
+            type_lbl = QLabel(f"⚠ {stype}  ({len(sigs)} submissions)")
+            type_lbl.setStyleSheet(
+                f"color: {color}; font-size: 12px; font-weight: bold;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(type_lbl)
+
+            for sig in sigs:
+                detail = QLabel(
+                    f"    {sig.student_name}: {sig.interpretation}"
+                )
+                detail.setWordWrap(True)
+                detail.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                    f" background: transparent; border: none;"
+                )
+                lo.addWidget(detail)
+
+        self._patterns_lo.addWidget(pane)
+
+    def _add_references_card(self, qa) -> None:
+        if not qa.shared_references:
+            return
+        pane = make_content_pane("patternsRefs")
+        lo = QVBoxLayout(pane)
+        lo.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
+        lo.setSpacing(4)
+        lo.addWidget(make_section_label("Shared References"))
+
+        for ref in qa.shared_references[:10]:
+            lbl = QLabel(f'"{ref.reference}": {ref.count} submissions')
+            lbl.setStyleSheet(
+                f"color: {PHOSPHOR_MID}; font-size: 12px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(lbl)
+
+        self._patterns_lo.addWidget(pane)
+
+    def _add_contradictions_card(self, qa) -> None:
+        pane = make_content_pane("patternsContradictions")
+        lo = QVBoxLayout(pane)
+        lo.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
+        lo.setSpacing(4)
+        lo.addWidget(make_section_label("Contradictions Detected"))
+        lo.addWidget(_muted_label(
+            "Opposing views on the same topic — pedagogically productive tensions."
+        ))
+
+        for c in qa.contradictions:
+            lbl = QLabel(c.description)
+            lbl.setWordWrap(True)
+            lbl.setStyleSheet(
+                f"color: {AMBER_BTN}; font-size: 12px;"
+                f" background: transparent; border: none; padding: 2px 0;"
+            )
+            lo.addWidget(lbl)
+
+        self._patterns_lo.addWidget(pane)
+
+    # ------------------------------------------------------------------
+    # Generic scrollable layer builder
+    # ------------------------------------------------------------------
+
+    def _build_scrollable_layer(self) -> QScrollArea:
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+        container = QWidget()
+        container.setStyleSheet(f"background: {BG_VOID};")
+        lo = QVBoxLayout(container)
+        lo.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_MD)
+        lo.setSpacing(SPACING_MD)
+        placeholder = QLabel("Select a completed run to view results.")
+        placeholder.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: 12px;"
+            f" background: transparent; border: none; padding: 20px;"
+        )
+        placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lo.addWidget(placeholder)
+        lo.addStretch()
+        scroll.setWidget(container)
+        return scroll
+
+    def _clear_scroll_layout(self, scroll: QScrollArea) -> QVBoxLayout:
+        """Clear a scrollable layer and return its layout."""
+        container = scroll.widget()
+        lo = container.layout()
+        while lo.count():
+            item = lo.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        return lo
+
+    # ------------------------------------------------------------------
+    # Student Work layer (coding records)
+    # ------------------------------------------------------------------
+
+    def _display_codings(self, run_id: str) -> None:
+        """Populate the Student Work layer with interactive editing."""
+        lo = self._clear_scroll_layout(self._codings_scroll)
+        self._ensure_profile_mgr()
+
+        if not self._store:
+            lo.addWidget(_muted_label("No store available."))
+            lo.addStretch()
+            return
+
+        codings = self._store.get_codings(run_id)
+        if not codings:
+            lo.addWidget(_muted_label("No coding records. Run LLM analysis to populate."))
+            lo.addStretch()
+            return
+
+        # Collect all theme names for the add-tag combo
+        all_tags = set()
+        for row in codings:
+            rec = row.get("coding_record", {})
+            if isinstance(rec, str):
+                try:
+                    rec = json.loads(rec)
+                except Exception:
+                    rec = {}
+            all_tags.update(rec.get("theme_tags", []))
+
+        lo.addWidget(make_section_label(f"Student Work  ({len(codings)} submissions)"))
+        lo.addWidget(make_h_rule())
+
+        from gui.widgets.phosphor_chip import PhosphorChip
+
+        for row in codings:
+            record = row.get("coding_record", {})
+            if isinstance(record, str):
+                try:
+                    record = json.loads(record)
+                except Exception:
+                    record = {}
+
+            sid = row.get("student_id", "")
+            name = record.get("student_name", row.get("student_name", "Unknown"))
+            tags = list(record.get("theme_tags", []))
+            concerns = list(record.get("concerns", []))
+            register = record.get("emotional_register", "")
+            quotes = record.get("notable_quotes", [])
+            existing_note = row.get("teacher_notes", "") or ""
+
+            pane = make_content_pane(f"coding_{sid}")
+            pane_lo = QVBoxLayout(pane)
+            pane_lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+            pane_lo.setSpacing(4)
+
+            # Header row: name + register
+            header = QLabel(f"{name}  \u00b7  {register}")
+            header.setStyleSheet(
+                f"color: {PHOSPHOR_HOT}; font-size: 13px; font-weight: bold;"
+                f" background: transparent; border: none;"
+            )
+            pane_lo.addWidget(header)
+
+            # ── Theme tags: chips with x-remove + add combo ──
+            tag_row = QHBoxLayout()
+            tag_row.setSpacing(4)
+            for tag in tags[:5]:
+                chip = PhosphorChip(tag, active=True, accent="amber")
+                # Rose "x" button to remove tag
+                x_btn = QPushButton("\u00d7")
+                x_btn.setFixedSize(18, 18)
+                x_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+                x_btn.setStyleSheet(
+                    f"QPushButton {{ background: transparent; color: {ROSE_ACCENT};"
+                    f" border: none; font-size: 13px; font-weight: bold; }}"
+                    f"QPushButton:hover {{ color: {BURN_RED}; }}"
+                )
+                x_btn.clicked.connect(
+                    lambda _=False, r=run_id, s=sid, t=tag:
+                    self._on_remove_tag(r, s, t)
+                )
+                tag_row.addWidget(chip)
+                tag_row.addWidget(x_btn)
+
+            # Add-tag combo
+            add_combo = QComboBox()
+            add_combo.addItem("+ tag")
+            for t in sorted(all_tags):
+                if t not in tags:
+                    add_combo.addItem(t)
+            add_combo.setStyleSheet(
+                f"QComboBox {{ background: {BG_INSET}; color: {PHOSPHOR_DIM};"
+                f" border: 1px solid {BORDER_DARK}; border-radius: 4px;"
+                f" padding: 2px 4px; font-size: 10px; }}"
+            )
+            add_combo.setFixedWidth(100)
+            add_combo.activated.connect(
+                lambda idx, cb=add_combo, r=run_id, s=sid:
+                self._on_add_tag(r, s, cb.currentText()) if idx > 0 else None
+            )
+            tag_row.addWidget(add_combo)
+            tag_row.addStretch()
+            pane_lo.addLayout(tag_row)
+
+            # ── Concern flags: individual Acknowledge/Dismiss buttons ──
+            for ci, c in enumerate(concerns):
+                passage = c.get("flagged_passage", "")[:100]
+                why = c.get("why_flagged", "")[:80]
+
+                concern_row = QHBoxLayout()
+                concern_row.setSpacing(4)
+                concern_lbl = QLabel(f"  \u26a0 {why}: \"{passage}...\"")
+                concern_lbl.setWordWrap(True)
+                concern_lbl.setStyleSheet(
+                    f"color: {ROSE_ACCENT}; font-size: 11px;"
+                    f" background: transparent; border: none;"
+                )
+                concern_row.addWidget(concern_lbl, 1)
+
+                ack_btn = QPushButton("Acknowledge")
+                ack_btn.setFixedHeight(20)
+                ack_btn.setStyleSheet(
+                    f"QPushButton {{ background: transparent; color: {TERM_GREEN};"
+                    f" border: 1px solid {TERM_GREEN}; border-radius: 3px;"
+                    f" font-size: 10px; padding: 1px 6px; }}"
+                    f"QPushButton:hover {{ background: rgba(114,184,90,0.15); }}"
+                )
+                ack_btn.clicked.connect(
+                    lambda _=False, r=run_id, s=sid, idx=ci:
+                    self._on_concern_action(r, s, idx, "acknowledge")
+                )
+                concern_row.addWidget(ack_btn)
+
+                dis_btn = QPushButton("Dismiss")
+                dis_btn.setFixedHeight(20)
+                dis_btn.setStyleSheet(
+                    f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
+                    f" border: 1px solid {PHOSPHOR_DIM}; border-radius: 3px;"
+                    f" font-size: 10px; padding: 1px 6px; }}"
+                    f"QPushButton:hover {{ background: rgba(90,60,8,0.15); }}"
+                )
+                dis_btn.clicked.connect(
+                    lambda _=False, r=run_id, s=sid, idx=ci:
+                    self._on_concern_action(r, s, idx, "dismiss")
+                )
+                concern_row.addWidget(dis_btn)
+                pane_lo.addLayout(concern_row)
+
+            # Notable quotes
+            for q in quotes[:2]:
+                text = q.get("text", "") if isinstance(q, dict) else ""
+                sig = q.get("significance", "") if isinstance(q, dict) else ""
+                if text:
+                    q_lbl = QLabel(f'  \u201c{text[:120]}...\u201d')
+                    q_lbl.setWordWrap(True)
+                    q_lbl.setStyleSheet(
+                        f"color: {PHOSPHOR_MID}; font-size: 11px; font-style: italic;"
+                        f" background: transparent; border: none;"
+                    )
+                    pane_lo.addWidget(q_lbl)
+                    if sig:
+                        s_lbl = QLabel(f"    {sig}")
+                        s_lbl.setStyleSheet(
+                            f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+                            f" background: transparent; border: none;"
+                        )
+                        pane_lo.addWidget(s_lbl)
+
+            # ── Teacher note: collapsible text area ──
+            note_btn = QPushButton(
+                f"{'▾' if existing_note else '▸'} Teacher Note"
+            )
+            note_btn.setStyleSheet(
+                f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
+                f" border: none; text-align: left; font-size: 10px;"
+                f" padding: 2px 0; }}"
+                f"QPushButton:hover {{ color: {PHOSPHOR_HOT}; }}"
+            )
+            note_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            note_te = QTextEdit()
+            note_te.setPlaceholderText("Add a note about this student's work...")
+            note_te.setMaximumHeight(50)
+            note_te.setVisible(bool(existing_note))
+            note_te.setPlainText(existing_note)
+            note_te.setStyleSheet(
+                f"QTextEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+                f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: 11px;"
+                f" font-family: 'Menlo', 'Consolas', monospace; padding: 4px; }}"
+                f"QTextEdit:focus {{ border-color: {BORDER_AMBER}; }}"
+            )
+
+            def _toggle_note(te=note_te, btn=note_btn):
+                v = not te.isVisible()
+                te.setVisible(v)
+                btn.setText(f"{'▾' if v else '▸'} Teacher Note")
+
+            note_btn.clicked.connect(_toggle_note)
+
+            # Auto-save on focus-out
+            class _NoteSaver(QObject):
+                def __init__(self, store, rid, stid, te_widget):
+                    super().__init__(te_widget)
+                    self.store = store
+                    self.rid = rid
+                    self.stid = stid
+                    self.te = te_widget
+                    self.te.installEventFilter(self)
+
+                def eventFilter(self, obj, event):
+                    from PySide6.QtCore import QEvent
+                    if obj is self.te and event.type() == QEvent.Type.FocusOut:
+                        text = self.te.toPlainText().strip()
+                        if self.store:
+                            self.store.update_coding_note(
+                                self.rid, self.stid, text
+                            )
+                    return False
+
+            saver = _NoteSaver(self._store, run_id, sid, note_te)
+            note_te._saver = saver  # prevent GC
+
+            pane_lo.addWidget(note_btn)
+            pane_lo.addWidget(note_te)
+
+            lo.addWidget(pane)
+
+        lo.addStretch()
+
+    # ------------------------------------------------------------------
+    # Themes layer
+    # ------------------------------------------------------------------
+
+    def _display_themes(self, run_id: str) -> None:
+        """Populate the Themes layer with interactive editing."""
+        lo = self._clear_scroll_layout(self._themes_scroll)
+        self._ensure_profile_mgr()
+
+        if not self._store:
+            lo.addWidget(_muted_label("No store available."))
+            lo.addStretch()
+            return
+
+        row = self._store.get_themes(run_id)
+
+        if not row or not row.get("theme_set"):
+            lo.addWidget(_muted_label("No themes generated. Run LLM analysis to populate."))
+            lo.addStretch()
+            return
+
+        try:
+            data = json.loads(row["theme_set"])
+        except Exception:
+            lo.addWidget(_muted_label("Error loading theme data."))
+            lo.addStretch()
+            return
+
+        themes = data.get("themes", [])
+        contradictions = data.get("contradictions", [])
+
+        # Header + merge button
+        header_row = QHBoxLayout()
+        header_row.addWidget(make_section_label(f"Themes  ({len(themes)} identified)"))
+        header_row.addStretch()
+
+        merge_btn = QPushButton("Merge Selected")
+        make_secondary_button(merge_btn)
+        merge_btn.setVisible(False)
+        header_row.addWidget(merge_btn)
+        lo.addLayout(header_row)
+        lo.addWidget(make_h_rule())
+
+        # Track merge checkboxes
+        merge_checks: List[tuple] = []  # (QCheckBox, theme_index)
+
+        for ti, t in enumerate(themes):
+            pane = make_content_pane(f"theme_{t.get('name', '')[:20].replace(' ', '_')}")
+            pane_lo = QVBoxLayout(pane)
+            pane_lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+            pane_lo.setSpacing(4)
+
+            freq = t.get("frequency", 0)
+            conf = t.get("confidence", 0)
+            conf_color = TERM_GREEN if conf >= 0.7 else (PHOSPHOR_MID if conf >= 0.4 else STATUS_WARN)
+
+            # ── Inline-editable name ──
+            name_row = QHBoxLayout()
+            name_row.setSpacing(4)
+
+            # Merge checkbox
+            cb = QCheckBox()
+            cb.setStyleSheet(f"QCheckBox {{ background: transparent; }}")
+            name_row.addWidget(cb)
+            merge_checks.append((cb, ti))
+
+            name_edit = QLineEdit(t.get("name", "Unnamed"))
+            name_edit.setStyleSheet(
+                f"QLineEdit {{ background: transparent; color: {PHOSPHOR_HOT};"
+                f" font-size: 13px; font-weight: bold; border: none;"
+                f" border-bottom: 1px solid transparent; }}"
+                f"QLineEdit:focus {{ background: {BG_INSET};"
+                f" border-bottom: 1px solid {BORDER_AMBER}; }}"
+            )
+            original_name = t.get("name", "")
+            name_edit.editingFinished.connect(
+                lambda ne=name_edit, orig=original_name, r=run_id:
+                self._on_theme_rename(r, orig, ne.text())
+            )
+            name_row.addWidget(name_edit, 1)
+
+            freq_lbl = QLabel(f"({freq} students)")
+            freq_lbl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+                f" background: transparent; border: none;"
+            )
+            name_row.addWidget(freq_lbl)
+            pane_lo.addLayout(name_row)
+
+            conf_lbl = QLabel(f"Confidence: {conf:.0%}")
+            conf_lbl.setStyleSheet(
+                f"color: {conf_color}; font-size: 10px;"
+                f" background: transparent; border: none;"
+            )
+            pane_lo.addWidget(conf_lbl)
+
+            desc = t.get("description", "")
+            if desc:
+                d_lbl = QLabel(desc)
+                d_lbl.setWordWrap(True)
+                d_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: 12px;"
+                    f" background: transparent; border: none;"
+                )
+                pane_lo.addWidget(d_lbl)
+
+            for q in t.get("supporting_quotes", [])[:3]:
+                text = q.get("text", "")
+                if text:
+                    q_lbl = QLabel(f'  \u201c{text[:150]}...\u201d')
+                    q_lbl.setWordWrap(True)
+                    q_lbl.setStyleSheet(
+                        f"color: {PHOSPHOR_MID}; font-size: 11px; font-style: italic;"
+                        f" background: transparent; border: none;"
+                    )
+                    pane_lo.addWidget(q_lbl)
+
+            # ── Action buttons: Split, Delete ──
+            btn_row = QHBoxLayout()
+            btn_row.addStretch()
+
+            split_btn = QPushButton("Split")
+            make_secondary_button(split_btn)
+            split_btn.clicked.connect(
+                lambda _=False, r=run_id, tname=original_name:
+                self._on_theme_split(r, tname)
+            )
+            btn_row.addWidget(split_btn)
+
+            del_btn = QPushButton("Delete")
+            del_btn.setStyleSheet(
+                f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
+                f" border: 1px solid {PHOSPHOR_DIM}; border-radius: 3px;"
+                f" font-size: 10px; padding: 2px 8px; }}"
+                f"QPushButton:hover {{ color: {BURN_RED}; border-color: {BURN_RED}; }}"
+            )
+            del_btn.clicked.connect(
+                lambda _=False, r=run_id, tname=original_name:
+                self._on_theme_delete(r, tname)
+            )
+            btn_row.addWidget(del_btn)
+            pane_lo.addLayout(btn_row)
+
+            lo.addWidget(pane)
+
+        # Wire merge button visibility
+        def _update_merge_vis():
+            checked = sum(1 for cb, _ in merge_checks if cb.isChecked())
+            merge_btn.setVisible(checked >= 2)
+
+        for cb, _ in merge_checks:
+            cb.stateChanged.connect(lambda _: _update_merge_vis())
+
+        merge_btn.clicked.connect(
+            lambda: self._on_theme_merge(
+                run_id,
+                [themes[ti].get("name", "") for cb, ti in merge_checks if cb.isChecked()],
+            )
+        )
+
+        # Contradictions
+        if contradictions:
+            lo.addWidget(make_section_label("Contradictions & Tensions"))
+            lo.addWidget(make_h_rule())
+            lo.addWidget(_muted_label(
+                "Opposing views \u2014 pedagogically productive tensions."
+            ))
+
+            for c in contradictions:
+                pane = make_content_pane("contradiction")
+                pane_lo = QVBoxLayout(pane)
+                pane_lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+                pane_lo.setSpacing(4)
+
+                desc_lbl = QLabel(c.get("description", ""))
+                desc_lbl.setWordWrap(True)
+                desc_lbl.setStyleSheet(
+                    f"color: {AMBER_BTN}; font-size: 12px; font-weight: bold;"
+                    f" background: transparent; border: none;"
+                )
+                pane_lo.addWidget(desc_lbl)
+
+                a_lbl = QLabel(f"  Side A: {c.get('side_a', '')} ({len(c.get('side_a_students', []))} students)")
+                a_lbl.setWordWrap(True)
+                a_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                    f" background: transparent; border: none;"
+                )
+                pane_lo.addWidget(a_lbl)
+
+                b_lbl = QLabel(f"  Side B: {c.get('side_b', '')} ({len(c.get('side_b_students', []))} students)")
+                b_lbl.setWordWrap(True)
+                b_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                    f" background: transparent; border: none;"
+                )
+                pane_lo.addWidget(b_lbl)
+
+                sig = c.get("pedagogical_significance", "")
+                if sig:
+                    s_lbl = QLabel(f"  Significance: {sig}")
+                    s_lbl.setWordWrap(True)
+                    s_lbl.setStyleSheet(
+                        f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+                        f" background: transparent; border: none;"
+                    )
+                    pane_lo.addWidget(s_lbl)
+
+                lo.addWidget(pane)
+
+        lo.addStretch()
+
+    # ------------------------------------------------------------------
+    # Outliers layer
+    # ------------------------------------------------------------------
+
+    def _display_outliers(self, run_id: str) -> None:
+        """Populate the Outliers layer with Add to Theme / Create Theme actions."""
+        lo = self._clear_scroll_layout(self._outliers_scroll)
+
+        if not self._store:
+            lo.addWidget(_muted_label("No store available."))
+            lo.addStretch()
+            return
+
+        row = self._store.get_themes(run_id)
+
+        if not row or not row.get("outlier_report"):
+            lo.addWidget(_muted_label("No outliers identified. Run LLM analysis to populate."))
+            lo.addStretch()
+            return
+
+        try:
+            outlier_data = json.loads(row["outlier_report"])
+        except Exception:
+            lo.addWidget(_muted_label("Error loading outlier data."))
+            lo.addStretch()
+            return
+
+        outliers = outlier_data.get("outliers", [])
+        if not outliers:
+            lo.addWidget(_muted_label("No outliers identified \u2014 all submissions matched themes."))
+            lo.addStretch()
+            return
+
+        # Get theme names for the combo
+        theme_names = []
+        if row.get("theme_set"):
+            try:
+                ts = json.loads(row["theme_set"])
+                theme_names = [t.get("name", "") for t in ts.get("themes", [])]
+            except Exception:
+                pass
+
+        lo.addWidget(make_section_label(f"Outliers  ({len(outliers)} submissions)"))
+        lo.addWidget(make_h_rule())
+        lo.addWidget(_muted_label(
+            "Submissions that don't fit the identified themes. "
+            "Often the most pedagogically important findings."
+        ))
+
+        for o in outliers:
+            sid = o.get("student_id", "")
+            pane = make_content_pane(f"outlier_{sid}")
+            pane_lo = QVBoxLayout(pane)
+            pane_lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+            pane_lo.setSpacing(4)
+
+            name_lbl = QLabel(o.get("student_name", "Unknown"))
+            name_lbl.setStyleSheet(
+                f"color: {PHOSPHOR_HOT}; font-size: 13px; font-weight: bold;"
+                f" background: transparent; border: none;"
+            )
+            pane_lo.addWidget(name_lbl)
+
+            why = o.get("why_notable", "")
+            if why:
+                w_lbl = QLabel(why)
+                w_lbl.setWordWrap(True)
+                w_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: 12px;"
+                    f" background: transparent; border: none;"
+                )
+                pane_lo.addWidget(w_lbl)
+
+            rel = o.get("relationship_to_themes", "")
+            if rel:
+                r_lbl = QLabel(f"Relationship to themes: {rel}")
+                r_lbl.setWordWrap(True)
+                r_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+                    f" background: transparent; border: none;"
+                )
+                pane_lo.addWidget(r_lbl)
+
+            quote = o.get("notable_quote")
+            if isinstance(quote, dict) and quote.get("text"):
+                q_lbl = QLabel(f'  \u201c{quote["text"][:150]}...\u201d')
+                q_lbl.setWordWrap(True)
+                q_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: 11px; font-style: italic;"
+                    f" background: transparent; border: none;"
+                )
+                pane_lo.addWidget(q_lbl)
+
+            rec = o.get("teacher_recommendation", "")
+            if rec:
+                rec_lbl = QLabel(f"Recommendation: {rec}")
+                rec_lbl.setStyleSheet(
+                    f"color: {AMBER_BTN}; font-size: 11px;"
+                    f" background: transparent; border: none;"
+                )
+                pane_lo.addWidget(rec_lbl)
+
+            # ── Action row: Add to Theme / Create Theme ──
+            action_row = QHBoxLayout()
+            action_row.addStretch()
+
+            add_combo = QComboBox()
+            add_combo.addItem("Add to Theme...")
+            for tn in theme_names:
+                add_combo.addItem(tn)
+            add_combo.setStyleSheet(
+                f"QComboBox {{ background: {BG_INSET}; color: {PHOSPHOR_DIM};"
+                f" border: 1px solid {BORDER_DARK}; border-radius: 4px;"
+                f" padding: 2px 4px; font-size: 10px; }}"
+            )
+            add_combo.setFixedWidth(150)
+            add_combo.activated.connect(
+                lambda idx, cb=add_combo, r=run_id, s=sid:
+                self._on_outlier_add_to_theme(r, s, cb.currentText())
+                if idx > 0 else None
+            )
+            action_row.addWidget(add_combo)
+
+            create_btn = QPushButton("Create Theme")
+            make_secondary_button(create_btn)
+            create_btn.clicked.connect(
+                lambda _=False, r=run_id, s=sid, sname=o.get("student_name", ""):
+                self._on_outlier_create_theme(r, s, sname)
+            )
+            action_row.addWidget(create_btn)
+            pane_lo.addLayout(action_row)
+
+            lo.addWidget(pane)
+
+        lo.addStretch()
+
+    # ------------------------------------------------------------------
+    # Report layer
+    # ------------------------------------------------------------------
+
+    def _display_report(self, run_id: str) -> None:
+        """Populate the Report layer with editable sections."""
+        lo = self._clear_scroll_layout(self._report_scroll)
+
+        if not self._store:
+            lo.addWidget(_muted_label("No store available."))
+            lo.addStretch()
+            return
+
+        row = self._store.get_themes(run_id)
+
+        if not row or not row.get("synthesis_report"):
+            lo.addWidget(_muted_label("No synthesis report. Run LLM analysis to populate."))
+            lo.addStretch()
+            return
+
+        try:
+            data = json.loads(row["synthesis_report"])
+        except Exception:
+            lo.addWidget(_muted_label("Error loading report data."))
+            lo.addStretch()
+            return
+
+        sections = data.get("sections", {})
+        confidence = data.get("confidence", 0)
+
+        # Store original for reset
+        self._report_original_sections = dict(sections)
+
+        # Confidence header
+        if confidence >= 0.7:
+            conf_text, conf_color = "HIGH", TERM_GREEN
+        elif confidence >= 0.4:
+            conf_text, conf_color = "MEDIUM", PHOSPHOR_MID
+        else:
+            conf_text, conf_color = "LOW", STATUS_WARN
+
+        header = QLabel(f"SYNTHESIS REPORT  \u00b7  Confidence: {conf_text}")
+        header.setStyleSheet(
+            f"color: {conf_color}; font-size: 14px; font-weight: bold;"
+            f" background: transparent; border: none;"
+        )
+        lo.addWidget(header)
+        lo.addWidget(make_h_rule())
+
+        section_titles = {
+            "what_students_said": "What Your Students Said",
+            "emergent_themes": "Emergent Themes",
+            "tensions_and_contradictions": "Tensions & Contradictions",
+            "surprises": "What Surprised the Analysis",
+            "focus_areas": "Your Focus Areas",
+            "concerns": "What Your Students Need You to See",
+            "divergent_approaches": "Divergent Approaches",
+            "looking_ahead": "Looking Ahead",
+            "students_to_check_in_with": "Students Carrying More Than Their Share",
+        }
+
+        self._report_editors: Dict[str, QTextEdit] = {}
+
+        for key, title in section_titles.items():
+            content = sections.get(key, "")
+            if not content:
+                continue
+
+            # Section header + edit/reset buttons
+            sec_row = QHBoxLayout()
+            sec_row.addWidget(make_section_label(title))
+            sec_row.addStretch()
+
+            edit_btn = QPushButton("Edit")
+            make_secondary_button(edit_btn)
+            sec_row.addWidget(edit_btn)
+
+            reset_btn = QPushButton("Reset")
+            reset_btn.setStyleSheet(
+                f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
+                f" border: 1px solid {PHOSPHOR_DIM}; border-radius: 3px;"
+                f" font-size: 10px; padding: 2px 6px; }}"
+                f"QPushButton:hover {{ color: {STATUS_WARN}; border-color: {STATUS_WARN}; }}"
+            )
+            reset_btn.setVisible(False)
+            sec_row.addWidget(reset_btn)
+            lo.addLayout(sec_row)
+
+            # Editable text area (starts read-only)
+            te = QTextEdit()
+            te.setPlainText(content)
+            te.setReadOnly(True)
+            te.setStyleSheet(
+                f"QTextEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+                f" border-radius: 4px; color: {PHOSPHOR_MID}; font-size: 12px;"
+                f" font-family: 'Menlo', 'Consolas', monospace; padding: 8px; }}"
+                f"QTextEdit:focus {{ border-color: {BORDER_AMBER}; }}"
+            )
+            te.setMinimumHeight(60)
+            te.setMaximumHeight(300)
+            lo.addWidget(te)
+            self._report_editors[key] = te
+
+            def _toggle_edit(
+                te_w=te, edit_b=edit_btn, reset_b=reset_btn,
+                sec_key=key, rid=run_id,
+            ):
+                is_ro = te_w.isReadOnly()
+                te_w.setReadOnly(not is_ro)
+                if is_ro:
+                    edit_b.setText("Save")
+                    reset_b.setVisible(True)
+                    te_w.setFocus()
+                else:
+                    edit_b.setText("Edit")
+                    reset_b.setVisible(False)
+                    self._on_report_section_save(rid, sec_key, te_w.toPlainText())
+
+            edit_btn.clicked.connect(_toggle_edit)
+
+            def _reset(
+                te_w=te, sec_key=key, edit_b=edit_btn, reset_b=reset_btn,
+            ):
+                original = self._report_original_sections.get(sec_key, "")
+                te_w.setPlainText(original)
+                te_w.setReadOnly(True)
+                edit_b.setText("Edit")
+                reset_b.setVisible(False)
+
+            reset_btn.clicked.connect(_reset)
+
+        # Export buttons
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+
+        export_md = QPushButton("Export Markdown")
+        make_secondary_button(export_md)
+        export_md.clicked.connect(lambda: self._export_report(run_id, "markdown"))
+        btn_row.addWidget(export_md)
+
+        export_anon = QPushButton("Export Anonymous")
+        make_secondary_button(export_anon)
+        export_anon.clicked.connect(lambda: self._export_report(run_id, "anonymous"))
+        btn_row.addWidget(export_anon)
+
+        lo.addLayout(btn_row)
+        lo.addStretch()
+
+    def _export_report(self, run_id: str, mode: str) -> None:
+        """Export the synthesis report as Markdown or anonymous version."""
+        if not self._store:
+            return
+        import json as _json
+        from PySide6.QtWidgets import QFileDialog
+
+        row = self._store.get_themes(run_id)
+        if not row or not row.get("synthesis_report"):
+            return
+
+        data = _json.loads(row["synthesis_report"])
+        sections = data.get("sections", {})
+
+        section_titles = {
+            "what_students_said": "What Your Students Said",
+            "emergent_themes": "Emergent Themes",
+            "tensions_and_contradictions": "Tensions & Contradictions",
+            "surprises": "What Surprised the Analysis",
+            "focus_areas": "Your Focus Areas",
+            "concerns": "What Your Students Need You to See",
+            "divergent_approaches": "Divergent Approaches",
+            "looking_ahead": "Looking Ahead",
+            "students_to_check_in_with": "Students Carrying More Than Their Share",
+        }
+
+        lines = ["# Insights Report\n"]
+        for key, title in section_titles.items():
+            content = sections.get(key, "")
+            if not content:
+                continue
+            if mode == "anonymous":
+                import re
+                content = re.sub(r'\b[A-Z][a-z]+ [A-Z][a-z]+\b', '[Student]', content)
+            lines.append(f"## {title}\n\n{content}\n")
+
+        text = "\n".join(lines)
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export Report", "", "Markdown (*.md)"
+        )
+        if path:
+            with open(path, "w") as f:
+                f.write(text)
+
+    # ------------------------------------------------------------------
+    # Feedback layer (Phase 4)
+    # ------------------------------------------------------------------
+
+    def _display_feedback(self, run_id: str) -> None:
+        """Populate the Feedback layer with the review queue."""
+        lo = self._clear_scroll_layout(self._feedback_scroll)
+        self._ensure_profile_mgr()
+
+        if not self._store:
+            lo.addWidget(_muted_label("No store available."))
+            lo.addStretch()
+            return
+
+        rows = self._store.get_feedback(run_id)
+        if not rows:
+            lo.addWidget(_muted_label(
+                "No feedback drafts. Enable 'Draft feedback' in setup and "
+                "run an LLM analysis to generate drafts."
+            ))
+            lo.addStretch()
+            return
+
+        # Count by status
+        counts = {"pending": 0, "approved": 0, "posted": 0,
+                  "rejected": 0, "manual": 0}
+        for r in rows:
+            conf = r.get("confidence") or 0.0
+            if conf < 0.6 and r.get("status") == "pending":
+                counts["manual"] += 1
+            else:
+                counts[r.get("status", "pending")] += 1
+
+        summary_parts = []
+        if counts["pending"]:
+            summary_parts.append(f"{counts['pending']} drafts ready")
+        if counts["approved"]:
+            summary_parts.append(f"{counts['approved']} approved")
+        if counts["posted"]:
+            summary_parts.append(f"{counts['posted']} posted")
+        if counts["rejected"]:
+            summary_parts.append(f"{counts['rejected']} rejected")
+        if counts["manual"]:
+            summary_parts.append(f"{counts['manual']} need manual review")
+
+        header = QLabel("DRAFT FEEDBACK")
+        header.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: 14px; font-weight: bold;"
+            f" background: transparent; border: none; letter-spacing: 2px;"
+        )
+        lo.addWidget(header)
+        lo.addWidget(_muted_label(
+            "Review before posting \u2014 each draft needs individual approval."
+        ))
+
+        summary_lbl = QLabel(" \u00b7 ".join(summary_parts))
+        summary_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_MID}; font-size: 12px;"
+            f" background: transparent; border: none; padding: 4px 0;"
+        )
+        lo.addWidget(summary_lbl)
+        lo.addWidget(make_h_rule())
+
+        # Post All Reviewed button (ONLY posts already-approved)
+        post_row = QHBoxLayout()
+        post_row.addStretch()
+        self._post_btn = QPushButton(
+            f"Post {counts['approved']} Approved to Canvas"
+            if counts["approved"] else "No Approved Drafts to Post"
+        )
+        self._post_btn.setEnabled(counts["approved"] > 0)
+        make_run_button(self._post_btn)
+        self._post_btn.clicked.connect(lambda: self._on_post_feedback(run_id))
+        post_row.addWidget(self._post_btn)
+        lo.addLayout(post_row)
+        lo.addWidget(make_h_rule())
+
+        for row in rows:
+            self._build_feedback_card(lo, run_id, row)
+
+        lo.addStretch()
+
+    def _build_feedback_card(
+        self, lo: QVBoxLayout, run_id: str, row: Dict,
+    ) -> None:
+        """Build one feedback review card."""
+        sid = row.get("student_id", "")
+        name = row.get("student_name", f"Student {sid}")
+        draft = row.get("draft_text", "")
+        status = row.get("status", "pending")
+        confidence = row.get("confidence") or 0.0
+        is_manual = confidence < 0.6 and status == "pending"
+
+        if status == "approved":
+            border_color = TERM_GREEN
+        elif status == "posted":
+            border_color = PHOSPHOR_DIM
+        elif status == "rejected":
+            border_color = PHOSPHOR_GLOW
+        elif is_manual:
+            border_color = ROSE_ACCENT
+        else:
+            border_color = BORDER_DARK
+
+        if confidence >= 0.7:
+            conf_text, conf_color = "HIGH", TERM_GREEN
+        elif confidence >= 0.4:
+            conf_text, conf_color = "MEDIUM", PHOSPHOR_MID
+        elif confidence > 0:
+            conf_text, conf_color = "LOW", STATUS_WARN
+        else:
+            conf_text, conf_color = "MANUAL REVIEW NEEDED", ROSE_ACCENT
+
+        pane = QFrame()
+        pn = f"fb_{sid}"
+        pane.setObjectName(pn)
+        pane.setStyleSheet(
+            f"QFrame#{pn} {{"
+            f"  background: {PANE_BG_GRADIENT};"
+            f"  border: 1px solid {border_color};"
+            f"  border-radius: 8px;"
+            f"}}"
+        )
+        pane_lo = QVBoxLayout(pane)
+        pane_lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+        pane_lo.setSpacing(4)
+
+        # Header: name + confidence
+        hdr = QHBoxLayout()
+        name_lbl = QLabel(name)
+        name_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: 13px; font-weight: bold;"
+            f" background: transparent; border: none;"
+        )
+        hdr.addWidget(name_lbl)
+        hdr.addStretch()
+        conf_lbl = QLabel(
+            f"confidence: {conf_text}" if status != "posted" else "POSTED"
+        )
+        conf_lbl.setStyleSheet(
+            f"color: {conf_color if status != 'posted' else PHOSPHOR_DIM};"
+            f" font-size: 10px; font-weight: bold;"
+            f" background: transparent; border: none;"
+        )
+        hdr.addWidget(conf_lbl)
+        pane_lo.addLayout(hdr)
+
+        # Posted: read-only, no actions
+        if status == "posted":
+            lbl = QLabel(row.get("approved_text") or draft)
+            lbl.setWordWrap(True)
+            lbl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: 12px;"
+                f" background: transparent; border: none; font-style: italic;"
+            )
+            pane_lo.addWidget(lbl)
+            lo.addWidget(pane)
+            return
+
+        # Manual review card
+        if is_manual:
+            self._build_manual_card(pane_lo, lo, pane, pn, run_id, sid, name, draft)
+            lo.addWidget(pane)
+            return
+
+        # Normal draft card
+        self._build_draft_card(
+            pane_lo, lo, pane, pn, run_id, sid, name, draft, status
+        )
+        lo.addWidget(pane)
+
+    def _build_manual_card(
+        self, pane_lo, parent_lo, pane, pn, run_id, sid, name, draft,
+    ) -> None:
+        """Manual review card: rose border, write-your-own."""
+        reason_lbl = QLabel(draft)
+        reason_lbl.setWordWrap(True)
+        reason_lbl.setStyleSheet(
+            f"color: {ROSE_ACCENT}; font-size: 12px;"
+            f" background: transparent; border: none;"
+        )
+        pane_lo.addWidget(reason_lbl)
+
+        te = QTextEdit()
+        te.setPlaceholderText("Write feedback for this student...")
+        te.setMaximumHeight(100)
+        te.setVisible(False)
+        te.setStyleSheet(
+            f"QTextEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: 12px;"
+            f" padding: 4px; }}"
+            f"QTextEdit:focus {{ border-color: {BORDER_AMBER}; }}"
+        )
+        pane_lo.addWidget(te)
+
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+
+        write_btn = QPushButton("Write Feedback")
+        make_secondary_button(write_btn)
+        btn_row.addWidget(write_btn)
+
+        save_btn = QPushButton("Save & Approve")
+        save_btn.setVisible(False)
+        make_run_button(save_btn)
+        btn_row.addWidget(save_btn)
+
+        skip_btn = QPushButton("Skip")
+        skip_btn.setStyleSheet(
+            f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
+            f" border: 1px solid {PHOSPHOR_DIM}; border-radius: 3px;"
+            f" font-size: 10px; padding: 2px 8px; }}"
+            f"QPushButton:hover {{ color: {PHOSPHOR_MID};"
+            f" border-color: {PHOSPHOR_MID}; }}"
+        )
+        btn_row.addWidget(skip_btn)
+        pane_lo.addLayout(btn_row)
+
+        def _show_write(t=te, wb=write_btn, sb=save_btn):
+            t.setVisible(True)
+            wb.setVisible(False)
+            sb.setVisible(True)
+            t.setFocus()
+
+        write_btn.clicked.connect(_show_write)
+
+        def _save(t=te, r=run_id, s=sid, n=name, p=pane, pname=pn):
+            text = t.toPlainText().strip()
+            if not text:
+                return
+            if len(text) > 10000:
+                self._show_toast(
+                    f"Feedback for {n} is {len(text):,} characters — "
+                    f"Canvas may reject comments over ~10,000. "
+                    f"Please shorten before saving."
+                )
+                return
+            if self._store:
+                self._store.update_feedback_text(r, s, text)
+                self._store.update_feedback_status(r, s, "approved", approved_text=text)
+                p.setStyleSheet(
+                    f"QFrame#{pname} {{ background: {PANE_BG_GRADIENT};"
+                    f" border: 1px solid {TERM_GREEN}; border-radius: 8px; }}"
+                )
+                self._show_toast(f"Approved: {n}")
+                self._invalidate_layers("feedback")
+
+        save_btn.clicked.connect(_save)
+        skip_btn.clicked.connect(
+            lambda _=False, r=run_id, s=sid: self._on_feedback_reject(r, s)
+        )
+
+    def _build_draft_card(
+        self, pane_lo, parent_lo, pane, pn, run_id, sid, name, draft, status,
+    ) -> None:
+        """Normal draft card with Edit / Approve / Reject / Preview."""
+        te = QTextEdit()
+        te.setPlainText(draft)
+        te.setReadOnly(True)
+        te.setMaximumHeight(120)
+        te.setStyleSheet(
+            f"QTextEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+            f" border-radius: 4px; color: {PHOSPHOR_MID}; font-size: 12px;"
+            f" padding: 6px; }}"
+            f"QTextEdit:focus {{ border-color: {BORDER_AMBER}; }}"
+        )
+        pane_lo.addWidget(te)
+
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+
+        edit_btn = QPushButton("Edit")
+        make_secondary_button(edit_btn)
+        btn_row.addWidget(edit_btn)
+
+        approve_btn = QPushButton("Approve" if status != "approved" else "Approved")
+        approve_btn.setEnabled(status != "approved")
+        approve_btn.setStyleSheet(
+            f"QPushButton {{ background: transparent; color: {TERM_GREEN};"
+            f" border: 1px solid {TERM_GREEN}; border-radius: 4px;"
+            f" font-size: 11px; padding: 4px 12px; font-weight: bold; }}"
+            f"QPushButton:hover {{ background: rgba(114,184,90,0.15); }}"
+        )
+        btn_row.addWidget(approve_btn)
+
+        reject_btn = QPushButton("Reject")
+        reject_btn.setEnabled(status != "rejected")
+        reject_btn.setStyleSheet(
+            f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
+            f" border: 1px solid {PHOSPHOR_DIM}; border-radius: 3px;"
+            f" font-size: 10px; padding: 3px 10px; }}"
+            f"QPushButton:hover {{ color: {BURN_RED}; border-color: {BURN_RED}; }}"
+        )
+        btn_row.addWidget(reject_btn)
+
+        preview_btn = QPushButton("Preview as Student")
+        preview_btn.setStyleSheet(
+            f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
+            f" border: 1px solid {PHOSPHOR_DIM}; border-radius: 3px;"
+            f" font-size: 10px; padding: 3px 10px; }}"
+            f"QPushButton:hover {{ color: {PHOSPHOR_MID};"
+            f" border-color: {PHOSPHOR_MID}; }}"
+        )
+        btn_row.addWidget(preview_btn)
+        pane_lo.addLayout(btn_row)
+
+        if status == "rejected":
+            te.setStyleSheet(
+                f"QTextEdit {{ background: {BG_INSET};"
+                f" border: 1px solid {PHOSPHOR_GLOW}; border-radius: 4px;"
+                f" color: {PHOSPHOR_DIM}; font-size: 12px; padding: 6px; }}"
+            )
+
+        # Wire edit toggle
+        def _toggle_edit(
+            t=te, eb=edit_btn, r=run_id, s=sid, n=name,
+            p=pane, pname=pn, orig=draft,
+        ):
+            is_ro = t.isReadOnly()
+            t.setReadOnly(not is_ro)
+            if is_ro:
+                eb.setText("Save")
+                t.setFocus()
+                t.setStyleSheet(
+                    f"QTextEdit {{ background: {BG_INSET};"
+                    f" border: 1px solid {BORDER_AMBER}; border-radius: 4px;"
+                    f" color: {PHOSPHOR_HOT}; font-size: 12px; padding: 6px; }}"
+                )
+            else:
+                eb.setText("Edit")
+                new_text = t.toPlainText().strip()
+                t.setStyleSheet(
+                    f"QTextEdit {{ background: {BG_INSET};"
+                    f" border: 1px solid {BORDER_DARK}; border-radius: 4px;"
+                    f" color: {PHOSPHOR_MID}; font-size: 12px; padding: 6px; }}"
+                )
+                if new_text != orig and self._store:
+                    self._store.update_feedback_text(r, s, new_text)
+                    self._store.save_calibration(
+                        (self._profile_mgr._profile_id
+                         if self._profile_mgr else "default"),
+                        "",
+                        json.dumps({"feedback": orig}),
+                        json.dumps({"feedback": new_text}),
+                        "feedback_edit",
+                    )
+                    self._show_toast(f"Saved edit for {n}")
+
+        edit_btn.clicked.connect(_toggle_edit)
+
+        # Wire approve
+        def _approve(
+            t=te, r=run_id, s=sid, n=name,
+            ab=approve_btn, p=pane, pname=pn,
+        ):
+            text = t.toPlainText().strip()
+            if not text:
+                return
+            # Canvas comment length guard (~10K chars safe limit)
+            if len(text) > 10000:
+                self._show_toast(
+                    f"Feedback for {n} is {len(text):,} characters — "
+                    f"Canvas may reject comments over ~10,000. "
+                    f"Please shorten before approving."
+                )
+                return
+            if self._store:
+                self._store.update_feedback_status(r, s, "approved", approved_text=text)
+                ab.setText("Approved")
+                ab.setEnabled(False)
+                p.setStyleSheet(
+                    f"QFrame#{pname} {{ background: {PANE_BG_GRADIENT};"
+                    f" border: 1px solid {TERM_GREEN}; border-radius: 8px; }}"
+                )
+                self._show_toast(f"Approved: {n}")
+
+        approve_btn.clicked.connect(_approve)
+
+        reject_btn.clicked.connect(
+            lambda _=False, r=run_id, s=sid: self._on_feedback_reject(r, s)
+        )
+        preview_btn.clicked.connect(
+            lambda _=False, t=te, n=name: self._preview_as_student(n, t.toPlainText())
+        )
+
+    def _on_feedback_reject(self, run_id: str, student_id: str) -> None:
+        """Reject a feedback draft."""
+        if self._store:
+            self._store.update_feedback_status(run_id, student_id, "rejected")
+            self._invalidate_layers("feedback")
+            self._show_toast("Feedback rejected.")
+
+    def _preview_as_student(self, student_name: str, text: str) -> None:
+        """Show ONLY what the student sees. No metadata, no flags."""
+        dlg = QDialog(self)
+        dlg.setWindowTitle(f"Student View: {student_name}")
+        dlg.setMinimumWidth(500)
+        dlg.setStyleSheet("QDialog { background: #ffffff; }")
+        dlo = QVBoxLayout(dlg)
+        dlo.setContentsMargins(24, 24, 24, 24)
+        dlo.setSpacing(12)
+
+        hdr = QLabel("Teacher comment on your submission:")
+        hdr.setStyleSheet(
+            "color: #333333; font-size: 13px; font-weight: bold;"
+            " background: transparent; border: none;"
+        )
+        dlo.addWidget(hdr)
+
+        body = QLabel(text)
+        body.setWordWrap(True)
+        body.setStyleSheet(
+            "color: #2d3b45; font-size: 13px; line-height: 1.5;"
+            " background: #f5f5f5; border: 1px solid #c7cdd1;"
+            " border-radius: 4px; padding: 12px;"
+            " font-family: 'Lato', 'Helvetica Neue', sans-serif;"
+        )
+        dlo.addWidget(body)
+
+        note = QLabel(
+            "This is what the student will see. No metadata, "
+            "no analytical labels, no concern flags."
+        )
+        note.setStyleSheet(
+            "color: #999999; font-size: 10px; background: transparent;"
+            " border: none;"
+        )
+        dlo.addWidget(note)
+
+        bb = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        bb.rejected.connect(dlg.reject)
+        dlo.addWidget(bb)
+        dlg.exec()
+
+    def _on_post_feedback(self, run_id: str) -> None:
+        """Post approved feedback to Canvas after confirmation."""
+        if not self._store or not self._api:
+            self._show_toast("Canvas API not configured.")
+            return
+
+        approved = self._store.get_approved_feedback(run_id)
+        n = len(approved)
+        if n == 0:
+            self._show_toast("No approved drafts to post.")
+            return
+
+        # Pre-post length check
+        too_long = []
+        for fb in approved:
+            text = fb.get("approved_text") or fb.get("draft_text") or ""
+            if len(text) > 10000:
+                too_long.append(fb.get("student_name", "Unknown"))
+        if too_long:
+            names = ", ".join(too_long[:5])
+            self._show_toast(
+                f"Cannot post — feedback too long for: {names}. "
+                f"Edit to under 10,000 characters."
+            )
+            return
+
+        run = self._store.get_run(run_id)
+        if not run:
+            return
+        course_id = run.get("course_id", "")
+        assignment_id = run.get("assignment_id", "")
+
+        # Confirmation — cannot be undone
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Confirm Post")
+        dlg.setStyleSheet(
+            f"QDialog {{ background: {BG_CARD}; }}"
+            f"QLabel {{ color: {PHOSPHOR_MID}; background: transparent;"
+            f" border: none; }}"
+        )
+        dlo = QVBoxLayout(dlg)
+        dlo.addWidget(QLabel(
+            f"Post feedback for {n} student{'s' if n != 1 else ''} "
+            f"to Canvas?\n\nThis cannot be undone."
+        ))
+        bb = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok
+            | QDialogButtonBox.StandardButton.Cancel
+        )
+        bb.button(QDialogButtonBox.StandardButton.Ok).setText("Post")
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        dlo.addWidget(bb)
+
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        from gui.workers import FeedbackPostWorker
+        self._post_worker = FeedbackPostWorker(
+            self._api,
+            store=self._store,
+            run_id=run_id,
+            course_id=course_id,
+            assignment_id=assignment_id,
+        )
+        self._post_worker.post_progress.connect(
+            lambda msg: self._show_toast(msg)
+        )
+        self._post_worker.post_complete.connect(self._on_post_complete)
+        self._post_worker.error.connect(
+            lambda msg: self._show_toast(f"Post error: {msg}")
+        )
+        self._post_worker.start()
+        self._show_toast("Posting feedback...")
+
+    def _on_post_complete(self, success: int, fail: int) -> None:
+        msg = f"Posted {success} comment{'s' if success != 1 else ''}."
+        if fail:
+            msg += f" {fail} failed."
+        self._show_toast(msg)
+        self._invalidate_layers("feedback")
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def refresh_courses(
+        self,
+        courses_by_term: list,
+        assignments_cache: Optional[dict] = None,
+    ) -> None:
+        """Populate the course/assignment selection lists.
+
+        courses_by_term: [(term_id, term_name, is_current, [course_dicts])]
+        assignments_cache: {course_id: [assignment_group_dicts]}
+        """
+        self._courses_by_term = courses_by_term
+        if assignments_cache:
+            self._assignments_cache = assignments_cache
+
+        self._course_rows.clear()
+
+        content = QWidget()
+        content.setStyleSheet(f"background: {BG_INSET};")
+        content_lo = QVBoxLayout(content)
+        content_lo.setContentsMargins(0, 2, 0, 4)
+        content_lo.setSpacing(0)
+
+        for term_id, term_name, is_current, courses in courses_by_term:
+            section = _TermSection(term_name, is_current)
+            for c in courses:
+                row = _CourseRow(c)
+                row.toggled.connect(self._on_course_row_toggled)
+                self._course_rows.append(row)
+                section.add_course_row(row)
+            content_lo.addWidget(section)
+
+        content_lo.addStretch()
+        if self._course_scroll is not None:
+            self._course_scroll.setWidget(content)
+
+        # Clear assignments since no courses are checked yet
+        self._assign_rows.clear()
+        if self._assign_scroll is not None:
+            _empty = QWidget()
+            _empty.setStyleSheet(f"background: {BG_INSET};")
+            self._assign_scroll.setWidget(_empty)
+        self._update_summary()
+
+    def show_review(self, run_id: str) -> None:
+        """Switch to review state and display the given run."""
+        self._refresh_run_sidebar()
+        self._state_stack.setCurrentIndex(2)
+        # Select the run in the sidebar
+        for i in range(self._run_list.count()):
+            item = self._run_list.item(i)
+            if item.data(Qt.ItemDataRole.UserRole) == run_id:
+                self._run_list.setCurrentRow(i)
+                break
+
+    # ------------------------------------------------------------------
+    # Signal handlers
+    # ------------------------------------------------------------------
+
+    def _on_course_row_toggled(self, course_id: int, checked: bool) -> None:
+        """When a course row is checked/unchecked, rebuild the assignment list."""
+        self._refresh_assignment_list()
+        self._update_summary()
+
+    def _on_assign_view_changed(self, mode: str) -> None:
+        """Switch between deadline and group view."""
+        self._assign_view_mode = mode
+        self._refresh_assignment_list()
+        self._update_summary()
+
+    def _qs_select_this_week(self, _: bool) -> None:
+        """Check all 'due this week' assignments."""
+        for row in self._assign_rows:
+            is_week = _classify_deadline(row.assign_dict.get("due_at", "")) == "WEEK"
+            row.set_checked(is_week)
+        self._update_summary()
+
+    def _qs_select_past_due(self, _: bool) -> None:
+        """Check all past-due assignments."""
+        for row in self._assign_rows:
+            is_past = _classify_deadline(row.assign_dict.get("due_at", "")) == "PAST"
+            row.set_checked(is_past)
+        self._update_summary()
+
+    def _qs_select_with_submissions(self, _: bool) -> None:
+        """Check all assignments that have submitted (or ungraded) submissions."""
+        for row in self._assign_rows:
+            a = row.assign_dict
+            has_subs = bool(
+                a.get("has_submitted_submissions")
+                or a.get("needs_grading_count", 0) > 0
+            )
+            row.set_checked(has_subs)
+        self._update_summary()
+
+    def _refresh_assignment_list(self) -> None:
+        """Rebuild assignment rows for all checked courses (deadline or group view)."""
+        self._assign_rows.clear()
+
+        # Collect (course, assignment) pairs for checked courses
+        pairs: list = []
+        for row in self._course_rows:
+            if not row.is_checked():
+                continue
+            course = row._course
+            cid    = course.get("id")
+            groups = self._assignments_cache.get(cid, [])
+            for group in groups:
+                for a in group.get("assignments", []):
+                    pairs.append((course, a, group.get("name", "Assignments")))
+
+        # Determine whether to show course pill (multi-course selection)
+        checked_course_ids = {row._course.get("id") for row in self._course_rows if row.is_checked()}
+        show_pill = len(checked_course_ids) > 1
+
+        content = QWidget()
+        content.setStyleSheet(f"background: {BG_INSET};")
+        content_lo = QVBoxLayout(content)
+        content_lo.setContentsMargins(0, 2, 0, 4)
+        content_lo.setSpacing(0)
+
+        if self._assign_view_mode == "deadline":
+            self._build_deadline_view(content_lo, pairs, show_pill)
+        else:
+            self._build_group_view(content_lo, pairs, show_pill)
+
+        content_lo.addStretch()
+        if self._assign_scroll is not None:
+            self._assign_scroll.setWidget(content)
+
+        # Fetch submission counts in background
+        self._fetch_submission_counts()
+
+    def _build_deadline_view(self, lo: QVBoxLayout, pairs: list, show_pill: bool) -> None:
+        """Build the deadline-grouped assignment list."""
+        _SECTION_META = [
+            ("PAST",   "DEADLINE PASSED", _PAST_COLOR),
+            ("WEEK",   "DUE THIS WEEK",   _WEEK_COLOR),
+            ("FUTURE", "UPCOMING",         _FUTURE_COLOR),
+            ("NONE",   "NO DEADLINE",      _NONE_COLOR),
+        ]
+        buckets: dict = {k: [] for k, _, _ in _SECTION_META}
+        for course, a, _group_name in pairs:
+            key = _classify_deadline(a.get("due_at", ""))
+            buckets[key].append((course, a))
+
+        for key, label, color in _SECTION_META:
+            items = buckets[key]
+            if not items:
+                continue
+            lo.addWidget(_DeadlineSection(label, color))
+            for course, a in items:
+                pill = (course.get("course_code") or course.get("code", ""))[:8] if show_pill else ""
+                arow = _AssignRow(course, a, course_pill=pill)
+                arow.toggled.connect(self._update_summary)
+                self._assign_rows.append(arow)
+                lo.addWidget(arow)
+            lo.addSpacing(4)
+
+    def _build_group_view(self, lo: QVBoxLayout, pairs: list, show_pill: bool) -> None:
+        """Build the assignment-group-grouped list with collapsible sections."""
+        # Preserve insertion order of groups
+        group_order: list = []
+        groups: dict = {}
+        for course, a, group_name in pairs:
+            key = group_name
+            if key not in groups:
+                group_order.append(key)
+                groups[key] = []
+            groups[key].append((course, a))
+
+        for group_name in group_order:
+            section = _GroupSection(group_name)
+            for course, a in groups[group_name]:
+                pill = (course.get("course_code") or course.get("code", ""))[:8] if show_pill else ""
+                arow = _AssignRow(course, a, course_pill=pill)
+                arow.toggled.connect(self._update_summary)
+                self._assign_rows.append(arow)
+                section.add_row(arow)
+            lo.addWidget(section)
+
+    def _update_summary(self) -> None:
+        """Update the footer summary text."""
+        checked = self._get_checked_assignments()
+        courses = set()
+        for c, a in checked:
+            courses.add(c.get("id"))
+        n_assign = len(checked)
+        n_courses = len(courses)
+        if n_assign:
+            tier = self._depth_toggle.mode
+            tier_hint = {
+                "quick": " \u00b7 instant results, no model needed",
+                "lightweight": " \u00b7 best run overnight (8B model)",
+                "medium": " \u00b7 ~70B model or institutional API",
+                "deep_thinking": " \u00b7 frontier model (institutional API)",
+            }.get(tier, "")
+
+            # Quick estimate of total students from checked assignments
+            total_students = 0
+            for c, a in checked:
+                # Try cached count first
+                ngc = a.get("needs_grading_count")
+                if ngc is not None:
+                    total_students += int(ngc)
+                else:
+                    # Estimate from enrollment if available
+                    total_students += c.get("total_students", 0)
+
+            student_text = ""
+            if total_students > 0:
+                student_text = f" \u00b7 ~{total_students} students"
+
+            self._setup_summary.setText(
+                f"{n_assign} assignment{'s' if n_assign != 1 else ''} "
+                f"across {n_courses} course{'s' if n_courses != 1 else ''}"
+                f"{student_text}{tier_hint}"
+            )
+            self._start_btn.setEnabled(True)
+        else:
+            self._setup_summary.setText("Select assignments to analyze.")
+            self._start_btn.setEnabled(False)
+
+    def _get_checked_assignments(self) -> List[tuple]:
+        """Return [(course_dict, assignment_dict), ...] for checked rows."""
+        return [
+            (r.course_dict, r.assign_dict)
+            for r in self._assign_rows
+            if r.is_checked()
+        ]
+
+    # ------------------------------------------------------------------
+    # Profile manager + toast + invalidation + edit handlers
+    # ------------------------------------------------------------------
+
+    def _ensure_profile_mgr(self) -> None:
+        """Lazily initialize the TeacherProfileManager."""
+        if self._profile_mgr is None and self._store:
+            from insights.teacher_profile import TeacherProfileManager
+            self._profile_mgr = TeacherProfileManager(self._store)
+
+    def _show_toast(self, msg: str) -> None:
+        """Show a temporary overlay message that fades after 3 seconds."""
+        toast = QLabel(msg, self)
+        toast.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        toast.setStyleSheet(
+            f"QLabel {{ background: {BG_CARD}; color: {PHOSPHOR_HOT};"
+            f" border: 1px solid {BORDER_AMBER}; border-radius: 6px;"
+            f" font-size: 12px; padding: 8px 16px; }}"
+        )
+        toast.adjustSize()
+        toast.move(
+            self.width() // 2 - toast.width() // 2,
+            self.height() - toast.height() - 40,
+        )
+        toast.show()
+        QTimer.singleShot(3000, toast.deleteLater)
+
+    def _invalidate_layers(self, *names: str) -> None:
+        """Clear named layers from cache. Reloads if currently visible."""
+        for name in names:
+            self._loaded_layers.discard(name)
+        # Reload the currently visible layer if invalidated
+        current_mode = getattr(self, "_layer_toggle", None)
+        if current_mode:
+            mode = current_mode.mode
+            if mode in names:
+                self._load_layer(mode)
+
+    def _trigger_partial_rerun(self, start_stage: str) -> None:
+        """Launch a PartialRerunWorker for downstream re-generation."""
+        run_id = self._current_run_id
+        if not run_id or not self._store:
+            return
+
+        from gui.workers import PartialRerunWorker
+        self._rerun_worker = PartialRerunWorker(
+            self._api,
+            run_id=run_id,
+            start_stage=start_stage,
+            store=self._store,
+            settings=self._get_settings(),
+        )
+        self._rerun_worker.progress_update.connect(
+            lambda msg: self._show_toast(msg)
+        )
+        self._rerun_worker.rerun_complete.connect(self._on_rerun_complete)
+        self._rerun_worker.error.connect(
+            lambda msg: self._show_toast(f"Re-run error: {msg}")
+        )
+        self._rerun_worker.start()
+        self._show_toast(f"Re-running from {start_stage}...")
+
+    def _on_rerun_complete(self, run_id: str, stages: list) -> None:
+        """Handle partial rerun completion — invalidate downstream layers."""
+        stage_to_layer = {
+            "themes": "themes",
+            "outliers": "outliers",
+            "synthesis": "report",
+        }
+        layers = [stage_to_layer.get(s, s) for s in stages]
+        self._invalidate_layers(*layers)
+        self._show_toast("Re-run complete.")
+
+    # ── Tag edit handlers ──
+
+    def _on_remove_tag(self, run_id: str, student_id: str, tag: str) -> None:
+        """Remove a theme tag from a student's coding record."""
+        if not self._store:
+            return
+        row = self._store.get_coding_record(run_id, student_id)
+        if not row:
+            return
+        record = row.get("coding_record", {})
+        if isinstance(record, str):
+            record = json.loads(record)
+        tags = record.get("theme_tags", [])
+        if tag in tags:
+            tags.remove(tag)
+        record["theme_tags"] = tags
+        edits = row.get("teacher_edits") or {}
+        if isinstance(edits, str):
+            edits = json.loads(edits)
+        edits.setdefault("tag_removals", []).append(tag)
+
+        record_json = json.dumps(record)
+        self._store.update_coding_tags(run_id, student_id, record_json, edits)
+
+        # Calibration
+        self._store.save_calibration(
+            self._profile_mgr._profile_id if self._profile_mgr else "default",
+            "", json.dumps({"theme_tags": tags + [tag]}),
+            json.dumps({"theme_tags": tags}), "tag_remove",
+        )
+        if self._profile_mgr:
+            self._profile_mgr.record_tag_edit(student_id, [], [tag])
+
+        self._invalidate_layers("codings")
+        self._trigger_partial_rerun("themes")
+        self._show_toast(f"Removed tag: {tag}")
+
+    def _on_add_tag(self, run_id: str, student_id: str, tag: str) -> None:
+        """Add a theme tag to a student's coding record."""
+        if not self._store or tag == "+ tag":
+            return
+        row = self._store.get_coding_record(run_id, student_id)
+        if not row:
+            return
+        record = row.get("coding_record", {})
+        if isinstance(record, str):
+            record = json.loads(record)
+        tags = record.get("theme_tags", [])
+        if tag not in tags:
+            tags.append(tag)
+        record["theme_tags"] = tags
+        edits = row.get("teacher_edits") or {}
+        if isinstance(edits, str):
+            edits = json.loads(edits)
+        edits.setdefault("tag_additions", []).append(tag)
+
+        record_json = json.dumps(record)
+        self._store.update_coding_tags(run_id, student_id, record_json, edits)
+
+        self._store.save_calibration(
+            self._profile_mgr._profile_id if self._profile_mgr else "default",
+            "", json.dumps({"theme_tags": [t for t in tags if t != tag]}),
+            json.dumps({"theme_tags": tags}), "tag_add",
+        )
+        if self._profile_mgr:
+            self._profile_mgr.record_tag_edit(student_id, [tag], [])
+
+        self._invalidate_layers("codings")
+        self._trigger_partial_rerun("themes")
+        self._show_toast(f"Added tag: {tag}")
+
+    # ── Concern action handlers ──
+
+    def _on_concern_action(
+        self, run_id: str, student_id: str, concern_idx: int, action: str,
+    ) -> None:
+        """Handle Acknowledge or Dismiss on a concern. NEVER batchable."""
+        if not self._store:
+            return
+        row = self._store.get_coding_record(run_id, student_id)
+        if not row:
+            return
+        record = row.get("coding_record", {})
+        if isinstance(record, str):
+            record = json.loads(record)
+        concerns = record.get("concerns", [])
+        if concern_idx >= len(concerns):
+            return
+
+        concern = concerns[concern_idx]
+        edits = row.get("teacher_edits") or {}
+        if isinstance(edits, str):
+            edits = json.loads(edits)
+
+        if action == "dismiss":
+            concerns.pop(concern_idx)
+            edits.setdefault("concerns_dismissed", []).append(
+                concern.get("flagged_passage", "")[:60]
+            )
+        else:
+            concern["teacher_acknowledged"] = True
+            edits.setdefault("concerns_acknowledged", []).append(
+                concern.get("flagged_passage", "")[:60]
+            )
+
+        record["concerns"] = concerns
+        record_json = json.dumps(record)
+        self._store.update_coding_concerns(run_id, student_id, record_json, edits)
+
+        # Profile calibration
+        if self._profile_mgr:
+            self._profile_mgr.record_concern_action(
+                concern.get("why_flagged", ""), action
+            )
+        self._store.save_calibration(
+            self._profile_mgr._profile_id if self._profile_mgr else "default",
+            "", "", json.dumps(concern),
+            f"concern_{action}",
+        )
+
+        self._invalidate_layers("codings")
+        self._show_toast(
+            f"Concern {'acknowledged' if action == 'acknowledge' else 'dismissed'}."
+        )
+
+    # ── Theme edit handlers ──
+
+    def _on_theme_rename(self, run_id: str, old_name: str, new_name: str) -> None:
+        """Rename a theme in the theme set."""
+        if not self._store or old_name == new_name or not new_name.strip():
+            return
+        row = self._store.get_themes(run_id)
+        if not row or not row.get("theme_set"):
+            return
+        data = json.loads(row["theme_set"])
+        for t in data.get("themes", []):
+            if t.get("name") == old_name:
+                t["name"] = new_name.strip()
+                break
+        edits = {"renames": {old_name: new_name.strip()}}
+        self._store.update_theme_set(run_id, json.dumps(data), edits)
+
+        if self._profile_mgr:
+            self._profile_mgr.record_theme_rename(old_name, new_name.strip())
+        self._store.save_calibration(
+            self._profile_mgr._profile_id if self._profile_mgr else "default",
+            "", json.dumps({"name": old_name}),
+            json.dumps({"name": new_name.strip()}), "theme_rename",
+        )
+
+        self._invalidate_layers("themes")
+        self._trigger_partial_rerun("outliers")
+        self._show_toast(f"Renamed: {old_name} \u2192 {new_name.strip()}")
+
+    def _on_theme_split(self, run_id: str, theme_name: str) -> None:
+        """Open a dialog to split a theme into children."""
+        dlg = QDialog(self)
+        dlg.setWindowTitle(f"Split: {theme_name}")
+        dlg.setStyleSheet(
+            f"QDialog {{ background: {BG_CARD}; }}"
+            f"QLabel {{ color: {PHOSPHOR_MID}; background: transparent; border: none; }}"
+        )
+        lo = QVBoxLayout(dlg)
+        lo.addWidget(QLabel(f"Split \"{theme_name}\" into sub-themes.\nEnter one name per line:"))
+        te = QTextEdit()
+        te.setStyleSheet(
+            f"QTextEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: 12px;"
+            f" font-family: 'Menlo', 'Consolas', monospace; padding: 4px; }}"
+        )
+        te.setMaximumHeight(100)
+        lo.addWidget(te)
+        bb = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        lo.addWidget(bb)
+
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            children = [
+                line.strip() for line in te.toPlainText().split("\n")
+                if line.strip()
+            ]
+            if len(children) >= 2:
+                self._apply_theme_split(run_id, theme_name, children)
+
+    def _apply_theme_split(
+        self, run_id: str, original: str, children: List[str],
+    ) -> None:
+        """Replace a theme with its children in the theme set."""
+        if not self._store:
+            return
+        row = self._store.get_themes(run_id)
+        if not row or not row.get("theme_set"):
+            return
+        data = json.loads(row["theme_set"])
+        themes = data.get("themes", [])
+
+        # Find original and split it
+        original_theme = None
+        new_themes = []
+        for t in themes:
+            if t.get("name") == original:
+                original_theme = t
+            else:
+                new_themes.append(t)
+
+        if original_theme:
+            for child_name in children:
+                new_themes.append({
+                    "name": child_name,
+                    "description": f"Sub-theme of: {original}",
+                    "frequency": 0,
+                    "student_ids": [],
+                    "supporting_quotes": [],
+                    "confidence": original_theme.get("confidence", 0.5),
+                    "sub_themes": None,
+                })
+        data["themes"] = new_themes
+        edits = {"splits": {original: children}}
+        self._store.update_theme_set(run_id, json.dumps(data), edits)
+
+        if self._profile_mgr:
+            self._profile_mgr.record_theme_split(original, children)
+
+        self._invalidate_layers("themes")
+        self._trigger_partial_rerun("outliers")
+        self._show_toast(f"Split \"{original}\" into {len(children)} themes")
+
+    def _on_theme_delete(self, run_id: str, theme_name: str) -> None:
+        """Delete a theme from the theme set."""
+        if not self._store:
+            return
+        row = self._store.get_themes(run_id)
+        if not row or not row.get("theme_set"):
+            return
+        data = json.loads(row["theme_set"])
+        data["themes"] = [
+            t for t in data.get("themes", [])
+            if t.get("name") != theme_name
+        ]
+        edits = {"deletions": [theme_name]}
+        self._store.update_theme_set(run_id, json.dumps(data), edits)
+
+        # Profile calibration
+        if self._profile_mgr:
+            self._profile_mgr.record_theme_delete(theme_name)
+        self._store.save_calibration(
+            self._profile_mgr._profile_id if self._profile_mgr else "default",
+            "", json.dumps({"theme": theme_name}), "",
+            "theme_delete",
+        )
+
+        self._invalidate_layers("themes")
+        self._trigger_partial_rerun("outliers")
+        self._show_toast(f"Deleted theme: {theme_name}")
+
+    def _on_theme_merge(self, run_id: str, theme_names: List[str]) -> None:
+        """Merge selected themes into one. Prompts for target name."""
+        if not self._store or len(theme_names) < 2:
+            return
+
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Merge Themes")
+        dlg.setStyleSheet(
+            f"QDialog {{ background: {BG_CARD}; }}"
+            f"QLabel {{ color: {PHOSPHOR_MID}; background: transparent; border: none; }}"
+        )
+        lo = QVBoxLayout(dlg)
+        lo.addWidget(QLabel(f"Merging: {', '.join(theme_names)}"))
+        lo.addWidget(QLabel("Name for merged theme:"))
+        name_edit = QLineEdit(theme_names[0])
+        name_edit.setStyleSheet(
+            f"QLineEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: 12px;"
+            f" padding: 4px; }}"
+        )
+        lo.addWidget(name_edit)
+        bb = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        lo.addWidget(bb)
+
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        target_name = name_edit.text().strip() or theme_names[0]
+        row = self._store.get_themes(run_id)
+        if not row or not row.get("theme_set"):
+            return
+        data = json.loads(row["theme_set"])
+
+        merged_sids = []
+        merged_quotes = []
+        merged_freq = 0
+        new_themes = []
+        for t in data.get("themes", []):
+            if t.get("name") in theme_names:
+                merged_sids.extend(t.get("student_ids", []))
+                merged_quotes.extend(t.get("supporting_quotes", []))
+                merged_freq += t.get("frequency", 0)
+            else:
+                new_themes.append(t)
+
+        new_themes.append({
+            "name": target_name,
+            "description": f"Merged from: {', '.join(theme_names)}",
+            "frequency": merged_freq,
+            "student_ids": list(set(merged_sids)),
+            "supporting_quotes": merged_quotes[:6],
+            "confidence": 0.7,
+            "sub_themes": theme_names,
+        })
+        data["themes"] = new_themes
+        edits = {"merges": {"sources": theme_names, "target": target_name}}
+        self._store.update_theme_set(run_id, json.dumps(data), edits)
+
+        if self._profile_mgr:
+            self._profile_mgr.record_theme_merge(theme_names, target_name)
+
+        self._invalidate_layers("themes")
+        self._trigger_partial_rerun("outliers")
+        self._show_toast(f"Merged {len(theme_names)} themes \u2192 {target_name}")
+
+    # ── Outlier edit handlers ──
+
+    def _on_outlier_add_to_theme(
+        self, run_id: str, student_id: str, theme_name: str,
+    ) -> None:
+        """Move an outlier student into an existing theme."""
+        if not self._store:
+            return
+        row = self._store.get_themes(run_id)
+        if not row:
+            return
+
+        # Add student to theme
+        if row.get("theme_set"):
+            ts_data = json.loads(row["theme_set"])
+            for t in ts_data.get("themes", []):
+                if t.get("name") == theme_name:
+                    sids = t.get("student_ids", [])
+                    if student_id not in sids:
+                        sids.append(student_id)
+                    t["student_ids"] = sids
+                    t["frequency"] = len(sids)
+                    break
+            self._store.update_theme_set(
+                run_id, json.dumps(ts_data),
+                {"outlier_to_theme": {student_id: theme_name}},
+            )
+
+        # Remove from outlier report
+        if row.get("outlier_report"):
+            or_data = json.loads(row["outlier_report"])
+            or_data["outliers"] = [
+                o for o in or_data.get("outliers", [])
+                if o.get("student_id") != student_id
+            ]
+            self._store.update_outlier_report(run_id, json.dumps(or_data))
+
+        # Profile calibration
+        self._store.save_calibration(
+            self._profile_mgr._profile_id if self._profile_mgr else "default",
+            "", json.dumps({"student_id": student_id}),
+            json.dumps({"theme": theme_name}),
+            "outlier_to_theme",
+        )
+
+        self._invalidate_layers("themes", "outliers")
+        self._trigger_partial_rerun("synthesis")
+        self._show_toast(f"Added to theme: {theme_name}")
+
+    def _on_outlier_create_theme(
+        self, run_id: str, student_id: str, student_name: str,
+    ) -> None:
+        """Create a new theme from an outlier."""
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Create Theme from Outlier")
+        dlg.setStyleSheet(
+            f"QDialog {{ background: {BG_CARD}; }}"
+            f"QLabel {{ color: {PHOSPHOR_MID}; background: transparent; border: none; }}"
+        )
+        lo = QVBoxLayout(dlg)
+        lo.addWidget(QLabel(f"Create new theme for {student_name}:"))
+        name_edit = QLineEdit()
+        name_edit.setPlaceholderText("Theme name...")
+        name_edit.setStyleSheet(
+            f"QLineEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: 12px;"
+            f" padding: 4px; }}"
+        )
+        lo.addWidget(name_edit)
+        bb = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        lo.addWidget(bb)
+
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        theme_name = name_edit.text().strip()
+        if not theme_name:
+            return
+
+        row = self._store.get_themes(run_id)
+        if not row:
+            return
+
+        # Add new theme
+        if row.get("theme_set"):
+            ts_data = json.loads(row["theme_set"])
+            ts_data.get("themes", []).append({
+                "name": theme_name,
+                "description": f"Created from outlier: {student_name}",
+                "frequency": 1,
+                "student_ids": [student_id],
+                "supporting_quotes": [],
+                "confidence": 0.5,
+                "sub_themes": None,
+            })
+            self._store.update_theme_set(
+                run_id, json.dumps(ts_data),
+                {"created_from_outlier": {student_id: theme_name}},
+            )
+
+        # Remove from outlier report
+        if row.get("outlier_report"):
+            or_data = json.loads(row["outlier_report"])
+            or_data["outliers"] = [
+                o for o in or_data.get("outliers", [])
+                if o.get("student_id") != student_id
+            ]
+            self._store.update_outlier_report(run_id, json.dumps(or_data))
+
+        # Profile calibration
+        self._store.save_calibration(
+            self._profile_mgr._profile_id if self._profile_mgr else "default",
+            "", json.dumps({"student_id": student_id}),
+            json.dumps({"theme": theme_name}),
+            "outlier_create_theme",
+        )
+
+        self._invalidate_layers("themes", "outliers")
+        self._trigger_partial_rerun("synthesis")
+        self._show_toast(f"Created theme: {theme_name}")
+
+    # ── Report edit handler ──
+
+    def _on_report_section_save(
+        self, run_id: str, section_key: str, new_text: str,
+    ) -> None:
+        """Save a directly edited report section."""
+        if not self._store:
+            return
+        row = self._store.get_themes(run_id)
+        if not row or not row.get("synthesis_report"):
+            return
+        data = json.loads(row["synthesis_report"])
+        data.setdefault("sections", {})[section_key] = new_text
+        self._store.update_synthesis_report(run_id, json.dumps(data))
+        self._show_toast(f"Saved: {section_key.replace('_', ' ').title()}")
+
+    # ------------------------------------------------------------------
+    # Start analysis (supports batch mode)
+    # ------------------------------------------------------------------
+
+    def _fetch_submission_counts(self) -> None:
+        """Kick off background workers to fetch submission counts per assignment."""
+        if not self._api or not self._assign_rows:
+            return
+
+        # Cancel any previous count worker
+        if hasattr(self, "_count_worker") and self._count_worker and self._count_worker.isRunning():
+            self._count_worker.cancel()
+            self._count_worker.wait(1000)
+
+        # Group assignments by course for efficient fetching
+        from collections import defaultdict
+        by_course = defaultdict(list)
+        self._assign_id_to_row = {}
+        for arow in self._assign_rows:
+            cid = arow.course_dict.get("id")
+            aid = arow.assign_dict.get("id")
+            if cid and aid:
+                by_course[cid].append(aid)
+                self._assign_id_to_row[aid] = arow
+
+        # Fetch for the first course (we can extend to multiple later)
+        # For simplicity, flatten all courses into one worker per course
+        from gui.workers import LoadSubmissionCountsWorker
+        all_aids = []
+        first_cid = None
+        for cid, aids in by_course.items():
+            if not first_cid:
+                first_cid = cid
+            all_aids.extend(aids)
+
+        if not first_cid or not all_aids:
+            return
+
+        # Use a single worker per course — for multi-course, we chain them
+        self._count_courses = list(by_course.items())
+        self._count_idx = 0
+        self._run_next_count_worker()
+
+    def _run_next_count_worker(self) -> None:
+        if self._count_idx >= len(self._count_courses):
+            return
+        cid, aids = self._count_courses[self._count_idx]
+        self._count_idx += 1
+
+        from gui.workers import LoadSubmissionCountsWorker
+        self._count_worker = LoadSubmissionCountsWorker(
+            self._api, cid, aids
+        )
+        self._count_worker.count_ready.connect(self._on_sub_count_ready)
+        self._count_worker.finished.connect(self._run_next_count_worker)
+        self._count_worker.start()
+
+    def _on_sub_count_ready(self, assignment_id: int, count: int) -> None:
+        """Buffer submission counts — display all at once when complete."""
+        if not hasattr(self, "_pending_counts"):
+            self._pending_counts = {}
+        self._pending_counts[assignment_id] = count
+
+        # Check if all assignments have been counted
+        total_expected = len(getattr(self, "_assign_id_to_row", {}))
+        if len(self._pending_counts) >= total_expected:
+            # All done — update all rows at once
+            for aid, cnt in self._pending_counts.items():
+                arow = self._assign_id_to_row.get(aid)
+                if arow:
+                    arow.set_submission_count(cnt)
+            self._pending_counts = {}
+
+    def _show_prior_insights(self) -> None:
+        """Switch to review view to see completed and partial runs."""
+        self._refresh_run_sidebar()
+        self._state_stack.setCurrentIndex(2)  # review view
+
+    def _show_setup_assistant(self) -> None:
+        """Show the Insights setup assistant dialog."""
+        from gui.dialogs.insights_setup_dialog import InsightsSetupDialog
+        dlg = InsightsSetupDialog(self)
+        dlg.exec()
+
+    def _on_start_analysis(self) -> None:
+        """Start the analysis pipeline."""
+        checked = self._get_checked_assignments()
+        if not checked:
+            return
+
+        if not self._api and not self._demo_mode:
+            self._setup_summary.setText(
+                "Configure Canvas credentials in Settings first."
+            )
+            return
+
+        # Check if LLM is needed but not available
+        tier = self._depth_toggle.mode
+        if tier != "quick":
+            from gui.dialogs.insights_setup_dialog import (
+                _check_ollama_running, _check_ollama_model,
+            )
+            if not _check_ollama_running() or not _check_ollama_model():
+                self._setup_summary.setText(
+                    "AI model not ready. Click Setup Assistant below."
+                )
+                self._show_setup_assistant()
+                return
+
+        # Switch to running state
+        self._state_stack.setCurrentIndex(1)
+        self._progress_label.setText("Starting analysis...")
+        self._progress_bar.setValue(0)
+        self._log_output.clear()
+        # Clear live results feed
+        while self._live_lo.count():
+            item = self._live_lo.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        self._live_lo.addStretch()
+        self._append_log("Starting analysis pipeline...")
+        self._progress_detail.setText("")
+
+        # Show which assignment is being analyzed
+        checked = self._get_checked_assignments()
+        if checked:
+            c, a = checked[0]
+            # Match course select display: nickname > name, with course_code
+            title = c.get("friendly_name") or c.get("original_name") or c.get("name", "")
+            code = c.get("course_code", "")
+            if title and code and code not in title:
+                course_display = f"{code} — {title}"
+            else:
+                course_display = title or code
+            assign_name = a.get("name", "")
+            self._live_header.setText(f"{course_display}  \u00b7  {assign_name}")
+            self._live_header.setVisible(True)
+
+        # Group by course — each course's assignments are separate runs
+        from collections import defaultdict
+        by_course: Dict[int, list] = defaultdict(list)
+        for course, assignment in checked:
+            by_course[course["id"]].append((course, assignment))
+
+        # Gather teacher input
+        teacher_context = self._week_input.toPlainText().strip()
+        next_week = self._next_week_input.toPlainText().strip()
+        if next_week:
+            teacher_context += f"\nNext week: {next_week}"
+
+        lens_text = self._lens_input.toPlainText().strip()
+        analysis_lens = None
+        if lens_text:
+            analysis_lens = {"analysis_lens": lens_text}
+
+        focus_text = self._focus_input.toPlainText().strip()
+        teacher_interests = None
+        if focus_text:
+            teacher_interests = [line.strip() for line in focus_text.split("\n") if line.strip()]
+
+        # Equity surfacing text — appended to teacher context for prompt injection
+        equity_text = self._equity_input.toPlainText().strip()
+        if equity_text:
+            teacher_context += f"\n\nEQUITY SURFACING (teacher-defined):\n{equity_text}"
+
+        # Persist teacher inputs to profile for future run defaults
+        if self._profile_mgr:
+            if teacher_interests:
+                self._profile_mgr.record_interest_areas(teacher_interests)
+            if analysis_lens:
+                self._profile_mgr.record_analysis_lens(analysis_lens)
+
+        # Batch mode when >1 assignment selected
+        if len(checked) > 1:
+            from gui.workers import BatchInsightsWorker
+            self._worker = BatchInsightsWorker(
+                self._api,
+                assignments=checked,
+                store=self._store,
+                translate_enabled=self._translate_toggle.isChecked(),
+                transcribe_enabled=self._transcribe_toggle.isChecked(),
+                model_tier=self._depth_toggle.mode,
+                teacher_context=teacher_context,
+                analysis_lens=analysis_lens,
+                teacher_interests=teacher_interests,
+                settings=self._get_settings(),
+            )
+            self._worker.progress_update.connect(self._on_progress)
+            self._worker.result_ready.connect(self._append_live_result)
+            self._worker.batch_complete.connect(self._on_batch_complete)
+            self._worker.error.connect(self._on_analysis_error)
+            self._worker.start()
+        else:
+            from gui.workers import InsightsWorker
+            first_course = checked[0][0]
+            first_assign = checked[0][1]
+            is_discussion = first_assign.get("submission_types", []) == ["discussion_topic"]
+
+            self._worker = InsightsWorker(
+                self._api,
+                store=self._store,
+                course_id=first_course["id"],
+                course_name=first_course.get("name", ""),
+                assignment_id=first_assign["id"],
+                assignment_name=first_assign.get("name", ""),
+                is_discussion=is_discussion,
+                translate_enabled=self._translate_toggle.isChecked(),
+                transcribe_enabled=self._transcribe_toggle.isChecked(),
+                model_tier=self._depth_toggle.mode,
+                teacher_context=teacher_context,
+                analysis_lens=analysis_lens,
+                teacher_interests=teacher_interests,
+                settings=self._get_settings(),
+            )
+            self._worker.progress_update.connect(self._on_progress)
+            self._worker.result_ready.connect(self._append_live_result)
+            self._worker.analysis_complete.connect(self._on_analysis_complete)
+            self._worker.error.connect(self._on_analysis_error)
+            self._worker.start()
+
+    def _get_settings(self) -> dict:
+        """Collect current settings for the engine."""
+        try:
+            from settings import load_settings
+            s = load_settings()
+        except Exception:
+            s = {}
+        # Pass through the feedback toggle from setup UI
+        s["insights_draft_feedback"] = self._feedback_toggle.isChecked()
+        return s
+
+    def _on_progress(self, message: str) -> None:
+        self._progress_label.setText(message)
+        self._append_log(message)
+
+        # Extract progress from messages like "Run 2/3" and "(6/28)"
+        # Track both run-level and submission-level progress for overall bar
+        import re
+
+        run_match = re.search(r'Run\s+(\d+)/(\d+)', message)
+        sub_match = re.search(r'[\(\[]?(\d+)/(\d+)[\)\]]?:', message)
+
+        if run_match:
+            self._batch_run_idx = int(run_match.group(1)) - 1  # 0-based
+            self._batch_run_total = int(run_match.group(2))
+
+        if sub_match:
+            sub_current = int(sub_match.group(1))
+            sub_total = int(sub_match.group(2))
+            run_idx = getattr(self, "_batch_run_idx", 0)
+            run_total = getattr(self, "_batch_run_total", 1)
+
+            if run_total > 0 and sub_total > 0:
+                # Each run gets an equal slice of the bar
+                run_slice = 100.0 / run_total
+                run_base = run_idx * run_slice
+                sub_pct = sub_current / sub_total
+                overall = int(run_base + sub_pct * run_slice)
+                self._progress_bar.setValue(min(overall, 99))
+
+    def _on_analysis_complete(self, run_id: str) -> None:
+        self._current_run_id = run_id
+        self._progress_label.setText("Analysis complete!")
+        self._progress_bar.setValue(100)
+        self._append_log("✓ Analysis complete! Switching to results...")
+
+        # Refresh sidebar and show results
+        self._refresh_run_sidebar()
+        self._state_stack.setCurrentIndex(2)
+
+        # Select the new run
+        for i in range(self._run_list.count()):
+            item = self._run_list.item(i)
+            if item.data(Qt.ItemDataRole.UserRole) == run_id:
+                self._run_list.setCurrentRow(i)
+                break
+
+    def _on_batch_complete(self, run_ids: list) -> None:
+        """Handle batch insights completion."""
+        n = len(run_ids)
+        self._progress_label.setText(f"Batch complete! {n} run{'s' if n != 1 else ''}.")
+        self._progress_detail.setText("Switching to review...")
+        self._refresh_run_sidebar()
+        self._state_stack.setCurrentIndex(2)
+        if run_ids:
+            # Select the first completed run
+            for i in range(self._run_list.count()):
+                item = self._run_list.item(i)
+                if item.data(Qt.ItemDataRole.UserRole) == run_ids[0]:
+                    self._run_list.setCurrentRow(i)
+                    break
+
+    def _on_analysis_error(self, message: str) -> None:
+        self._progress_label.setText(f"Error: {message}")
+        self._progress_detail.setText("Return to setup to try again.")
+
+    def _on_cancel(self) -> None:
+        if self._worker:
+            self._worker.cancel()
+            self._worker.wait(3000)  # wait up to 3 seconds for clean shutdown
+        self._state_stack.setCurrentIndex(0)
+
+    def cleanup(self) -> None:
+        """Clean shutdown — call from MainWindow.closeEvent."""
+        if self._worker and self._worker.isRunning():
+            self._worker.cancel()
+            self._worker.wait(5000)
+
+    def _refresh_run_sidebar(self) -> None:
+        """Populate the run sidebar — completed AND partial runs."""
+        self._run_list.clear()
+        if not self._store:
+            return
+
+        # Show all runs (completed first, then partial)
+        all_runs = self._store.get_runs()
+        completed_ids = {
+            r["run_id"] for r in self._store.get_completed_runs()
+        }
+
+        for run in all_runs:
+            course = run.get("course_name", "")
+            assign = run.get("assignment_name", "")
+            n = run.get("total_submissions", 0)
+            rid = run["run_id"]
+            is_complete = rid in completed_ids
+
+            if is_complete:
+                text = f"{assign}\n{course}  \u00b7  {n} students"
+            else:
+                stages = run.get("stages_completed", [])
+                if isinstance(stages, str):
+                    try:
+                        stages = json.loads(stages)
+                    except Exception:
+                        stages = []
+                last_stage = stages[-1] if stages else "started"
+                text = f"{assign}  (partial)\n{course}  \u00b7  stopped at: {last_stage}"
+
+            item = QListWidgetItem(text)
+            item.setData(Qt.ItemDataRole.UserRole, rid)
+            if not is_complete:
+                from PySide6.QtGui import QColor
+                item.setForeground(QColor(PHOSPHOR_DIM))
+            self._run_list.addItem(item)
+
+    def _on_run_selected(self, row: int) -> None:
+        """Load and display results for the selected run."""
+        if row < 0:
+            return
+        item = self._run_list.item(row)
+        if not item:
+            return
+        run_id = item.data(Qt.ItemDataRole.UserRole)
+        if not run_id or not self._store:
+            return
+
+        run = self._store.get_run(run_id)
+        if not run:
+            return
+
+        self._current_run_id = run_id
+        # Track which layers have been loaded for this run
+        self._loaded_layers = set()
+
+        # Always load patterns (default layer)
+        qa_json = run.get("quick_analysis")
+        if qa_json:
+            self._display_patterns(qa_json)
+            self._loaded_layers.add("patterns")
+
+        # Load the currently visible layer if it's not patterns
+        current_mode = self._layer_toggle.mode
+        if current_mode != "patterns":
+            self._load_layer(current_mode)
+        else:
+            self._layer_stack.setCurrentIndex(0)
+            self._layer_toggle.set_mode("patterns")
+
+    def _on_layer_changed(self, mode: str) -> None:
+        """Switch the layer content stack, lazily loading data."""
+        layer_map = {
+            "patterns": 0, "codings": 1, "themes": 2,
+            "outliers": 3, "report": 4, "feedback": 5,
+            "semester": 6,
+        }
+        self._layer_stack.setCurrentIndex(layer_map.get(mode, 0))
+        self._load_layer(mode)
+
+    def _load_layer(self, mode: str) -> None:
+        """Load data for the given layer if not already loaded for this run."""
+        run_id = self._current_run_id
+        if not run_id:
+            return
+        loaded = getattr(self, "_loaded_layers", set())
+        if mode in loaded:
+            return
+        loaded.add(mode)
+        self._loaded_layers = loaded
+
+        if mode == "codings":
+            self._display_codings(run_id)
+        elif mode == "themes":
+            self._display_themes(run_id)
+        elif mode == "outliers":
+            self._display_outliers(run_id)
+        elif mode == "report":
+            self._display_report(run_id)
+        elif mode == "feedback":
+            self._display_feedback(run_id)
+        elif mode == "semester":
+            self._display_semester(run_id)
+
+    # ------------------------------------------------------------------
+    # Semester trajectory view (Phase 5)
+    # ------------------------------------------------------------------
+
+    def _display_semester(self, run_id: str) -> None:
+        """Populate the Semester layer with cross-run trajectory data."""
+        if not self._store:
+            return
+
+        # Get course_id from current run
+        run = self._store.get_run(run_id)
+        if not run:
+            return
+        course_id = run.get("course_id", "")
+        if not course_id:
+            return
+
+        # Compute trajectory
+        from insights.trajectory import TrajectoryAnalyzer
+        analyzer = TrajectoryAnalyzer(self._store)
+        traj = analyzer.analyze_course_trajectory(course_id)
+
+        # Clear and get layout
+        lo = self._clear_scroll_layout(self._semester_scroll)
+
+        if traj is None:
+            empty = QLabel(
+                "Need at least 2 completed runs for this course "
+                "to show semester trajectory."
+            )
+            empty.setWordWrap(True)
+            empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            empty.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: 12px;"
+                f" background: transparent; border: none; padding: 40px;"
+            )
+            lo.addWidget(empty)
+            lo.addStretch()
+            return
+
+        # ── Summary card ──
+        summary_pane = make_content_pane("semesterSummaryPane")
+        s_lo = QVBoxLayout(summary_pane)
+        s_lo.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+        s_lo.setSpacing(SPACING_SM)
+
+        s_lo.addWidget(make_section_label("Semester Overview"))
+        s_lo.addWidget(make_h_rule())
+
+        header = QLabel(
+            f"{traj.course_name}  |  {traj.run_count} runs  |  {traj.date_range}"
+        )
+        header.setWordWrap(True)
+        header.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: 13px; font-weight: bold;"
+            f" background: transparent; border: none;"
+        )
+        s_lo.addWidget(header)
+        lo.addWidget(summary_pane)
+
+        # ── Engagement trend sparkline ──
+        if traj.engagement_trend:
+            eng_pane = make_content_pane("semesterEngagementPane")
+            e_lo = QVBoxLayout(eng_pane)
+            e_lo.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+            e_lo.setSpacing(SPACING_SM)
+
+            e_lo.addWidget(make_section_label("Engagement Trend"))
+            e_lo.addWidget(make_h_rule())
+
+            # Word count trend using unicode block chars
+            wc_row = QHBoxLayout()
+            wc_row.setSpacing(SPACING_XS)
+            vals = [m.avg_words for m in traj.engagement_trend]
+            max_val = max(vals) if vals else 1
+            for m in traj.engagement_trend:
+                col = QVBoxLayout()
+                col.setSpacing(2)
+
+                # Bar (unicode block)
+                bar_h = int((m.avg_words / max(max_val, 1)) * 5)
+                blocks = "\u2588" * max(bar_h, 1)
+                bar_lbl = QLabel(blocks)
+                bar_lbl.setAlignment(Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter)
+                bar_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: 14px;"
+                    f" background: transparent; border: none;"
+                )
+                col.addWidget(bar_lbl)
+
+                # Value
+                val_lbl = QLabel(f"{m.avg_words:.0f}")
+                val_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                val_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_DIM}; font-size: 9px;"
+                    f" background: transparent; border: none;"
+                )
+                col.addWidget(val_lbl)
+
+                # Label
+                name_lbl = QLabel(m.label[:12])
+                name_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                name_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_DIM}; font-size: 8px;"
+                    f" background: transparent; border: none;"
+                )
+                col.addWidget(name_lbl)
+                wc_row.addLayout(col)
+
+            wc_row.addStretch()
+            e_lo.addLayout(wc_row)
+
+            # Submission rate row
+            rates = [m.submission_rate for m in traj.engagement_trend]
+            if any(r < 1.0 for r in rates):
+                rate_text = "  ".join(
+                    f"{m.label[:8]}: {m.submission_rate:.0%}"
+                    for m in traj.engagement_trend
+                )
+                rate_lbl = QLabel(f"Submission rates: {rate_text}")
+                rate_lbl.setWordWrap(True)
+                rate_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+                    f" background: transparent; border: none;"
+                )
+                e_lo.addWidget(rate_lbl)
+
+            lo.addWidget(eng_pane)
+
+        # ── Exhaustion trend (structural signal) ──
+        if traj.exhaustion_trend:
+            total_exhaustion = sum(
+                m.late_count + m.short_count + m.silence_count
+                for m in traj.exhaustion_trend
+            )
+            if total_exhaustion > 0:
+                ex_pane = make_content_pane("semesterExhaustionPane")
+                x_lo = QVBoxLayout(ex_pane)
+                x_lo.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+                x_lo.setSpacing(SPACING_SM)
+
+                x_lo.addWidget(make_section_label("Exhaustion Indicators"))
+                x_lo.addWidget(make_h_rule())
+
+                # Check if trending up
+                late_vals = [m.late_count for m in traj.exhaustion_trend]
+                short_vals = [m.short_count for m in traj.exhaustion_trend]
+                silence_vals = [m.silence_count for m in traj.exhaustion_trend]
+                trending_up = (
+                    len(late_vals) >= 3
+                    and late_vals[-1] > late_vals[0]
+                    and short_vals[-1] + silence_vals[-1] > short_vals[0] + silence_vals[0]
+                )
+
+                framing_color = ROSE_ACCENT if trending_up else PHOSPHOR_DIM
+                framing = QLabel(
+                    "Late submissions and short reflections are increasing \u2014 "
+                    "this may be a structural signal about workload or timing."
+                    if trending_up else
+                    "No clear upward trend in exhaustion indicators."
+                )
+                framing.setWordWrap(True)
+                framing.setStyleSheet(
+                    f"color: {framing_color}; font-size: 11px;"
+                    f" background: transparent; border: none;"
+                )
+                x_lo.addWidget(framing)
+
+                # Per-week breakdown
+                for m in traj.exhaustion_trend:
+                    if m.late_count + m.short_count + m.silence_count == 0:
+                        continue
+                    parts = []
+                    if m.late_count:
+                        parts.append(f"{m.late_count} late")
+                    if m.short_count:
+                        parts.append(f"{m.short_count} short")
+                    if m.silence_count:
+                        parts.append(f"{m.silence_count} missing")
+                    row_lbl = QLabel(f"{m.label}:  {', '.join(parts)}")
+                    row_lbl.setStyleSheet(
+                        f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                        f" background: transparent; border: none;"
+                    )
+                    x_lo.addWidget(row_lbl)
+
+                lo.addWidget(ex_pane)
+
+        # ── Concern trend ──
+        if traj.concern_trend and any(m.concern_count > 0 for m in traj.concern_trend):
+            c_pane = make_content_pane("semesterConcernPane")
+            c_lo = QVBoxLayout(c_pane)
+            c_lo.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+            c_lo.setSpacing(SPACING_SM)
+
+            c_lo.addWidget(make_section_label("Concern Signals Over Time"))
+            c_lo.addWidget(make_h_rule())
+
+            for m in traj.concern_trend:
+                if m.concern_count == 0:
+                    continue
+                types_str = f"  ({', '.join(m.concern_types)})" if m.concern_types else ""
+                row_lbl = QLabel(f"{m.label}:  {m.concern_count} flag(s){types_str}")
+                row_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                    f" background: transparent; border: none;"
+                )
+                c_lo.addWidget(row_lbl)
+
+            lo.addWidget(c_pane)
+
+        # ── Theme evolution ──
+        if traj.theme_evolution:
+            t_pane = make_content_pane("semesterThemePane")
+            t_lo = QVBoxLayout(t_pane)
+            t_lo.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+            t_lo.setSpacing(SPACING_SM)
+
+            t_lo.addWidget(make_section_label("Theme Evolution"))
+            t_lo.addWidget(make_h_rule())
+
+            from gui.widgets.phosphor_chip import PhosphorChip
+
+            # Group by status
+            for status in ("recurring", "new", "fading", "one-time"):
+                themes = [t for t in traj.theme_evolution if t.status == status]
+                if not themes:
+                    continue
+                status_labels = {
+                    "recurring": "Recurring themes",
+                    "new": "Appeared this run",
+                    "fading": "Fading themes",
+                    "one-time": "One-time themes",
+                }
+                grp_lbl = QLabel(status_labels.get(status, status).upper())
+                grp_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_DIM}; font-size: 9px; font-weight: bold;"
+                    f" letter-spacing: 1px; background: transparent; border: none;"
+                    f" padding-top: 4px;"
+                )
+                t_lo.addWidget(grp_lbl)
+
+                # Flow layout of chips + week indicators
+                flow = QHBoxLayout()
+                flow.setSpacing(SPACING_XS)
+                for te in themes:
+                    weeks_str = ",".join(str(w + 1) for w in te.weeks_present)
+                    chip = PhosphorChip(
+                        f"{te.theme_name} (wk {weeks_str})",
+                        active=(status == "recurring"),
+                        accent="amber",
+                    )
+                    flow.addWidget(chip)
+                flow.addStretch()
+                t_lo.addLayout(flow)
+
+            lo.addWidget(t_pane)
+
+        # ── Top readings ──
+        if traj.top_readings:
+            r_pane = make_content_pane("semesterReadingsPane")
+            r_lo = QVBoxLayout(r_pane)
+            r_lo.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+            r_lo.setSpacing(SPACING_SM)
+
+            r_lo.addWidget(make_section_label("Most-Engaging Readings"))
+            r_lo.addWidget(make_h_rule())
+
+            for i, rd in enumerate(traj.top_readings[:10]):
+                ref_lbl = QLabel(
+                    f"{i + 1}. {rd.reading}  \u2014  "
+                    f"referenced {rd.times_referenced}x, "
+                    f"avg {rd.avg_word_count:.0f} words"
+                )
+                ref_lbl.setWordWrap(True)
+                ref_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                    f" background: transparent; border: none;"
+                )
+                r_lo.addWidget(ref_lbl)
+
+            lo.addWidget(r_pane)
+
+        # ── Student trajectories ──
+        if traj.student_trajectories:
+            st_pane = make_content_pane("semesterStudentPane")
+            st_lo = QVBoxLayout(st_pane)
+            st_lo.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+            st_lo.setSpacing(SPACING_SM)
+
+            st_lo.addWidget(make_section_label("Student Trajectories"))
+            st_lo.addWidget(make_h_rule())
+
+            st_lo.addWidget(_muted_label(
+                "Week-by-week status: "
+                "\u25cf on time  "
+                "\u25cf late  "
+                "\u25cb missing  "
+                "\u25c6 concern flagged"
+            ))
+
+            # Status dot color map
+            dot_colors = {
+                "on_time": TERM_GREEN,
+                "late": AMBER_BTN,
+                "missing": PHOSPHOR_DIM,
+            }
+
+            for arc in traj.student_trajectories:
+                arc_row = QHBoxLayout()
+                arc_row.setSpacing(SPACING_SM)
+
+                # Student name
+                name_lbl = QLabel(arc.student_name[:20])
+                name_lbl.setFixedWidth(140)
+                name_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                    f" background: transparent; border: none;"
+                )
+                arc_row.addWidget(name_lbl)
+
+                # Status dots
+                dots_parts = []
+                for i, status in enumerate(arc.weekly_submission_status):
+                    color = dot_colors.get(status, PHOSPHOR_DIM)
+                    has_concern = (
+                        i < len(arc.weekly_concern_flags)
+                        and arc.weekly_concern_flags[i] > 0
+                    )
+                    if has_concern:
+                        dots_parts.append(
+                            f'<span style="color:{ROSE_ACCENT}">\u25c6</span>'
+                        )
+                    elif status == "missing":
+                        dots_parts.append(
+                            f'<span style="color:{color}">\u25cb</span>'
+                        )
+                    else:
+                        dots_parts.append(
+                            f'<span style="color:{color}">\u25cf</span>'
+                        )
+
+                dots_lbl = QLabel("  ".join(dots_parts))
+                dots_lbl.setTextFormat(Qt.TextFormat.RichText)
+                dots_lbl.setStyleSheet(
+                    f"font-size: 14px; background: transparent; border: none;"
+                )
+                arc_row.addWidget(dots_lbl)
+
+                # Trend label
+                trend_colors = {
+                    "improving": TERM_GREEN,
+                    "declining": ROSE_ACCENT,
+                    "steady": PHOSPHOR_DIM,
+                    "irregular": AMBER_BTN,
+                }
+                trend_symbols = {
+                    "improving": "\u2197",
+                    "declining": "\u2198",
+                    "steady": "\u2192",
+                    "irregular": "\u223f",
+                }
+                trend_lbl = QLabel(
+                    f"{trend_symbols.get(arc.trend, '')} {arc.trend}"
+                )
+                trend_lbl.setStyleSheet(
+                    f"color: {trend_colors.get(arc.trend, PHOSPHOR_DIM)};"
+                    f" font-size: 10px; background: transparent; border: none;"
+                )
+                arc_row.addWidget(trend_lbl)
+                arc_row.addStretch()
+
+                st_lo.addLayout(arc_row)
+
+            lo.addWidget(st_pane)
+
+        # ── Confidence & cross-validation ──
+        if run_id:
+            run_data = self._store.get_run(run_id)
+            confidence = run_data.get("pipeline_confidence", {}) if run_data else {}
+            if isinstance(confidence, dict) and confidence.get("overall"):
+                cv_pane = make_content_pane("semesterConfidencePane")
+                cv_lo = QVBoxLayout(cv_pane)
+                cv_lo.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+                cv_lo.setSpacing(SPACING_SM)
+
+                cv_lo.addWidget(make_section_label("Pipeline Confidence"))
+                cv_lo.addWidget(make_h_rule())
+
+                overall = confidence.get("overall", 0)
+                overall_lbl = QLabel(f"Overall: {overall:.0%}")
+                overall_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_HOT}; font-size: 13px; font-weight: bold;"
+                    f" background: transparent; border: none;"
+                )
+                cv_lo.addWidget(overall_lbl)
+
+                for key in ("data_quality", "coding_reliability", "theme_coherence"):
+                    val = confidence.get(key, 0)
+                    if val:
+                        metric_lbl = QLabel(
+                            f"  {key.replace('_', ' ').title()}: {val:.0%}"
+                        )
+                        metric_lbl.setStyleSheet(
+                            f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                            f" background: transparent; border: none;"
+                        )
+                        cv_lo.addWidget(metric_lbl)
+
+                for note in confidence.get("concerns", []):
+                    note_lbl = QLabel(f"\u26a0  {note}")
+                    note_lbl.setWordWrap(True)
+                    note_lbl.setStyleSheet(
+                        f"color: {ROSE_ACCENT}; font-size: 11px;"
+                        f" background: transparent; border: none;"
+                    )
+                    cv_lo.addWidget(note_lbl)
+
+                lo.addWidget(cv_pane)
+
+        lo.addStretch()

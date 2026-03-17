@@ -1,161 +1,168 @@
 """
-One-time cleanup wizard dialog.
+One-time cleanup wizard — immediately deletes selected records from the internal SQLite database.
+
+This is a full system clear; it is separate from the auto-delete schedule in Settings > Data Retention.
 """
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QGroupBox,
-    QLabel, QRadioButton, QButtonGroup, QCheckBox, QSpinBox,
-    QDialogButtonBox, QMessageBox,
+    QDialog, QVBoxLayout, QHBoxLayout,
+    QLabel,
 )
-from PySide6.QtCore import Qt
 
-from gui.styles import SPACING_SM, SPACING_MD
+from gui.styles import (
+    SPACING_SM, SPACING_MD, SPACING_LG,
+    PHOSPHOR_HOT,
+    make_section_label, make_h_rule, make_content_pane,
+    make_run_button, make_secondary_button,
+    BG_VOID,
+)
+from gui.widgets.switch_toggle import SwitchToggle
+from gui.dialogs.message_dialog import show_info, show_warning
 
 
 class CleanupDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Run Cleanup")
-        self.setMinimumWidth(420)
+        self.setMinimumWidth(440)
+        self.setStyleSheet(f"QDialog {{ background: {BG_VOID}; }}")
         self._setup_ui()
         self._update_preview()
+
+    # ── UI construction ────────────────────────────────────────────────────
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
         layout.setSpacing(SPACING_MD)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
 
-        # Mode
-        mode_box = QGroupBox("Mode")
-        mode_vbox = QVBoxLayout(mode_box)
-        self._mode_bg = QButtonGroup(self)
-        for val, label in [("archive", "Archive (move to Archived Reports)"),
-                            ("trash",   "Move to Trash")]:
-            rb = QRadioButton(label)
-            rb.setProperty("mode_val", val)
-            self._mode_bg.addButton(rb)
-            mode_vbox.addWidget(rb)
-            if val == "archive":
-                rb.setChecked(True)
-        self._mode_bg.buttonClicked.connect(lambda _: self._update_preview())
-        layout.addWidget(mode_box)
+        # Categories pane
+        pane = make_content_pane("cleanupCatsPane")
+        pane_lo = QVBoxLayout(pane)
+        pane_lo.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+        pane_lo.setSpacing(SPACING_SM)
 
-        # Threshold
-        thresh_row = QHBoxLayout()
-        thresh_row.addWidget(QLabel("Older than:"))
-        self._days = QSpinBox()
-        self._days.setRange(1, 3650)
-        self._days.setValue(90)
-        self._days.setSuffix(" days")
-        self._days.valueChanged.connect(self._update_preview)
-        thresh_row.addWidget(self._days)
-        thresh_row.addStretch()
-        layout.addLayout(thresh_row)
+        pane_lo.addWidget(make_section_label("Data to Remove"))
+        pane_lo.addWidget(make_h_rule())
 
-        # File types
-        types_box = QGroupBox("File types")
-        types_vbox = QVBoxLayout(types_box)
-        self._type_checks = {}
-        type_labels = {
-            "ad_csv":   "Academic Integrity CSVs",
-            "ad_excel": "Academic Integrity Excel reports",
-            "ad_txt":   "Academic Integrity text reports",
-            "ci_csv":   "Complete/Incomplete CSVs",
-            "df_csv":   "Discussion Forum CSVs",
-        }
-        for key, label in type_labels.items():
-            cb = QCheckBox(label)
-            cb.setChecked(True)
-            cb.stateChanged.connect(self._update_preview)
-            types_vbox.addWidget(cb)
-            self._type_checks[key] = cb
-        layout.addWidget(types_box)
+        self._sw_grading = SwitchToggle("Grading results  (Complete/Incomplete and Discussion Forum runs)", wrap_width=300)
+        self._sw_grading.setChecked(True)
+        self._sw_grading.toggled.connect(self._update_preview)
+        pane_lo.addWidget(self._sw_grading)
+
+        self._sw_aic = SwitchToggle("Academic Integrity Check results", wrap_width=300)
+        self._sw_aic.setChecked(True)
+        self._sw_aic.toggled.connect(self._update_preview)
+        pane_lo.addWidget(self._sw_aic)
+
+        self._sw_notes = SwitchToggle("Teacher notes", wrap_width=300)
+        self._sw_notes.setChecked(False)
+        self._sw_notes.toggled.connect(self._update_preview)
+        pane_lo.addWidget(self._sw_notes)
+
+        self._sw_profiles = SwitchToggle(
+            "Per-student profile overrides", wrap_width=300
+        )
+        self._sw_profiles.setChecked(False)
+        self._sw_profiles.toggled.connect(self._update_preview)
+        pane_lo.addWidget(self._sw_profiles)
+
+        layout.addWidget(pane)
 
         # Preview
-        self._preview_label = QLabel("Preview: calculating…")
+        self._preview_label = QLabel("Preview: calculating\u2026")
+        self._preview_label.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: 11px; background: transparent;"
+        )
         layout.addWidget(self._preview_label)
 
         # Buttons
-        btn_box = QDialogButtonBox()
-        self._cancel_btn = btn_box.addButton(QDialogButtonBox.StandardButton.Cancel)
-        self._cancel_btn.clicked.connect(self.reject)
-        self._run_btn = btn_box.addButton("Run Cleanup", QDialogButtonBox.ButtonRole.AcceptRole)
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+        from PySide6.QtWidgets import QPushButton
+        cancel = QPushButton("Cancel")
+        make_secondary_button(cancel)
+        cancel.clicked.connect(self.reject)
+        self._run_btn = QPushButton("Delete Records")
+        make_run_button(self._run_btn)
         self._run_btn.clicked.connect(self._on_run)
-        layout.addWidget(btn_box)
+        btn_row.addWidget(cancel)
+        btn_row.addWidget(self._run_btn)
+        layout.addLayout(btn_row)
 
-    def _current_mode(self) -> str:
-        btn = self._mode_bg.checkedButton()
-        return btn.property("mode_val") if btn else "archive"
+    # ── Helpers ────────────────────────────────────────────────────────────
 
-    def _checked_types(self) -> list:
-        return [k for k, cb in self._type_checks.items() if cb.isChecked()]
-
-    def _update_preview(self) -> None:
+    def _update_preview(self, *_) -> None:
+        if not any([
+            self._sw_grading.isChecked(),
+            self._sw_aic.isChecked(),
+            self._sw_notes.isChecked(),
+            self._sw_profiles.isChecked(),
+        ]):
+            self._preview_label.setText("Preview: select at least one category.")
+            return
         try:
-            from cleanup import count_files_to_clean
-            from autograder_utils import get_output_base_dir
-
-            base = get_output_base_dir()
-            days = self._days.value()
-            total = 0
-
-            type_map = {
-                "ad_csv":   ("Academic_Dishonesty", "csv"),
-                "ad_excel": ("Academic_Dishonesty", "excel"),
-                "ad_txt":   ("Academic_Dishonesty", "txt"),
-                "ci_csv":   ("Complete-Incomplete", "csv"),
-                "df_csv":   ("Discussion_Forum",    "csv"),
-            }
-            for key in self._checked_types():
-                script_type, file_type = type_map[key]
-                target_dir = base / {
-                    "Academic_Dishonesty": "Academic Dishonesty Reports",
-                    "Complete-Incomplete": "Complete-Incomplete Assignments",
-                    "Discussion_Forum":    "Discussion Forums",
-                }[script_type]
-                total += count_files_to_clean(target_dir, script_type, file_type, days)
-
-            self._preview_label.setText(f"Preview: {total} file{'s' if total != 1 else ''} would be affected")
+            from automation.run_store import RunStore
+            store = RunStore()
+            counts = store.count_for_cleanup(
+                0,
+                include_aic=self._sw_aic.isChecked(),
+                include_grading=self._sw_grading.isChecked(),
+                include_notes=self._sw_notes.isChecked(),
+                include_profiles=self._sw_profiles.isChecked(),
+            )
+            store.close()
+            total = sum(counts.values())
+            parts = []
+            if self._sw_grading.isChecked():
+                parts.append(f"{counts['grading']} grading")
+            if self._sw_aic.isChecked():
+                parts.append(f"{counts['aic']} AIC")
+            if self._sw_notes.isChecked():
+                parts.append(f"{counts['notes']} notes")
+            if self._sw_profiles.isChecked():
+                parts.append(f"{counts['profiles']} profile overrides")
+            detail = ",  ".join(parts)
+            self._preview_label.setText(
+                f"Preview: {total} record{'s' if total != 1 else ''} would be deleted  \u2014  {detail}"
+            )
         except Exception as exc:
             self._preview_label.setText(f"Preview unavailable: {exc}")
 
     def _on_run(self) -> None:
-        mode = self._current_mode()
-        days = self._days.value()
-        types = self._checked_types()
-        if not types:
-            QMessageBox.warning(self, "No Types", "Select at least one file type.")
+        if not any([
+            self._sw_grading.isChecked(),
+            self._sw_aic.isChecked(),
+            self._sw_notes.isChecked(),
+            self._sw_profiles.isChecked(),
+        ]):
+            show_warning(self, "No Categories", "Select at least one data category.")
             return
-
         try:
-            from cleanup import archive_files_by_type, trash_files_by_type
-            from autograder_utils import get_output_base_dir
-
-            base = get_output_base_dir()
-            type_map = {
-                "ad_csv":   ("Academic_Dishonesty", "csv"),
-                "ad_excel": ("Academic_Dishonesty", "excel"),
-                "ad_txt":   ("Academic_Dishonesty", "txt"),
-                "ci_csv":   ("Complete-Incomplete", "csv"),
-                "df_csv":   ("Discussion_Forum",    "csv"),
-            }
-            dir_map = {
-                "Academic_Dishonesty": "Academic Dishonesty Reports",
-                "Complete-Incomplete": "Complete-Incomplete Assignments",
-                "Discussion_Forum":    "Discussion Forums",
-            }
-            total = 0
-            for key in types:
-                script_type, file_type = type_map[key]
-                target_dir = base / dir_map[script_type]
-                if mode == "archive":
-                    total += archive_files_by_type(target_dir, script_type, file_type, days)
-                else:
-                    total += trash_files_by_type(target_dir, script_type, file_type, days)
-
-            action = "Archived" if mode == "archive" else "Moved to Trash"
-            dest = "Archived Reports" if mode == "archive" else "Trash"
-            QMessageBox.information(self, "Cleanup Complete",
-                                    f"{action} {total} file{'s' if total != 1 else ''} to {dest}.")
+            from automation.run_store import RunStore
+            store = RunStore()
+            deleted = store.delete_for_cleanup(
+                0,
+                include_aic=self._sw_aic.isChecked(),
+                include_grading=self._sw_grading.isChecked(),
+                include_notes=self._sw_notes.isChecked(),
+                include_profiles=self._sw_profiles.isChecked(),
+            )
+            store.close()
+            total = sum(deleted.values())
+            parts = []
+            if self._sw_grading.isChecked():
+                parts.append(f"{deleted['grading']} grading")
+            if self._sw_aic.isChecked():
+                parts.append(f"{deleted['aic']} AIC")
+            if self._sw_notes.isChecked():
+                parts.append(f"{deleted['notes']} notes")
+            if self._sw_profiles.isChecked():
+                parts.append(f"{deleted['profiles']} profile overrides")
+            detail = ",  ".join(parts)
+            show_info(
+                self, "Cleanup Complete",
+                f"Deleted {total} record{'s' if total != 1 else ''}.\n{detail}",
+            )
             self.accept()
         except Exception as exc:
-            QMessageBox.warning(self, "Cleanup Error", str(exc))
+            show_warning(self, "Cleanup Error", str(exc))

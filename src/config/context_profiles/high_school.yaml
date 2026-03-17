@@ -1,0 +1,43 @@
+# High School Context Profile
+# Version: 3.0.0
+# Education level profile: per-marker base weights for typical high school student.
+#
+# These weights bake in the educational context for a normative HS student:
+# - "Furthermore" IS the curriculum in 9th-grade English
+# - Thesaurus use is vocabulary-building, not AI
+# - A teenager using "elucidate" IS unusual
+# - Five-paragraph structure is drilled, not suspicious
+
+profile_id: high_school
+profile_name: "High School"
+description: |
+  Per-marker base weights for a typical high school student.
+  Reflects what is taught in HS English: formal transitions, five-paragraph
+  structure, vocabulary expansion. High weight on inflated vocabulary because
+  a teenager using "elucidate" is genuinely unusual. Very low weight on
+  transitions because formal connectors are explicitly assigned.
+
+# v3 format: absolute per-match weights (not multipliers).
+# Used by WeightComposer. Orthogonal to MarkerLoader multipliers.
+marker_weights:
+  suspicious:
+    ai_transitions: 0.15          # "Furthermore" IS the curriculum — extremely low signal
+    generic_phrases: 0.25         # Filler hooks are explicitly taught technique
+    inflated_vocabulary: 0.45     # Teenager using "elucidate" IS unusual — strongest HS signal
+    ai_specific_org: 0.90         # No one assigns equal paragraph lengths
+
+  authenticity:
+    personal_voice: 0.40          # Many HS teachers ban "I" — absence is less meaningful
+    emotional_language: 0.80      # Strong signal everywhere
+    cognitive_diversity: 0.60     # Strong signal everywhere
+
+thresholds:
+  outlier_percentile: 96          # Higher threshold — smaller class sizes, wider variance
+  cognitive_protection_floor: 0.5 # Standard floor
+
+notes: |
+  For high school courses, transitions and generic phrases are explicitly
+  taught writing techniques. Flag suspicion on inflated vocabulary and
+  ai_specific_organization instead. Peer comparison on calibrated metrics
+  still catches genuine outliers — a student with 5x the inflated vocabulary
+  of peers stands out even with weight 0.45.

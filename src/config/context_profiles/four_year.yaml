@@ -1,0 +1,39 @@
+# Four-Year College Context Profile
+# Version: 3.0.0
+# Education level profile: per-marker base weights for typical 4-year college student.
+#
+# These weights represent the baseline calibration. They match the hardcoded
+# weights in the analyzer (0.5 transitions, 0.4 generic, 0.3 vocabulary).
+# Use population overlays for schools that deviate from this typical profile.
+
+profile_id: four_year
+profile_name: "Four-Year College / Liberal Arts"
+description: |
+  Per-marker base weights for a typical four-year college student.
+  Represents the "standard" baseline calibration. Students are expected
+  to have moved beyond mechanical formula-writing; formal transitions and
+  generic phrases are stronger signals than at high school level.
+
+# v3 format: absolute per-match weights (not multipliers).
+# Used by WeightComposer. Orthogonal to MarkerLoader multipliers.
+marker_weights:
+  suspicious:
+    ai_transitions: 0.50          # Stronger signal than CC — beyond formula-writing stage
+    generic_phrases: 0.40         # Generic phrases less expected in college writing
+    inflated_vocabulary: 0.30     # Thesaurus use is somewhat common; moderate signal
+    ai_specific_org: 1.00         # No adjustment — full weight
+
+  authenticity:
+    personal_voice: 0.50          # Standard — personal voice expected in college writing
+    emotional_language: 0.80      # Strong signal everywhere
+    cognitive_diversity: 0.60     # Strong signal everywhere
+
+thresholds:
+  outlier_percentile: 92          # Standard threshold for 4-year college
+  cognitive_protection_floor: 0.5 # Standard floor
+
+notes: |
+  Standard four-year college weights. Match analyzer baseline behavior.
+  Apply ESL overlay if school has significant ESL population.
+  Apply first-gen overlay if school has significant first-gen population.
+  The distributional peer comparison still catches outliers reliably.

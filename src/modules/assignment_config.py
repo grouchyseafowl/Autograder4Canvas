@@ -20,6 +20,9 @@ class AssignmentProfile:
     expected_word_count: Tuple[int, int]
     marker_weight_adjustments: Dict[str, float]
     notes: str
+    # v3.0 mode flags
+    personal_voice_authentic: bool = True   # when False, personal voice ≠ authenticity signal
+    invert_sentence_signals: bool = False   # when True (notes), smooth prose = suspicious
 
 
 @dataclass
@@ -87,7 +90,9 @@ class AssignmentConfigLoader:
                     description=data.get('description', ''),
                     expected_word_count=tuple(data.get('expected_word_count', [0, 10000])),
                     marker_weight_adjustments=data.get('marker_weight_adjustments', {}),
-                    notes=data.get('notes', '')
+                    notes=data.get('notes', ''),
+                    personal_voice_authentic=data.get('personal_voice_authentic', True),
+                    invert_sentence_signals=data.get('invert_sentence_signals', False),
                 )
 
             # Load course level configurations
@@ -155,6 +160,16 @@ class AssignmentConfigLoader:
             InstitutionalContextConfig if found, None otherwise
         """
         return self.institutional_contexts.get(context_id)
+
+    def get_mode_flags(self, assignment_type: str) -> Tuple[bool, bool]:
+        """
+        Return (personal_voice_authentic, invert_sentence_signals) for a mode.
+        Defaults to (True, False) when mode not found.
+        """
+        profile = self.get_assignment_profile(assignment_type)
+        if profile:
+            return profile.personal_voice_authentic, profile.invert_sentence_signals
+        return True, False
 
     def get_marker_weight_adjustments(self, assignment_type: str) -> Dict[str, float]:
         """
@@ -317,11 +332,8 @@ def apply_assignment_config_to_detector(detector,
     """
     Apply assignment configuration to a HumanPresenceDetector instance.
 
-    Args:
-        detector: HumanPresenceDetector instance
-        assignment_type: Assignment type ID
-        course_level: Course level ID
-        institutional_context: Institutional context ID
+    Returns:
+        (suspicious_multiplier, authenticity_boost, personal_voice_authentic, invert_sentence_signals)
     """
     config_loader = get_default_config_loader()
 
@@ -329,21 +341,17 @@ def apply_assignment_config_to_detector(detector,
     if assignment_type:
         adjustments = config_loader.get_marker_weight_adjustments(assignment_type)
         if adjustments:
-            # Apply to detector's category weights
             for category, multiplier in adjustments.items():
                 if hasattr(detector, 'CATEGORY_WEIGHTS') and category in detector.CATEGORY_WEIGHTS:
-                    # Store original if not already stored
                     if not hasattr(detector, '_original_weights'):
                         detector._original_weights = detector.CATEGORY_WEIGHTS.copy()
-
-                    # Apply multiplier (normalize after to maintain 100% total)
                     detector.CATEGORY_WEIGHTS[category] = detector._original_weights[category] * multiplier
 
-            # Normalize weights to sum to 1.0
             total = sum(detector.CATEGORY_WEIGHTS.values())
             if total > 0:
                 for key in detector.CATEGORY_WEIGHTS:
                     detector.CATEGORY_WEIGHTS[key] /= total
 
-    # Return multipliers for analyzer to apply
-    return config_loader.get_combined_multiplier(course_level, institutional_context)
+    multipliers = config_loader.get_combined_multiplier(course_level, institutional_context)
+    pva, iss = config_loader.get_mode_flags(assignment_type or '')
+    return multipliers[0], multipliers[1], pva, iss
