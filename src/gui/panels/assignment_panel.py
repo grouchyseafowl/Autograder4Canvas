@@ -50,6 +50,7 @@ from PySide6.QtGui import (
 )
 
 from gui.styles import (
+    px,
     SPACING_SM, SPACING_MD, FONT_LARGE, make_run_button,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM, PHOSPHOR_GLOW,
     ROSE_ACCENT, BORDER_DARK, BORDER_AMBER,
@@ -131,7 +132,7 @@ _PILL_QSS = f"""
         border: 1px solid rgba(106,74,18,0.40);
         border-radius: 10px;
         padding: 2px 11px;
-        font-size: 11px;
+        font-size: {px(11)}px;
         min-height: 22px;
     }}
     QPushButton:hover:!checked {{
@@ -160,7 +161,7 @@ _CLEAR_QSS = f"""
         border: 1px solid transparent;
         border-radius: 10px;
         padding: 2px 9px;
-        font-size: 11px;
+        font-size: {px(11)}px;
         min-height: 22px;
     }}
     QPushButton:hover {{
@@ -388,7 +389,7 @@ class _AssignmentRow(QFrame):
 
         name_lbl = _ElidingLabel(assignment["name"])
         name_lbl.setToolTip(assignment["name"])
-        name_lbl.setStyleSheet(f"color: {name_color}; font-size: 12px;")
+        name_lbl.setStyleSheet(f"color: {name_color}; font-size: {px(12)}px;")
         row.addWidget(name_lbl, 1)
 
         # ── Due date ────────────────────────────────────────────────────
@@ -396,13 +397,13 @@ class _AssignmentRow(QFrame):
         self._due_lbl.setFixedWidth(70)
         self._due_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         if section_key == "PAST" and ngr > 0:
-            self._due_lbl.setStyleSheet(f"color: {_PAST_COLOR}; font-size: 11px;")
+            self._due_lbl.setStyleSheet(f"color: {_PAST_COLOR}; font-size: {px(11)}px;")
             apply_phosphor_glow(self._due_lbl, color=_PAST_COLOR, blur=7, strength=0.40,
                                 xOffset=-2, yOffset=1)
         elif section_key == "PAST":
-            self._due_lbl.setStyleSheet(f"color: #7A5520; font-size: 11px;")
+            self._due_lbl.setStyleSheet(f"color: #7A5520; font-size: {px(11)}px;")
         else:
-            self._due_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px;")
+            self._due_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;")
         row.addWidget(self._due_lbl)
 
         # ── Published status badge (clickable) ──────────────────────────
@@ -416,7 +417,7 @@ class _AssignmentRow(QFrame):
         self._pub_lbl = _ClickableLabel(pub_text)
         self._pub_lbl.setFixedWidth(80)
         self._pub_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._pub_lbl.setStyleSheet(f"color: {pub_color}; font-size: 10px;")
+        self._pub_lbl.setStyleSheet(f"color: {pub_color}; font-size: {px(10)}px;")
         self._pub_lbl.setToolTip("Click to toggle publish state")
         self._pub_lbl.setCursor(Qt.CursorShape.PointingHandCursor)
         self._pub_lbl.clicked.connect(lambda: self.publish_badge_clicked.emit(self._aid))
@@ -428,7 +429,7 @@ class _AssignmentRow(QFrame):
         kind_lbl = QLabel(kind)
         kind_lbl.setFixedWidth(50)
         kind_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        kind_lbl.setStyleSheet(f"color: {kind_col}; font-size: 10px;")
+        kind_lbl.setStyleSheet(f"color: {kind_col}; font-size: {px(10)}px;")
         kind_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         row.addWidget(kind_lbl)
 
@@ -443,7 +444,7 @@ class _AssignmentRow(QFrame):
             background: rgba(58,40,8,0.45);
             border: 1px solid rgba(90,60,8,0.30);
             border-radius: 3px;
-            font-size: 10px;
+            font-size: {px(10)}px;
             padding: 1px 4px;
         """)
         self._tag_lbl.setToolTip("Click to change grading type")
@@ -453,10 +454,10 @@ class _AssignmentRow(QFrame):
 
         # ── To-grade count ──────────────────────────────────────────────
         if ngr > 0:
-            ngr_css = f"color: {PHOSPHOR_HOT}; font-weight: bold; font-size: 11px;"
+            ngr_css = f"color: {PHOSPHOR_HOT}; font-weight: bold; font-size: {px(11)}px;"
             ngr_txt = str(ngr)
         else:
-            ngr_css = f"color: {PHOSPHOR_GLOW}; font-size: 11px;"
+            ngr_css = f"color: {PHOSPHOR_GLOW}; font-size: {px(11)}px;"
             ngr_txt = "—"
 
         ngr_lbl = QLabel(ngr_txt)
@@ -741,7 +742,7 @@ class _SectionBand(QFrame):
                 background: transparent;
                 border: none;
                 color: {PHOSPHOR_GLOW};
-                font-size: 10px;
+                font-size: {px(10)}px;
                 padding: 0 4px;
             }}
             QFrame QPushButton:hover {{ color: {color}; }}
@@ -760,22 +761,22 @@ class _SectionBand(QFrame):
         # Section name
         row.addWidget(_band_lbl(
             label,
-            f"color: {color}; font-size: 10px; font-weight: bold; letter-spacing: 1px;"
+            f"color: {color}; font-size: {px(10)}px; font-weight: bold; letter-spacing: 1px;"
         ))
 
         # Item count
         if item_count:
             row.addWidget(_band_lbl(
                 f"{item_count} assignment{'s' if item_count != 1 else ''}",
-                f"color: {PHOSPHOR_GLOW}; font-size: 10px;"
+                f"color: {PHOSPHOR_GLOW}; font-size: {px(10)}px;"
             ))
 
         # Ungraded count — only if > 0
         if ungraded:
-            row.addWidget(_band_lbl("·", f"color: {PHOSPHOR_GLOW}; font-size: 10px;"))
+            row.addWidget(_band_lbl("·", f"color: {PHOSPHOR_GLOW}; font-size: {px(10)}px;"))
             row.addWidget(_band_lbl(
                 f"{ungraded} ungraded",
-                f"color: {PHOSPHOR_HOT}; font-size: 10px; font-weight: bold;"
+                f"color: {PHOSPHOR_HOT}; font-size: {px(10)}px; font-weight: bold;"
             ))
 
         row.addStretch()
@@ -1018,7 +1019,7 @@ class _GroupBand(QFrame):
             background: transparent;
             border: none;
             color: {glow};
-            font-size: 10px;
+            font-size: {px10}px;
             padding: 0 4px;
         }}
         QFrame QPushButton:hover {{ color: {color}; }}
@@ -1034,7 +1035,7 @@ class _GroupBand(QFrame):
             background: transparent;
             border: none;
             color: {glow};
-            font-size: 10px;
+            font-size: {px10}px;
             padding: 0 4px;
         }}
         QFrame QPushButton:hover {{ color: {color}; }}
@@ -1050,7 +1051,7 @@ class _GroupBand(QFrame):
         QFrame QLabel {{ background: transparent; border: none; }}
         QFrame QPushButton {{
             background: transparent; border: none;
-            color: {glow}; font-size: 10px; padding: 0 4px;
+            color: {glow}; font-size: {px10}px; padding: 0 4px;
         }}
     """
 
@@ -1079,14 +1080,14 @@ class _GroupBand(QFrame):
         self._chevron.setFixedWidth(12)
         self._chevron.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._chevron.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 9px; background: transparent; border: none;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(9)}px; background: transparent; border: none;"
         )
         row.addWidget(self._chevron)
 
         # ── Group name ───────────────────────────────────────────────────
         self._name_lbl = QLabel(group_name.upper())
         self._name_lbl.setStyleSheet(
-            f"color: {color}; font-size: 10px; font-weight: bold;"
+            f"color: {color}; font-size: {px(10)}px; font-weight: bold;"
             f" letter-spacing: 1px; background: transparent; border: none;"
         )
         self._name_lbl.setMinimumWidth(0)
@@ -1095,7 +1096,7 @@ class _GroupBand(QFrame):
         # ── Item count / collapsed badge ─────────────────────────────────
         self._count_lbl = QLabel()
         self._count_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_GLOW}; font-size: 10px; background: transparent; border: none;"
+            f"color: {PHOSPHOR_GLOW}; font-size: {px(10)}px; background: transparent; border: none;"
         )
         self._count_lbl.setMinimumWidth(0)
         row.addWidget(self._count_lbl)
@@ -1105,13 +1106,13 @@ class _GroupBand(QFrame):
         if weight is not None and weight > 0:
             sep = QLabel("·")
             sep.setStyleSheet(
-                f"color: {PHOSPHOR_GLOW}; font-size: 10px; background: transparent; border: none;"
+                f"color: {PHOSPHOR_GLOW}; font-size: {px(10)}px; background: transparent; border: none;"
             )
             sep.setMinimumWidth(0)
             row.addWidget(sep)
             w_lbl = QLabel(f"{weight:.0f}%")
             w_lbl.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 10px; background: transparent; border: none;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent; border: none;"
             )
             w_lbl.setMinimumWidth(0)
             row.addWidget(w_lbl)
@@ -1157,7 +1158,8 @@ class _GroupBand(QFrame):
     def _apply_qss(self, hover: bool) -> None:
         tpl = self._HOVER_QSS if hover else self._BASE_QSS
         self.setStyleSheet(tpl.format(
-            color=self._color, glow=PHOSPHOR_GLOW, hot=PHOSPHOR_HOT
+            color=self._color, glow=PHOSPHOR_GLOW, hot=PHOSPHOR_HOT,
+            px10=px(10),
         ))
 
     def paintEvent(self, event) -> None:  # noqa: N802
@@ -1180,14 +1182,14 @@ class _GroupBand(QFrame):
     def enterEvent(self, event) -> None:
         self._apply_qss(True)
         self._chevron.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 9px; background: transparent; border: none;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(9)}px; background: transparent; border: none;"
         )
         super().enterEvent(event)
 
     def leaveEvent(self, event) -> None:
         self._apply_qss(False)
         self._chevron.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 9px; background: transparent; border: none;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(9)}px; background: transparent; border: none;"
         )
         super().leaveEvent(event)
 
@@ -1384,7 +1386,7 @@ class _NowDivider(QFrame):
 
         label = QLabel("◉  TODAY")
         label.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 10px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(10)}px; font-weight: bold;"
             f" background: transparent; border: none; letter-spacing: 1px;"
         )
 
@@ -1403,7 +1405,7 @@ class _MessageRow(QLabel):
         self.setMinimumWidth(0)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 12px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(12)}px;"
             f" background: transparent; border: none;"
             f" padding: 32px 16px;"
         )
@@ -1463,7 +1465,7 @@ class AssignmentPanel(QFrame):
 
         self._course_label = QLabel("")
         self._course_label.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 12px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(12)}px; font-weight: bold;"
             f" background: transparent; border: none;"
         )
         self._course_label.setWordWrap(True)
@@ -1472,7 +1474,7 @@ class AssignmentPanel(QFrame):
         self._ungraded_badge = QLabel()
         self._ungraded_badge.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self._ungraded_badge.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 11px;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(11)}px;"
             f" background: rgba(240,168,48,0.12);"
             f" border: 1px solid rgba(240,168,48,0.30);"
             f" border-radius: 4px; padding: 2px 8px;"
@@ -1534,7 +1536,7 @@ class AssignmentPanel(QFrame):
         def _col_hdr_lbl(text, width=None, align=Qt.AlignmentFlag.AlignLeft):
             lbl = QLabel(text)
             lbl.setStyleSheet(
-                f"color: {PHOSPHOR_GLOW}; font-size: 10px;"
+                f"color: {PHOSPHOR_GLOW}; font-size: {px(10)}px;"
                 f" font-weight: bold;"
                 f" background: transparent; border: none;"
             )
@@ -1590,7 +1592,7 @@ class AssignmentPanel(QFrame):
         bottom.setSpacing(10)
 
         self._count_label = QLabel("0 selected")
-        self._count_label.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px;")
+        self._count_label.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;")
         bottom.addWidget(self._count_label, 0, Qt.AlignmentFlag.AlignVCenter)
         bottom.addStretch()
 
@@ -1646,6 +1648,19 @@ class AssignmentPanel(QFrame):
         row.addWidget(clr)
 
         row.addStretch()
+
+        # Configure Templates — far right
+        _tsep2 = QFrame()
+        _tsep2.setFrameShape(QFrame.Shape.VLine)
+        _tsep2.setFixedWidth(1)
+        _tsep2.setStyleSheet(f"background: {BORDER_DARK}; border: none;")
+        row.addWidget(_tsep2)
+        row.addSpacing(4)
+
+        cfg_btn = PhosphorChip("Templates", accent="amber", action=True)
+        cfg_btn.setToolTip("Configure assignment templates and AIC settings")
+        cfg_btn.toggled.connect(lambda _: self._open_template_editor())
+        row.addWidget(cfg_btn)
 
         return bar
 
@@ -1997,6 +2012,23 @@ class AssignmentPanel(QFrame):
     # ------------------------------------------------------------------
     # Layout helpers
     # ------------------------------------------------------------------
+
+    def get_selected_assignments(self) -> list:
+        """Public: return currently selected assignment dicts."""
+        return self._get_selected_assignments()
+
+    def get_selected_ids(self) -> set:
+        """Public: return a copy of the currently selected assignment ID set."""
+        return self._checked_ids.copy()
+
+    def restore_selection(self, ids: set) -> None:
+        """Re-check assignments by ID — call after populate_tree to restore a saved selection."""
+        self._select_by_ids(list(ids))
+
+    def _open_template_editor(self) -> None:
+        from gui.dialogs.template_editor_dialog import TemplateEditorDialog
+        dlg = TemplateEditorDialog(parent=self)
+        dlg.exec()
 
     def _on_run_clicked(self) -> None:
         selected = self._get_selected_assignments()

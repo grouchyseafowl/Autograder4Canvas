@@ -11,8 +11,8 @@ from typing import List
 
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QTextEdit, QSpinBox, QComboBox,
-    QDoubleSpinBox, QFrame, QSizePolicy, QWidget, QStackedWidget,
+    QTextEdit, QComboBox,
+    QFrame, QSizePolicy, QWidget, QStackedWidget,
 )
 from PySide6.QtCore import Qt, QRect, QSize, Signal
 from PySide6.QtGui import (
@@ -21,6 +21,7 @@ from PySide6.QtGui import (
 )
 
 from gui.styles import (
+    px,
     BG_VOID, BG_INSET,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM,
     BORDER_DARK, BORDER_AMBER,
@@ -164,19 +165,28 @@ def _classify_selection(selected_items: list) -> tuple:
 # ---------------------------------------------------------------------------
 
 class RunDialog(QDialog):
-    """Modal dialog to configure and execute a grading job."""
+    """Modal dialog to configure and execute a grading job.
 
-    def __init__(self, api, selected_items: List[dict], course_name: str,
-                 course_id: int, term_id: int, demo_mode: bool = False, parent=None):
+    Parameters
+    ----------
+    selections : list of (course_name, course_id, [assignment_dicts])
+        One entry per course. Courses are run sequentially.
+    """
+
+    def __init__(self, api,
+                 selections: List[tuple],
+                 term_id: int, demo_mode: bool = False, parent=None):
         super().__init__(parent)
-        self._api          = api
-        self._selected     = selected_items
-        self._course_name  = course_name
-        self._course_id    = course_id
-        self._term_id      = term_id
-        self._demo_mode    = demo_mode
-        self._worker       = None
-        self._n_df, self._n_ci, self._df_grading_type = _classify_selection(selected_items)
+        self._api        = api
+        self._selections = selections   # [(course_name, course_id, [items]), ...]
+        self._term_id    = term_id
+        self._demo_mode  = demo_mode
+        self._worker     = None
+        self._run_queue: List[tuple] = []
+
+        # Classify the flat union of all assignments for the config pane
+        all_items = [a for _, _, items in selections for a in items]
+        self._n_df, self._n_ci, self._df_grading_type = _classify_selection(all_items)
 
         self.setWindowTitle("Run Autograder4Canvas")
         self.setMinimumWidth(540)
@@ -211,24 +221,38 @@ class RunDialog(QDialog):
         layout.setSpacing(0)
 
         # ── Header ──────────────────────────────────────────────────────────
-        course_lbl = QLabel(self._course_name.upper())
-        course_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+        n_courses = len(self._selections)
+        all_items = [a for _, _, items in self._selections for a in items]
+        n_total   = len(all_items)
+
+        if n_courses == 1:
+            title_text = self._selections[0][0].upper()
+        else:
+            title_text = f"{n_total} ASSIGNMENTS  ·  {n_courses} COURSES"
+
+        title_lbl = QLabel(title_text)
+        title_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: {px(16)}px; font-weight: bold;"
             f" letter-spacing: 2px; background: transparent; border: none;"
         )
-        apply_phosphor_glow(course_lbl, color=PHOSPHOR_HOT, blur=10, strength=0.40)
-        layout.addWidget(course_lbl)
+        apply_phosphor_glow(title_lbl, color=PHOSPHOR_HOT, blur=10, strength=0.40)
+        layout.addWidget(title_lbl)
 
         layout.addSpacing(4)
 
-        names = ", ".join(i["name"] for i in self._selected[:4])
-        if len(self._selected) > 4:
-            names += f"  +{len(self._selected) - 4} more"
-        n = len(self._selected)
-        sub_lbl = QLabel(f"{names}  ({n} assignment{'s' if n != 1 else ''})")
+        # Per-course assignment summary
+        sub_lines = []
+        for cname, _, items in self._selections:
+            names = ", ".join(i["name"] for i in items[:3])
+            if len(items) > 3:
+                names += f"  +{len(items) - 3} more"
+            prefix = f"{cname}:  " if n_courses > 1 else ""
+            sub_lines.append(f"{prefix}{names}")
+
+        sub_lbl = QLabel("\n".join(sub_lines))
         sub_lbl.setWordWrap(True)
         sub_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px; background: transparent; border: none;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; background: transparent; border: none;"
         )
         layout.addWidget(sub_lbl)
 
@@ -257,7 +281,13 @@ class RunDialog(QDialog):
         btn_row.addWidget(self._cancel_btn)
         btn_row.addStretch()
 
-        self._run_btn = QPushButton("▶  Run Autograder")
+        n_total = sum(len(items) for _, _, items in self._selections)
+        n_courses = len(self._selections)
+        if n_courses > 1:
+            run_label = f"▶  Run All  ({n_total})"
+        else:
+            run_label = "▶  Run Autograder"
+        self._run_btn = QPushButton(run_label)
         self._run_btn.clicked.connect(self._on_run)
         make_run_button(self._run_btn)
         btn_row.addWidget(self._run_btn)
@@ -281,7 +311,7 @@ class RunDialog(QDialog):
             parts.append(f"{self._n_ci} Complete / Incomplete")
         scope_lbl = QLabel("  " + "  ·  ".join(parts))
         scope_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 12px; background: transparent; border: none;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(12)}px; background: transparent; border: none;"
         )
         lo.addWidget(scope_lbl)
 
@@ -292,7 +322,7 @@ class RunDialog(QDialog):
                 gt_text = "ᵢ  Discussion grading: Complete / Incomplete"
             canvas_gt_lbl = QLabel(gt_text)
             canvas_gt_lbl.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 10px; background: transparent; border: none;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent; border: none;"
             )
             lo.addWidget(canvas_gt_lbl)
 
@@ -302,131 +332,10 @@ class RunDialog(QDialog):
         )
         self._mixed_warn_lbl.setWordWrap(True)
         self._mixed_warn_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 10px;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(10)}px;"
             f" background: transparent; border: none; padding-top: 2px;"
         )
         lo.addWidget(self._mixed_warn_lbl)
-
-        # ── Parameters ──────────────────────────────────────────────────────
-        lo.addWidget(make_h_rule())
-        lo.addWidget(make_section_label("Parameters"))
-
-        _lbl_css = (
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: 500;"
-            f" letter-spacing: 1px; background: transparent; border: none;"
-        )
-        _sub_css = (
-            f"color: {PHOSPHOR_DIM}; font-size: 9px; background: transparent; border: none;"
-        )
-
-        # CI: single min word count row
-        ci_row_w = QWidget()
-        ci_row_w.setStyleSheet("background: transparent;")
-        ci_lo = QHBoxLayout(ci_row_w)
-        ci_lo.setContentsMargins(0, 0, 0, 0)
-        ci_lo.setSpacing(8)
-        ci_key = QLabel("MIN WORD COUNT")
-        ci_key.setStyleSheet(_lbl_css)
-        ci_lo.addWidget(ci_key)
-        self._min_words = QSpinBox()
-        self._min_words.setRange(0, 10000)
-        self._min_words.setValue(200)
-        self._min_words.setFixedWidth(80)
-        ci_lo.addWidget(self._min_words)
-        ci_lo.addStretch()
-        _type_lbl_css = (
-            f"color: {PHOSPHOR_DIM}; font-size: 9px; font-weight: 600;"
-            f" letter-spacing: 1px; background: transparent; border: none; padding-top: 4px;"
-        )
-        self._ci_section_lbl = QLabel("FOR COMPLETE / INCOMPLETE")
-        self._ci_section_lbl.setStyleSheet(_type_lbl_css)
-        lo.addWidget(self._ci_section_lbl)
-        lo.addWidget(ci_row_w)
-        self._ci_row_w = ci_row_w
-
-        # DF: two-row layout  POSTS / REPLIES
-        df_rows_w = QWidget()
-        df_rows_w.setStyleSheet("background: transparent;")
-        df_grid = QVBoxLayout(df_rows_w)
-        df_grid.setContentsMargins(0, 0, 0, 2)
-        df_grid.setSpacing(4)
-
-        # helper: build one row  [KEY] [sub] [spinbox] [sub] [spinbox]
-        def _df_row(key_text, sub1, spin1, sub2, spin2):
-            row_w = QWidget()
-            row_w.setStyleSheet("background: transparent;")
-            rlo = QHBoxLayout(row_w)
-            rlo.setContentsMargins(0, 0, 0, 0)
-            rlo.setSpacing(8)
-            key_lbl = QLabel(key_text)
-            key_lbl.setStyleSheet(_lbl_css)
-            key_lbl.setFixedWidth(56)
-            rlo.addWidget(key_lbl)
-            l1 = QLabel(sub1)
-            l1.setStyleSheet(_sub_css)
-            rlo.addWidget(l1)
-            spin1.setFixedWidth(75)
-            rlo.addWidget(spin1)
-            rlo.addSpacing(10)
-            l2 = QLabel(sub2)
-            l2.setStyleSheet(_sub_css)
-            rlo.addWidget(l2)
-            spin2.setFixedWidth(75)
-            rlo.addWidget(spin2)
-            rlo.addStretch()
-            return row_w, l1, spin1, l2, spin2
-
-        self._post_words = QSpinBox()
-        self._post_words.setRange(0, 10000)
-        self._post_words.setValue(200)
-
-        self._post_points = QDoubleSpinBox()
-        self._post_points.setRange(0, 100)
-        self._post_points.setValue(1.0)
-        self._post_points.setSingleStep(0.5)
-
-        self._min_posts = QSpinBox()
-        self._min_posts.setRange(1, 100)
-        self._min_posts.setValue(1)
-
-        (posts_row_w,
-         self._posts_sub1_lbl, _,
-         self._posts_sub2_lbl, self._posts_spin2) = _df_row(
-            "POSTS", "min words", self._post_words,
-            "count" if self._df_grading_type != "points" else "points",
-            self._min_posts if self._df_grading_type != "points" else self._post_points,
-        )
-
-        self._reply_words = QSpinBox()
-        self._reply_words.setRange(0, 10000)
-        self._reply_words.setValue(50)
-
-        self._reply_points = QDoubleSpinBox()
-        self._reply_points.setRange(0, 100)
-        self._reply_points.setValue(0.5)
-        self._reply_points.setSingleStep(0.25)
-
-        self._min_replies = QSpinBox()
-        self._min_replies.setRange(0, 100)
-        self._min_replies.setValue(2)
-
-        (replies_row_w,
-         self._replies_sub1_lbl, _,
-         self._replies_sub2_lbl, self._replies_spin2) = _df_row(
-            "REPLIES", "min words", self._reply_words,
-            "count" if self._df_grading_type != "points" else "points",
-            self._min_replies if self._df_grading_type != "points" else self._reply_points,
-        )
-
-        df_grid.addWidget(posts_row_w)
-        df_grid.addWidget(replies_row_w)
-        self._type_sep = make_h_rule()
-        lo.addWidget(self._type_sep)
-        self._df_section_lbl = QLabel("FOR DISCUSSION FORUMS")
-        self._df_section_lbl.setStyleSheet(_type_lbl_css)
-        lo.addWidget(self._df_section_lbl)
-        lo.addWidget(df_rows_w)
-        self._df_rows_w = df_rows_w
 
         # ── Options ──────────────────────────────────────────────────────────
         lo.addWidget(make_h_rule())
@@ -505,7 +414,7 @@ class RunDialog(QDialog):
         )
         note.setWordWrap(True)
         note.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; background: transparent; border: none;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent; border: none;"
         )
         lo.addWidget(note)
 
@@ -527,7 +436,7 @@ class RunDialog(QDialog):
             "ᵢ Affects AIC marker weights only"
         )
         self._aic_type_note.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; background: transparent; border: none;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent; border: none;"
         )
         lo.addWidget(self._aic_type_note)
 
@@ -545,14 +454,14 @@ class RunDialog(QDialog):
 
         self._progress_heading = QLabel("RUNNING")
         self._progress_heading.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(16)}px; font-weight: bold;"
             f" letter-spacing: 2px; background: transparent; border: none;"
         )
         layout.addWidget(self._progress_heading)
 
         self._progress_status = QLabel("Preparing…")
         self._progress_status.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px; background: transparent; border: none;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; background: transparent; border: none;"
         )
         layout.addWidget(self._progress_status)
 
@@ -607,9 +516,6 @@ class RunDialog(QDialog):
                 bool(s.get("preserve_existing_grades", True)))
             aic_default = s.get("aic_mode_default", "grade_and_aic")
             self._aic_seg.set_mode(aic_default)
-            self._min_words.setValue(int(s.get("param_min_words", 200)))
-            self._post_words.setValue(int(s.get("param_post_words", 200)))
-            self._reply_words.setValue(int(s.get("param_reply_words", 50)))
         except Exception:
             self._preserve_grades_sw.setChecked(True)
 
@@ -627,100 +533,110 @@ class RunDialog(QDialog):
     # ------------------------------------------------------------------
 
     def _update_visibility(self) -> None:
-        has_df    = self._n_df > 0
-        has_ci    = self._n_ci > 0
-        aic_mode  = self._aic_seg.mode
-        aic_only  = aic_mode == "aic_only"
-        aic_on    = aic_mode != "grade_only"
-
-        # Grading params visible when grading runs
-        show_params = not aic_only
+        has_df   = self._n_df > 0
+        has_ci   = self._n_ci > 0
+        aic_mode = self._aic_seg.mode
+        aic_on   = aic_mode != "grade_only"
 
         is_mixed = has_ci and has_df
-
-        # Mixed-type warning
         self._mixed_warn_lbl.setVisible(is_mixed)
-
-        # Per-type sub-headers and separator (only shown when mixed)
-        self._ci_section_lbl.setVisible(is_mixed and show_params)
-        self._type_sep.setVisible(is_mixed and show_params)
-        self._df_section_lbl.setVisible(is_mixed and show_params)
-
-        # CI row
-        self._ci_row_w.setVisible(has_ci and show_params)
-
-        # DF rows
-        self._df_rows_w.setVisible(has_df and show_params)
-
-        # AIC pane visibility
         self._aic_type_note.setVisible(aic_on)
-
-    def _current_grading_type(self) -> str:
-        return self._df_grading_type
 
     # ------------------------------------------------------------------
     # Run
     # ------------------------------------------------------------------
 
     def _on_run(self) -> None:
-        aic_mode      = self._aic_seg.mode
-        aic_only      = aic_mode == "aic_only"
-        grade_only    = aic_mode == "grade_only"
-        effective_aic = not grade_only
-
-        if aic_only:
-            atype = "aic"
-        elif self._n_df > 0 and self._n_ci > 0:
-            atype = "mixed"
-        elif self._n_df > 0:
-            atype = "discussion_forum"
-        else:
-            atype = "complete_incomplete"
+        self._run_queue = list(self._selections)
+        n_total = sum(len(items) for _, _, items in self._selections)
 
         self._stack.setCurrentIndex(1)
         self._progress_heading.setText("RUNNING")
         self._progress_status.setText("Starting…")
         self._progress_bar.setValue(0)
-        self._progress_bar.setMaximum(max(1, len(self._selected)))
+        self._progress_bar.setMaximum(max(1, n_total))
         self._stop_btn.setEnabled(True)
         self._close_btn.setEnabled(False)
         self._log_output.clear()
+        self._run_next_course()
 
-        # Resolve the correct spinboxes based on grading type
-        post_pts   = self._post_points.value()  if self._df_grading_type == "points" else 1.0
-        reply_pts  = self._reply_points.value() if self._df_grading_type == "points" else 0.5
-        min_posts  = self._min_posts.value()    if self._df_grading_type != "points" else 1
-        min_replies = self._min_replies.value() if self._df_grading_type != "points" else 2
+    def _run_next_course(self) -> None:
+        if not self._run_queue:
+            self._on_all_done()
+            return
+
+        course_name, course_id, selected = self._run_queue.pop(0)
+        n_courses   = len(self._selections)
+        done_count  = n_courses - len(self._run_queue) - 1
+        if n_courses > 1:
+            self._progress_status.setText(
+                f"Running {course_name}  ({done_count + 1} of {n_courses})…"
+            )
+        else:
+            self._progress_status.setText("Starting…")
+
+        aic_mode      = self._aic_seg.mode
+        aic_only      = aic_mode == "aic_only"
+        grade_only    = aic_mode == "grade_only"
+        effective_aic = not grade_only
+
+        n_df, n_ci, df_gt = _classify_selection(selected)
+        if aic_only:
+            atype = "aic"
+        elif n_df > 0 and n_ci > 0:
+            atype = "mixed"
+        elif n_df > 0:
+            atype = "discussion_forum"
+        else:
+            atype = "complete_incomplete"
+
+        mode_settings = self._resolve_mode_settings()
 
         if self._demo_mode:
             from gui.workers import DemoRunWorker
-            self._worker = DemoRunWorker(selected_items=self._selected)
+            self._worker = DemoRunWorker(selected_items=selected)
         else:
             from gui.workers import RunWorker
             self._worker = RunWorker(
                 api=self._api,
-                course_id=self._course_id,
-                course_name=self._course_name,
-                selected_assignments=self._selected,
+                course_id=course_id,
+                course_name=course_name,
+                selected_assignments=selected,
                 assignment_type=atype,
-                min_word_count=self._min_words.value(),
-                post_min_words=self._post_words.value(),
-                reply_min_words=self._reply_words.value(),
-                grading_type=self._current_grading_type(),
-                post_points=post_pts,
-                reply_points=reply_pts,
-                min_posts=min_posts,
-                min_replies=min_replies,
+                min_word_count=mode_settings["min_word_count"],
+                post_min_words=mode_settings["post_min_words"],
+                reply_min_words=mode_settings["reply_min_words"],
+                grading_type=df_gt,
+                post_points=1.0,
+                reply_points=0.5,
+                min_posts=1,
+                min_replies=2,
                 run_adc=effective_aic,
                 preserve_grades=self._preserve_grades_sw.isChecked(),
                 mark_incomplete=self._mark_incomplete_sw.isChecked(),
                 dry_run=False,
-                mode_settings=self._resolve_mode_settings(),
+                mode_settings=mode_settings,
             )
         self._worker.log_line.connect(self._append_log)
         self._worker.progress.connect(self._on_progress)
-        self._worker.finished.connect(self._on_finished)
+        self._worker.finished.connect(self._on_course_finished)
         self._worker.start()
+
+    def _on_course_finished(self, success: bool, message: str) -> None:
+        icon = "Done" if success else "Error"
+        self._append_log(f"\n[{icon}] {message}")
+        if self._run_queue:
+            self._run_next_course()
+        else:
+            self._on_all_done()
+
+    def _on_all_done(self) -> None:
+        self._stop_btn.setEnabled(False)
+        self._close_btn.setEnabled(True)
+        n_total = sum(len(items) for _, _, items in self._selections)
+        self._progress_bar.setValue(self._progress_bar._maximum)
+        self._progress_heading.setText("COMPLETE")
+        self._progress_status.setText(f"Done — {n_total} assignment{'s' if n_total != 1 else ''} graded.")
 
     def _on_progress(self, done: int, total: int) -> None:
         self._progress_bar.setMaximum(total)
@@ -739,17 +655,6 @@ class RunDialog(QDialog):
         sb = self._log_output.verticalScrollBar()
         sb.setValue(sb.maximum())
 
-    def _on_finished(self, success: bool, message: str) -> None:
-        self._stop_btn.setEnabled(False)
-        self._close_btn.setEnabled(True)
-        icon = "Done" if success else "Error"
-        self._append_log(f"\n[{icon}] {message}")
-        self._progress_heading.setText("COMPLETE" if success else "ERROR")
-        if success:
-            # Force bar to 100% regardless of how progress was counted
-            m = self._progress_bar._maximum
-            self._progress_bar.setValue(m)
-
     def _on_stop(self) -> None:
         if self._worker and self._worker.isRunning():
             self._worker.cancel()
@@ -765,14 +670,22 @@ class RunDialog(QDialog):
             pass
 
     def _resolve_mode_settings(self) -> dict:
-        """Return {aic_mode, aic_config} from the current template selection."""
+        """Return aic_mode, aic_config, and word counts from the selected template."""
         tmpl_name = self._type_combo.currentData()
         if not tmpl_name or tmpl_name == "auto":
-            return {"aic_mode": "auto", "aic_config": aic_config_from_mode("auto")}
-        tmpl = load_templates().get(tmpl_name, {})
+            tmpl = {}
+            base = {"aic_mode": "auto", "aic_config": aic_config_from_mode("auto")}
+        else:
+            tmpl = load_templates().get(tmpl_name, {})
+            base = {
+                "aic_mode":   tmpl.get("aic_mode", "auto"),
+                "aic_config": get_aic_config(tmpl),
+            }
         return {
-            "aic_mode":   tmpl.get("aic_mode", "auto"),
-            "aic_config": get_aic_config(tmpl),
+            **base,
+            "min_word_count":  tmpl.get("min_word_count", 200),
+            "post_min_words":  tmpl.get("post_min_words", 200),
+            "reply_min_words": tmpl.get("reply_min_words", 50),
         }
 
     def _populate_type_combo(self) -> None:
