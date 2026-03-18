@@ -1,4 +1,4 @@
-"""CRT-style rocker toggle for switching between two labelled views."""
+"""CRT-style rocker toggle for switching between two or more labelled views."""
 
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, Signal
 from PySide6.QtGui import (
@@ -27,12 +27,16 @@ BG_INSET = "#0E0A02"
 
 
 class ViewToggle(QWidget):
-    """A rocker toggle painted as a single rounded rectangle with two zones.
+    """A rocker toggle painted as a single rounded rectangle with N equal segments.
+
+    Supports 2 or more segments. When ``segments`` is provided it takes
+    precedence over the legacy ``left_label / right_label / left_mode /
+    right_mode`` keyword arguments (which remain for backward compatibility).
 
     Signals
     -------
     mode_changed(str)
-        Emitted with the active mode string when the active side changes.
+        Emitted with the active mode string when the active segment changes.
     """
 
     mode_changed = Signal(str)
@@ -44,23 +48,28 @@ class ViewToggle(QWidget):
                  left_label: str = "Deadline",
                  right_label: str = "Group",
                  left_mode: str = "deadline",
-                 right_mode: str = "group") -> None:
+                 right_mode: str = "group",
+                 segments: list | None = None) -> None:
         super().__init__(parent)
-        self._label_left = left_label
-        self._label_right = right_label
-        self._mode_left = left_mode
-        self._mode_right = right_mode
-        self._mode: str = self._mode_left  # default active side
-        self._hover_side: str | None = None  # which side the cursor is over
+
+        if segments is not None:
+            self._segments: list[tuple[str, str]] = list(segments)
+        else:
+            self._segments = [
+                (left_label, left_mode),
+                (right_label, right_mode),
+            ]
+
+        self._mode: str = self._segments[0][1]   # default to first segment
+        self._hover_idx: int | None = None
 
         # Auto-size width from label text
         font = QFont()
         font.setPixelSize(11)
         font.setWeight(QFont.Weight.Medium)
         fm = QFontMetrics(font)
-        left_w = fm.horizontalAdvance(left_label) + 24
-        right_w = fm.horizontalAdvance(right_label) + 24
-        total_w = max(left_w + right_w, 140)
+        seg_widths = [fm.horizontalAdvance(lbl) + 40 for lbl, _ in self._segments]
+        total_w = max(sum(seg_widths), 180)
 
         self.setFixedSize(total_w, 24)
         self.setMouseTracking(True)
@@ -75,7 +84,7 @@ class ViewToggle(QWidget):
 
     def set_mode(self, mode: str) -> None:
         """Programmatically switch the toggle without emitting a signal."""
-        if mode not in (self._mode_left, self._mode_right):
+        if mode not in (m for _, m in self._segments):
             return
         if mode != self._mode:
             self._mode = mode
@@ -93,39 +102,45 @@ class ViewToggle(QWidget):
     # ------------------------------------------------------------------
     # Geometry helpers
     # ------------------------------------------------------------------
-    def _left_rect(self) -> QRect:
-        return QRect(0, 0, self.width() // 2, self.height())
+    def _segment_rect(self, i: int) -> QRect:
+        n = len(self._segments)
+        seg_w = self.width() // n
+        x = i * seg_w
+        # Last segment absorbs any rounding remainder
+        w = self.width() - x if i == n - 1 else seg_w
+        return QRect(x, 0, w, self.height())
 
-    def _right_rect(self) -> QRect:
-        half = self.width() // 2
-        return QRect(half, 0, self.width() - half, self.height())
+    def _idx_at(self, pos: QPoint) -> int:
+        n = len(self._segments)
+        seg_w = self.width() // n
+        return max(0, min(pos.x() // seg_w, n - 1))
 
     def _side_at(self, pos: QPoint) -> str:
-        if pos.x() < self.width() // 2:
-            return self._mode_left
-        return self._mode_right
+        """Return the mode string for the segment under ``pos``."""
+        return self._segments[self._idx_at(pos)][1]
 
     # ------------------------------------------------------------------
     # Interaction
     # ------------------------------------------------------------------
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         if event.button() == Qt.MouseButton.LeftButton:
-            clicked = self._side_at(event.position().toPoint())
-            if clicked != self._mode:
-                self._mode = clicked
+            idx = self._idx_at(event.position().toPoint())
+            mode = self._segments[idx][1]
+            if mode != self._mode:
+                self._mode = mode
                 self.update()
                 self.mode_changed.emit(self._mode)
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:  # noqa: N802
-        side = self._side_at(event.position().toPoint())
-        if side != self._hover_side:
-            self._hover_side = side
+        idx = self._idx_at(event.position().toPoint())
+        if idx != self._hover_idx:
+            self._hover_idx = idx
             self.update()
         super().mouseMoveEvent(event)
 
     def leaveEvent(self, event) -> None:  # noqa: N802
-        self._hover_side = None
+        self._hover_idx = None
         self.update()
         super().leaveEvent(event)
 
@@ -138,7 +153,7 @@ class ViewToggle(QWidget):
 
         w = self.width()
         h = self.height()
-        half = w // 2
+        n = len(self._segments)
         radius = 3
 
         # --- overall background & border ---
@@ -152,9 +167,14 @@ class ViewToggle(QWidget):
         clip = QPainterPath()
         clip.addRoundedRect(outer.adjusted(1, 1, 0, 0), radius, radius)
 
-        # --- hover fill on inactive hovered side ---
-        if self._hover_side is not None and self._hover_side != self._mode:
-            hover_rect = self._left_rect() if self._hover_side == self._mode_left else self._right_rect()
+        # Active segment index
+        active_idx = next(
+            (i for i, (_, m) in enumerate(self._segments) if m == self._mode), 0
+        )
+
+        # --- hover fill on inactive hovered segment ---
+        if self._hover_idx is not None and self._hover_idx != active_idx:
+            hover_rect = self._segment_rect(self._hover_idx)
             hx = hover_rect.center().x()
             hy = hover_rect.center().y()
             hover_grad = QRadialGradient(hx, hy, max(hover_rect.width(), hover_rect.height()) * 0.8)
@@ -167,8 +187,8 @@ class ViewToggle(QWidget):
             p.drawRect(hover_rect)
             p.restore()
 
-        # --- active side fill (radial glow) ---
-        active_rect = self._left_rect() if self._mode == self._mode_left else self._right_rect()
+        # --- active segment fill (radial glow) ---
+        active_rect = self._segment_rect(active_idx)
         cx = active_rect.center().x()
         cy = active_rect.center().y()
         grad = QRadialGradient(cx, cy, max(active_rect.width(), active_rect.height()) * 0.8)
@@ -181,7 +201,7 @@ class ViewToggle(QWidget):
         p.drawRect(active_rect)
         p.restore()
 
-        # --- bloom halo on active side ---
+        # --- bloom halo on active segment ---
         bloom = QRadialGradient(cx, cy, max(active_rect.width(), active_rect.height()) * 0.5)
         bloom.setColorAt(0.0, QColor(240, 168, 48, 40))
         bloom.setColorAt(0.6, QColor(240, 168, 48, 14))
@@ -193,34 +213,31 @@ class ViewToggle(QWidget):
         p.drawRect(active_rect)
         p.restore()
 
-        # --- centre divider ---
+        # --- dividers between segments ---
+        seg_w = w // n
         p.setPen(QPen(QColor("#2A1A04"), 1.0))
-        p.drawLine(half, 2, half, h - 3)
+        for i in range(1, n):
+            x = i * seg_w
+            p.drawLine(x, 2, x, h - 3)
 
-        # --- text ---
+        # --- text for each segment ---
         font = QFont()
         font.setPixelSize(11)
         font.setWeight(QFont.Weight.Medium)
         p.setFont(font)
 
-        fm = QFontMetrics(font)
-
-        for side, label, rect in (
-            (self._mode_left, self._label_left, self._left_rect()),
-            (self._mode_right, self._label_right, self._right_rect()),
-        ):
-            is_active = self._mode == side
-            is_hovered = self._hover_side == side and not is_active
+        for i, (label, mode) in enumerate(self._segments):
+            rect = self._segment_rect(i)
+            is_active = self._mode == mode
+            is_hovered = self._hover_idx == i and not is_active
 
             if is_active:
-                # Subtle glow behind text (draw text twice, blurred layer first)
+                # Subtle glow behind text
                 glow_color = QColor(PHOSPHOR_HOT)
                 glow_color.setAlpha(60)
                 p.setPen(glow_color)
-                # Offset copies for a cheap "glow" effect
                 for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
                     p.drawText(rect.adjusted(dx, dy, dx, dy), Qt.AlignmentFlag.AlignCenter, label)
-                # Main bright text
                 p.setPen(QColor(PHOSPHOR_HOT))
             elif is_hovered:
                 p.setPen(QColor(PHOSPHOR_MID))

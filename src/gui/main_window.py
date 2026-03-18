@@ -13,6 +13,7 @@ from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QAction, QKeySequence, QColor
 
 from gui.styles import (
+    px,
     WIN_MIN_W, WIN_MIN_H, WIN_DEFAULT_W, WIN_DEFAULT_H,
     LEFT_PANEL_MIN, LEFT_PANEL_PREF,
     BG_VOID, BG_PANEL, BORDER_DARK, BORDER_AMBER,
@@ -38,7 +39,7 @@ _NAV_BTN_QSS = f"""
         border-radius: 0;
         padding: 0 18px;
         font-family: "Menlo", "Consolas", "Courier New", monospace;
-        font-size: 12px;
+        font-size: {px(12)}px;
         min-height: 46px;
     }}
     QPushButton:hover:!checked {{
@@ -65,7 +66,7 @@ _ACTION_BTN_QSS = f"""
         border-radius: 0;
         padding: 0 18px;
         font-family: "Menlo", "Consolas", "Courier New", monospace;
-        font-size: 12px;
+        font-size: {px(12)}px;
         min-height: 46px;
     }}
     QPushButton:hover {{
@@ -249,17 +250,11 @@ class MainWindow(QMainWindow):
         self._nav_group.addButton(self._btn_bulk)
         h.addWidget(self._btn_bulk)
 
-        # Review Prior Runs → page 3
-        self._btn_prior = _nav_btn("Review Prior Runs")
-        self._btn_prior.clicked.connect(lambda: self._stack.setCurrentIndex(3))
+        # Review → page 3 (Grading + AIC + Insights)
+        self._btn_prior = _nav_btn("Review")
+        self._btn_prior.clicked.connect(self._show_review_page)
         self._nav_group.addButton(self._btn_prior)
         h.addWidget(self._btn_prior)
-
-        # Generate Insights → page 5
-        self._btn_insights = _nav_btn("Generate Insights")
-        self._btn_insights.clicked.connect(self._show_insights_page)
-        self._nav_group.addButton(self._btn_insights)
-        h.addWidget(self._btn_insights)
 
         # Automation → page 1
         self._btn_automation = _nav_btn("Automation")
@@ -333,14 +328,14 @@ class MainWindow(QMainWindow):
         # Page header (matches Bulk Run's title bar)
         cs_title = QLabel("COURSE SELECT")
         cs_title.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(16)}px; font-weight: bold;"
             f" background: transparent; border: none; letter-spacing: 2px;"
         )
         cs_sub = QLabel(
             "Select a course to view assignments and run the autograder."
         )
         cs_sub.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
             f" background: transparent; border: none;"
         )
         cs_sub.setWordWrap(True)
@@ -361,15 +356,28 @@ class MainWindow(QMainWindow):
         self._settings_panel = SettingsPanel(api=self._api)
         self._stack.addWidget(self._settings_panel)    # index 2
 
-        # ── Page 3: Review (Grading Results + AIC) ────────────────────────
+        # ── Insights panel (lives inside ReviewPanel, not a top-level stack page) ─
+        from insights.insights_store import InsightsStore
+        from gui.panels.insights_panel import InsightsPanel
+        self._insights_store = InsightsStore()
+        self._insights_panel = InsightsPanel(
+            api=self._api, store=self._insights_store, demo_mode=self._demo_mode
+        )
+
+        # ── Page 3: Review (Grading Results + AIC + Insights) ─────────────
         from gui.panels.review_panel import ReviewPanel
         if self._demo_mode:
             from automation.demo_store import DemoRunStore
             self._review_panel = ReviewPanel(
-                api=None, store=DemoRunStore(profile=self._demo_profile)
+                api=None,
+                store=DemoRunStore(profile=self._demo_profile),
+                insights_panel=self._insights_panel,
             )
         else:
-            self._review_panel = ReviewPanel(api=self._api)
+            self._review_panel = ReviewPanel(
+                api=self._api,
+                insights_panel=self._insights_panel,
+            )
         self._stack.addWidget(self._review_panel)  # index 3
 
         # ── Page 4: Bulk Run ──────────────────────────────────────────────
@@ -377,25 +385,16 @@ class MainWindow(QMainWindow):
         self._bulk_run_page = BulkRunPage(api=self._api, demo_mode=self._demo_mode)
         self._stack.addWidget(self._bulk_run_page)            # index 4
 
-        # ── Page 5: Generate Insights ─────────────────────────────────────
-        from insights.insights_store import InsightsStore
-        from gui.panels.insights_panel import InsightsPanel
-        self._insights_store = InsightsStore()
-        self._insights_panel = InsightsPanel(
-            api=self._api, store=self._insights_store, demo_mode=self._demo_mode
-        )
-        self._stack.addWidget(self._insights_panel)           # index 5
-
         self._stack.setCurrentIndex(0)
 
 
-    def _show_insights_page(self) -> None:
-        """Switch to the Generate Insights page, refreshing course data."""
+    def _show_review_page(self) -> None:
+        """Switch to the Review page, ensuring Insights has fresh course data."""
         courses_by_term = self._course_panel.get_all_courses_by_term()
         self._insights_panel.refresh_courses(
             courses_by_term, self._assignments_cache
         )
-        self._stack.setCurrentIndex(5)
+        self._stack.setCurrentIndex(3)
 
     def _build_statusbar(self) -> None:
         sb = QStatusBar()
@@ -409,7 +408,7 @@ class MainWindow(QMainWindow):
                 f"color: {PHOSPHOR_HOT}; background: rgba(90,60,8,0.35);"
                 f" border: 1px solid {BORDER_AMBER}; border-radius: 3px;"
                 f" font-family: 'Menlo','Consolas','Courier New',monospace;"
-                f" font-size: 11px; font-weight: bold; padding: 1px 4px;"
+                f" font-size: {px(11)}px; font-weight: bold; padding: 1px 4px;"
             )
             sb.addPermanentWidget(demo_badge)
 

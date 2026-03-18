@@ -1,18 +1,20 @@
 """
-Review Panel — Container with ViewToggle switching between Grading Review and Academic Integrity.
+Review Panel — Container with ViewToggle switching between Grading Review,
+Academic Integrity, and Insights.
 
-Sits at Page 3 in the main window stack. Both views share the same SQLite database
-and operate on the same students/assignments.
+Sits at Page 3 in the main window stack. All three views share the same
+SQLite database and operate on the same students/assignments.
 
 Layout:
   ┌────────────────────────────────────────────────────────────────┐
-  │  REVIEW  [Grading Review ◆ | ◆ Academic Integrity]            │  ← page header
-  │  Review grading results and academic integrity patterns…       │  ← subtitle
+  │  REVIEW  [Grading Review ◆ | ◆ Academic Integrity | Insights] │  ← page header
+  │  Review grading results, integrity patterns, and insights.     │  ← subtitle
   │  ────────────────────────────────────────────────────────────  │  ← h_rule
   ├────────────────────────────────────────────────────────────────┤
   │  QStackedWidget:                                               │
   │    index 0: GradingResultsPanel                               │
   │    index 1: PriorRunsPanel (AIC) — has own ethical strip      │
+  │    index 2: InsightsPanel (optional, when passed in)          │
   └────────────────────────────────────────────────────────────────┘
 """
 
@@ -21,6 +23,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.styles import (
+    px,
     PHOSPHOR_HOT, PHOSPHOR_DIM,
     BORDER_DARK, BORDER_AMBER,
     PANE_BG_GRADIENT,
@@ -28,12 +31,14 @@ from gui.styles import (
 
 
 class ReviewPanel(QFrame):
-    """Page 3 container: ViewToggle + stacked GradingResultsPanel / PriorRunsPanel."""
+    """Page 3 container: ViewToggle + stacked GradingResultsPanel /
+    PriorRunsPanel / InsightsPanel."""
 
-    def __init__(self, api=None, store=None, parent=None):
+    def __init__(self, api=None, store=None, insights_panel=None, parent=None):
         super().__init__(parent)
-        self._api   = api
-        self._store = store
+        self._api             = api
+        self._store           = store
+        self._insights_panel  = insights_panel
         self.setObjectName("reviewPanel")
         self.setStyleSheet(f"""
             QFrame#reviewPanel {{
@@ -61,28 +66,44 @@ class ReviewPanel(QFrame):
 
         title = QLabel("REVIEW")
         title.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(16)}px; font-weight: bold;"
             f" letter-spacing: 2px; background: transparent; border: none;"
         )
         header_row.addWidget(title)
 
         from gui.widgets.view_toggle import ViewToggle
-        self._toggle = ViewToggle(
-            parent=self,
-            left_label="Grading Review",
-            right_label="Academic Integrity",
-            left_mode="grading",
-            right_mode="aic",
-        )
+        if self._insights_panel is not None:
+            self._toggle = ViewToggle(
+                parent=self,
+                segments=[
+                    ("Grading Review",       "grading"),
+                    ("Academic Integrity",   "aic"),
+                    ("Insights",             "insights"),
+                ],
+            )
+        else:
+            self._toggle = ViewToggle(
+                parent=self,
+                left_label="Grading Review",
+                right_label="Academic Integrity",
+                left_mode="grading",
+                right_mode="aic",
+            )
         header_row.addWidget(self._toggle)
         header_row.addStretch()
         layout.addLayout(header_row)
 
-        sub = QLabel(
-            "Review grading results and academic integrity patterns across assignments."
-        )
+        if self._insights_panel is not None:
+            subtitle_text = (
+                "Review grading results, academic integrity patterns, and course insights."
+            )
+        else:
+            subtitle_text = (
+                "Review grading results and academic integrity patterns across assignments."
+            )
+        sub = QLabel(subtitle_text)
         sub.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
             f" background: transparent; border: none;"
         )
         sub.setWordWrap(True)
@@ -117,6 +138,10 @@ class ReviewPanel(QFrame):
         self._aic_panel = PriorRunsPanel(api=self._api, store=self._store)
         self._stack.addWidget(self._aic_panel)
 
+        # Index 2: Insights (optional)
+        if self._insights_panel is not None:
+            self._stack.addWidget(self._insights_panel)
+
         self._stack.setCurrentIndex(0)
         layout.addWidget(self._stack, 1)
 
@@ -129,8 +154,10 @@ class ReviewPanel(QFrame):
         if mode == "grading":
             self._stack.setCurrentIndex(0)
             self._grading_panel.refresh()
-        else:
+        elif mode == "aic":
             self._stack.setCurrentIndex(1)
+        elif mode == "insights" and self._insights_panel is not None:
+            self._stack.setCurrentIndex(2)
 
     def set_course(self, course_id: int, course_name: str) -> None:
         """Propagate course selection from Course Select to both review sub-panels."""
