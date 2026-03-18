@@ -246,6 +246,12 @@ class MainWindow(QMainWindow):
         self._nav_group.addButton(self._btn_courses)
         h.addWidget(self._btn_courses)
 
+        # Bulk Run → page 4
+        self._btn_bulk = _nav_btn("Bulk Run")
+        self._btn_bulk.clicked.connect(self._show_bulk_run_page)
+        self._nav_group.addButton(self._btn_bulk)
+        h.addWidget(self._btn_bulk)
+
         # Review → page 3 (Grading + AIC + Insights)
         self._btn_prior = _nav_btn("Review")
         self._btn_prior.clicked.connect(self._show_review_page)
@@ -376,6 +382,10 @@ class MainWindow(QMainWindow):
             )
         self._stack.addWidget(self._review_panel)  # index 3
 
+        # ── Page 4: Bulk Run ──────────────────────────────────────────────
+        from gui.dialogs.bulk_run_dialog import BulkRunPage
+        self._bulk_run_page = BulkRunPage(api=self._api, demo_mode=self._demo_mode)
+        self._stack.addWidget(self._bulk_run_page)  # index 4
 
         self._stack.setCurrentIndex(0)
 
@@ -415,10 +425,16 @@ class MainWindow(QMainWindow):
         self._assignment_panel.edit_completed.connect(self._on_edit_completed)
         self._settings_panel.settings_saved.connect(self._on_settings_saved)
 
-        # Pass editor to panels that support Canvas mutations
+        # Sync course-panel width between Course Select and Bulk Run
+        self._course_splitter.splitterMoved.connect(self._sync_to_bulk_run)
+        self._bulk_run_page._pane_splitter.splitterMoved.connect(self._sync_to_course_select)
+
+        # Pass editor and Canvas URL to panels
         if self._editor:
             self._assignment_panel.set_editor(self._editor)
             self._course_panel.set_editor(self._editor)
+        elif self._api and hasattr(self._api, "base_url"):
+            self._assignment_panel.set_canvas_url(self._api.base_url)
 
     # ------------------------------------------------------------------
     # Course / assignment loading
@@ -583,11 +599,7 @@ class MainWindow(QMainWindow):
                          "Configure Canvas credentials in the Settings tab first.")
             return
 
-        # Build combined selection: current course first, then any other saved courses
         selections = [(course_name, course_id, selected)]
-        for cid, (cname, items) in self._cross_selections.items():
-            if cid != course_id and items:
-                selections.append((cname, cid, items))
 
         term_id = self._current_term_id or 0
 
@@ -618,8 +630,54 @@ class MainWindow(QMainWindow):
         else:
             self._refresh_assignments()
 
+    def _show_bulk_run_page(self) -> None:
+        courses_by_term = self._course_panel.get_all_courses_by_term()
+        self._bulk_run_page.refresh_courses(courses_by_term)
+        if self._demo_mode:
+            from demo_data import SPRING_2026, FALL_2025, get_demo_courses, get_demo_assignment_groups
+            p  = self._demo_profile
+            mp = self._bulk_run_page._mapping_panel
+            for term_id in (SPRING_2026, FALL_2025):
+                for c in get_demo_courses(term_id, profile=p):
+                    mp._groups_cache[c["id"]] = get_demo_assignment_groups(c["id"], profile=p)
+        self._stack.setCurrentIndex(4)
+
     def _on_term_selected(self, term_id: int) -> None:
         self._current_term_id = term_id
+
+    # ------------------------------------------------------------------
+    # Splitter width sync
+    # ------------------------------------------------------------------
+
+    def _sync_to_bulk_run(self, pos: int, index: int) -> None:
+        cs_sizes = self._course_splitter.sizes()
+        if not cs_sizes:
+            return
+        br_sizes = self._bulk_run_page._pane_splitter.sizes()
+        if len(br_sizes) < 3:
+            return
+        delta = cs_sizes[0] - br_sizes[0]
+        br_sizes[0] = cs_sizes[0]
+        br_sizes[1] = max(100, br_sizes[1] - delta)
+        self._bulk_run_page._pane_splitter.blockSignals(True)
+        self._bulk_run_page._pane_splitter.setSizes(br_sizes)
+        self._bulk_run_page._pane_splitter.blockSignals(False)
+
+    def _sync_to_course_select(self, pos: int, index: int) -> None:
+        if index != 1:
+            return
+        br_sizes = self._bulk_run_page._pane_splitter.sizes()
+        if not br_sizes:
+            return
+        cs_sizes = self._course_splitter.sizes()
+        if len(cs_sizes) < 2:
+            return
+        total = sum(cs_sizes)
+        cs_sizes[0] = br_sizes[0]
+        cs_sizes[1] = total - cs_sizes[0]
+        self._course_splitter.blockSignals(True)
+        self._course_splitter.setSizes(cs_sizes)
+        self._course_splitter.blockSignals(False)
 
     # ------------------------------------------------------------------
     # Settings saved
@@ -693,6 +751,8 @@ class MainWindow(QMainWindow):
         for w in list(self._active_workers):
             w.wait(3000)
         # Also stop workers not tracked by _active_workers
+        if hasattr(self, "_bulk_run_page") and hasattr(self._bulk_run_page, "_mapping_panel"):
+            self._bulk_run_page._mapping_panel.stop_and_wait()
         if hasattr(self, "_insights_panel"):
             self._insights_panel.cleanup()
         event.accept()
