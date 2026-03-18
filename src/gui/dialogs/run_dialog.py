@@ -406,17 +406,7 @@ class RunDialog(QDialog):
         lo.addWidget(make_h_rule())
         lo.addSpacing(2)
 
-        lo.addWidget(make_section_label("Assignment Type  —  for AIC only"))
-
-        note = QLabel(
-            "Tells the AIC which marker weight profile to apply."
-            "  Doesn't affect grading."
-        )
-        note.setWordWrap(True)
-        note.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent; border: none;"
-        )
-        lo.addWidget(note)
+        lo.addWidget(make_section_label("Template"))
 
         type_row = QHBoxLayout()
         type_row.setContentsMargins(0, 4, 0, 0)
@@ -424,19 +414,19 @@ class RunDialog(QDialog):
 
         self._type_combo = QComboBox()
         self._populate_type_combo()
+        self._type_combo.currentIndexChanged.connect(self._update_template_summary)
         type_row.addWidget(self._type_combo, 1)
 
-        edit_types_btn = QPushButton("Edit Types")
-        edit_types_btn.setToolTip("Open the Assignment Type editor")
+        edit_types_btn = QPushButton("Edit Templates")
+        edit_types_btn.setToolTip("Open the Template editor")
         edit_types_btn.clicked.connect(self._open_type_editor)
         type_row.addWidget(edit_types_btn)
         lo.addLayout(type_row)
 
-        self._aic_type_note = QLabel(
-            "ᵢ Affects AIC marker weights only"
-        )
+        self._aic_type_note = QLabel()
+        self._aic_type_note.setWordWrap(True)
         self._aic_type_note.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent; border: none;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(10)}px; background: transparent; border: none;"
         )
         lo.addWidget(self._aic_type_note)
 
@@ -518,6 +508,32 @@ class RunDialog(QDialog):
             self._aic_seg.set_mode(aic_default)
         except Exception:
             self._preserve_grades_sw.setChecked(True)
+        self._update_template_summary()
+
+    def _update_template_summary(self) -> None:
+        """Refresh the read-only template summary line below the combo."""
+        ms = self._resolve_mode_settings()
+        tmpl_name = self._type_combo.currentData()
+
+        wc = ms["min_word_count"]
+        aic_mode = ms["aic_mode"]
+
+        has_df = self._n_df > 0
+        if has_df:
+            wc_text = f"posts {ms['post_min_words']} words  ·  replies {ms['reply_min_words']} words"
+        else:
+            wc_text = f"min {wc} words"
+
+        if not tmpl_name or tmpl_name == "auto":
+            prefix = "ᵢ  Auto-detect"
+            suffix = " — configure Templates to customise"
+        else:
+            prefix = f"ᵢ  {tmpl_name}"
+            suffix = ""
+
+        self._aic_type_note.setText(
+            f"{prefix}  ·  {wc_text}  ·  AIC: {aic_mode}{suffix}"
+        )
 
     def _save_setting(self, key: str, value) -> None:
         try:

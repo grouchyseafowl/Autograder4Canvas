@@ -51,7 +51,7 @@ from PySide6.QtGui import (
 
 from gui.styles import (
     px,
-    SPACING_SM, SPACING_MD, FONT_LARGE, make_run_button,
+    SPACING_SM, SPACING_MD, FONT_LARGE, make_run_button, make_secondary_button,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM, PHOSPHOR_GLOW,
     ROSE_ACCENT, BORDER_DARK, BORDER_AMBER,
     BG_CARD, BG_VOID, BG_INSET, PANE_BG_GRADIENT,
@@ -1596,6 +1596,11 @@ class AssignmentPanel(QFrame):
         bottom.addWidget(self._count_label, 0, Qt.AlignmentFlag.AlignVCenter)
         bottom.addStretch()
 
+        self._templates_btn = QPushButton("Templates")
+        self._templates_btn.clicked.connect(self._open_template_editor)
+        make_secondary_button(self._templates_btn)
+        bottom.addWidget(self._templates_btn)
+
         self._run_btn = QPushButton("▶  Run Autograder")
         self._run_btn.setEnabled(False)
         self._run_btn.clicked.connect(self._on_run_clicked)
@@ -1648,20 +1653,6 @@ class AssignmentPanel(QFrame):
         row.addWidget(clr)
 
         row.addStretch()
-
-        # Configure Templates — far right
-        _tsep2 = QFrame()
-        _tsep2.setFrameShape(QFrame.Shape.VLine)
-        _tsep2.setFixedWidth(1)
-        _tsep2.setStyleSheet(f"background: {BORDER_DARK}; border: none;")
-        row.addWidget(_tsep2)
-        row.addSpacing(4)
-
-        cfg_btn = PhosphorChip("Templates", accent="amber", action=True)
-        cfg_btn.setToolTip("Configure assignment templates and AIC settings")
-        cfg_btn.toggled.connect(lambda _: self._open_template_editor())
-        row.addWidget(cfg_btn)
-
         return bar
 
     # ------------------------------------------------------------------
