@@ -38,7 +38,10 @@ from PySide6.QtWidgets import (
     QMenu, QInputDialog, QMessageBox, QDateTimeEdit,
     QDialog, QFormLayout, QComboBox, QSpinBox,
 )
-from gui.dialogs.message_dialog import show_info, show_warning, show_critical, show_question
+from gui.dialogs.message_dialog import (
+    show_info, show_warning, show_critical, show_question,
+    show_warning_suppressible,
+)
 from PySide6.QtCore import (
     Signal, Qt, QSize, QTimer, QMimeData, QDateTime,
     QPropertyAnimation, QEasingCurve,
@@ -51,7 +54,7 @@ from PySide6.QtGui import (
 
 from gui.styles import (
     px,
-    SPACING_SM, SPACING_MD, FONT_LARGE, make_run_button, make_secondary_button,
+    SPACING_SM, SPACING_MD, FONT_LARGE, make_run_button,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM, PHOSPHOR_GLOW,
     ROSE_ACCENT, BORDER_DARK, BORDER_AMBER,
     BG_CARD, BG_VOID, BG_INSET, PANE_BG_GRADIENT,
@@ -471,13 +474,12 @@ class _AssignmentRow(QFrame):
         # through directly to this frame, so mousePressEvent / mouseMoveEvent
         # fire without any event-propagation or event-filter complexity.
         # QCheckBox is intentionally left interactive.
-        if not auto:
+        if not auto and not drag_enabled:
             self.setCursor(Qt.CursorShape.ForbiddenCursor)
 
         if drag_enabled:
             self.setAcceptDrops(True)
-            if auto:
-                self.setCursor(Qt.CursorShape.OpenHandCursor)
+            self.setCursor(Qt.CursorShape.OpenHandCursor)
             self.setToolTip(assignment["name"])
             for lbl in self.findChildren(QLabel):
                 if not isinstance(lbl, _ClickableLabel):
@@ -530,17 +532,25 @@ class _AssignmentRow(QFrame):
             else:
                 p.fillRect(self.rect(), self._tint)
 
-        # 2. Selection / hover radial glow (left-biased origin behind pip)
+        # 2. Selection / hover glow
         if is_checked or self._hovered:
             glow_cx = w * 0.25
             glow_cy = cy
             if is_checked:
                 mid_r, mid_g, mid_b = 204, 82, 130   # rose
-                glow_a, bloom_a = 72, 35
+                glow_a, bloom_a, tail_a = 72, 35, 18
             else:
                 mid_r, mid_g, mid_b = 240, 168, 48   # amber
-                glow_a, bloom_a = 50, 20
+                glow_a, bloom_a, tail_a = 50, 20, 10
 
+            # Linear wash first — ensures the tint is visible across the full row width
+            wash = QLinearGradient(0, 0, w, 0)
+            wash.setColorAt(0.00, QColor(mid_r, mid_g, mid_b, glow_a // 2))
+            wash.setColorAt(0.45, QColor(mid_r, mid_g, mid_b, tail_a))
+            wash.setColorAt(1.00, QColor(mid_r, mid_g, mid_b, tail_a))
+            p.fillRect(self.rect(), QBrush(wash))
+
+            # Radial glow on top — concentrated left-side phosphor bloom
             grad = QRadialGradient(glow_cx, glow_cy, w * 0.8)
             grad.setColorAt(0.00, QColor(mid_r, mid_g, mid_b, glow_a))
             grad.setColorAt(0.40, QColor(mid_r, mid_g, mid_b, glow_a // 4))
@@ -636,6 +646,13 @@ class _AssignmentRow(QFrame):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
+            # In drag-enabled view, clicks outside the pip zone start a potential drag
+            # regardless of whether this assignment is autogradeable.
+            if self._drag_enabled and event.pos().x() >= 36:
+                self._drag_start = event.pos()
+                event.accept()
+                return
+            # Pip-zone click (or non-drag view): attempt selection toggle.
             if not self._auto:
                 self._show_not_gradeable_notice()
                 event.accept()
@@ -643,25 +660,23 @@ class _AssignmentRow(QFrame):
             if self._ngr == 0:
                 event.accept()
                 return
-            if self._drag_enabled and event.pos().x() >= 36:
-                # Click outside pip zone in drag view → record for potential drag
-                self._drag_start = event.pos()
-            else:
-                # Full-row click in normal view, or pip-zone click in drag view → toggle
-                self._is_checked = not self._is_checked
-                self.toggled.emit(self._aid, self._is_checked)
-                self.update()
+            self._is_checked = not self._is_checked
+            self.toggled.emit(self._aid, self._is_checked)
+            self.update()
             event.accept()
         else:
             super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and self._drag_start is not None:
-            # If we released without dragging, treat it as a toggle click
+            # Short move = click not drag → try to toggle (auto rows only)
             if (event.pos() - self._drag_start).manhattanLength() < 10:
-                self._is_checked = not self._is_checked
-                self.toggled.emit(self._aid, self._is_checked)
-                self.update()
+                if self._auto and self._ngr > 0:
+                    self._is_checked = not self._is_checked
+                    self.toggled.emit(self._aid, self._is_checked)
+                    self.update()
+                elif not self._auto:
+                    self._show_not_gradeable_notice()
             self._drag_start = None
             event.accept()
         else:
@@ -670,16 +685,35 @@ class _AssignmentRow(QFrame):
     def _show_not_gradeable_notice(self) -> None:
         gtype = self._data.get("grading_type", "points")
         type_label = _GRADING_LABELS.get(gtype, "Points")
-        show_warning(
-            self.window(),
-            "Cannot Autograde",
-            f"{self._data['name']} cannot be autograded.\n\n"
-            f"This assignment uses {type_label} grading, which is not supported. "
-            f"The autograder only supports Complete / Incomplete and "
-            f"Discussion Forum assignments.\n\n"
-            f"To autograde this assignment, change its grading type to "
-            f"Complete / Incomplete in Canvas first.",
-        )
+        name = self._data.get("name", "This assignment")
+
+        # Walk up to the panel to check for editor
+        panel = self.parent()
+        while panel and not isinstance(panel, AssignmentPanel):
+            panel = panel.parent()
+        has_editor = bool(panel and getattr(panel, "_editor", None))
+
+        if has_editor:
+            from gui.dialogs.message_dialog import show_with_action
+            if show_with_action(
+                self.window(),
+                "Convert Grading Type",
+                f"{name} currently uses {type_label} grading.\n\n"
+                f"Autograding requires Complete / Incomplete.",
+                "Convert to C/I",
+                severity="info",
+            ):
+                aid = self._data.get("id")
+                if aid is not None:
+                    panel._pending_auto_check = aid
+                panel._ctx_change_grading_type(self._data, "pass_fail")
+        else:
+            show_warning(
+                self.window(),
+                "Cannot Autograde",
+                f"{name} uses {type_label} grading.\n\n"
+                f"Change it to Complete / Incomplete in Canvas to autograde it.",
+            )
 
     # Drag-and-drop target (for inserting above this row in group view)
     def dragEnterEvent(self, event):
@@ -1433,7 +1467,10 @@ class AssignmentPanel(QFrame):
         self._checked_ids:        Set[int] = set()
         self._view_mode:          str = "deadline"   # "deadline" | "group"
         self._editor              = None              # CanvasEditor instance
+        self._canvas_base_url:    str = ""            # for "Open in Canvas" links
         self._active_edit_workers: list = []          # prevent premature GC
+        self._pending_auto_check: int | None = None   # auto-select after refresh
+        self._preserve_scroll:    bool = False         # skip divider scroll on next rebuild
 
         # By-Group view state (keyed by course_id str)
         self._group_order: List[int] = []          # ordered group IDs for current course
@@ -1596,11 +1633,6 @@ class AssignmentPanel(QFrame):
         bottom.addWidget(self._count_label, 0, Qt.AlignmentFlag.AlignVCenter)
         bottom.addStretch()
 
-        self._templates_btn = QPushButton("Templates")
-        self._templates_btn.clicked.connect(self._open_template_editor)
-        make_secondary_button(self._templates_btn)
-        bottom.addWidget(self._templates_btn)
-
         self._run_btn = QPushButton("▶  Run Autograder")
         self._run_btn.setEnabled(False)
         self._run_btn.clicked.connect(self._on_run_clicked)
@@ -1695,8 +1727,14 @@ class AssignmentPanel(QFrame):
     def set_editor(self, editor) -> None:
         """Wire in a CanvasEditor instance for mutations."""
         self._editor = editor
+        if editor and hasattr(editor, "base_url"):
+            self._canvas_base_url = editor.base_url
 
-    def populate_tree(self, groups: list) -> None:
+    def set_canvas_url(self, url: str) -> None:
+        """Set the Canvas base URL (for 'Open in Canvas' without a full editor)."""
+        self._canvas_base_url = url.rstrip("/") if url else ""
+
+    def populate_tree(self, groups: list, preserve_scroll: bool = False) -> None:
         """Populate from assignment-group dicts (name kept for back-compat)."""
         if not groups:
             self._groups_data = []
@@ -1704,6 +1742,7 @@ class AssignmentPanel(QFrame):
             self.show_empty()
             return
 
+        self._preserve_scroll = preserve_scroll
         self._groups_data = groups
         self._rebuild()
 
@@ -1733,6 +1772,8 @@ class AssignmentPanel(QFrame):
 
     def _rebuild_by_deadline(self) -> None:
         """Re-render scroll content from _groups_data (timeline view)."""
+        saved_scroll = (self._scroll.verticalScrollBar().value()
+                        if self._preserve_scroll else None)
         self._clear_scroll_content()
         self._rows.clear()
 
@@ -1831,10 +1872,23 @@ class AssignmentPanel(QFrame):
         else:
             self._ungraded_badge.hide()
 
+        # Auto-check pending assignment (e.g. after C/I conversion)
+        if self._pending_auto_check is not None:
+            aid = self._pending_auto_check
+            self._pending_auto_check = None
+            if aid in self._rows:
+                self._checked_ids.add(aid)
+                self._rows[aid].set_checked(True)
+
         self._update_run_btn()
 
-        # Scroll so that the TODAY divider (or start of PAST) is in view
-        if has_past:
+        if saved_scroll is not None:
+            # Restore previous scroll position after edit-triggered refresh
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(0, lambda: self._scroll.verticalScrollBar().setValue(saved_scroll))
+            self._preserve_scroll = False
+        elif has_past:
+            # Scroll so that the TODAY divider (or start of PAST) is in view
             # Scroll to bottom of past section — divider sits just below
             self._scroll.verticalScrollBar().setValue(
                 self._scroll.verticalScrollBar().maximum()
@@ -1870,7 +1924,13 @@ class AssignmentPanel(QFrame):
                 gtype  = a.get("grading_type", "points")
                 ngc    = int(a.get("needs_grading_count") or 0)
                 due_dt = _parse_due(a.get("due_at"))
-                auto   = _is_autogradeable(gtype, gtypes)
+                # Canvas sometimes omits submission_types for discussions;
+                # fall back to checking the discussion_topic key directly.
+                is_discussion = (
+                    "discussion_topic" in gtypes
+                    or bool(a.get("discussion_topic"))
+                )
+                auto = _is_autogradeable(gtype, gtypes) or is_discussion
 
                 result.append({
                     "type":                "assignment",
@@ -2016,11 +2076,6 @@ class AssignmentPanel(QFrame):
         """Re-check assignments by ID — call after populate_tree to restore a saved selection."""
         self._select_by_ids(list(ids))
 
-    def _open_template_editor(self) -> None:
-        from gui.dialogs.template_editor_dialog import TemplateEditorDialog
-        dlg = TemplateEditorDialog(parent=self)
-        dlg.exec()
-
     def _on_run_clicked(self) -> None:
         selected = self._get_selected_assignments()
         if selected:
@@ -2032,6 +2087,8 @@ class AssignmentPanel(QFrame):
 
     def _rebuild_by_group(self) -> None:
         """Render scroll content grouped by Canvas assignment groups."""
+        saved_scroll = (self._scroll.verticalScrollBar().value()
+                        if self._preserve_scroll else None)
         self._clear_scroll_content()
         self._rows.clear()
         self._col_containers.clear()
@@ -2152,6 +2209,14 @@ class AssignmentPanel(QFrame):
         for aid, row in self._rows.items():
             row.set_checked(aid in self._checked_ids)
 
+        # Auto-check pending assignment (e.g. after C/I conversion)
+        if self._pending_auto_check is not None:
+            aid = self._pending_auto_check
+            self._pending_auto_check = None
+            if aid in self._rows:
+                self._checked_ids.add(aid)
+                self._rows[aid].set_checked(True)
+
         # Total-ungraded badge
         total_ngr = sum(a.get("needs_grading_count", 0) or 0 for a in enriched)
         if total_ngr:
@@ -2162,13 +2227,18 @@ class AssignmentPanel(QFrame):
 
         self._update_run_btn()
 
+        if saved_scroll is not None:
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(0, lambda: self._scroll.verticalScrollBar().setValue(saved_scroll))
+            self._preserve_scroll = False
+
     # ------------------------------------------------------------------
     # Context menu
     # ------------------------------------------------------------------
 
     def contextMenuEvent(self, event):
         """Right-click context menu for assignments."""
-        if not self._editor or not self._course_id:
+        if not self._course_id:
             return
 
         # Find which row was clicked
@@ -2190,7 +2260,9 @@ class AssignmentPanel(QFrame):
 
         is_bulk = clicked_row.is_checked() and len(self._checked_ids) > 1
 
+        from gui.styles import menu_qss
         menu = QMenu(self)
+        menu.setStyleSheet(menu_qss())
         if is_bulk:
             self._build_bulk_menu(menu)
         else:
@@ -2200,48 +2272,62 @@ class AssignmentPanel(QFrame):
 
     def _build_single_menu(self, menu: QMenu, row: _AssignmentRow) -> None:
         data = row.data()
+        has_editor = bool(self._editor)
 
-        # Open in Canvas
+        # Open in Canvas — always available when we know the base URL
+        has_url = bool(self._canvas_base_url)
         open_act = menu.addAction("Open in Canvas")
-        open_act.triggered.connect(lambda: self._open_in_canvas(data))
+        open_act.setEnabled(has_url)
+        if has_url:
+            open_act.triggered.connect(lambda: self._open_in_canvas(data))
 
         menu.addSeparator()
 
         # Rename
         rename_act = menu.addAction("Rename...")
-        rename_act.triggered.connect(lambda: self._ctx_rename(data))
+        rename_act.setEnabled(has_editor)
+        if has_editor:
+            rename_act.triggered.connect(lambda: self._ctx_rename(data))
 
         # Change Due Date
         due_act = menu.addAction("Change Due Date...")
-        due_act.triggered.connect(lambda: self._ctx_change_due_date(data))
+        due_act.setEnabled(has_editor)
+        if has_editor:
+            due_act.triggered.connect(lambda: self._ctx_change_due_date(data))
 
         # Change Grading Type submenu
         gt_menu = menu.addMenu("Change Grading Type")
+        gt_menu.setEnabled(has_editor)
         current_gt = data.get("grading_type", "points")
         for gt_key, gt_label in _GRADING_LABELS.items():
             act = gt_menu.addAction(gt_label)
             act.setEnabled(gt_key != current_gt)
-            act.triggered.connect(
-                lambda checked, k=gt_key: self._ctx_change_grading_type(data, k)
-            )
+            if has_editor:
+                act.triggered.connect(
+                    lambda checked, k=gt_key: self._ctx_change_grading_type(data, k)
+                )
 
         # Set Points
         pts_act = menu.addAction("Set Points...")
-        pts_act.triggered.connect(lambda: self._ctx_set_points(data))
+        pts_act.setEnabled(has_editor)
+        if has_editor:
+            pts_act.triggered.connect(lambda: self._ctx_set_points(data))
 
         # Move to Group submenu
         grp_menu = menu.addMenu("Move to Group")
+        grp_menu.setEnabled(has_editor)
         current_gid = data.get("group_id")
         for g in self._groups_data:
             gid = g.get("id")
             gname = g.get("name", "?")
             act = grp_menu.addAction(gname)
             act.setEnabled(gid != current_gid)
-            act.triggered.connect(
-                lambda checked, target_gid=gid: self._ctx_move_to_group(
-                    data, target_gid
+            if has_editor:
+                act.triggered.connect(
+                    lambda checked, target_gid=gid: self._ctx_move_to_group(
+                        data, target_gid
+                    )
                 )
-            )
 
         menu.addSeparator()
 
@@ -2249,33 +2335,45 @@ class AssignmentPanel(QFrame):
         published = data.get("published", True)
         pub_label = "Unpublish" if published else "Publish"
         pub_act = menu.addAction(pub_label)
-        pub_act.triggered.connect(lambda: self._ctx_toggle_publish(data))
+        pub_act.setEnabled(has_editor)
+        if has_editor:
+            pub_act.triggered.connect(lambda: self._ctx_toggle_publish(data))
 
     def _build_bulk_menu(self, menu: QMenu) -> None:
+        has_editor = bool(self._editor)
+
         shift_act = menu.addAction("Shift Deadlines...")
-        shift_act.triggered.connect(self._ctx_bulk_shift)
+        shift_act.setEnabled(has_editor)
+        if has_editor:
+            shift_act.triggered.connect(self._ctx_bulk_shift)
 
         gt_menu = menu.addMenu("Change Grading Type")
+        gt_menu.setEnabled(has_editor)
         for gt_key, gt_label in _GRADING_LABELS.items():
             act = gt_menu.addAction(gt_label)
-            act.triggered.connect(
-                lambda checked, k=gt_key: self._ctx_bulk_grading_type(k)
-            )
+            if has_editor:
+                act.triggered.connect(
+                    lambda checked, k=gt_key: self._ctx_bulk_grading_type(k)
+                )
 
         menu.addSeparator()
 
         pub_act = menu.addAction("Publish All")
-        pub_act.triggered.connect(lambda: self._ctx_bulk_publish(True))
+        pub_act.setEnabled(has_editor)
+        if has_editor:
+            pub_act.triggered.connect(lambda: self._ctx_bulk_publish(True))
 
         unpub_act = menu.addAction("Unpublish All")
-        unpub_act.triggered.connect(lambda: self._ctx_bulk_publish(False))
+        unpub_act.setEnabled(has_editor)
+        if has_editor:
+            unpub_act.triggered.connect(lambda: self._ctx_bulk_publish(False))
 
     # ------------------------------------------------------------------
     # Context menu actions — single assignment
     # ------------------------------------------------------------------
 
     def _open_in_canvas(self, data: dict) -> None:
-        base = self._editor.base_url if self._editor else ""
+        base = self._canvas_base_url
         url = f"{base}/courses/{self._course_id}/assignments/{data['id']}"
         from PySide6.QtCore import QUrl
         QDesktopServices.openUrl(QUrl(url))
@@ -2591,7 +2689,9 @@ class AssignmentPanel(QFrame):
         data = row.data()
         current_gt = data.get("grading_type", "points")
 
+        from gui.styles import menu_qss
         menu = QMenu(self)
+        menu.setStyleSheet(menu_qss())
         for gt_key, gt_label in _GRADING_LABELS.items():
             act = menu.addAction(gt_label)
             act.setEnabled(gt_key != current_gt)
@@ -2649,16 +2749,24 @@ class AssignmentPanel(QFrame):
                 show_critical(self, "Cannot Proceed", msgs)
                 return
             if result.advisory_warnings:
+                from settings import load_settings, save_settings
+                s = load_settings()
+                if not s.get("warn_grading_type_reinterpret", True):
+                    # User previously suppressed this warning
+                    self._run_edit(edit_fn)
+                    return
                 msgs = "\n\n".join(
                     w.message for w in result.advisory_warnings
                 )
-                reply = show_warning(
-                    self, "Warning",
+                reply, suppress = show_warning_suppressible(
+                    self, "Existing Grades",
                     msgs + "\n\nApply anyway?",
-                    QMessageBox.StandardButton.Yes
-                    | QMessageBox.StandardButton.Cancel,
+                    checkbox_label="Don't warn me again",
                 )
                 if reply == QMessageBox.StandardButton.Yes:
+                    if suppress:
+                        s["warn_grading_type_reinterpret"] = False
+                        save_settings(s)
                     self._run_edit(edit_fn)
                 return
             self._run_edit(edit_fn)

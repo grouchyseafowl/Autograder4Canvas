@@ -16,29 +16,41 @@ _DEFAULTS = {
     "default_min_words": 200,             # C/I assignment minimum word count
     "default_post_words": 200,            # discussion post minimum word count
     "default_reply_words": 50,            # discussion reply minimum word count
-    # Data retention (GUI settings — translated to cleanup_* keys on save)
-    "data_retention_enabled": False,      # auto-delete internal data on a schedule
-    "data_retention_days": 90,            # age threshold for auto-deletion
+    # Data retention — auto-delete internal SQLite data on app startup
+    "data_retention_enabled": True,       # master toggle
+    "data_retention_days": 180,           # age threshold (total days = years*365 + days)
+    "data_retention_years": 0,            # age threshold — years component
     "data_retention_grading": True,       # include grading report data (C/I, discussion)
     "data_retention_aic": True,           # include Academic Integrity (AIC) data
+    "data_retention_insights": True,      # include Insights analysis data
+    "data_retention_notes": False,        # include teacher notes
+    "data_retention_notes_years": 3,      # notes age threshold — years
+    "data_retention_notes_days": 0,       # notes age threshold — days
     # Institution / population profile (legacy)
     "institution_type": "community_college",  # community_college, four_year, university, other
     "context_profile": "community_college",   # maps to config/context_profiles/<id>.yaml (legacy)
     # Phase 8: Two-axis weight system — education level (fallback when not in credential profile)
     # Per-institution values live in credentials.json; this is the app-wide fallback.
     "education_level": "community_college",   # high_school, community_college, four_year, university, online
+    "population_esl": "none",                 # none, low, moderate, high
+    "population_first_gen": "none",           # none, low, moderate, high
+    "population_neurodivergent_aware": False,  # enable neurodivergent-aware scoring
     # Insights Engine
     "insights_whisper_model": "base",
     "insights_translation_backend": "ollama",
     "insights_translation_model": "llama3.1:8b",
     "insights_model_tier": "lightweight",
-    "insights_throttle_delay": 2.0,
+    "insights_throttle_delay": 0,
     "insights_low_priority": True,
+    "insights_keep_awake": True,
     # Accessibility
     "font_scale": 1.25,                   # 1.0 = small, 1.25 = default, 1.5 = extra large
     "insights_draft_feedback": False,
     "insights_translate_enabled": True,
     "insights_transcribe_enabled": True,
+    "insights_image_transcribe_enabled": True,
+    "review_sidebar_show_all": True,
+    "warn_grading_type_reinterpret": True,  # warn when existing grades will be reinterpreted
 }
 
 

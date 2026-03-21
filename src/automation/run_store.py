@@ -192,6 +192,7 @@ CREATE TABLE IF NOT EXISTS grading_results (
   teacher_override    TEXT,
   override_reason     TEXT,
   override_at         TEXT,
+  short_sub_review    TEXT,    -- JSON: ShortSubReview.model_dump() or list thereof (discussions)
   PRIMARY KEY (student_id, assignment_id)
 );
 
@@ -241,9 +242,14 @@ class RunStore:
         """
         # Phase 8: Two-axis weight system — store provenance with each result
         migrations = [
+            # grading_results: short submission review LLM verdict (JSON)
+            "ALTER TABLE grading_results ADD COLUMN short_sub_review TEXT",
             # aic_results: record which education level + population produced the scores
             "ALTER TABLE aic_results ADD COLUMN education_level TEXT",
             "ALTER TABLE aic_results ADD COLUMN population_settings TEXT",  # JSON dict
+            # aic_results: store submission body so the detail view can display it
+            # even when no grading_results row exists (AIC-only runs)
+            "ALTER TABLE aic_results ADD COLUMN submission_body TEXT",
             # student_profile_overrides: composable per-student overrides
             "ALTER TABLE student_profile_overrides ADD COLUMN esl_override TEXT",
             "ALTER TABLE student_profile_overrides ADD COLUMN first_gen_override TEXT",
@@ -285,6 +291,7 @@ class RunStore:
         assignment_name: str,
         submitted_at: Optional[str] = None,
         context_profile: str = "standard",
+        submission_body: str = "",
     ) -> None:
         """
         Upsert one AnalysisResult.
@@ -309,10 +316,11 @@ class RunStore:
                 is_outlier, outlier_reasons,
                 context_adjustments, conversation_starters,
                 verification_questions, revision_guidance,
-                education_level, population_settings
+                education_level, population_settings,
+                submission_body
             ) VALUES (
                 ?,?,  ?,?,?,?,?,  ?,?,  ?,  ?,?,?,  ?,  ?,?,
-                ?,?,?,  ?,?,  ?,  ?,?,  ?,?,?,?,  ?,?
+                ?,?,?,  ?,?,  ?,  ?,?,  ?,?,?,?,  ?,?,  ?
             )
             ON CONFLICT (student_id, assignment_id) DO UPDATE SET
                 student_name              = excluded.student_name,
@@ -342,7 +350,8 @@ class RunStore:
                 verification_questions    = excluded.verification_questions,
                 revision_guidance         = excluded.revision_guidance,
                 education_level           = excluded.education_level,
-                population_settings       = excluded.population_settings
+                population_settings       = excluded.population_settings,
+                submission_body           = excluded.submission_body
             """,
             (
                 str(result.student_id), str(assignment_id),
@@ -370,6 +379,7 @@ class RunStore:
                 self._j(result.revision_guidance),
                 getattr(result, 'education_level', None),
                 self._jd(getattr(result, 'population_settings', None)),
+                submission_body or "",
             ),
         )
         self._conn.commit()
@@ -499,6 +509,38 @@ class RunStore:
             result.append(d)
         return result
 
+    # ── Read: course matrix (heatmap — all students × all assignments) ───
+
+    def get_course_matrix(self, course_id: str) -> List[Dict]:
+        """
+        Every (student, assignment) result row for one course.
+
+        Returns a flat list of dicts, each containing at minimum:
+          student_id, student_name, assignment_id, assignment_name,
+          human_presence_confidence, concern_level, smoking_gun,
+          suspicious_score, authenticity_score, word_count, submit_date.
+
+        The caller groups by student/assignment to build the heatmap grid.
+        Rows are ordered chronologically by submission date so assignment
+        columns appear in natural time order.
+        """
+        rows = self._conn.execute(
+            """
+            SELECT
+                student_id, student_name,
+                assignment_id, assignment_name,
+                human_presence_confidence, concern_level,
+                smoking_gun, suspicious_score, authenticity_score,
+                word_count,
+                COALESCE(submitted_at, last_analyzed_at) AS submit_date
+            FROM aic_results
+            WHERE course_id = ?
+            ORDER BY COALESCE(submitted_at, last_analyzed_at) ASC
+            """,
+            (str(course_id),),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
     # ── Read: student trajectory (sparklines) ─────────────────────────────
 
     def get_trajectory(self, student_id: str, course_id: str) -> List[Dict]:
@@ -562,22 +604,43 @@ class RunStore:
     def get_submission_content(
         self, student_id: str, assignment_id: str
     ) -> Optional[Dict]:
-        """Fetch submission body and attachment metadata from grading_results."""
+        """Fetch submission body and attachment metadata.
+
+        Queries grading_results first (has full body + attachment metadata).
+        Falls back to aic_results.submission_body for AIC-only runs where no
+        grading result exists.
+        """
         row = self._conn.execute(
             "SELECT submission_body, submission_type, attachment_meta "
             "FROM grading_results WHERE student_id = ? AND assignment_id = ?",
             (str(student_id), str(assignment_id)),
         ).fetchone()
-        if row is None:
-            return None
-        d = dict(row)
-        raw = d.get("attachment_meta")
-        if raw:
-            try:
-                d["attachment_meta"] = json.loads(raw)
-            except (json.JSONDecodeError, TypeError):
-                d["attachment_meta"] = []
-        return d
+        if row is not None:
+            d = dict(row)
+            raw = d.get("attachment_meta")
+            if raw:
+                try:
+                    d["attachment_meta"] = json.loads(raw)
+                except (json.JSONDecodeError, TypeError):
+                    d["attachment_meta"] = []
+            return d
+
+        # No grading result — try aic_results (AIC-only runs store body there)
+        try:
+            aic_row = self._conn.execute(
+                "SELECT submission_body FROM aic_results "
+                "WHERE student_id = ? AND assignment_id = ?",
+                (str(student_id), str(assignment_id)),
+            ).fetchone()
+        except Exception:
+            aic_row = None
+        if aic_row and aic_row["submission_body"]:
+            return {
+                "submission_body": aic_row["submission_body"],
+                "submission_type": "online_text_entry",
+                "attachment_meta": [],
+            }
+        return None
 
     # ── Teacher notes ──────────────────────────────────────────────────────
 
@@ -744,6 +807,7 @@ class RunStore:
             "grading_tool", "min_word_count", "was_skipped",
             "post_count", "reply_count", "avg_words_per_post",
             "teacher_override", "override_reason", "override_at",
+            "short_sub_review",
         ]
         vals = [d.get(c) for c in cols]
         placeholders = ", ".join("?" * len(cols))
@@ -867,7 +931,12 @@ class RunStore:
                 a.concern_level      AS aic_concern_level,
                 a.suspicious_score   AS aic_suspicious_score,
                 a.human_presence_confidence AS aic_human_presence_confidence,
-                a.smoking_gun        AS aic_smoking_gun
+                a.smoking_gun        AS aic_smoking_gun,
+                a.smoking_gun_details AS aic_smoking_gun_details,
+                a.marker_counts      AS aic_marker_counts,
+                a.context_adjustments AS aic_context_adjustments,
+                a.conversation_starters AS aic_conversation_starters,
+                a.submission_body    AS aic_submission_body
             FROM grading_results g
             LEFT JOIN aic_results a
               ON g.student_id = a.student_id
@@ -880,13 +949,18 @@ class RunStore:
         result = []
         for r in rows:
             d = dict(r)
-            for col in ("flags", "attachment_meta"):
+            for col in ("flags", "attachment_meta",
+                        "aic_smoking_gun_details", "aic_marker_counts",
+                        "aic_context_adjustments", "aic_conversation_starters"):
                 raw = d.get(col)
-                if raw:
+                if raw and isinstance(raw, str):
                     try:
                         d[col] = json.loads(raw)
                     except (json.JSONDecodeError, TypeError):
                         pass
+            # For online_upload: if grading body is empty, use AIC extracted text
+            if not d.get("submission_body") and d.get("aic_submission_body"):
+                d["submission_body"] = d["aic_submission_body"]
             result.append(d)
         return result
 

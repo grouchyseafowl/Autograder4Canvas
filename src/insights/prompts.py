@@ -10,6 +10,8 @@ Design principles (from spec Section XV):
   4. Output as JSON matching the Pydantic models
   5. Student names, verbatim quotes, preserve tensions
   6. Political urgency about injustice is appropriate engagement, not a concern
+  7. Course content ≠ student wellbeing: students discussing violence, trauma,
+     or injustice AS COURSE MATERIAL are doing the assignment, not in distress
 
 Every prompt instructs the model to:
   - Use student names (never "Student 1")
@@ -30,6 +32,11 @@ SYSTEM_PROMPT = (
     "Preserve tensions and contradictions — they are pedagogically productive, "
     "not problems to smooth away. Political urgency about injustice is "
     "appropriate academic engagement, not a concern.\n\n"
+    "IMPORTANT: Many courses study difficult topics — violence, genocide, "
+    "sexual assault, colonialism, slavery, trauma. Students writing about "
+    "these topics are engaging with course material, not expressing personal "
+    "distress. Never confuse disturbing SUBJECT MATTER with student WELLBEING "
+    "concerns.\n\n"
     "Respond ONLY with valid JSON matching the requested schema."
 )
 
@@ -197,9 +204,8 @@ EXAMPLE (different student and assignment):
 
 CONCERN_PROMPT = """\
 Review this student submission for passages that might need the teacher's \
-attention. You are looking for content that could indicate a student in \
-distress, language that essentializes or dismisses groups, or other passages \
-the teacher should be aware of.
+attention. You are looking for signs of STUDENT WELLBEING issues or \
+language that essentializes or dismisses groups.
 
 STUDENT: {student_name}
 ASSIGNMENT PROMPT: {assignment_prompt}
@@ -212,23 +218,67 @@ SUBMISSION TEXT:
 {submission_text}
 ---
 
-CRITICAL INSTRUCTIONS — READ CAREFULLY:
+CRITICAL INSTRUCTIONS — READ VERY CAREFULLY:
+
+THE MOST IMPORTANT DISTINCTION: You must distinguish between COURSE CONTENT \
+and STUDENT WELLBEING. Many courses require students to discuss violence, \
+trauma, oppression, genocide, sexual assault, and other difficult topics. \
+A student writing ABOUT these topics is doing the assignment, not expressing \
+personal distress. Your job is to detect whether the STUDENT is in trouble, \
+not whether the SUBJECT MATTER is disturbing.
+
+COURSE CONTENT vs. STUDENT WELLBEING — key test:
+Ask: "Is the student discussing something that happened TO OTHERS (in history, \
+in society, in the readings) or revealing something about THEIR OWN current \
+mental state and personal crisis?"
 
 Do NOT flag ANY of the following:
-- Students expressing anger about injustice, racism, or structural violence \
-(this is appropriate academic engagement, not a concern)
+- Students discussing, analyzing, or emotionally responding to assigned course \
+material about historical trauma, violence, colonialism, genocide, sexual \
+violence, slavery, forced removal, or any other difficult subject matter — \
+THIS IS THE ASSIGNMENT, not a concern
+- Students expressing anger, grief, shock, or moral outrage about injustice \
+described in course material (e.g. "It's crazy that this happened", "this \
+makes me sick", "I can't believe this was legal")
+- Students using words like "triggered", "overwhelming", or "hard to read" \
+when describing their emotional response to difficult course material — this \
+is emotional engagement with the assignment, not clinical distress
+- Students expressing anger about racism, structural violence, or injustice \
+(this is appropriate academic engagement)
 - Students describing their own experiences with discrimination
 - Students critiquing institutional racism, policing, or immigration enforcement
 - Students using urgent or passionate language about justice issues
 - Students whose writing style differs from academic English conventions
+- Students using colloquial intensifiers like "crazy", "insane", "wild" when \
+reacting to course content
 
 DO flag:
 - Language that essentializes racial or ethnic groups ("all X people...", \
 "they always...", "those people")
 - Colorblind claims ("I don't see race", "not about race", "reverse racism")
 - Dismissal of other students' lived experiences
-- Students who appear to be in personal crisis (distinguish from political urgency)
 - Tone policing ("too angry", "too emotional", "calm down")
+- Student revealing PERSONAL crisis: expressions of hopelessness about their \
+OWN life, self-harm ideation, feeling unable to continue, requests for help \
+that go beyond the academic context
+- Student language that shifts from discussing course material to discussing \
+their own inability to cope as a PERSON (not just "this reading was hard" \
+but "I don't know how to keep going")
+
+HOW TO TELL THE DIFFERENCE — examples:
+- "This makes me angry" about historical injustice → ENGAGEMENT, not a concern
+- "I can't do this anymore" about their own life → POTENTIAL CONCERN
+- "This passage about rape was triggering" → emotional engagement with material
+- "I feel like nobody would care if I disappeared" → POTENTIAL CONCERN
+- "It's crazy how they treated Native women" → discussing course content
+- "Reading about this violence was really heavy" → processing difficult material
+- "I haven't been able to get out of bed and I don't see the point" → CONCERN
+
+When the assignment ITSELF deals with violence, trauma, or injustice, set \
+your threshold MUCH higher for flagging. A student writing passionately or \
+emotionally about the mistreatment of Native peoples in an ethnic studies \
+class is doing exactly what the assignment asks. Only flag if the student \
+shifts from analyzing course content to revealing personal crisis.
 
 The non-LLM analysis classified this submission as shown above. Consider \
 this context — if the non-LLM pass says "APPROPRIATE: political urgency \
@@ -249,7 +299,7 @@ Respond with JSON:
 
 If no concerns, return: {{"concerns": []}}
 
-EXAMPLE of what IS a concern:
+EXAMPLE of what IS a concern (essentializing language):
 {{
   "concerns": [
     {{
@@ -261,7 +311,27 @@ EXAMPLE of what IS a concern:
   ]
 }}
 
-EXAMPLE of what is NOT a concern:
+EXAMPLE of what IS a concern (student wellbeing):
+{{
+  "concerns": [
+    {{
+      "flagged_passage": "I honestly don't know why I'm still doing any of this",
+      "surrounding_context": "After a paragraph analyzing the reading, the student wrote: 'I honestly don't know why I'm still doing any of this. Nothing feels like it matters anymore. I'm just going through the motions.'",
+      "why_flagged": "Student shifts from course analysis to expressing personal hopelessness. May indicate wellbeing issue beyond the assignment. Teacher should check in.",
+      "confidence": 0.8
+    }}
+  ]
+}}
+
+EXAMPLE of what is NOT a concern (engaging with difficult material):
+A student in an ethnic studies class writes: "Reading about the rape and \
+murder of Native women made me feel sick. It's crazy that this is still \
+happening and nobody talks about it. This passage was really triggering \
+but I'm glad we're learning about it." — This is a student processing \
+difficult course material with appropriate emotional engagement. Do NOT \
+flag this.
+
+EXAMPLE of what is NOT a concern (passionate engagement):
 "The system of white supremacy in this country makes me furious. How can \
 we read about redlining and NOT be angry?" — This is appropriate engagement. \
 Do NOT flag this."""
@@ -358,12 +428,20 @@ unified theme set with merged themes and contradictions.
 {profile_fragment}
 RULES:
 - Merge similar themes across groups (combine student lists, quotes, frequencies)
-- Preserve unique themes even if they appear in only one group
+- NEVER drop a theme just because it appeared in only one group — unique themes \
+are often the most important findings
+- Within a merged theme, preserve DIVERSITY — if students approach the same theme \
+through different entry points (personal experience vs academic analysis vs current \
+events), note that range, don't flatten it into one description
 - Contradictions from different groups about the SAME topic should be merged
 - Contradictions about DIFFERENT topics should both be preserved
+- NEW contradictions may emerge when groups are combined — if Group 1's dominant \
+theme conflicts with Group 3's dominant theme, that's a finding, not a merge error
 - After merging, re-evaluate confidence based on how consistent the theme is \
 across groups (appears in all groups = high confidence)
-- Student names and verbatim quotes must be preserved through the merge"""
+- Student names and verbatim quotes must be preserved through the merge
+- If a theme has sub-themes or notable variation within it, use the sub_themes \
+field to capture that variation rather than collapsing it"""
 
 # ---------------------------------------------------------------------------
 # Outlier analysis
@@ -429,6 +507,57 @@ suggested responses. Each concern requires individual teacher review.",
 week.",
     "students_to_check_in_with": "Aggregated from concern flags + outlier \
 flags. Student names with specific reasons."
+  }},
+  "confidence": 0.0-1.0
+}}"""
+
+# ---------------------------------------------------------------------------
+# 3-pass synthesis sections (for Lightweight tier on small models)
+# ---------------------------------------------------------------------------
+# Each pass asks for 3 sections, which an 8B model can handle reliably.
+
+_SYNTH_PASS_1 = """\
+Generate JSON with EXACTLY these 3 section keys. Write 2-4 sentences per section.
+Use student names and direct quotes.
+{{
+  "sections": {{
+    "what_students_said": "Executive summary — most important patterns, \
+primary concern, biggest win.",
+    "emergent_themes": "From the theme set, with supporting quotes and \
+student counts.",
+    "tensions_and_contradictions": "From the contradictions — explicitly \
+preserved, named as pedagogically productive."
+  }},
+  "confidence": 0.0-1.0
+}}"""
+
+_SYNTH_PASS_2 = """\
+Generate JSON with EXACTLY these 3 section keys. Write 2-4 sentences per section.
+Use student names and direct quotes.
+{{
+  "sections": {{
+    "surprises": "Submissions that don't fit the themes. Use student \
+names and their actual words.",
+    "focus_areas": "Teacher-directed analysis against their stated interests \
+and analysis lens.",
+    "concerns": "Aggregated from concern flags, with flagged passages and \
+suggested responses. Each concern requires individual teacher review."
+  }},
+  "confidence": 0.0-1.0
+}}"""
+
+_SYNTH_PASS_3 = """\
+Generate JSON with EXACTLY these 3 section keys. Write 2-4 sentences per section.
+Use student names and direct quotes.
+{{
+  "sections": {{
+    "divergent_approaches": "How students entered the material differently \
+— by format, emotional register, personal vs analytical.",
+    "looking_ahead": "What this tells the teacher about readiness for \
+next week.",
+    "students_to_check_in_with": "Aggregated from concern flags + outlier \
+flags. Student names with specific reasons. Do NOT recommend singling out \
+students to share or present — suggest structural opportunities instead."
   }},
   "confidence": 0.0-1.0
 }}"""
@@ -701,4 +830,227 @@ FEEDBACK_LENGTH_VARIANTS = {
     "moderate": "4-6 sentences.",
     "detailed": "A short paragraph (6-8 sentences) with specific references "
                 "to the student's work.",
+}
+
+
+# ---------------------------------------------------------------------------
+# Short Submission Review prompts
+# ---------------------------------------------------------------------------
+
+SHORT_SUB_SYSTEM_PROMPT = (
+    "You are helping a teacher decide whether a short student submission "
+    "demonstrates engagement with the assignment. The submission fell below "
+    "the word count threshold, but word count alone does not determine "
+    "whether a student has engaged.\n\n"
+    "Your job is NOT to judge writing quality, grammar, or sophistication. "
+    "Your job is NOT to assess student effort or character. "
+    "Your job IS to look at what the student actually wrote and determine "
+    "whether it shows engagement with the assignment material.\n\n"
+    "A submission can be short AND complete. Brevity is not a deficiency.\n\n"
+    "IMPORTANT: Students who mix languages (e.g., English and Spanish, "
+    "English and Tagalog) within a submission are demonstrating multilingual "
+    "engagement — a sophisticated rhetorical practice. Count ALL languages "
+    "when assessing engagement, not just English words. If the submission "
+    "is entirely in a non-English language, verdict is TEACHER_REVIEW — "
+    "the teacher can assess engagement; you cannot reliably assess a "
+    "language you may not know well.\n\n"
+    "IMPORTANT: Students using dictation or assistive technology may produce "
+    "text with unusual formatting, run-on structures, or missing punctuation. "
+    "This represents full engagement through oral expression.\n\n"
+    "IMPORTANT: Variable capacity is real. A student may be dealing with "
+    "chronic pain, executive function barriers, mental health, work "
+    "schedules, family obligations, or other circumstances. Assess THIS "
+    "submission on its own terms — never compare to an imagined 'normal' "
+    "output level.\n\n"
+    "IMPORTANT: Students may write briefly as a form of self-protection, "
+    "particularly around identity (gender, sexuality, race, disability, "
+    "immigration). Protective brevity is not disengagement.\n\n"
+    "IMPORTANT: Multiple factors may compound. A multilingual student with "
+    "variable capacity faces more than the sum of individual barriers. "
+    "Give additional benefit of the doubt when multiple markers are present.\n\n"
+    "If you are uncertain, the verdict is TEACHER_REVIEW. You may include "
+    "a teacher_note suggesting a check-in if the brevity pattern suggests "
+    "the student may need support — framed as care, not surveillance.\n\n"
+    "Respond ONLY with valid JSON matching the requested schema."
+)
+
+_SHORT_SUB_DO_NOT = """\
+IMPORTANT — DO NOT:
+- Judge writing quality, grammar, or sophistication
+- Compare this to other students or an imagined "ideal" submission
+- Penalize non-standard English, code-switching, or multilingual writing
+- Treat brevity itself as evidence of low engagement
+- Make assumptions about student character, effort, or motivation
+- Penalize bullet points, fragments, or informal structure
+- Use words like "limited," "basic," "lacks," or "insufficient" about the writing
+- Rate informal register (AAVE, colloquial, conversational) as lower confidence \
+than academic register for the same engagement level
+
+DO:
+- Look for specific evidence of engagement with the assignment material
+- Consider whether the format makes brevity appropriate
+- Note any course concepts, personal connections, or substantive content
+- Recognize translanguaging (language mixing) as sophisticated engagement
+- Recognize that protective brevity (writing less around sensitive identity \
+topics) is not disengagement
+- Give the benefit of the doubt — if ambiguous, verdict is TEACHER_REVIEW
+- If the submission is entirely in a non-English language, verdict is TEACHER_REVIEW
+- If brevity may reflect circumstances beyond the assignment, include a \
+teacher_note suggesting a check-in (framed as care)"""
+
+_SHORT_SUB_JSON_SCHEMA = """\
+Respond with JSON:
+{{
+  "verdict": "CREDIT or TEACHER_REVIEW",
+  "brevity_category": "one of: concise_complete, dense_engagement, \
+format_appropriate, multilingual, partial_attempt, wrong_submission, \
+placeholder, unclear",
+  "rationale": "1-2 sentences for the teacher",
+  "engagement_evidence": ["verbatim snippets showing engagement"],
+  "confidence": 0.0-1.0,
+  "teacher_note": "optional care-framed note if check-in may be warranted, or null"
+}}"""
+
+_SHORT_SUB_FEW_SHOT = """\
+EXAMPLES:
+
+Example 1 — CREDIT / concise_complete:
+Submission (62 words): "Reading Baldwin made me rethink everything about my \
+neighborhood. I never realized that the way our block is laid out — who got \
+to live where — wasn't accidental. It was designed. I keep thinking about \
+the part where he talks about complicity, because I wonder what that means \
+for people who didn't choose to be here but benefit anyway. That's my block."
+Response: {{"verdict": "CREDIT", "brevity_category": "concise_complete", \
+"rationale": "Despite brevity, shows genuine personal connection to Baldwin and \
+articulates a specific intellectual shift about complicity and place.", \
+"engagement_evidence": ["that's my block", "I wonder what that means for people \
+who didn't choose to be here"], "confidence": 0.88, "teacher_note": null}}
+
+Example 2 — TEACHER_REVIEW / placeholder:
+Submission (8 words): "I will finish this later sorry professor"
+Response: {{"verdict": "TEACHER_REVIEW", "brevity_category": "placeholder", \
+"rationale": "Student has not engaged with the material; this is a placeholder \
+note, not a submission.", "engagement_evidence": [], "confidence": 0.95, \
+"teacher_note": "Consider checking in — student may be navigating something."}}
+
+Example 3 — CREDIT / format_appropriate:
+Submission (43 words): "Thesis: standardized testing reinforces racial \
+inequality\\nI. History of testing as sorting mechanism\\nII. Disparate \
+impact data\\nIII. Counterargument: meritocracy myth\\nConclusion: reform \
+requires dismantling, not tweaking"
+Response: {{"verdict": "CREDIT", "brevity_category": "format_appropriate", \
+"rationale": "Outline format is inherently concise; structure shows thesis, \
+evidence plan, counterargument, and conclusion — complete academic thinking.", \
+"engagement_evidence": ["meritocracy myth", "reform requires dismantling, not \
+tweaking"], "confidence": 0.91, "teacher_note": null}}
+
+Example 4 — CREDIT / multilingual:
+Submission (45 words): "Yosso's concept of capital aspiracional — mi mamá \
+siempre dice que hay que echarle ganas. That's not just 'working hard,' it's \
+a whole philosophy about believing the future is possible when everything \
+says it isn't. The reading finally gave me a word for what she taught me."
+Response: {{"verdict": "CREDIT", "brevity_category": "multilingual", \
+"rationale": "Translanguaging submission demonstrates sophisticated engagement: \
+student connects Yosso's framework to embodied family knowledge across two \
+languages.", "engagement_evidence": ["capital aspiracional", "The reading \
+finally gave me a word for what she taught me"], "confidence": 0.93, \
+"teacher_note": null}}
+
+Example 5 — TEACHER_REVIEW / unclear (protective brevity):
+Submission (14 words): "This reading connected to things I've been through \
+but I can't really get into it here"
+Response: {{"verdict": "TEACHER_REVIEW", "brevity_category": "unclear", \
+"rationale": "Student signals personal connection but declines to elaborate — \
+may be self-protecting around sensitive experience.", "engagement_evidence": \
+["connected to things I've been through"], "confidence": 0.6, \
+"teacher_note": "Consider a private check-in — student may have engaged deeply \
+but not felt safe to write about it here. This is not disengagement."}}"""
+
+SHORT_SUB_REVIEW_PROMPT = """\
+A student submitted work below the word count threshold. \
+Review whether this submission demonstrates engagement.
+
+STUDENT: {student_name}
+WORD COUNT: {word_count} words (threshold: {min_word_count})
+
+ASSIGNMENT DESCRIPTION:
+{assignment_prompt}
+
+{review_guidance}
+
+{equity_fragment}
+
+SUBMISSION TEXT:
+---
+{submission_text}
+---
+
+""" + _SHORT_SUB_DO_NOT + """
+
+""" + _SHORT_SUB_FEW_SHOT + """
+
+""" + _SHORT_SUB_JSON_SCHEMA
+
+SHORT_SUB_DISCUSSION_PROMPT = """\
+A student's discussion reply fell below the word count threshold. \
+Review whether this reply demonstrates engagement, considering the \
+conversation context.
+
+STUDENT: {student_name}
+REPLY WORD COUNT: {word_count} words (threshold: {min_word_count})
+
+DISCUSSION PROMPT:
+{assignment_prompt}
+
+THREAD CONTEXT:
+{thread_context}
+
+STUDENT'S REPLY:
+---
+{submission_text}
+---
+
+{review_guidance}
+
+{equity_fragment}
+
+A short reply that directly engages a peer's argument, applies a course \
+concept, or adds a personal perspective can be more substantive than a \
+long generic response. Evaluate this reply IN CONTEXT of what came before.
+
+""" + _SHORT_SUB_DO_NOT + """
+
+""" + _SHORT_SUB_FEW_SHOT + """
+
+""" + _SHORT_SUB_JSON_SCHEMA
+
+# Default per-genre guidance injected as {review_guidance} in Quick Run.
+# Bulk Run pulls from the assignment template's short_sub_guidance field.
+SHORT_SUB_TEMPLATE_GUIDANCE = {
+    "personal": (
+        "PERSONAL/REFLECTION: authentic engagement > length. A brief moment of "
+        "genuine vulnerability or a single sharp connection to the reading "
+        "constitutes complete work."
+    ),
+    "essay": (
+        "FORMAL ESSAY: brevity is more concerning here, but a dense paragraph "
+        "with thesis, evidence, and analysis can still demonstrate engagement."
+    ),
+    "notes": (
+        "READING NOTES: inherently brief and fragmentary. Bullet points, "
+        "keywords, page references are authentic note-taking. Do not expect prose."
+    ),
+    "outline": (
+        "OUTLINE: hierarchical and concise by design. Look for structure and "
+        "topic coverage, not word count."
+    ),
+    "discussion": (
+        "DISCUSSION: a short, incisive response that directly engages a peer's "
+        "argument or the reading can be more substantive than a long generic post."
+    ),
+    "draft": (
+        "DRAFT: rough, incomplete, messy by nature. False starts and fragments "
+        "are authentic drafting."
+    ),
+    "auto": "Look for evidence of engagement with the material regardless of format or register.",
 }

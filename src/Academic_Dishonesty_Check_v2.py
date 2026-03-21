@@ -687,8 +687,12 @@ class DishonestyAnalyzer:
             adjusted_suspicious = suspicious_score * self.context_multiplier * esl_adjustment
         
         # Determine concern level
-        concern_level = self._determine_concern_level(suspicious_score, authenticity_score)
-        adjusted_concern = self._determine_concern_level(adjusted_suspicious, authenticity_score)
+        concern_level = self._determine_concern_level(
+            suspicious_score, authenticity_score, word_count=word_count,
+        )
+        adjusted_concern = self._determine_concern_level(
+            adjusted_suspicious, authenticity_score, word_count=word_count,
+        )
         
         # Get guidance
         conversation_starters = self._get_conversation_starters(concern_level)
@@ -713,6 +717,16 @@ class DishonestyAnalyzer:
             context_applied.append("Note: AI models don't make article errors or tense mixing")
         if student_context_applied:
             context_applied.extend(student_context_adjustments)
+
+        # Brevity cap note — if word_count was below the reliable-analysis
+        # threshold, _determine_concern_level already capped at 'low'.
+        # Surface that decision in context_adjustments so it's transparent.
+        if word_count < self.MIN_WORDS_FOR_RELIABLE_ANALYSIS:
+            context_applied.append(
+                f"Short submission ({word_count} words, threshold "
+                f"{self.MIN_WORDS_FOR_RELIABLE_ANALYSIS}): text too brief for "
+                f"reliable authenticity analysis — concern level capped at 'low'"
+            )
 
         # Add organizational analysis details if present
         if ai_org_score > 0:
@@ -822,11 +836,10 @@ class DishonestyAnalyzer:
             details.append(
                 f"AI document structure: 1 HTML header + list/strong-header combo"
             )
-        if ul_ol_tags and len(li_tags) >= 3:
-            details.append(
-                f"Bullet/numbered list in submission ({len(li_tags)} <li> items) — "
-                f"unusual for prose assignments; common in AI-generated outlines"
-            )
+        # Note: <ul>/<ol> with <li> items are produced by Canvas's own rich
+        # text editor, so their presence alone is NOT a smoking gun.  They
+        # only matter when combined with other structural artifacts (headers,
+        # strong-headers) — those combos are already caught above.
         if len(strong_hdrs) >= 2:
             details.append(
                 f"<strong> tags used as section headers ({len(strong_hdrs)} instances) — "
@@ -1031,25 +1044,50 @@ class DishonestyAnalyzer:
         
         return adjusted_score
     
-    def _determine_concern_level(self, suspicious: float, authenticity: float) -> str:
-        """Determine concern level based on scores."""
+    # Minimum word count for reliable AIC analysis.  Below this threshold
+    # there simply isn't enough text for authentic-voice markers to appear,
+    # so low authenticity scores are expected and not evidence of AI use.
+    MIN_WORDS_FOR_RELIABLE_ANALYSIS = 30
+
+    def _determine_concern_level(
+        self, suspicious: float, authenticity: float,
+        word_count: int | None = None,
+    ) -> str:
+        """Determine concern level based on scores.
+
+        If *word_count* is provided and below
+        ``MIN_WORDS_FOR_RELIABLE_ANALYSIS``, the result is capped at ``'low'``
+        because very short submissions lack enough text for authenticity
+        markers to register reliably.
+        """
+        # --- score-based determination (unchanged logic) ---
         # High: High suspicious AND low authenticity
         if suspicious > 5.0 and authenticity < 2.0:
-            return 'high'
-        
+            level = 'high'
         # Elevated: Moderate suspicious OR very low authenticity
-        if suspicious > 4.0 or authenticity < 1.5:
-            return 'elevated'
-        
+        elif suspicious > 4.0 or authenticity < 1.5:
+            level = 'elevated'
         # Moderate: Some concerning patterns
-        if suspicious > 2.5 or authenticity < 3.0:
-            return 'moderate'
-        
+        elif suspicious > 2.5 or authenticity < 3.0:
+            level = 'moderate'
         # Low: Minor issues
-        if suspicious > 1.5:
-            return 'low'
-        
-        return 'none'
+        elif suspicious > 1.5:
+            level = 'low'
+        else:
+            level = 'none'
+
+        # --- brevity cap ------------------------------------------------
+        # Very short submissions don't contain enough text for human-voice
+        # markers to surface.  Flagging them would penalise brevity, not
+        # detect AI use.
+        if (
+            word_count is not None
+            and word_count < self.MIN_WORDS_FOR_RELIABLE_ANALYSIS
+            and level not in ('low', 'none')
+        ):
+            level = 'low'
+
+        return level
     
     def _get_conversation_starters(self, concern_level: str) -> List[str]:
         """Get appropriate conversation starters."""
@@ -1585,6 +1623,86 @@ def _extract_attachment_text(attachment: Dict[str, Any]) -> str:
     return ""
 
 
+def _get_discussion_submissions(course_id: int, assignment_id: int):
+    """Fetch discussion entries as pseudo-submissions for AIC analysis.
+
+    For discussion-type assignments, Canvas stores text in discussion entries
+    rather than submission bodies.  This function detects discussion assignments,
+    fetches entries via the /discussion_topics/{id}/view endpoint, and returns
+    them in the same shape as regular submissions so the caller needs no changes.
+
+    Returns ``None`` when the assignment is *not* a discussion — the caller
+    should fall back to normal ``get_submissions``.
+    """
+    if not HAS_REQUESTS or not API_TOKEN:
+        return None
+
+    # ── Fetch assignment metadata to check submission_types ──────────
+    try:
+        url = f"{CANVAS_BASE_URL}/api/v1/courses/{course_id}/assignments/{assignment_id}"
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+        assignment = resp.json()
+    except Exception:
+        return None
+
+    submission_types = assignment.get("submission_types", [])
+    if "discussion_topic" not in submission_types:
+        return None  # not a discussion — caller should use get_submissions
+
+    # ── Resolve the discussion topic ID ──────────────────────────────
+    topic = assignment.get("discussion_topic")
+    topic_id = topic.get("id") if isinstance(topic, dict) else None
+    if not topic_id:
+        topic_id = assignment.get("discussion_topic_id")
+    if not topic_id:
+        return None
+
+    # ── Fetch the full discussion view (entries + nested replies) ────
+    try:
+        view_url = (f"{CANVAS_BASE_URL}/api/v1/courses/{course_id}"
+                    f"/discussion_topics/{topic_id}/view")
+        resp = requests.get(view_url, headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception:
+        return None
+
+    # ── Flatten entries and group by user_id ─────────────────────────
+    raw_entries = data.get("view", [])
+    user_texts: Dict[int, List[str]] = defaultdict(list)
+
+    def _collect(entry):
+        uid = entry.get("user_id")
+        msg = entry.get("message") or ""
+        if uid and msg.strip():
+            user_texts[uid].append(msg)
+        for reply in entry.get("replies", []):
+            _collect(reply)
+
+    for entry in raw_entries:
+        _collect(entry)
+
+    if not user_texts:
+        return []
+
+    # ── Build participant name lookup ────────────────────────────────
+    participants = {p["id"]: p.get("display_name", f"Student {p['id']}")
+                    for p in data.get("participants", [])}
+
+    # ── Return pseudo-submission dicts (same shape the caller expects) ─
+    pseudo = []
+    for uid, texts in user_texts.items():
+        pseudo.append({
+            "user_id": uid,
+            "user": {"name": participants.get(uid, f"Student {uid}")},
+            "body": "\n\n".join(texts),
+            "workflow_state": "submitted",
+            "submitted_at": None,
+        })
+    return pseudo
+
+
 def get_submissions(course_id: int, assignment_id: int):
     """Fetch all submissions for an assignment."""
     if not HAS_REQUESTS or not API_TOKEN:
@@ -1629,7 +1747,8 @@ def analyze_assignment(course_id: int,
                        composed_weights=None,
                        aic_config: Optional[dict] = None,
                        course_name: str = "",
-                       generate_report: bool = True) -> Tuple[List[AnalysisResult], Path]:
+                       generate_report: bool = True,
+                       submissions: Optional[list] = None) -> Tuple[List[AnalysisResult], Path]:
     """
     Analyze all submissions for an assignment.
 
@@ -1642,18 +1761,27 @@ def analyze_assignment(course_id: int,
                          'essay', 'lab'). When provided, configures signal polarity
                          and personal-voice handling for the specific assignment type.
         composed_weights: Optional ComposedWeights from WeightComposer (Phase 8).
+        submissions: Optional pre-fetched (and preprocessed) submission list.
+                     When provided, skips Canvas fetch — used by RunWorker so
+                     preprocessing (translation, transcription) runs once.
 
     Returns:
         Tuple of (list of results, path to report file)
     """
-    print(f"\nFetching submissions...")
-    submissions = get_submissions(course_id, assignment_id)
-
-    if not submissions:
-        print("No submissions found.")
-        return [], None
-
-    print(f"Found {len(submissions)} submissions.")
+    if submissions is not None:
+        print(f"\nUsing {len(submissions)} pre-fetched submissions.")
+    else:
+        print(f"\nFetching submissions...")
+        # Try discussion-entry path first (returns None for non-discussions)
+        submissions = _get_discussion_submissions(course_id, assignment_id)
+        if submissions is not None:
+            print(f"Found {len(submissions)} discussion participants.")
+        else:
+            submissions = get_submissions(course_id, assignment_id)
+            if not submissions:
+                print("No submissions found.")
+                return [], None
+            print(f"Found {len(submissions)} submissions.")
 
     # Initialize analyzer
     # aic_config (Phase 9) takes precedence; assignment_type (Phase 7) is legacy fallback
@@ -1669,12 +1797,20 @@ def analyze_assignment(course_id: int,
     # Analyze each submission
     results = []
     errors = []
+    skipped_no_text = 0
+    skipped_unsubmitted = 0
     for sub in submissions:
         try:
             # Get student info
             user = sub.get("user", {})
             student_id = str(sub.get("user_id", "unknown"))
             student_name = user.get("name", f"Student {student_id}")
+
+            # Skip unsubmitted
+            ws = sub.get("workflow_state", "")
+            if ws in ("unsubmitted", "deleted"):
+                skipped_unsubmitted += 1
+                continue
 
             # Get submission text — inline body first, then attached files
             body = sub.get("body", "") or ""
@@ -1685,6 +1821,7 @@ def analyze_assignment(course_id: int,
 
             # Skip if still no text after extraction
             if not body.strip():
+                skipped_no_text += 1
                 continue
 
             print(f"  Analyzing: {student_name}...")
@@ -1693,10 +1830,14 @@ def analyze_assignment(course_id: int,
         except Exception as e:
             # Don't let one submission failure stop the entire batch
             error_msg = f"Error analyzing {student_name}: {str(e)}"
-            print(f"  ⚠ {error_msg}")
+            print(f"  Warning: {error_msg}")
             print(f"  Continuing with remaining submissions...")
             errors.append(error_msg)
             continue
+
+    if skipped_no_text:
+        print(f"  Skipped {skipped_no_text} submission(s) with no extractable text"
+              f" (file-only or empty)")
 
     if not results:
         print("No text submissions to analyze.")
@@ -1730,6 +1871,7 @@ def analyze_assignment(course_id: int,
                 assignment_name=_assignment_name,
                 submitted_at=_sub.get("submitted_at"),
                 context_profile=context_profile,
+                submission_body=(_sub.get("body") or "").strip(),
             )
     except Exception as _e:
         print(f"  ⚠ RunStore save skipped: {_e}")

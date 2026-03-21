@@ -148,6 +148,69 @@ PANEL_GRADIENT = ("qradialgradient(cx:0.50,cy:0.46,radius:0.88,fx:0.53,fy:0.42,"
 
 MONO_FONT = '"Menlo", "Consolas", "Courier New", monospace'
 
+
+def menu_qss() -> str:
+    """CRT-styled QMenu stylesheet — call on every QMenu instance for reliability.
+
+    macOS popup menus sometimes bypass app-level stylesheets, so applying
+    this directly on each QMenu guarantees the CRT look.
+    """
+    return f"""
+        QMenu {{
+            background: qradialgradient(cx:0.25,cy:0.18,radius:1.15,
+                stop:0.00 #221A0A,stop:0.45 #150F05,stop:1.00 #0B0802);
+            border: 1px solid {BORDER_AMBER};
+            border-radius: 6px;
+            padding: 6px 0;
+            font-family: "Menlo", "Consolas", "Courier New", monospace;
+            font-size: {px(12)}px;
+        }}
+        QMenu::item {{
+            padding: 6px 28px 6px 14px;
+            color: {PHOSPHOR_MID};
+            border-left: 2px solid transparent;
+            margin: 1px 4px;
+            border-radius: 3px;
+        }}
+        QMenu::item:selected {{
+            background: qradialgradient(cx:0.15,cy:0.50,radius:1.00,
+                stop:0.00 rgba(240,168,48,50),
+                stop:0.55 rgba(240,168,48,12),
+                stop:1.00 rgba(240,168,48,0));
+            color: {PHOSPHOR_HOT};
+            border-left: 2px solid {PHOSPHOR_HOT};
+        }}
+        QMenu::item:disabled {{
+            color: {PHOSPHOR_GLOW};
+        }}
+        QMenu::separator {{
+            height: 1px;
+            background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                stop:0.00 rgba(106,74,18,0),
+                stop:0.20 rgba(106,74,18,0.45),
+                stop:0.80 rgba(106,74,18,0.45),
+                stop:1.00 rgba(106,74,18,0));
+            margin: 5px 10px;
+        }}
+    """
+
+
+def combo_qss() -> str:
+    """Return an empty string — QComboBox styling is now handled by CRTComboBox.
+
+    Kept as a no-op so existing ``setStyleSheet(combo_qss())`` calls don't
+    break. New code should use ``CRTComboBox`` from ``gui.widgets.crt_combo``
+    instead of styling a plain QComboBox.
+    """
+    return ""
+
+
+def make_crt_combo(parent=None):
+    """Create a CRTComboBox — convenience so callers don't need the import."""
+    from gui.widgets.crt_combo import CRTComboBox
+    return CRTComboBox(parent)
+
+
 # ---------------------------------------------------------------------------
 # Application-wide QSS
 # Button gradients — CRT phosphor glow from centre, matching ViewToggle style
@@ -217,24 +280,43 @@ QMenuBar::item:selected {{
     color: {SIDEBAR_SEL_TEXT};
 }}
 QMenu {{
-    background: {BG_CARD};
-    border: 1px solid {BORDER_DARK};
+    background: qradialgradient(cx:0.30,cy:0.20,radius:1.10,
+        stop:0.00 #201808,stop:0.50 #140E04,stop:1.00 #0C0902);
+    border: 1px solid {BORDER_AMBER};
     border-radius: 6px;
-    padding: 4px 0;
+    padding: 6px 0;
+    font-family: "Menlo", "Consolas", "Courier New", monospace;
+    font-size: {px(12)}px;
 }}
 QMenu::item {{
-    padding: 6px 20px 6px 12px;
+    padding: 6px 28px 6px 14px;
     color: {PHOSPHOR_MID};
+    border-left: 2px solid transparent;
+    margin: 1px 4px;
+    border-radius: 3px;
 }}
 QMenu::item:selected {{
-    background: {SIDEBAR_SEL_BG};
+    background: qradialgradient(cx:0.20,cy:0.50,radius:1.00,
+        stop:0.00 rgba(240,168,48,45),stop:0.60 rgba(240,168,48,10),stop:1.00 rgba(240,168,48,0));
     color: {PHOSPHOR_HOT};
-    border-radius: 3px;
+    border-left: 2px solid {PHOSPHOR_HOT};
+}}
+QMenu::item:disabled {{
+    color: {PHOSPHOR_GLOW};
 }}
 QMenu::separator {{
     height: 1px;
-    background: {BORDER_DARK};
-    margin: 4px 8px;
+    background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+        stop:0.00 rgba(106,74,18,0),
+        stop:0.25 rgba(106,74,18,0.50),
+        stop:0.75 rgba(106,74,18,0.50),
+        stop:1.00 rgba(106,74,18,0));
+    margin: 5px 10px;
+}}
+QMenu::indicator {{
+    width: 10px;
+    height: 10px;
+    margin-left: 4px;
 }}
 
 /* ── Tool bar ─────────────────────────────────────────────────────────────── */
@@ -393,6 +475,34 @@ QPushButton#runButton:disabled, QPushButton[accent="true"]:disabled {{
     border-color: rgba(60, 20, 40, 0.30);
 }}
 
+/* Blue accent buttons (AIC) */
+QPushButton[accentBlue="true"] {{
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgba(50, 80, 120, 0.85), stop:1 rgba(30, 50, 80, 0.85));
+    color: #90C8F0;
+    border: 1px solid rgba(120, 180, 220, 0.65);
+    font-weight: 600;
+    padding: 7px 18px;
+}}
+QPushButton[accentBlue="true"]:hover {{
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgba(60, 100, 150, 0.90), stop:1 rgba(40, 65, 100, 0.90));
+    border-color: rgba(144, 200, 240, 0.90);
+    color: #B0DEFF;
+}}
+QPushButton[accentBlue="true"]:pressed {{
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgba(25, 45, 70, 0.85), stop:1 rgba(35, 60, 90, 0.85));
+    padding-top: 8px; padding-bottom: 6px;
+    padding-left: 19px; padding-right: 17px;
+    border-color: rgba(120, 180, 220, 0.35);
+    color: #90C8F0;
+}}
+QPushButton[accentBlue="true"]:disabled {{
+    color: rgba(60, 90, 120, 0.50);
+    border-color: rgba(40, 60, 80, 0.30);
+}}
+
 /* Secondary amber buttons */
 QPushButton[secondary="true"] {{
     background: {_BTN_BG};
@@ -435,29 +545,21 @@ QLineEdit:disabled {{
     color: {PHOSPHOR_DIM};
 }}
 
-/* ── Combo box ────────────────────────────────────────────────────────────── */
+/* ── Combo box (fallback for plain QComboBox; prefer CRTComboBox) ─────── */
 QComboBox {{
     background: {BG_INSET};
     border: 1px solid {BORDER_DARK};
-    border-radius: 4px;
-    padding: 5px 8px;
+    border-radius: 5px;
+    padding: 5px 28px 5px 10px;
     color: {PHOSPHOR_HOT};
     min-height: {px(22)}px;
 }}
-QComboBox:focus {{
-    border-color: {PHOSPHOR_HOT};
+QComboBox:hover {{
+    border-color: {BORDER_AMBER};
 }}
 QComboBox::drop-down {{
     border: none;
     width: 20px;
-}}
-QComboBox QAbstractItemView {{
-    background: {BG_CARD};
-    border: 1px solid {BORDER_DARK};
-    border-radius: 4px;
-    color: {PHOSPHOR_MID};
-    selection-background-color: {SIDEBAR_SEL_BG};
-    selection-color: {PHOSPHOR_HOT};
 }}
 
 /* ── Spin box ─────────────────────────────────────────────────────────────── */
@@ -470,6 +572,12 @@ QSpinBox, QDoubleSpinBox, QTimeEdit {{
 }}
 QSpinBox:focus, QDoubleSpinBox:focus, QTimeEdit:focus {{
     border-color: {PHOSPHOR_HOT};
+}}
+QSpinBox::up-button, QDoubleSpinBox::up-button,
+QSpinBox::down-button, QDoubleSpinBox::down-button {{
+    width: 0px;
+    height: 0px;
+    border: none;
 }}
 
 /* ── Checkboxes / radio buttons ───────────────────────────────────────────── */
@@ -710,6 +818,24 @@ def make_run_button(btn) -> None:
     apply_phosphor_glow(btn, color=ROSE_ACCENT, blur=14, strength=0.50)
 
 
+def make_blue_button(btn) -> None:
+    """Style a QPushButton as a blue accent action (AIC blue glow)."""
+    btn.setProperty("accentBlue", "true")
+    btn.style().unpolish(btn)
+    btn.style().polish(btn)
+    apply_phosphor_glow(btn, color="#78B4DC", blur=14, strength=0.50)
+
+
+def make_glow_bulb_button(text: str, parent=None):
+    """Create a GlowBulbButton — analog backlit pushbutton with baby-blue glow.
+
+    Returns a fully styled GlowBulbButton instance (not a plain QPushButton).
+    Use this for high-visibility actions like "Run AIC".
+    """
+    from gui.widgets.glow_bulb_button import GlowBulbButton
+    return GlowBulbButton(text, parent)
+
+
 def make_secondary_button(btn) -> None:
     """Style a QPushButton as an amber secondary action (amber glow)."""
     btn.setProperty("secondary", "true")
@@ -815,6 +941,11 @@ class GripSplitter:
             _BG    = QColor(BG_VOID)
             _DOT   = QColor(PHOSPHOR_DIM)
             _DOT_H = QColor("#8A5E1A")
+
+            def __init__(self, orientation, parent):
+                super().__init__(orientation, parent)
+                # Override global QSplitter::handle QSS so paintEvent controls rendering
+                self.setStyleSheet("QSplitterHandle { background: transparent; }")
 
             def paintEvent(self, event):
                 p = QPainter(self)

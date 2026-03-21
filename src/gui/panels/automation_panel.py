@@ -13,6 +13,7 @@ from PySide6.QtCore import Qt, QTime, Signal
 from PySide6.QtGui import QFont, QPainter, QColor
 
 from gui.styles import (
+    px,
     SPACING_SM, SPACING_MD, PHOSPHOR_HOT, PHOSPHOR_DIM, make_h_rule,
 )
 
@@ -68,12 +69,12 @@ class AutomationPanel(QWidget):
 
         title = QLabel("AUTOMATION")
         title.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(16)}px; font-weight: bold;"
             f" background: transparent; border: none; letter-spacing: 2px;"
         )
         sub = QLabel("Schedule automatic grading runs for your configured courses.")
         sub.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
             f" background: transparent; border: none;"
         )
         sub.setWordWrap(True)

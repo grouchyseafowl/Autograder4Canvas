@@ -133,7 +133,7 @@ class PhosphorChip(QWidget):
         # 2. Radial glow — origin slightly upper-left (emphasises first word)
         if self._active or self._hovered:
             r, g, b = _ROSE_RGB if self._accent == "rose" else _AMBER_RGB
-            primary_a = 75 if self._active else 32
+            primary_a = 75 if self._active else 45
             bloom_a   = 38 if self._active else 0   # bloom only when active
 
             clip = QPainterPath()
@@ -160,11 +160,21 @@ class PhosphorChip(QWidget):
 
             p.restore()
 
-        # 3. Border
+        # 3. Border — three levels: active > hover > rest
         if self._accent == "rose":
-            border = _ROSE_BORDER_ACT if self._active else _ROSE_BORDER_REST
+            if self._active:
+                border = _ROSE_BORDER_ACT
+            elif self._hovered:
+                border = QColor(180, 70, 115, 170)
+            else:
+                border = _ROSE_BORDER_REST
         else:
-            border = _AMBER_BORDER_ACT if self._active else _AMBER_BORDER_REST
+            if self._active:
+                border = _AMBER_BORDER_ACT
+            elif self._hovered:
+                border = QColor(160, 110, 24, 170)
+            else:
+                border = _AMBER_BORDER_REST
         p.setPen(QPen(border, 1.0))
         p.setBrush(Qt.BrushStyle.NoBrush)
         p.drawRoundedRect(outer, _RADIUS, _RADIUS)

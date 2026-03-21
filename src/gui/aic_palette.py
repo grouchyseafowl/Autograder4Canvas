@@ -8,10 +8,10 @@ from gui.styles import PHOSPHOR_DIM, WARN_PINK, BURN_RED, ROSE_ACCENT
 
 CONCERN_COLOR = {
     "none":     "#3A2808",
-    "low":      PHOSPHOR_DIM,
-    "moderate": WARN_PINK,
-    "elevated": "#E0802A",
-    "high":     BURN_RED,
+    "low":      "#5A7A90",        # muted blue-grey
+    "moderate": "#6A9AB8",        # mid baby blue
+    "elevated": "#78B4DC",        # baby blue
+    "high":     "#90C8F0",        # bright baby blue
 }
 
 CONCERN_LABEL = {

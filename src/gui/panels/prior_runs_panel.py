@@ -22,22 +22,26 @@ from PySide6.QtWidgets import (
     QScrollArea, QSplitter, QTextEdit, QTextBrowser, QSizePolicy, QComboBox,
     QCheckBox, QStackedWidget,
 )
-from PySide6.QtCore import Qt, Signal, QPoint, QRect, QSize
+from PySide6.QtCore import Qt, Signal, QPoint, QPointF, QRect, QRectF, QSize
 from PySide6.QtGui import (
     QColor, QPainter, QPen, QBrush, QFont, QFontMetrics,
     QRadialGradient, QLinearGradient, QPainterPath, QPaintEvent, QMouseEvent,
 )
 
 from gui.styles import (
+    px,
     SPACING_XS, SPACING_SM, SPACING_MD, SPACING_LG,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM, PHOSPHOR_GLOW,
     ROSE_ACCENT, ROSE_DIM, WARN_PINK, TERM_GREEN, BURN_RED, AMBER_BTN,
     BG_VOID, BG_CARD, BG_PANEL, BG_INSET,
     BORDER_DARK, BORDER_AMBER,
     CARD_GRADIENT, PANEL_GRADIENT,
-    make_secondary_button, make_run_button,
+    make_secondary_button, make_run_button, make_blue_button,
+    make_glow_bulb_button,
     make_section_label, make_h_rule, GripSplitter, PANE_BG_GRADIENT,
+    combo_qss,
 )
+from gui.widgets.crt_combo import CRTComboBox
 from gui.widgets.switch_toggle import SwitchToggle
 
 
@@ -45,53 +49,32 @@ from gui.widgets.switch_toggle import SwitchToggle
 # Local stylesheets
 # ──────────────────────────────────────────────────────────────────────────────
 
-_COMBO_QSS = f"""
-    QComboBox {{
-        background: {BG_INSET};
-        color: {PHOSPHOR_MID};
-        border: 1px solid {BORDER_DARK};
-        border-radius: 4px;
-        padding: 3px 8px;
-        font-size: 12px;
-    }}
-    QComboBox:hover {{ border-color: {BORDER_AMBER}; color: {PHOSPHOR_HOT}; }}
-    QComboBox::drop-down {{ border: none; width: 18px; }}
-    QComboBox QAbstractItemView {{
-        background: {BG_CARD};
-        color: {PHOSPHOR_MID};
-        selection-background-color: {BG_PANEL};
-        selection-color: {PHOSPHOR_HOT};
-        border: 1px solid {BORDER_DARK};
-    }}
-"""
+_COMBO_QSS = combo_qss()
 
 _RUN_ROW_QSS = f"""
     QFrame {{
         background: transparent;
         border: none;
         border-left: 3px solid transparent;
-        border-bottom: 1px solid {BORDER_DARK};
     }}
     QFrame:hover {{
-        background: qradialgradient(cx:0.06,cy:0.5,radius:1.2,fx:0.02,fy:0.5,
-            stop:0.0 rgba(240,168,48,0.14),stop:0.45 rgba(240,168,48,0.04),stop:1.0 transparent);
-        border-left-color: {BORDER_AMBER};
+        background: qradialgradient(cx:0.15,cy:0.5,radius:1.20,
+            stop:0.00 #231A06,stop:0.70 #191406,stop:1.00 #141003);
     }}
 """
 
 _RUN_ROW_SEL_QSS = f"""
     QFrame {{
-        background: qradialgradient(cx:0.06,cy:0.5,radius:1.2,fx:0.02,fy:0.5,
-            stop:0.0 rgba(204,82,130,0.22),stop:0.45 rgba(204,82,130,0.06),stop:1.0 transparent);
+        background: qradialgradient(cx:0.15,cy:0.5,radius:1.30,
+            stop:0.00 #3A2408,stop:0.65 #2C1C08,stop:1.00 #1A1205);
         border: none;
-        border-left: 3px solid {BORDER_AMBER};
-        border-bottom: 1px solid {BORDER_DARK};
+        border-left: 3px solid {ROSE_ACCENT};
     }}
 """
 
 _SECTION_HDR_QSS = f"""
     color: {PHOSPHOR_DIM};
-    font-size: 10px;
+    font-size: {px(10)}px;
     font-weight: bold;
     letter-spacing: 1px;
 """
@@ -118,7 +101,7 @@ _NOTE_EDIT_QSS = f"""
         color: {PHOSPHOR_MID};
         border: 1px solid {BORDER_DARK};
         border-radius: 4px;
-        font-size: 12px;
+        font-size: {px(12)}px;
         padding: 6px;
     }}
     QTextEdit:focus {{ border-color: {BORDER_AMBER}; }}
@@ -131,14 +114,13 @@ _NOTE_EDIT_QSS = f"""
 
 from gui.aic_palette import CONCERN_COLOR as _CONCERN_COLOR, CONCERN_LABEL as _CONCERN_LABEL
 
-# Scatter-specific dot colours — overrides palette for visibility on dark bg.
-# "none" concern uses cool teal (instead of near-invisible dark amber).
+# Scatter-specific dot colours — baby blue scheme for visibility on dark bg.
 _SCATTER_COLOR = {
-    "none":     "#58C8B8",   # cool teal — clearly safe
-    "low":      "#78B870",   # soft green — low concern
-    "moderate": "#C4708A",   # warm pink — moderate
-    "elevated": "#E0802A",   # orange — elevated
-    "high":     "#C04020",   # red — high
+    "none":     "#7EC8E3",   # baby blue — safe
+    "low":      "#A8D8EA",   # lighter blue — low concern
+    "moderate": "#F0C987",   # warm amber — moderate
+    "elevated": "#E88D4F",   # orange — elevated
+    "high":     "#D44D4D",   # red — high
 }
 
 _PROFILE_OPTIONS = [
@@ -147,6 +129,29 @@ _PROFILE_OPTIONS = [
     ("esl",               "ESL"),
     ("neurodivergent",    "Neurodivergent"),
     ("first_gen",         "First-Generation"),
+]
+
+# Population context options — mirrored from settings_panel.py
+_EDU_LEVEL_OPTIONS = [
+    ("community_college", "Community College"),
+    ("high_school",       "High School"),
+    ("four_year",         "Four-Year College"),
+    ("university",        "Research University"),
+    ("online",            "Online / Distance"),
+]
+
+_ESL_LEVEL_OPTIONS = [
+    ("none",     "Default"),
+    ("low",      "Low  (< 10%)"),
+    ("moderate", "Moderate  (10–25%)"),
+    ("high",     "High  (> 25%)"),
+]
+
+_FIRST_GEN_OPTIONS = [
+    ("none",     "Default"),
+    ("low",      "Low  (< 20%)"),
+    ("moderate", "Moderate  (20–45%)"),
+    ("high",     "High  (> 45%)"),
 ]
 
 # Per-student composable override levels (for StudentDetailView)
@@ -198,14 +203,27 @@ def _fmt_date(iso: Optional[str]) -> str:
 
 class CohortScatterWidget(QWidget):
     """
-    Scatter plot: X = human presence confidence (0–100), Y = suspicion score.
-    Dot size ∝ word count.  Colours map to concern level.
+    Cohort scatter: X = authenticity score (0-10), Y = suspicious score (0-10).
+    Y is inverted so higher suspicious scores appear at the TOP (more concerning)
+    and lower scores at the BOTTOM (safer).
+
+    Quadrant shading:
+      Top-left  (high suspicious, low authenticity) = rose tint  (danger zone)
+      Bottom-right (low suspicious, high authenticity) = teal tint (safe zone)
+      Other quadrants = neutral
+
+    Dot size proportional to word count.  Colours map to concern level (baby blue scheme).
     Smoking-gun submissions get a rose-glow ring.
-    Click a dot → dot_clicked(student_id, assignment_id) emitted.
+    For cohorts <= 20 students, first names are rendered next to dots.
+    Click a dot -> dot_clicked(student_id, assignment_id) emitted.
     """
 
     dot_clicked = Signal(str, str)   # (student_id, assignment_id)
     dot_hovered = Signal(str)        # student name or "" on leave
+
+    # Fixed axis range for both dimensions
+    _AXIS_MIN: float = 0.0
+    _AXIS_MAX: float = 10.0
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -224,28 +242,51 @@ class CohortScatterWidget(QWidget):
         self._hover_idx = None
         self.update()
 
+    # ── score accessors ──────────────────────────────────────────────────────
+
+    @staticmethod
+    def _auth_value(row: Dict) -> float:
+        """Authenticity score (0-10).  Falls back to 5.0 if missing."""
+        v = row.get("authenticity_score")
+        if v is not None:
+            return max(0.0, min(10.0, float(v)))
+        return 5.0
+
+    @staticmethod
+    def _susp_value(row: Dict) -> float:
+        """Suspicious score (0-10).  Falls back to 5.0 if missing."""
+        v = row.get("suspicious_score")
+        if v is not None:
+            return max(0.0, min(10.0, float(v)))
+        return 5.0
+
     # ── geometry ─────────────────────────────────────────────────────────────
 
     def _plot_rect(self) -> QRect:
-        return QRect(56, 10, self.width() - 56 - 14, self.height() - 10 - 40)
+        # Left margin for Y-axis labels, right margin for axis hint,
+        # top margin for top label, bottom margin for X-axis labels.
+        return QRect(60, 18, self.width() - 60 - 18, self.height() - 18 - 48)
 
-    def _dot_pos(self, row: Dict, pr: QRect) -> QPoint:
-        hp = float(row.get("human_presence_confidence") or 50)
-        sus = float(row.get("adjusted_suspicious_score") or row.get("suspicious_score") or 0)
-        max_sus = max((float(r.get("adjusted_suspicious_score") or r.get("suspicious_score") or 0)
-                       for r in self._rows), default=1.0) or 1.0
-        x = pr.left() + int(hp / 100 * pr.width())
-        y = pr.bottom() - int(sus / max_sus * pr.height())
+    def _dot_pos(self, row: Dict, _idx: int, pr: QRect) -> QPoint:
+        auth = self._auth_value(row)
+        susp = self._susp_value(row)
+        ax_range = self._AXIS_MAX - self._AXIS_MIN
+        # X: authenticity 0 (left) -> 10 (right)
+        tx = (auth - self._AXIS_MIN) / ax_range
+        x = pr.left() + int(tx * pr.width())
+        # Y: suspicious score — INVERTED so 10 is at top, 0 at bottom
+        ty = (susp - self._AXIS_MIN) / ax_range
+        y = pr.bottom() - int(ty * pr.height())
         return QPoint(x, y)
 
     def _dot_radius(self, row: Dict) -> int:
         wc = int(row.get("word_count") or 200)
-        return max(4, min(13, int(4 + math.sqrt(wc / 50))))
+        return max(4, min(11, int(4 + math.sqrt(wc / 60))))
 
     def _find_dot(self, pos: QPoint) -> Optional[int]:
         pr = self._plot_rect()
         for i, row in enumerate(self._rows):
-            dp = self._dot_pos(row, pr)
+            dp = self._dot_pos(row, i, pr)
             if (pos - dp).manhattanLength() < self._dot_radius(row) + 8:
                 return i
         return None
@@ -280,84 +321,114 @@ class CohortScatterWidget(QWidget):
 
         w, h = self.width(), self.height()
         pr = self._plot_rect()
+        ax_range = self._AXIS_MAX - self._AXIS_MIN
 
         # ── Background ────────────────────────────────────────────────────
         p.fillRect(0, 0, w, h, QColor(BG_INSET))
 
-        # Subtle vertical zone tint: teal at bottom (safe) → rose at top (concern)
-        zone = QLinearGradient(0, pr.bottom(), 0, pr.top())
-        zone.setColorAt(0.00, QColor(88, 200, 176, 10))
-        zone.setColorAt(0.35, QColor(0, 0, 0, 0))
-        zone.setColorAt(0.65, QColor(0, 0, 0, 0))
-        zone.setColorAt(1.00, QColor(204, 82, 130, 14))
-        p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(zone)
-        p.drawRect(pr)
+        # Quadrant shading — subtle tint in corners.
+        mid_x = pr.left() + pr.width() // 2
+        mid_y = pr.top() + pr.height() // 2
 
-        # ── Grid lines (quartiles) ────────────────────────────────────────
-        p.setPen(QPen(QColor(PHOSPHOR_GLOW), 1, Qt.PenStyle.DotLine))
-        for frac in (0.25, 0.5, 0.75):
-            gx = pr.left() + int(frac * pr.width())
-            gy = pr.bottom() - int(frac * pr.height())
-            p.drawLine(gx, pr.top(), gx, pr.bottom())
+        # Top-left quadrant (high suspicious, low authenticity) = rose tint
+        tl_grad = QLinearGradient(pr.left(), pr.top(), mid_x, mid_y)
+        tl_grad.setColorAt(0.0, QColor(204, 82, 130, 35))
+        tl_grad.setColorAt(1.0, QColor(0, 0, 0, 0))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(tl_grad)
+        p.drawRect(pr.left(), pr.top(), pr.width() // 2, pr.height() // 2)
+
+        # Bottom-right quadrant (low suspicious, high authenticity) = teal tint
+        br_grad = QLinearGradient(pr.right(), pr.bottom(), mid_x, mid_y)
+        br_grad.setColorAt(0.0, QColor(88, 200, 176, 35))
+        br_grad.setColorAt(1.0, QColor(0, 0, 0, 0))
+        p.setBrush(br_grad)
+        p.drawRect(mid_x, mid_y, pr.width() - pr.width() // 2,
+                   pr.height() - pr.height() // 2)
+
+        # ── Grid lines at nice intervals (every 2 units on 0-10 scale) ───
+        label_font = QFont()
+        label_font.setPixelSize(px(9))
+        p.setFont(label_font)
+
+        # Horizontal grid lines (suspicious score ticks — Y axis)
+        for tv in range(0, 11, 2):
+            ty_frac = float(tv - self._AXIS_MIN) / ax_range
+            gy = pr.bottom() - int(ty_frac * pr.height())
+            p.setPen(QPen(QColor(PHOSPHOR_GLOW), 1, Qt.PenStyle.DotLine))
             p.drawLine(pr.left(), gy, pr.right(), gy)
+            # Y-axis tick label
+            p.setPen(QColor(PHOSPHOR_DIM))
+            p.drawText(QRect(pr.left() - 46, gy - 7, 40, 14),
+                       Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+                       f"{tv}")
+
+        # Vertical grid lines (authenticity score ticks — X axis)
+        for tv in range(0, 11, 2):
+            tx_frac = float(tv - self._AXIS_MIN) / ax_range
+            gx = pr.left() + int(tx_frac * pr.width())
+            p.setPen(QPen(QColor(PHOSPHOR_GLOW), 1, Qt.PenStyle.DotLine))
+            p.drawLine(gx, pr.top(), gx, pr.bottom())
+            # X-axis tick label
+            p.setPen(QColor(PHOSPHOR_DIM))
+            p.drawText(QRect(gx - 14, pr.bottom() + 4, 28, 14),
+                       Qt.AlignmentFlag.AlignCenter, f"{tv}")
 
         # ── Axis borders ──────────────────────────────────────────────────
         p.setPen(QPen(QColor(BORDER_DARK), 1))
         p.drawLine(pr.left(), pr.top(), pr.left(), pr.bottom())
         p.drawLine(pr.left(), pr.bottom(), pr.right(), pr.bottom())
 
-        # ── Y axis: rotated label + tick values ───────────────────────────
-        label_font = QFont()
-        label_font.setPixelSize(9)
-
-        # Rotated title
+        # ── Y axis: rotated label ─────────────────────────────────────────
         p.save()
         rot_font = QFont()
-        rot_font.setPixelSize(9)
+        rot_font.setPixelSize(px(9))
         rot_font.setBold(True)
         p.setFont(rot_font)
         p.setPen(QColor(PHOSPHOR_DIM))
-        p.translate(12, pr.top() + pr.height() // 2)
+        p.translate(10, pr.top() + pr.height() // 2)
         p.rotate(-90)
         p.drawText(QRect(-pr.height() // 2, 0, pr.height(), 14),
-                   Qt.AlignmentFlag.AlignCenter, "PATTERN STRENGTH")
+                   Qt.AlignmentFlag.AlignCenter, "SUSPICION")
         p.restore()
 
-        # Tick labels
-        p.setFont(label_font)
-        max_sus = max(
-            (float(r.get("adjusted_suspicious_score") or r.get("suspicious_score") or 0)
-             for r in self._rows), default=1.0) or 1.0
-        for frac, label in ((0.0, "0"), (0.5, f"{max_sus * 0.5:.1f}"), (1.0, f"{max_sus:.1f}")):
-            gy = pr.bottom() - int(frac * pr.height())
-            p.setPen(QColor(PHOSPHOR_DIM))
-            p.drawText(QRect(pr.left() - 34, gy - 7, 30, 14),
-                       Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
-                       label)
-
-        # Zone hint labels (right edge of plot)
+        # Y-axis hint labels inside the plot (top and bottom)
         hint_font = QFont()
-        hint_font.setPixelSize(8)
+        hint_font.setPixelSize(px(8))
         p.setFont(hint_font)
-        p.setPen(QColor(88, 200, 176, 160))
-        p.drawText(QRect(pr.right() - 110, pr.bottom() - 16, 106, 14),
-                   Qt.AlignmentFlag.AlignRight, "fewer patterns")
-        p.setPen(QColor(204, 82, 130, 160))
-        p.drawText(QRect(pr.right() - 110, pr.top() + 2, 106, 14),
-                   Qt.AlignmentFlag.AlignRight, "more patterns")
+        p.setPen(QColor(204, 82, 130, 155))
+        p.drawText(QRect(pr.left() + 4, pr.top() + 3, pr.width() - 8, 12),
+                   Qt.AlignmentFlag.AlignLeft, "\u2191 more suspicious")
+        p.setPen(QColor(88, 200, 176, 155))
+        p.drawText(QRect(pr.left() + 4, pr.bottom() - 14, pr.width() - 8, 12),
+                   Qt.AlignmentFlag.AlignLeft, "\u2193 less suspicious")
 
-        # ── X axis labels ─────────────────────────────────────────────────
-        p.setFont(label_font)
+        # ── X axis: label ─────────────────────────────────────────────────
+        x_label_font = QFont()
+        x_label_font.setPixelSize(px(9))
+        x_label_font.setBold(True)
+        p.setFont(x_label_font)
         p.setPen(QColor(PHOSPHOR_DIM))
-        p.drawText(QRect(pr.left(), pr.bottom() + 6, pr.width(), 14),
-                   Qt.AlignmentFlag.AlignLeft, "← less human presence")
-        p.drawText(QRect(pr.left(), pr.bottom() + 6, pr.width(), 14),
-                   Qt.AlignmentFlag.AlignRight, "more human presence →")
+        p.drawText(QRect(pr.left(), pr.bottom() + 20, pr.width(), 14),
+                   Qt.AlignmentFlag.AlignCenter, "AUTHENTICITY")
+
+        # X-axis hint labels (left and right)
+        p.setFont(hint_font)
+        p.setPen(QColor(204, 82, 130, 130))
+        p.drawText(QRect(pr.left(), pr.bottom() + 32, pr.width() // 2, 12),
+                   Qt.AlignmentFlag.AlignLeft, "\u2190 AI signals")
+        p.setPen(QColor(88, 200, 176, 130))
+        p.drawText(QRect(pr.left() + pr.width() // 2, pr.bottom() + 32,
+                         pr.width() // 2, 12),
+                   Qt.AlignmentFlag.AlignRight, "human \u2192")
 
         # ── Dots with CRT bloom ───────────────────────────────────────────
+        show_names = len(self._rows) <= 20
+        name_font = QFont()
+        name_font.setPixelSize(px(8))
+
         for i, row in enumerate(self._rows):
-            dp = self._dot_pos(row, pr)
+            dp = self._dot_pos(row, i, pr)
             rad = self._dot_radius(row)
             concern = row.get("concern_level", "none")
             is_sg = bool(row.get("smoking_gun"))
@@ -412,16 +483,26 @@ class CohortScatterWidget(QWidget):
             p.setBrush(hl)
             p.drawEllipse(dp, rad, rad)
 
+            # Student first name label (small cohorts only)
+            if show_names:
+                full_name = row.get("student_name", "")
+                first_name = full_name.split()[0] if full_name else ""
+                if first_name:
+                    p.setFont(name_font)
+                    p.setPen(QColor(PHOSPHOR_DIM))
+                    p.drawText(dp.x() + rad + 3, dp.y() + 3, first_name)
+
         # ── Hover tooltip ─────────────────────────────────────────────────
         if self._hover_idx is not None:
             row = self._rows[self._hover_idx]
-            dp = self._dot_pos(row, pr)
+            dp = self._dot_pos(row, self._hover_idx, pr)
             name = row.get("student_name", "")
             concern = _CONCERN_LABEL.get(row.get("concern_level", "none"), "")
-            sus = row.get("adjusted_suspicious_score") or row.get("suspicious_score") or 0
-            tip = f"{name}  ·  {concern}  ·  {sus:.2f}"
+            auth = self._auth_value(row)
+            susp = self._susp_value(row)
+            tip = f"{name}  \u00b7  {concern}  \u00b7  auth {auth:.1f}  \u00b7  susp {susp:.1f}"
             tip_font = QFont()
-            tip_font.setPixelSize(11)
+            tip_font.setPixelSize(px(11))
             p.setFont(tip_font)
             fm = QFontMetrics(tip_font)
             tw = fm.horizontalAdvance(tip) + 16
@@ -442,7 +523,7 @@ class CohortScatterWidget(QWidget):
         if self._profile_label:
             p.setPen(QColor(WARN_PINK))
             pf = QFont()
-            pf.setPixelSize(10)
+            pf.setPixelSize(px(10))
             p.setFont(pf)
             p.drawText(QRect(pr.left(), h - 14, pr.width(), 14),
                        Qt.AlignmentFlag.AlignRight,
@@ -564,20 +645,405 @@ class SparklineWidget(QWidget):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# Class Heatmap — students (rows) × assignments (cols), colour = HP %
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _hp_cell_color(hp_frac: float) -> QColor:
+    """Continuous colour for a heatmap cell: rose (0 %) → amber (50 %) → teal (100 %)."""
+    _R, _A, _T = (192, 64, 100), (232, 160, 48), (88, 200, 184)
+    t = max(0.0, min(1.0, hp_frac))
+    if t <= 0.5:
+        s = t / 0.5
+        c0, c1 = _R, _A
+    else:
+        s = (t - 0.5) / 0.5
+        c0, c1 = _A, _T
+    r = int(c0[0] + (c1[0] - c0[0]) * s)
+    g = int(c0[1] + (c1[1] - c0[1]) * s)
+    b = int(c0[2] + (c1[2] - c0[2]) * s)
+    return QColor(r, g, b)
+
+
+def _concern_cell_color(concern: str) -> QColor:
+    """Map concern level to baby-blue-based colour for heatmap cells."""
+    _CONCERN_CELL = {
+        "none":     QColor(126, 200, 227, 170),  # baby blue
+        "low":      QColor(168, 216, 234, 170),  # lighter blue
+        "moderate": QColor(240, 201, 135, 180),  # warm amber
+        "elevated": QColor(232, 141, 79, 190),   # orange
+        "high":     QColor(212, 77, 77, 200),    # red
+    }
+    return _CONCERN_CELL.get(concern, _CONCERN_CELL["none"])
+
+
+def _concern_to_score(concern: str) -> int:
+    """Map concern level to a numeric value for display and averaging."""
+    return {"none": 0, "low": 1, "moderate": 2, "elevated": 3, "high": 4}.get(concern, 0)
+
+
+class ClassHeatmapWidget(QWidget):
+    """
+    QPainter heatmap: students (rows) × assignments (columns).
+
+    Cell colour = concern level on a baby-blue → amber → red spectrum.
+    Pinned header row (assignment names) and class-average summary row
+    stay visible while student rows scroll vertically.
+
+    Click a student row → student_clicked(student_id, course_id).
+    """
+
+    student_clicked = Signal(str, str)   # (student_id, course_id)
+
+    _NAME_W     = 140
+    _CELL_H     = 22
+    _CELL_GAP   = 2
+    _HDR_H      = 32
+    _SUMM_H     = 24
+    _PAD        = 6
+    _MIN_CELL_W = 44
+    _MAX_CELL_W = 90
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._course_id: str = ""
+        self._assignments: list = []       # [(assignment_id, short_name)]
+        self._students: list = []          # [{id, name, avg_hp, cells:{aid:{hp,concern,sg}}}]
+        self._class_avg: dict = {}         # {assignment_id: avg_hp_frac}
+        self._scroll_y: int = 0
+        self._max_scroll: int = 0
+        self._hover_row: int = -1
+        self.setMouseTracking(True)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.setMinimumHeight(120)
+
+    # ── Data ──────────────────────────────────────────────────────────────────
+
+    def set_data(self, course_id: str, flat_rows: list) -> None:
+        """Build the grid from a flat list of (student, assignment) dicts."""
+        self._course_id = course_id
+
+        # Dedupe assignment order (chronological from query)
+        seen_aid = {}
+        for r in flat_rows:
+            aid = str(r.get("assignment_id", ""))
+            if aid and aid not in seen_aid:
+                aname = r.get("assignment_name", "?")
+                # Truncate to fit cell
+                seen_aid[aid] = aname[:12]
+        self._assignments = list(seen_aid.items())
+
+        # Build per-student cell map
+        student_map = {}  # id → {name, cells:{aid:{concern,sg,auth}}}
+        for r in flat_rows:
+            sid = str(r.get("student_id", ""))
+            if not sid:
+                continue
+            if sid not in student_map:
+                student_map[sid] = {
+                    "id": sid,
+                    "name": r.get("student_name", "?"),
+                    "cells": {},
+                }
+            aid = str(r.get("assignment_id", ""))
+            concern = r.get("concern_level", "none")
+            student_map[sid]["cells"][aid] = {
+                "concern": concern,
+                "concern_score": _concern_to_score(concern),
+                "sg": bool(r.get("smoking_gun")),
+                "auth": r.get("authenticity_score"),
+            }
+
+        # Compute per-student max concern score (for sorting — worst at top)
+        for s in student_map.values():
+            scores = [c["concern_score"] for c in s["cells"].values()]
+            s["max_concern"] = max(scores) if scores else 0
+
+        self._students = sorted(
+            student_map.values(), key=lambda s: -s["max_concern"]
+        )
+
+        # Class averages per assignment (concern score)
+        self._class_avg = {}
+        for aid, _ in self._assignments:
+            vals = []
+            for s in self._students:
+                cell = s["cells"].get(aid)
+                if cell:
+                    vals.append(cell["concern_score"])
+            self._class_avg[aid] = (sum(vals) / len(vals)) if vals else 0.0
+
+        self._scroll_y = 0
+        self._hover_row = -1
+        self._update_max_scroll()
+        self.update()
+
+    def _update_max_scroll(self) -> None:
+        body_h = len(self._students) * (self._CELL_H + self._CELL_GAP)
+        avail = self.height() - self._HDR_H - self._SUMM_H - self._PAD
+        self._max_scroll = max(0, body_h - avail)
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._update_max_scroll()
+
+    # ── Layout helpers ────────────────────────────────────────────────────────
+
+    def _cell_w(self) -> int:
+        n = max(len(self._assignments), 1)
+        avail = self.width() - self._NAME_W - self._PAD * 2
+        cw = max(self._MIN_CELL_W, min(self._MAX_CELL_W, avail // n))
+        return cw
+
+    def _grid_x(self) -> int:
+        return self._NAME_W + self._PAD
+
+    def _body_top(self) -> int:
+        return self._HDR_H + self._SUMM_H
+
+    # ── Painting ──────────────────────────────────────────────────────────────
+
+    def paintEvent(self, _event) -> None:
+        if not self._assignments or not self._students:
+            return
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        w, h = self.width(), self.height()
+        cw = self._cell_w()
+        gx = self._grid_x()
+        bt = self._body_top()
+
+        dim   = QColor(PHOSPHOR_DIM)
+        mid   = QColor(PHOSPHOR_MID)
+        hot   = QColor(PHOSPHOR_HOT)
+        empty = QColor(BG_INSET)
+        bdr   = QColor(BORDER_DARK)
+
+        hdr_font = QFont("Menlo", px(8))
+        hdr_font.setBold(True)
+        name_font = QFont("Menlo", px(9))
+        tiny_font = QFont("Menlo", px(8))
+        hp_font = QFont("Menlo", px(7))
+
+        # ── Header row: assignment names (rotated 45°) ────────────────────────
+        p.setFont(hdr_font)
+        p.setPen(dim)
+        for j, (aid, aname) in enumerate(self._assignments):
+            cx = gx + j * (cw + self._CELL_GAP) + cw // 2
+            p.save()
+            p.translate(cx, self._HDR_H - 4)
+            p.rotate(-40)
+            p.drawText(0, 0, aname)
+            p.restore()
+
+        # ── Summary row: class average ────────────────────────────────────────
+        sum_y = self._HDR_H
+        p.setFont(name_font)
+        p.setPen(mid)
+        p.drawText(
+            self._PAD, sum_y, self._NAME_W - self._PAD, self._SUMM_H,
+            Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+            "Class Avg",
+        )
+        _CONCERN_LABELS = {0: "—", 1: "Low", 2: "Mod", 3: "Elev", 4: "High"}
+        for j, (aid, _) in enumerate(self._assignments):
+            cx = gx + j * (cw + self._CELL_GAP)
+            avg = self._class_avg.get(aid, 0.0)
+            # Map average concern score to a concern level for coloring
+            avg_concern = "none" if avg < 0.5 else "low" if avg < 1.5 else "moderate" if avg < 2.5 else "elevated" if avg < 3.5 else "high"
+            color = _concern_cell_color(avg_concern)
+            cell_rect = QRectF(cx, sum_y + 2, cw, self._SUMM_H - 4)
+            path = QPainterPath()
+            path.addRoundedRect(cell_rect, 3, 3)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.fillPath(path, color)
+            # Concern label inside cell
+            p.setFont(hp_font)
+            is_dark_bg = avg_concern in ("elevated", "high", "moderate")
+            p.setPen(QColor(0, 0, 0, 160) if is_dark_bg else QColor(255, 255, 255, 200))
+            label = _CONCERN_LABELS.get(round(avg), "—")
+            p.drawText(cell_rect, Qt.AlignmentFlag.AlignCenter, label)
+
+        # Separator below summary
+        p.setPen(QPen(bdr, 1))
+        p.drawLine(self._PAD, bt - 1, w - self._PAD, bt - 1)
+
+        # ── Student rows (scrollable) ─────────────────────────────────────────
+        p.save()
+        p.setClipRect(0, bt, w, h - bt)
+
+        for i, student in enumerate(self._students):
+            row_y = bt + i * (self._CELL_H + self._CELL_GAP) - self._scroll_y
+            if row_y + self._CELL_H < bt or row_y > h:
+                continue
+
+            is_hovered = (i == self._hover_row)
+
+            # Row hover highlight
+            if is_hovered:
+                p.setPen(Qt.PenStyle.NoPen)
+                p.setBrush(QColor(60, 40, 10, 40))
+                p.drawRect(QRectF(0, row_y, w, self._CELL_H))
+                p.setBrush(Qt.BrushStyle.NoBrush)
+
+            # Student name
+            p.setFont(name_font)
+            p.setPen(hot if is_hovered else mid)
+            name_short = student["name"]
+            if len(name_short) > 18:
+                name_short = name_short[:17] + "…"
+            p.drawText(
+                self._PAD, int(row_y), self._NAME_W - self._PAD, self._CELL_H,
+                Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+                name_short,
+            )
+
+            # Cells
+            for j, (aid, _) in enumerate(self._assignments):
+                cx = gx + j * (cw + self._CELL_GAP)
+                cell = student["cells"].get(aid)
+                cell_rect = QRectF(cx, row_y + 1, cw, self._CELL_H - 2)
+                path = QPainterPath()
+                path.addRoundedRect(cell_rect, 2, 2)
+
+                if cell:
+                    concern = cell.get("concern", "none")
+                    color = _concern_cell_color(concern)
+                    p.setPen(Qt.PenStyle.NoPen)
+                    p.fillPath(path, color)
+
+                    # Concern label in cell
+                    p.setFont(hp_font)
+                    concern_label = _CONCERN_LABELS.get(
+                        cell.get("concern_score", 0), "—"
+                    )
+                    is_dark_bg = concern in ("elevated", "high", "moderate")
+                    p.setPen(
+                        QColor(0, 0, 0, 160) if is_dark_bg
+                        else QColor(255, 255, 255, 200)
+                    )
+                    p.drawText(cell_rect, Qt.AlignmentFlag.AlignCenter,
+                               concern_label)
+
+                    # Smoking gun marker (small rose dot in top-right corner)
+                    if cell["sg"]:
+                        p.setPen(Qt.PenStyle.NoPen)
+                        p.setBrush(QColor(ROSE_ACCENT))
+                        p.drawEllipse(
+                            int(cx + cw - 6), int(row_y + 3), 4, 4)
+                        p.setBrush(Qt.BrushStyle.NoBrush)
+                else:
+                    # No data for this cell
+                    p.setPen(Qt.PenStyle.NoPen)
+                    p.fillPath(path, empty)
+                    p.setPen(QPen(bdr, 0.5))
+                    p.drawPath(path)
+
+        p.restore()
+
+        # Scrollbar hint (thin amber bar on right edge)
+        if self._max_scroll > 0:
+            sb_h = max(20, int((h - bt) ** 2 / ((h - bt) + self._max_scroll)))
+            sb_y = bt + int(self._scroll_y / self._max_scroll * ((h - bt) - sb_h))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor(BORDER_AMBER))
+            p.setOpacity(0.4)
+            p.drawRoundedRect(QRectF(w - 5, sb_y, 3, sb_h), 1, 1)
+            p.setOpacity(1.0)
+
+        p.end()
+
+    # ── Interaction ───────────────────────────────────────────────────────────
+
+    def wheelEvent(self, event) -> None:
+        dy = -event.angleDelta().y()
+        self._scroll_y = max(0, min(self._max_scroll, self._scroll_y + dy // 2))
+        self.update()
+        event.accept()
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        bt = self._body_top()
+        y = event.position().y()
+        if y < bt:
+            if self._hover_row != -1:
+                self._hover_row = -1
+                self.update()
+            return
+        row_idx = int((y - bt + self._scroll_y) / (self._CELL_H + self._CELL_GAP))
+        if 0 <= row_idx < len(self._students):
+            if row_idx != self._hover_row:
+                self._hover_row = row_idx
+                self.update()
+
+                # Build tooltip
+                s = self._students[row_idx]
+                max_c = s.get("max_concern", 0)
+                _cnames = {0: "No concern", 1: "Low", 2: "Moderate", 3: "Elevated", 4: "High"}
+                tip = f"{s['name']}  ·  max concern: {_cnames.get(max_c, '?')}"
+                self.setToolTip(tip)
+        else:
+            if self._hover_row != -1:
+                self._hover_row = -1
+                self.update()
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if event.button() != Qt.MouseButton.LeftButton:
+            return
+        bt = self._body_top()
+        y = event.position().y()
+        if y < bt:
+            return
+        row_idx = int((y - bt + self._scroll_y) / (self._CELL_H + self._CELL_GAP))
+        if 0 <= row_idx < len(self._students):
+            sid = self._students[row_idx]["id"]
+            self.student_clicked.emit(sid, self._course_id)
+
+    def leaveEvent(self, event) -> None:
+        if self._hover_row != -1:
+            self._hover_row = -1
+            self.update()
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # Layer 1: Class Landscape
 # ──────────────────────────────────────────────────────────────────────────────
 
-class ClassLandscapeView(QFrame):
-    """Cohort scatter + distribution bar for one run."""
+_VIEW_BTN_QSS = f"""
+    QPushButton {{
+        background: transparent; border: 1px solid {BORDER_DARK};
+        border-radius: 3px; padding: 3px 10px;
+        color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;
+        letter-spacing: 0.5px;
+    }}
+    QPushButton:hover {{ border-color: {BORDER_AMBER}; color: {PHOSPHOR_MID}; }}
+"""
+_VIEW_BTN_ACTIVE_QSS = f"""
+    QPushButton {{
+        background: {BG_INSET}; border: 1px solid {BORDER_AMBER};
+        border-radius: 3px; padding: 3px 10px;
+        color: {PHOSPHOR_HOT}; font-size: {px(10)}px; font-weight: bold;
+        letter-spacing: 0.5px;
+    }}
+"""
 
-    student_selected = Signal(str, str)   # (student_id, assignment_id)
+
+class ClassLandscapeView(QFrame):
+    """Cohort scatter + heatmap views for one course/run."""
+
+    student_selected = Signal(str, str)      # (student_id, assignment_id) — from scatter
+    trajectory_requested = Signal(str, str)   # (student_id, course_id)    — from heatmap
+    matrix_needed = Signal(str)               # course_id — request matrix data load
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setStyleSheet(f"QFrame {{ background: {BG_VOID}; border: none; }}")
         self._run_meta: Dict = {}
         self._rows: List[Dict] = []
-        self._profile_id = "standard"
+        # Load population context from settings
+        from settings import load_settings
+        self._settings = load_settings()
+        self._view_mode = "snapshot"          # "snapshot" | "overtime"
+        self._matrix_loaded = False
         self._build_ui()
 
     def _build_ui(self) -> None:
@@ -585,51 +1051,176 @@ class ClassLandscapeView(QFrame):
         root.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
         root.setSpacing(SPACING_SM)
 
-        # ── Header ──────────────────────────────────────────────────────────
-        self._header_lbl = QLabel("")
-        self._header_lbl.setStyleSheet(f"color: {PHOSPHOR_HOT}; font-size: 13px; font-weight: bold;")
-        root.addWidget(self._header_lbl)
+        # ── Header: two lines ────────────────────────────────────────────────
+        self._course_lbl = QLabel("")
+        self._course_lbl.setStyleSheet(f"color: {PHOSPHOR_HOT}; font-size: {px(13)}px; font-weight: bold;")
+        root.addWidget(self._course_lbl)
 
-        # Profile selector
+        self._meta_lbl = QLabel("")
+        self._meta_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;")
+        root.addWidget(self._meta_lbl)
+
+        # ── Controls row: view toggle + population disclosure ────────────────
         ctrl_row = QHBoxLayout()
         ctrl_row.setSpacing(SPACING_SM)
-        ctrl_lbl = QLabel("Population profile:")
-        ctrl_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px;")
-        ctrl_row.addWidget(ctrl_lbl)
-        self._profile_combo = QComboBox()
-        self._profile_combo.setStyleSheet(_COMBO_QSS)
-        for pid, plabel in _PROFILE_OPTIONS:
-            self._profile_combo.addItem(plabel, pid)
-        self._profile_combo.currentIndexChanged.connect(self._on_profile_changed)
-        ctrl_row.addWidget(self._profile_combo)
-        ctrl_row.addStretch()
+
+        # View toggle
+        self._btn_snapshot = QPushButton("COHORT SNAPSHOT")
+        self._btn_overtime = QPushButton("CLASS OVER TIME")
+        self._btn_snapshot.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_overtime.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_snapshot.clicked.connect(lambda: self._set_view("snapshot"))
+        self._btn_overtime.clicked.connect(lambda: self._set_view("overtime"))
+        ctrl_row.addWidget(self._btn_snapshot)
+        ctrl_row.addWidget(self._btn_overtime)
+
+        ctrl_row.addSpacing(SPACING_SM)
         self._hover_lbl = QLabel("")
-        self._hover_lbl.setStyleSheet(f"color: {PHOSPHOR_MID}; font-size: 11px;")
+        self._hover_lbl.setStyleSheet(f"color: {PHOSPHOR_MID}; font-size: {px(11)}px;")
         ctrl_row.addWidget(self._hover_lbl)
+
+        ctrl_row.addStretch()
+
+        # Population context disclosure button
+        self._pop_btn = QPushButton("\u25b8 Population Context")
+        self._pop_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._pop_btn.setStyleSheet(
+            f"QPushButton {{ color: {PHOSPHOR_DIM}; background: transparent;"
+            f" border: none; font-size: {px(10)}px; padding: 2px 6px; }}"
+            f"QPushButton:hover {{ color: {PHOSPHOR_MID}; }}")
+        self._pop_btn.clicked.connect(self._toggle_pop_context)
+        ctrl_row.addWidget(self._pop_btn)
         root.addLayout(ctrl_row)
 
-        # ── Scatter ──────────────────────────────────────────────────────────
+        # ── Collapsible population context section ───────────────────────────
+        self._pop_frame = QFrame()
+        self._pop_frame.setStyleSheet(
+            f"QFrame {{ background: {BG_CARD}; border: 1px solid {BORDER_DARK};"
+            f" border-radius: 4px; }}")
+        self._pop_frame.setVisible(False)
+        pop_lay = QHBoxLayout(self._pop_frame)
+        pop_lay.setContentsMargins(SPACING_SM, SPACING_XS, SPACING_SM, SPACING_XS)
+        pop_lay.setSpacing(SPACING_MD)
+
+        def _pop_col(label_text, combo, options, setting_key):
+            col = QVBoxLayout()
+            col.setSpacing(1)
+            lbl = QLabel(label_text)
+            lbl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(9)}px;"
+                f" background: transparent; border: none;")
+            col.addWidget(lbl)
+            for pid, plabel in options:
+                combo.addItem(plabel, pid)
+            val = self._settings.get(setting_key, options[0][0])
+            idx = combo.findData(val)
+            if idx >= 0:
+                combo.setCurrentIndex(idx)
+            combo.currentIndexChanged.connect(self._on_pop_changed)
+            col.addWidget(combo)
+            return col
+
+        self._edu_combo = CRTComboBox()
+        pop_lay.addLayout(_pop_col("Institution", self._edu_combo,
+                                    _EDU_LEVEL_OPTIONS, "education_level"))
+
+        self._esl_combo = CRTComboBox()
+        pop_lay.addLayout(_pop_col("ESL Population", self._esl_combo,
+                                    _ESL_LEVEL_OPTIONS, "population_esl"))
+
+        self._fg_combo = CRTComboBox()
+        pop_lay.addLayout(_pop_col("First-Gen Population", self._fg_combo,
+                                    _FIRST_GEN_OPTIONS, "population_first_gen"))
+
+        nd_col = QVBoxLayout()
+        nd_col.setSpacing(1)
+        nd_lbl = QLabel("Neurodivergent-Aware")
+        nd_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(9)}px;"
+            f" background: transparent; border: none;")
+        nd_col.addWidget(nd_lbl)
+        self._nd_toggle = SwitchToggle("", wrap_width=80)
+        self._nd_toggle.setChecked(
+            bool(self._settings.get("population_neurodivergent_aware", False)))
+        self._nd_toggle.toggled.connect(lambda _: self._on_pop_changed())
+        nd_col.addWidget(self._nd_toggle)
+        pop_lay.addLayout(nd_col)
+
+        pop_lay.addStretch()
+        root.addWidget(self._pop_frame)
+
+        # ── Stacked content: scatter vs heatmap ────────────────────────────
+        self._view_stack = QStackedWidget()
+
+        # Index 0: Scatter panel
+        scatter_panel = QWidget()
+        sp_lay = QVBoxLayout(scatter_panel)
+        sp_lay.setContentsMargins(0, 0, 0, 0)
+        sp_lay.setSpacing(SPACING_SM)
         self._scatter = CohortScatterWidget()
         self._scatter.dot_clicked.connect(self.student_selected)
         self._scatter.dot_hovered.connect(self._hover_lbl.setText)
-        root.addWidget(self._scatter, 1)
-
-        # ── Distribution bar ─────────────────────────────────────────────────
-        root.addWidget(_section_label("Cohort Distribution"))
+        sp_lay.addWidget(self._scatter, 1)
+        sp_lay.addWidget(_section_label("Cohort Distribution"))
         self._dist_lbl = QLabel("")
-        self._dist_lbl.setStyleSheet(f"color: {PHOSPHOR_MID}; font-size: 12px;")
+        self._dist_lbl.setStyleSheet(f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;")
         self._dist_lbl.setWordWrap(True)
-        root.addWidget(self._dist_lbl)
-
-        # ── Click hint ───────────────────────────────────────────────────────
+        sp_lay.addWidget(self._dist_lbl)
         hint = QLabel("Click a dot to view student detail.")
-        hint.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px;")
-        root.addWidget(hint)
+        hint.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;")
+        sp_lay.addWidget(hint)
+        self._view_stack.addWidget(scatter_panel)  # index 0
+
+        # Index 1: Heatmap panel
+        heatmap_panel = QWidget()
+        hm_lay = QVBoxLayout(heatmap_panel)
+        hm_lay.setContentsMargins(0, 0, 0, 0)
+        hm_lay.setSpacing(SPACING_SM)
+        self._heatmap = ClassHeatmapWidget()
+        self._heatmap.student_clicked.connect(self.trajectory_requested)
+        hm_lay.addWidget(self._heatmap, 1)
+        hm_hint = QLabel("Click a student row to view their semester trajectory.")
+        hm_hint.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;")
+        hm_lay.addWidget(hm_hint)
+        self._view_stack.addWidget(heatmap_panel)  # index 1
+
+        root.addWidget(self._view_stack, 1)
+        self._sync_toggle_style()
+
+    # ── View toggle ───────────────────────────────────────────────────────────
+
+    def _set_view(self, mode: str) -> None:
+        self._view_mode = mode
+        if mode == "overtime":
+            self._view_stack.setCurrentIndex(1)
+            if not self._matrix_loaded:
+                cid = str(self._run_meta.get("course_id", ""))
+                if cid:
+                    self.matrix_needed.emit(cid)
+        else:
+            self._view_stack.setCurrentIndex(0)
+        self._sync_toggle_style()
+
+    def _sync_toggle_style(self) -> None:
+        is_snap = self._view_mode == "snapshot"
+        self._btn_snapshot.setStyleSheet(_VIEW_BTN_ACTIVE_QSS if is_snap else _VIEW_BTN_QSS)
+        self._btn_overtime.setStyleSheet(_VIEW_BTN_QSS if is_snap else _VIEW_BTN_ACTIVE_QSS)
+
+    # ── Data loading ──────────────────────────────────────────────────────────
 
     def load(self, run_meta: Dict, rows: List[Dict]) -> None:
         self._run_meta = run_meta
         self._rows = rows
-        self._refresh()
+        self._matrix_loaded = False          # new run → invalidate matrix cache
+        if self._view_mode == "snapshot":
+            self._refresh()
+        else:
+            self._set_view("snapshot")       # switch back to snapshot on new run
+
+    def load_matrix(self, course_id: str, flat_rows: list) -> None:
+        """Feed the heatmap with full course matrix data."""
+        self._heatmap.set_data(course_id, flat_rows)
+        self._matrix_loaded = True
 
     def _refresh(self) -> None:
         meta = self._run_meta
@@ -637,19 +1228,33 @@ class ClassLandscapeView(QFrame):
         cname = meta.get("course_name", "")
         date = _fmt_date(meta.get("last_run"))
         count = meta.get("analyzed_count", 0)
-        self._header_lbl.setText(f"{cname}  ·  {aname}  ·  {date}  ·  {count} students")
+        self._course_lbl.setText(cname)
+        self._meta_lbl.setText(f"{aname}  ·  {date}  ·  {count} students")
 
-        pid = self._profile_id
-        plabel = dict(_PROFILE_OPTIONS).get(pid, "")
+        edu = self._edu_combo.currentData() or "community_college"
+        plabel = dict(_EDU_LEVEL_OPTIONS).get(edu, "")
         self._scatter.set_data(
             self._rows,
             str(meta.get("assignment_id", "")),
-            plabel if pid != "standard" else "",
+            plabel if edu != "community_college" else "",
         )
         self._update_dist()
 
-    def _on_profile_changed(self) -> None:
-        self._profile_id = self._profile_combo.currentData()
+    def _toggle_pop_context(self) -> None:
+        vis = not self._pop_frame.isVisible()
+        self._pop_frame.setVisible(vis)
+        self._pop_btn.setText(
+            ("\u25be Population Context" if vis else "\u25b8 Population Context"))
+
+    def _on_pop_changed(self, _=None) -> None:
+        # Save back to settings
+        from settings import load_settings, save_settings
+        s = load_settings()
+        s["education_level"] = self._edu_combo.currentData() or "community_college"
+        s["population_esl"] = self._esl_combo.currentData() or "none"
+        s["population_first_gen"] = self._fg_combo.currentData() or "none"
+        s["population_neurodivergent_aware"] = self._nd_toggle.isChecked()
+        save_settings(s)
         self._refresh()
 
     def _update_dist(self) -> None:
@@ -707,7 +1312,7 @@ class StudentTrajectoryView(QFrame):
         # ── Header ───────────────────────────────────────────────────────────
         self._header_lbl = QLabel("")
         self._header_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 13px; font-weight: bold;")
+            f"color: {PHOSPHOR_HOT}; font-size: {px(13)}px; font-weight: bold;")
         root.addWidget(self._header_lbl)
         root.addWidget(_h_rule())
 
@@ -726,7 +1331,7 @@ class StudentTrajectoryView(QFrame):
 
         # ── Hint ─────────────────────────────────────────────────────────────
         hint = QLabel("Click an assignment name below to view its detail.")
-        hint.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px;")
+        hint.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;")
         root.addWidget(hint)
 
     def load(self, student_name: str, course_name: str,
@@ -825,7 +1430,7 @@ class StudentTrajectoryView(QFrame):
                 QPushButton {{
                     background: transparent; border: none;
                     color: {ROSE_ACCENT if sg else color};
-                    font-size: 12px; text-align: left; padding: 2px 0;
+                    font-size: {px(12)}px; text-align: left; padding: 2px 0;
                 }}
                 QPushButton:hover {{ color: {PHOSPHOR_HOT}; }}
             """)
@@ -860,11 +1465,11 @@ def _collapsible_section(title: str, initially_open: bool = False) -> tuple:
     hl.setContentsMargins(SPACING_SM, 0, SPACING_SM, 0)
     arrow_lbl = QLabel("▾" if initially_open else "▸")
     arrow_lbl.setStyleSheet(
-        f"color: {PHOSPHOR_DIM}; font-size: 10px; background: transparent;")
+        f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent;")
     hl.addWidget(arrow_lbl)
     title_lbl = QLabel(title.upper())
     title_lbl.setStyleSheet(
-        f"color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: bold;"
+        f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
         f" letter-spacing: 1.5px; background: transparent;")
     hl.addWidget(title_lbl)
     hl.addStretch()
@@ -956,20 +1561,25 @@ class StudentDetailView(QFrame):
         self._back_btn.clicked.connect(self.back_requested)
         nav_row.addWidget(self._back_btn)
 
-        self._nav_title = QLabel("")
-        self._nav_title.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 12px;")
-        nav_row.addWidget(self._nav_title)
+        self._nav_name = QLabel("")
+        self._nav_name.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: {px(13)}px; font-weight: bold;")
+        nav_row.addWidget(self._nav_name)
+
+        self._nav_meta = QLabel("")
+        self._nav_meta.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;")
+        nav_row.addWidget(self._nav_meta)
         nav_row.addStretch()
 
         self._concern_label = QLabel("")
         self._concern_label.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 12px; font-weight: bold;")
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;")
         nav_row.addWidget(self._concern_label)
 
         self._word_count_label = QLabel("")
         self._word_count_label.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px;")
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;")
         nav_row.addWidget(self._word_count_label)
 
         header_layout.addLayout(nav_row)
@@ -979,12 +1589,9 @@ class StudentDetailView(QFrame):
         self._sg_banner.setObjectName("sgBanner")
         self._sg_banner.setStyleSheet(f"""
             QFrame#sgBanner {{
-                background: qradialgradient(cx:0.3,cy:0.5,radius:1.0,
-                    stop:0.0 rgba(204,82,130,0.18),
-                    stop:0.6 rgba(204,82,130,0.06),
-                    stop:1.0 transparent);
+                background: transparent;
                 border: none;
-                border-left: 3px solid {ROSE_ACCENT};
+                border-left: 2px solid rgba(204,82,130,0.55);
                 padding: 4px 8px;
             }}
             QFrame#sgBanner > QLabel {{ background: transparent; border: none; }}
@@ -994,53 +1601,95 @@ class StudentDetailView(QFrame):
         sg_inner.setSpacing(2)
         self._sg_title = QLabel("")
         self._sg_title.setStyleSheet(
-            f"color: {ROSE_ACCENT}; font-size: 11px; font-weight: bold;"
-            f" letter-spacing: 1px;")
+            f"color: {WARN_PINK}; font-size: {px(10)}px;")
         sg_inner.addWidget(self._sg_title)
         self._sg_details_layout = QVBoxLayout()
         sg_inner.addLayout(self._sg_details_layout)
         self._sg_banner.hide()
         header_layout.addWidget(self._sg_banner)
 
-        # Row 3: population override controls
-        override_row = QHBoxLayout()
-        override_row.setSpacing(SPACING_SM)
+        # Row 3: population override controls (collapsible, hidden by default)
+        pop_header = QFrame()
+        pop_header.setFixedHeight(24)
+        pop_header.setStyleSheet(f"""
+            QFrame {{
+                background: transparent;
+                border: none;
+                border-top: 1px solid {BORDER_DARK};
+            }}
+            QFrame:hover {{ background: rgba(255,180,0,0.04); }}
+            QFrame > QLabel {{ background: transparent; border: none; }}
+        """)
+        pop_header.setCursor(Qt.CursorShape.PointingHandCursor)
+        pop_hl = QHBoxLayout(pop_header)
+        pop_hl.setContentsMargins(0, 0, SPACING_SM, 0)
+        pop_hl.setSpacing(SPACING_XS)
+        self._pop_arrow = QLabel("▸")
+        self._pop_arrow.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(9)}px;")
+        pop_hl.addWidget(self._pop_arrow)
+        pop_hdr_lbl = QLabel("POPULATION CONTEXT")
+        pop_hdr_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(9)}px; font-weight: bold;"
+            f" letter-spacing: 1px;")
+        pop_hl.addWidget(pop_hdr_lbl)
+        self._pop_status_lbl = QLabel("")
+        self._pop_status_lbl.setStyleSheet(
+            f"color: {WARN_PINK}; font-size: {px(9)}px;")
+        pop_hl.addWidget(self._pop_status_lbl)
+        pop_hl.addStretch()
+        header_layout.addWidget(pop_header)
+
+        self._pop_content = QWidget()
+        self._pop_content.setStyleSheet("background: transparent;")
+        self._pop_content.hide()
+        pop_content_layout = QHBoxLayout(self._pop_content)
+        pop_content_layout.setContentsMargins(0, SPACING_XS, 0, SPACING_XS)
+        pop_content_layout.setSpacing(SPACING_SM)
+
+        def _toggle_pop():
+            vis = not self._pop_content.isVisible()
+            self._pop_content.setVisible(vis)
+            self._pop_arrow.setText("▾" if vis else "▸")
+        pop_header.mousePressEvent = lambda e: _toggle_pop()
 
         self._override_nd = SwitchToggle("Neurodivergent-Aware", wrap_width=130)
-        override_row.addWidget(self._override_nd)
+        self._override_nd.toggled.connect(self._on_composable_override)
+        pop_content_layout.addWidget(self._override_nd)
 
         esl_lbl = QLabel("ESL:")
-        esl_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 10px;")
-        override_row.addWidget(esl_lbl)
-        self._override_esl_combo = QComboBox()
-        self._override_esl_combo.setStyleSheet(_COMBO_QSS)
+        esl_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;")
+        pop_content_layout.addWidget(esl_lbl)
+        self._override_esl_combo = CRTComboBox()
         self._override_esl_combo.setFixedWidth(160)
         for pid, plabel in _OVERRIDE_LEVEL_OPTIONS:
             self._override_esl_combo.addItem(plabel, pid)
-        override_row.addWidget(self._override_esl_combo)
+        self._override_esl_combo.currentIndexChanged.connect(self._on_composable_override)
+        pop_content_layout.addWidget(self._override_esl_combo)
 
         fg_lbl = QLabel("First-Gen:")
-        fg_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 10px;")
-        override_row.addWidget(fg_lbl)
-        self._override_fg_combo = QComboBox()
-        self._override_fg_combo.setStyleSheet(_COMBO_QSS)
+        fg_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;")
+        pop_content_layout.addWidget(fg_lbl)
+        self._override_fg_combo = CRTComboBox()
         self._override_fg_combo.setFixedWidth(160)
         for pid, plabel in _OVERRIDE_LEVEL_OPTIONS:
             self._override_fg_combo.addItem(plabel, pid)
-        override_row.addWidget(self._override_fg_combo)
+        self._override_fg_combo.currentIndexChanged.connect(self._on_composable_override)
+        pop_content_layout.addWidget(self._override_fg_combo)
 
-        apply_btn = QPushButton("Apply Override")
-        make_secondary_button(apply_btn)
-        apply_btn.clicked.connect(self._on_composable_override)
-        override_row.addWidget(apply_btn)
+        self._clear_override_btn = QPushButton("Clear")
+        make_secondary_button(self._clear_override_btn)
+        self._clear_override_btn.clicked.connect(self._on_clear_override)
+        self._clear_override_btn.hide()
+        pop_content_layout.addWidget(self._clear_override_btn)
 
         self._recalc_note = QLabel("")
-        self._recalc_note.setStyleSheet(f"color: {WARN_PINK}; font-size: 10px;")
+        self._recalc_note.setStyleSheet(f"color: {WARN_PINK}; font-size: {px(10)}px;")
         self._recalc_note.setWordWrap(True)
-        override_row.addWidget(self._recalc_note)
-        override_row.addStretch()
+        pop_content_layout.addWidget(self._recalc_note)
+        pop_content_layout.addStretch()
 
-        header_layout.addLayout(override_row)
+        header_layout.addWidget(self._pop_content)
         outer.addWidget(self._header)
 
         # ── Two-pane split ────────────────────────────────────────────────────
@@ -1058,7 +1707,7 @@ class StudentDetailView(QFrame):
 
         self._sub_type_label = QLabel("No submission loaded")
         self._sub_type_label.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: bold;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
             f" letter-spacing: 1px; background: transparent; border: none;")
         left_layout.addWidget(self._sub_type_label)
 
@@ -1067,11 +1716,11 @@ class StudentDetailView(QFrame):
         self._sub_viewer.setStyleSheet(f"""
             QTextBrowser {{
                 background: {BG_INSET};
-                color: {PHOSPHOR_MID};
+                color: {PHOSPHOR_DIM};
                 border: 1px solid {BORDER_DARK};
                 border-radius: 4px;
                 padding: 8px;
-                font-size: 12px;
+                font-size: {px(12)}px;
             }}
         """)
         self._sub_viewer.setSizePolicy(
@@ -1101,9 +1750,12 @@ class StudentDetailView(QFrame):
         self._right_layout.setSpacing(SPACING_SM)
         right_scroll.setWidget(self._right_body)
 
+        left_frame.setMinimumWidth(300)
+        right_scroll.setMinimumWidth(280)
         self._splitter.addWidget(right_scroll)
         self._splitter.setStretchFactor(0, 45)
         self._splitter.setStretchFactor(1, 55)
+        self._splitter.setSizes([420, 350])
 
         outer.addWidget(self._splitter, 1)
 
@@ -1127,37 +1779,57 @@ class StudentDetailView(QFrame):
         wc      = d.get("word_count") or 0
 
         # ── Header strip ──────────────────────────────────────────────────────
-        self._nav_title.setText(f"{name}  ·  {aname}  ·  {date}")
+        self._nav_name.setText(name)
+        self._nav_meta.setText(f"{aname}  ·  {date}" if aname else date)
 
         c_color = _CONCERN_COLOR.get(concern, PHOSPHOR_DIM)
         c_text  = _CONCERN_LABEL.get(concern, concern).upper()
         self._concern_label.setText(f"● {c_text}")
         self._concern_label.setStyleSheet(
-            f"color: {c_color}; font-size: 12px; font-weight: bold;")
+            f"color: {c_color}; font-size: {px(10)}px; font-weight: bold;")
         self._word_count_label.setText(f"{wc:,} words")
 
         # Smoking gun banner
         if is_sg:
-            self._sg_title.setText("⚠ SMOKING GUN: CHATBOT PASTE ARTIFACTS")
+            self._sg_title.setText("⚑ Smoking gun detected")
             # Clear any previous detail labels
             while self._sg_details_layout.count():
                 item = self._sg_details_layout.takeAt(0)
                 if item.widget():
                     item.widget().deleteLater()
             for detail_txt in (d.get("smoking_gun_details") or []):
-                det = QLabel(f"  >> {detail_txt}")
+                det = QLabel(f"  {detail_txt}")
                 det.setWordWrap(True)
                 det.setStyleSheet(
-                    f"color: {WARN_PINK}; font-size: 11px;"
+                    f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
                     f" background: transparent; border: none;")
                 self._sg_details_layout.addWidget(det)
             self._sg_banner.show()
         else:
             self._sg_banner.hide()
 
-        # Override combos
+        # Override combos — block signals while populating to prevent spurious saves
         student_id_str = str(d.get("student_id", ""))
         stored = self._store.get_composable_overrides(student_id_str)
+
+        # Update "None" item to show class-wide default for context
+        try:
+            from credentials import load_credentials, get_active_profile
+            _creds = load_credentials()
+            _, _prof = get_active_profile(_creds)
+            _class_esl = (_prof or {}).get("population_esl", "none")
+            _class_fg = (_prof or {}).get("population_first_gen", "none")
+            _class_nd = bool((_prof or {}).get("population_neurodivergent_aware", False))
+        except Exception:
+            _class_esl = _class_fg = "none"
+            _class_nd = False
+        _esl_none_text = f"None  (class: {_class_esl})" if _class_esl != "none" else "None  (class default)"
+        _fg_none_text = f"None  (class: {_class_fg})" if _class_fg != "none" else "None  (class default)"
+        self._override_esl_combo.setItemText(0, _esl_none_text)
+        self._override_fg_combo.setItemText(0, _fg_none_text)
+
+        for w in (self._override_esl_combo, self._override_fg_combo, self._override_nd):
+            w.blockSignals(True)
         esl_idx = self._override_esl_combo.findData(stored.get("esl_level", "none"))
         if esl_idx >= 0:
             self._override_esl_combo.setCurrentIndex(esl_idx)
@@ -1165,13 +1837,27 @@ class StudentDetailView(QFrame):
         if fg_idx >= 0:
             self._override_fg_combo.setCurrentIndex(fg_idx)
         self._override_nd.setChecked(bool(stored.get("neurodivergent_aware", False)))
+        for w in (self._override_esl_combo, self._override_fg_combo, self._override_nd):
+            w.blockSignals(False)
 
-        if (stored.get("esl_level", "none") != "none"
-                or stored.get("first_gen_level", "none") != "none"
-                or stored.get("neurodivergent_aware", False)):
-            self._recalc_note.setText("Custom population override active — scores adjusted.")
+        override_active = (stored.get("esl_level", "none") != "none"
+                           or stored.get("first_gen_level", "none") != "none"
+                           or stored.get("neurodivergent_aware", False))
+        self._clear_override_btn.setVisible(override_active)
+        if override_active:
+            parts = []
+            if stored.get("esl_level", "none") != "none":
+                parts.append(f"ESL={stored['esl_level']}")
+            if stored.get("first_gen_level", "none") != "none":
+                parts.append(f"first-gen={stored['first_gen_level']}")
+            if stored.get("neurodivergent_aware", False):
+                parts.append("ND-aware")
+            status_txt = ", ".join(parts)
+            self._recalc_note.setText(f"Override active: {status_txt}")
+            self._pop_status_lbl.setText(f"· {status_txt}")
         else:
             self._recalc_note.setText("")
+            self._pop_status_lbl.setText("")
 
         # ── Left pane: submission content ─────────────────────────────────────
         sub_content = None
@@ -1206,7 +1892,7 @@ class StudentDetailView(QFrame):
                     fsize = att.get("size") or att.get("content-length") or 0
                     att_lbl = QLabel(f"  📎 {fname}  ({_fmt_size(fsize)})")
                     att_lbl.setStyleSheet(
-                        f"color: {PHOSPHOR_MID}; font-size: 12px;"
+                        f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
                         f" background: transparent; border: none;")
                     self._att_layout.addWidget(att_lbl)
             else:
@@ -1255,12 +1941,12 @@ class StudentDetailView(QFrame):
             auth_col = QVBoxLayout()
             sus_col_hdr = QLabel("Suspicion Markers")
             sus_col_hdr.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: bold;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
                 f" background: transparent; border: none;")
             sus_col.addWidget(sus_col_hdr)
             auth_col_hdr = QLabel("Authenticity Markers")
             auth_col_hdr.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: bold;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
                 f" background: transparent; border: none;")
             auth_col.addWidget(auth_col_hdr)
             sus_keys = {"inflated_vocabulary", "ai_transitions", "generic_phrases",
@@ -1270,7 +1956,7 @@ class StudentDetailView(QFrame):
                     continue
                 lbl = QLabel(f"  {key.replace('_', ' ')}:  {val}")
                 lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(11)}px;"
                     f" background: transparent; border: none;")
                 if key in sus_keys:
                     sus_col.addWidget(lbl)
@@ -1293,14 +1979,14 @@ class StudentDetailView(QFrame):
                 lbl = QLabel(f'  "{s}"')
                 lbl.setWordWrap(True)
                 lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 12px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
                     f" background: transparent; border: none;")
                 self._right_layout.addWidget(lbl)
             for q in vqs[:3]:
                 lbl = QLabel(f"  • {q}")
                 lbl.setWordWrap(True)
                 lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 12px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
                     f" background: transparent; border: none;")
                 self._right_layout.addWidget(lbl)
             self._right_layout.addWidget(make_h_rule())
@@ -1321,7 +2007,7 @@ class StudentDetailView(QFrame):
                 a_lbl = QLabel(f"  • {adj}")
                 a_lbl.setWordWrap(True)
                 a_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 12px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
                     f" background: transparent; border: none;")
                 ctx_layout.addWidget(a_lbl)
             self._right_layout.addWidget(ctx_header)
@@ -1356,14 +2042,14 @@ class StudentDetailView(QFrame):
         else:
             empty = QLabel("No notes yet.")
             empty.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 12px;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(12)}px;"
                 f" background: transparent; border: none;")
             self._right_layout.addWidget(empty)
 
         # Composer
         composer_lbl = QLabel("Add a note:")
         composer_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: bold;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
             f" background: transparent; border: none;")
         self._right_layout.addWidget(composer_lbl)
 
@@ -1384,7 +2070,7 @@ class StudentDetailView(QFrame):
         btn_row.addStretch()
         scope_lbl = QLabel("Notes are per student, not per assignment.")
         scope_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
             f" background: transparent; border: none;")
         btn_row.addWidget(scope_lbl)
         self._right_layout.addLayout(btn_row)
@@ -1406,7 +2092,7 @@ class StudentDetailView(QFrame):
         # Date + action buttons
         top_row = QHBoxLayout()
         date_lbl = QLabel(_fmt_date(note.get("created_at")))
-        date_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 10px;")
+        date_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;")
         top_row.addWidget(date_lbl)
         top_row.addStretch()
 
@@ -1416,7 +2102,7 @@ class StudentDetailView(QFrame):
         edit_btn.setStyleSheet(f"""
             QPushButton {{
                 background: transparent; border: none;
-                color: {PHOSPHOR_DIM}; font-size: 10px; padding: 0 4px;
+                color: {PHOSPHOR_DIM}; font-size: {px(10)}px; padding: 0 4px;
             }}
             QPushButton:hover {{ color: {PHOSPHOR_HOT}; }}
         """)
@@ -1426,7 +2112,7 @@ class StudentDetailView(QFrame):
         del_btn.setStyleSheet(f"""
             QPushButton {{
                 background: transparent; border: none;
-                color: {PHOSPHOR_DIM}; font-size: 10px; padding: 0 4px;
+                color: {PHOSPHOR_DIM}; font-size: {px(10)}px; padding: 0 4px;
             }}
             QPushButton:hover {{ color: {BURN_RED}; }}
         """)
@@ -1437,7 +2123,7 @@ class StudentDetailView(QFrame):
         note_text = note.get("note_text", "")
         text_lbl = QLabel(note_text)
         text_lbl.setWordWrap(True)
-        text_lbl.setStyleSheet(f"color: {PHOSPHOR_MID}; font-size: 12px;")
+        text_lbl.setStyleSheet(f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;")
         v.addWidget(text_lbl)
 
         # Inline editor (hidden by default)
@@ -1497,7 +2183,7 @@ class StudentDetailView(QFrame):
         self._note_edit.clear()
         self._rebuild()
 
-    def _on_composable_override(self) -> None:
+    def _on_composable_override(self, *_) -> None:
         student_id = str(self._detail.get("student_id", ""))
         if not student_id:
             return
@@ -1506,9 +2192,9 @@ class StudentDetailView(QFrame):
         nd = self._override_nd.isChecked()
         self._store.set_composable_overrides(student_id, esl_level=esl,
                                              first_gen_level=fg, neurodivergent_aware=nd)
-        if esl == "none" and fg == "none" and not nd:
-            self._recalc_note.setText("")
-        else:
+        override_active = (esl != "none" or fg != "none" or nd)
+        self._clear_override_btn.setVisible(override_active)
+        if override_active:
             parts = []
             if esl != "none":
                 parts.append(f"ESL={esl}")
@@ -1516,14 +2202,45 @@ class StudentDetailView(QFrame):
                 parts.append(f"first-gen={fg}")
             if nd:
                 parts.append("ND-aware")
-            self._recalc_note.setText(f"Override active: {', '.join(parts)}")
+            status_txt = ", ".join(parts)
+            self._recalc_note.setText(f"Override active: {status_txt}")
+            self._pop_status_lbl.setText(f"· {status_txt}")
+        else:
+            self._recalc_note.setText("")
+            self._pop_status_lbl.setText("")
         # Emit legacy signal with derived profile_id for any existing slots
+        legacy_pid = self._store.get_profile_override(student_id) or "standard"
+        self.profile_override_changed.emit(student_id, legacy_pid)
+
+    def _on_clear_override(self) -> None:
+        student_id = str(self._detail.get("student_id", ""))
+        if not student_id:
+            return
+        for w in (self._override_esl_combo, self._override_fg_combo, self._override_nd):
+            w.blockSignals(True)
+        self._override_esl_combo.setCurrentIndex(self._override_esl_combo.findData("none"))
+        self._override_fg_combo.setCurrentIndex(self._override_fg_combo.findData("none"))
+        self._override_nd.setChecked(False)
+        for w in (self._override_esl_combo, self._override_fg_combo, self._override_nd):
+            w.blockSignals(False)
+        self._store.set_composable_overrides(student_id, esl_level="none",
+                                             first_gen_level="none", neurodivergent_aware=False)
+        self._clear_override_btn.hide()
+        self._recalc_note.setText("")
+        self._pop_status_lbl.setText("")
         legacy_pid = self._store.get_profile_override(student_id) or "standard"
         self.profile_override_changed.emit(student_id, legacy_pid)
 
     def _open_export_dialog(self) -> None:
         from gui.dialogs.export_reports_dialog import ExportReportsDialog
-        ExportReportsDialog(parent=self).exec()
+        ExportReportsDialog(
+            store=self._store,
+            course_id=self._detail.get("course_id", ""),
+            course_name=self._detail.get("course_name", ""),
+            student_id=self._detail.get("student_id", ""),
+            student_name=self._detail.get("student_name", ""),
+            parent=self,
+        ).exec()
 
     def _on_trajectory(self) -> None:
         student_id = str(self._detail.get("student_id", ""))
@@ -1570,7 +2287,7 @@ class RunBrowserSidebar(QFrame):
         refresh_btn.setStyleSheet(f"""
             QPushButton {{
                 background: transparent; border: none;
-                color: {PHOSPHOR_DIM}; font-size: 14px;
+                color: {PHOSPHOR_DIM}; font-size: {px(14)}px;
             }}
             QPushButton:hover {{ color: {PHOSPHOR_HOT}; }}
         """)
@@ -1596,7 +2313,7 @@ class RunBrowserSidebar(QFrame):
         self._empty_lbl = QLabel("No runs found.\nRun the Academic\nIntegrity Check first.")
         self._empty_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._empty_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px; padding: 20px;")
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; padding: 20px;")
         self._list_layout.addWidget(self._empty_lbl)
         self._list_layout.addStretch()
 
@@ -1621,7 +2338,7 @@ class RunBrowserSidebar(QFrame):
         if not rows:
             lbl = QLabel("No runs found.\nRun the Academic\nIntegrity Check first.")
             lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px; padding: 20px;")
+            lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; padding: 20px;")
             self._list_layout.addWidget(lbl)
             self._list_layout.addStretch()
             return
@@ -1642,24 +2359,24 @@ class RunBrowserSidebar(QFrame):
         layout.setSpacing(2)
 
         course = QLabel(run.get("course_name", "").upper()[:28])
-        course.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: bold; letter-spacing: 1px;")
+        course.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold; letter-spacing: 1px;")
         layout.addWidget(course)
 
         aname = QLabel(run.get("assignment_name", ""))
-        aname.setStyleSheet(f"color: {PHOSPHOR_MID}; font-size: 12px;")
+        aname.setStyleSheet(f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;")
         aname.setWordWrap(True)
         layout.addWidget(aname)
 
         date = _fmt_date(run.get("last_run"))
         count = run.get("analyzed_count", 0)
         meta_lbl = QLabel(f"{date}  ·  {count} students")
-        meta_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 10px;")
+        meta_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;")
         layout.addWidget(meta_lbl)
 
         guns = int(run.get("smoking_gun_count") or 0)
         if guns:
             gun_lbl = QLabel(f"!! {guns} smoking gun{'s' if guns > 1 else ''}")
-            gun_lbl.setStyleSheet(f"color: {ROSE_ACCENT}; font-size: 10px; font-weight: bold;")
+            gun_lbl.setStyleSheet(f"color: {ROSE_ACCENT}; font-size: {px(10)}px; font-weight: bold;")
             layout.addWidget(gun_lbl)
 
         # Click handler via mouse press event override
@@ -1690,6 +2407,8 @@ class PriorRunsPanel(QFrame):
       Below: Horizontal splitter → Run Browser sidebar | Right content stack
     """
 
+    return_to_grading = Signal()  # emitted when back is pressed after cross-nav from grading
+
     def __init__(self, api=None, store=None, parent=None):
         super().__init__(parent)
         self._api = api
@@ -1705,9 +2424,13 @@ class PriorRunsPanel(QFrame):
                 self._store = None
 
         self._nav_history: List[int] = []  # stack of content indices for back nav
+        self._came_from_grading = False   # True when cross-navigated from grading review
         self._current_run: Dict = {}
         self._current_student_id = ""
         self._current_course_id = ""
+        self._cohort_worker = None
+        self._detail_worker = None
+        self._matrix_worker = None
 
         self._build_ui()
         self._load_runs()
@@ -1729,45 +2452,31 @@ class PriorRunsPanel(QFrame):
         strip_layout.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
         strip_layout.setSpacing(SPACING_MD)
 
-        framing_lbl = QLabel("PATTERNS FOR CONVERSATION, NOT VERDICTS")
+        framing_lbl = QLabel("Patterns for conversation, not verdicts")
         framing_lbl.setStyleSheet(
-            f"color: {ROSE_ACCENT}; font-size: 11px; font-weight: bold; letter-spacing: 1px;")
+            f"color: {PHOSPHOR_DIM}; font-size: {px(9)}px; font-style: italic;")
         strip_layout.addWidget(framing_lbl)
         strip_layout.addStretch()
 
-        info_btn = QPushButton("How the Academic Integrity Check Works")
+        info_btn = QPushButton("How It Works")
         make_secondary_button(info_btn)
         info_btn.clicked.connect(self._show_aic_info)
         strip_layout.addWidget(info_btn)
 
-        run_aic_btn = QPushButton("Run Academic Integrity Check")
-        make_run_button(run_aic_btn)
+        export_btn = QPushButton("Export Reports")
+        make_secondary_button(export_btn)
+        export_btn.clicked.connect(self._open_course_export_dialog)
+        strip_layout.addWidget(export_btn)
+
+        run_aic_btn = make_glow_bulb_button("Run AIC")
         run_aic_btn.setEnabled(self._api is not None)
         run_aic_btn.clicked.connect(self._open_run_aic_dialog)
         strip_layout.addWidget(run_aic_btn)
 
         root.addWidget(strip)
 
-        # ── Main body: sidebar + content ──────────────────────────────────────
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.setChildrenCollapsible(False)
-        splitter.setStyleSheet("QSplitter::handle { background: " + BORDER_DARK + "; width: 1px; }")
-
-        # Sidebar
-        if self._store:
-            self._sidebar = RunBrowserSidebar(self._store)
-            self._sidebar.run_selected.connect(self._on_run_selected)
-        else:
-            self._sidebar = QLabel("RunStore unavailable.")
-            self._sidebar.setStyleSheet(f"color: {BURN_RED}; padding: 20px;")
-        splitter.addWidget(self._sidebar)
-
-        # Right content stack
+        # ── Main body: content stack (sidebar removed — shared ReviewSidebar at parent) ──
         self._content_stack = QStackedWidget()
-        splitter.addWidget(self._content_stack)
-        splitter.setStretchFactor(0, 0)
-        splitter.setStretchFactor(1, 1)
-        splitter.setSizes([240, 800])
 
         # Layer 0: Empty state (no run selected)
         empty = QFrame()
@@ -1775,13 +2484,15 @@ class PriorRunsPanel(QFrame):
         empty_layout = QVBoxLayout(empty)
         empty_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         empty_lbl = QLabel("Select a run from the sidebar to view the class landscape.")
-        empty_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 13px;")
+        empty_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(13)}px;")
         empty_layout.addWidget(empty_lbl)
         self._content_stack.addWidget(empty)   # index 0
 
         # Layer 1: Class Landscape
         self._landscape = ClassLandscapeView()
         self._landscape.student_selected.connect(self._on_student_selected)
+        self._landscape.trajectory_requested.connect(self._on_heatmap_student_clicked)
+        self._landscape.matrix_needed.connect(self._load_matrix)
         self._content_stack.addWidget(self._landscape)  # index 1
 
         # Layer 3: Student Trajectory
@@ -1799,25 +2510,32 @@ class PriorRunsPanel(QFrame):
             self._detail = QLabel("RunStore unavailable.")
         self._content_stack.addWidget(self._detail)   # index 3
 
-        root.addWidget(splitter, 1)
+        root.addWidget(self._content_stack, 1)
+
+    # ── Public API ─────────────────────────────────────────────────────────
+
+    def load_assignment(self, course_id: str, assignment_id: str) -> None:
+        """Load AIC data for an assignment (called by shared ReviewSidebar)."""
+        run_meta = {
+            "course_id": course_id,
+            "assignment_id": assignment_id,
+        }
+        # Try to enrich from store
+        if self._store:
+            try:
+                for r in self._store.get_runs():
+                    if (str(r.get("course_id", "")) == str(course_id)
+                            and str(r.get("assignment_id", "")) == str(assignment_id)):
+                        run_meta = r
+                        break
+            except Exception:
+                pass
+        self._on_run_selected(run_meta)
 
     # ── Data loading ──────────────────────────────────────────────────────────
 
     def _load_runs(self) -> None:
-        if not self._store:
-            return
-        try:
-            from gui.workers import LoadRunsWorker
-            self._runs_worker = LoadRunsWorker(self._store, parent=self)
-            self._runs_worker.runs_loaded.connect(self._on_runs_loaded)
-            self._runs_worker.error.connect(self._on_error)
-            self._runs_worker.start()
-        except Exception:
-            pass
-
-    def _on_runs_loaded(self, rows: List[Dict]) -> None:
-        if isinstance(self._sidebar, RunBrowserSidebar):
-            self._sidebar.set_runs(rows)
+        pass  # sidebar removed — runs loaded via load_assignment()
 
     def _on_run_selected(self, run_meta: Dict) -> None:
         self._current_run = run_meta
@@ -1837,6 +2555,7 @@ class PriorRunsPanel(QFrame):
                 lambda _: self._nav_to(1))
             w.error.connect(self._on_error)
             w.start()
+            self._cohort_worker = w  # prevent GC while running
         except Exception:
             pass
 
@@ -1849,6 +2568,7 @@ class PriorRunsPanel(QFrame):
             w.detail_loaded.connect(self._on_detail_loaded)
             w.error.connect(self._on_error)
             w.start()
+            self._detail_worker = w  # prevent GC while running
         except Exception:
             pass
 
@@ -1877,6 +2597,41 @@ class PriorRunsPanel(QFrame):
         except Exception:
             pass
 
+    # ── Heatmap support ──────────────────────────────────────────────────────
+
+    def _load_matrix(self, course_id: str) -> None:
+        """Load the full student × assignment matrix for the heatmap."""
+        if not self._store:
+            return
+        try:
+            from gui.workers import LoadCourseMatrixWorker
+            w = LoadCourseMatrixWorker(self._store, course_id, parent=self)
+            w.matrix_loaded.connect(
+                lambda rows, cid=course_id: self._landscape.load_matrix(cid, rows))
+            w.error.connect(self._on_error)
+            w.start()
+            self._matrix_worker = w  # prevent GC while running
+        except Exception:
+            pass
+
+    def _on_heatmap_student_clicked(self, student_id: str, course_id: str) -> None:
+        """Navigate to the student trajectory view from a heatmap row click."""
+        if not self._store:
+            return
+        try:
+            rows = self._store.get_trajectory(student_id, course_id)
+            # Try to get student name from the matrix data
+            student_name = ""
+            for s in self._landscape._heatmap._students:
+                if s["id"] == student_id:
+                    student_name = s["name"]
+                    break
+            course_name = self._current_run.get("course_name", "")
+            self._trajectory.load(student_name, course_name, student_id, course_id, rows)
+            self._nav_to(2)
+        except Exception:
+            pass
+
     # ── Navigation ────────────────────────────────────────────────────────────
 
     def _nav_to(self, idx: int) -> None:
@@ -1888,12 +2643,28 @@ class PriorRunsPanel(QFrame):
         self._content_stack.setCurrentIndex(idx)
 
     def _nav_back(self) -> None:
+        if self._came_from_grading:
+            self._came_from_grading = False
+            self._nav_history.clear()
+            self.return_to_grading.emit()
+            return
         if self._nav_history:
             self._content_stack.setCurrentIndex(self._nav_history.pop())
         else:
             self._content_stack.setCurrentIndex(1)
 
     # ── Misc ─────────────────────────────────────────────────────────────────
+
+    def _open_course_export_dialog(self) -> None:
+        from gui.dialogs.export_reports_dialog import ExportReportsDialog
+        course_id   = self._current_run.get("course_id", "")
+        course_name = self._current_run.get("course_name", "")
+        ExportReportsDialog(
+            store=self._store,
+            course_id=course_id,
+            course_name=course_name,
+            parent=self,
+        ).exec()
 
     def _show_aic_info(self) -> None:
         from gui.dialogs.aic_info_dialog import AICInfoDialog
@@ -1907,16 +2678,14 @@ class PriorRunsPanel(QFrame):
 
     def navigate_to_student(self, student_id: str, assignment_id: str) -> None:
         """Cross-navigate from grading panel: jump straight to a student's AIC detail."""
-        # Select the matching run in the sidebar for visual context
-        if isinstance(self._sidebar, RunBrowserSidebar):
-            for i, run in enumerate(self._sidebar._rows):
-                if str(run.get("assignment_id", "")) == str(assignment_id):
-                    self._sidebar._selected_idx = i
-                    for j, frame in enumerate(self._sidebar._row_frames):
-                        frame.setStyleSheet(_RUN_ROW_SEL_QSS if j == i else _RUN_ROW_QSS)
-                    break
-        # Load student detail directly (skips landscape)
+        self._came_from_grading = True
         self._on_student_selected(student_id, assignment_id)
+
+    def cleanup(self) -> None:
+        """Wait for any running worker threads before destruction."""
+        for w in (self._cohort_worker, self._detail_worker, self._matrix_worker):
+            if w and w.isRunning():
+                w.wait(3000)
 
     def _on_error(self, msg: str) -> None:
         # Surface to status bar if we have a parent main window

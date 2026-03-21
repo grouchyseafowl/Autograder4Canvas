@@ -30,7 +30,7 @@ _AMBER_DIM = QColor("#4A3010")
 _AMBER_BDR = QColor(BORDER_AMBER)
 _AMBER_RGB = (240, 168, 48)
 
-_HEIGHT    = 40
+_HEIGHT    = 30
 _RADIUS    = 5
 _FONT_PX   = 11
 

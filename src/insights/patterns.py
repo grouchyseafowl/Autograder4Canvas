@@ -52,7 +52,9 @@ INSIGHT_PATTERNS: Dict[str, re.Pattern] = {
         r"\b(too (angry|aggressive|emotional)|calm down|be civil)\b", re.IGNORECASE
     ),
     "distress_markers": re.compile(
-        r"\b(scared|afraid|unsafe|trigger\w*|crisis|can't cope)\b", re.IGNORECASE
+        r"\b(scared|afraid|unsafe|crisis|can't cope|"
+        r"can't do this anymore|don't see the point|want to disappear|"
+        r"nobody would care|give up on everything)\b", re.IGNORECASE
     ),
 
     # Engagement quality

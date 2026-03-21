@@ -45,6 +45,7 @@ from typing import Dict, List, Optional
 
 import requests as http_requests
 
+from .image_transcriber import ImageTranscriber, ImageTranscriptionResult, is_image_attachment
 from .language_detector import detect_language, language_name, LanguageResult
 from .transcriber import Transcriber, TranscriptionResult, is_audio_attachment
 from .translator import Translator, TranslationResult
@@ -98,7 +99,11 @@ def _extract_text_attachment(attachment: Dict, headers: Dict) -> Optional[str]:
                 from pdfminer.high_level import extract_text
                 return extract_text(io.BytesIO(content))
             except ImportError:
-                logger.warning("pdfminer not available for .pdf extraction")
+                logger.warning(
+                    "pdfminer.six not installed — cannot extract text from PDF '%s'. "
+                    "Install with: pip install pdfminer.six",
+                    filename,
+                )
                 return None
 
         return None
@@ -129,12 +134,14 @@ class PreprocessedSubmission:
     # What processing was done
     was_translated: bool = False
     was_transcribed: bool = False
+    was_image_transcribed: bool = False
     original_language: Optional[str] = None
     original_language_name: Optional[str] = None
 
     # Original content preserved for reference
     original_text: Optional[str] = None
     transcription_results: List[TranscriptionResult] = field(default_factory=list)
+    image_transcription_results: List[ImageTranscriptionResult] = field(default_factory=list)
     translation_result: Optional[TranslationResult] = None
 
     # Teacher comment content (if processing was done, teacher may want to know)
@@ -158,6 +165,12 @@ class PreprocessedSubmission:
             if translated_audio:
                 desc += f" ({translated_audio} translated to English)"
             parts.append(desc)
+        if self.was_image_transcribed:
+            count = len(self.image_transcription_results)
+            parts.append(
+                f"transcribed {count} handwritten image(s) "
+                f"[NEEDS VERIFICATION]"
+            )
         if self.was_translated:
             parts.append(f"text translated from {self.original_language_name}")
         if not parts:
@@ -190,18 +203,31 @@ class PreprocessingPipeline:
         whisper_cpp_binary: Optional[str] = None,
         whisper_cpp_model: Optional[str] = None,
         whisper_cpp_threads: int = 4,
+        # Image transcription config (handwritten notes)
+        image_transcription_enabled: bool = False,
+        image_transcription_backend: str = "ollama",
+        image_transcription_model: str = "llama3.2-vision:11b",
+        image_dpi: int = 150,  # 150 dpi is the sweet spot for small vision models
         # Behavior
         generate_teacher_comments: bool = True,
     ):
         self.canvas_headers = canvas_headers or {}
         self.translation_enabled = translation_enabled
         self.transcription_enabled = transcription_enabled
+        self.image_transcription_enabled = image_transcription_enabled
+        self.image_dpi = image_dpi
         self.generate_teacher_comments = generate_teacher_comments
 
         self._translator = None
         self._transcriber = None
+        self._image_transcriber = None
 
         # Store config for lazy init
+        self._image_transcription_config = {
+            "backend": image_transcription_backend,
+            "model": image_transcription_model,
+            "ollama_base_url": ollama_base_url,
+        }
         self._translation_config = {
             "backend": translation_backend,
             "model": translation_model,
@@ -231,6 +257,14 @@ class PreprocessingPipeline:
             self._transcriber = Transcriber(**self._transcription_config)
         return self._transcriber
 
+    @property
+    def image_transcriber(self) -> ImageTranscriber:
+        if self._image_transcriber is None:
+            self._image_transcriber = ImageTranscriber(
+                **self._image_transcription_config
+            )
+        return self._image_transcriber
+
     def _extract_submission_text(self, submission: Dict) -> str:
         """Pull text from submission body + text attachments (may be any language)."""
         parts = []
@@ -240,7 +274,7 @@ class PreprocessingPipeline:
             parts.append(_clean_html(body))
 
         for att in submission.get("attachments", []):
-            if not is_audio_attachment(att):
+            if not is_audio_attachment(att) and not is_image_attachment(att):
                 text = _extract_text_attachment(att, self.canvas_headers)
                 if text:
                     parts.append(text.strip())
@@ -345,7 +379,8 @@ class PreprocessingPipeline:
     def _build_teacher_comment(
         self,
         transcription_results: List[TranscriptionResult],
-        translation_result: Optional[TranslationResult],
+        image_transcription_results: Optional[List[ImageTranscriptionResult]] = None,
+        translation_result: Optional[TranslationResult] = None,
     ) -> Optional[str]:
         """Build an informational teacher comment noting what preprocessing was done."""
         if not self.generate_teacher_comments:
@@ -369,6 +404,28 @@ class PreprocessingPipeline:
                 else:
                     lines.append(f"  - {tr.filename}: failed ({tr.error})")
             lines.append("")
+
+        if image_transcription_results:
+            has_transcribed = any(
+                r.success and r.transcript for r in image_transcription_results
+            )
+            if has_transcribed:
+                lines.append("Handwritten Notes (NEEDS VERIFICATION):")
+                lines.append(
+                    "  ⚠ The following text was transcribed from handwritten "
+                    "images using AI. Please verify accuracy — handwriting "
+                    "recognition can make errors, especially with unusual "
+                    "formatting or unclear writing."
+                )
+                for ir in image_transcription_results:
+                    if ir.success and ir.transcript:
+                        preview = ir.transcript[:100]
+                        if len(ir.transcript) > 100:
+                            preview += "..."
+                        lines.append(f"  - {ir.filename}: \"{preview}\"")
+                    elif not ir.success:
+                        lines.append(f"  - {ir.filename}: failed ({ir.error})")
+                lines.append("")
 
         if translation_result and translation_result.success:
             lines.append(
@@ -418,6 +475,34 @@ class PreprocessingPipeline:
                         if tr.success and tr.transcript:
                             transcribed_texts.append(tr.transcript)
 
+        # --- Step 1b: Image transcription (handwritten notes) ---
+        image_transcription_results = []
+        image_texts = []
+
+        if self.image_transcription_enabled:
+            image_attachments = [
+                att for att in submission.get("attachments", [])
+                if is_image_attachment(att)
+            ]
+            if image_attachments:
+                if not self.image_transcriber.is_available():
+                    logger.warning(
+                        f"  Submission {sub_id}: {len(image_attachments)} "
+                        f"image file(s) but no vision model available"
+                    )
+                else:
+                    for att in image_attachments:
+                        fname = att.get("filename", "image")
+                        url = att.get("url", "")
+                        if url:
+                            logger.info(f"  Transcribing handwritten: {fname}...")
+                            result = self.image_transcriber.transcribe_from_url(
+                                url, fname, headers=self.canvas_headers,
+                            )
+                            image_transcription_results.append(result)
+                            if result.success and result.transcript:
+                                image_texts.append(result.transcript)
+
         # --- Step 2: Extract text content ---
         text_content = self._extract_submission_text(submission)
 
@@ -447,6 +532,10 @@ class PreprocessingPipeline:
         if translated_text.strip():
             final_parts.append(translated_text)
         final_parts.extend(transcribed_texts)
+        # Image transcriptions — add clean text (no annotations that would
+        # confuse the LLM). The was_image_transcribed flag tells the UI to
+        # display verification warnings.
+        final_parts.extend(image_texts)
         final_text = "\n\n".join(final_parts)
 
         if not final_text.strip():
@@ -459,10 +548,14 @@ class PreprocessingPipeline:
 
         # --- Step 5: Build teacher comment ---
         teacher_comment = self._build_teacher_comment(
-            transcription_results, translation_result
+            transcription_results, image_transcription_results,
+            translation_result,
         )
 
         was_transcribed = any(r.success for r in transcription_results)
+        was_image_transcribed = any(
+            r.success and r.transcript for r in image_transcription_results
+        )
         was_translated = (
             translation_result is not None and translation_result.success
         )
@@ -486,6 +579,7 @@ class PreprocessingPipeline:
             text=final_text,
             was_translated=was_translated,
             was_transcribed=was_transcribed,
+            was_image_transcribed=was_image_transcribed,
             original_language=(
                 translation_result.source_language if translation_result else None
             ),
@@ -494,6 +588,7 @@ class PreprocessingPipeline:
             ),
             original_text=original_text,
             transcription_results=transcription_results,
+            image_transcription_results=image_transcription_results,
             translation_result=translation_result,
             teacher_comment=teacher_comment,
         )

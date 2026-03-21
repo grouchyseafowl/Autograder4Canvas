@@ -6,33 +6,47 @@ Two-page QStackedWidget:
   Page 1 — PROGRESS:  phosphor progress bar, live log, stop/close
 """
 import datetime
-from pathlib import Path
 from typing import List
 
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QTextEdit, QComboBox,
+    QTextEdit, QLineEdit, QScrollArea,
     QFrame, QSizePolicy, QWidget, QStackedWidget,
 )
-from PySide6.QtCore import Qt, QRect, QSize, Signal
+from PySide6.QtCore import Qt, QRect, QSize, Signal, QTimer
 from PySide6.QtGui import (
-    QColor, QFont, QFontMetrics, QPainter, QPainterPath,
+    QColor, QFont, QFontMetrics, QIntValidator, QPainter, QPainterPath,
     QBrush, QLinearGradient, QPen, QRadialGradient,
 )
 
 from gui.styles import (
     px,
-    BG_VOID, BG_INSET,
+    BG_VOID, BG_INSET, BG_CARD,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM,
-    BORDER_DARK, BORDER_AMBER,
+    BORDER_DARK, BORDER_AMBER, AMBER_BTN,
+    ROSE_ACCENT, TERM_GREEN, BURN_RED, STATUS_WARN,
     make_run_button, make_monospace_textedit,
     make_content_pane, make_section_label, make_h_rule,
-    apply_phosphor_glow,
+    apply_phosphor_glow, GripSplitter,
+    SPACING_XS, SPACING_SM,
 )
 from gui.widgets.switch_toggle import SwitchToggle
-from gui.widgets.option_rocker import OptionRocker
-from gui.widgets.segmented_toggle import SegmentedToggle
-from assignment_templates import aic_config_from_mode, get_aic_config, load_templates, SYSTEM_DEFAULT_NAMES
+from gui.widgets.option_pair import OptionPair
+from assignment_templates import aic_config_from_mode
+
+import re
+_EMOJI_RE = re.compile(
+    "["
+    "\U0001F300-\U0001F9FF"  # misc symbols, emoticons, etc.
+    "\U00002702-\U000027B0"  # dingbats
+    "\U0000FE00-\U0000FE0F"  # variation selectors
+    "\U0000200D"             # ZWJ
+    "\U000025A0-\U000025FF"  # geometric shapes
+    "]+", re.UNICODE,
+)
+
+def _strip_emoji(text: str) -> str:
+    return _EMOJI_RE.sub("", text).strip()
 
 
 # ---------------------------------------------------------------------------
@@ -114,13 +128,54 @@ class _PhosphorProgressBar(QWidget):
         p.end()
 
 
-# _SegmentedToggle: alias for the shared widget (kept for call-site compat)
-_SegmentedToggle = SegmentedToggle
-
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+def _num_field(value: int = 150, max_val: int = 9999, width: int = 55) -> QLineEdit:
+    """Small numeric text field — no arrows, no suffix, just a number."""
+    field = QLineEdit(str(value))
+    field.setValidator(QIntValidator(0, max_val))
+    field.setFixedWidth(width)
+    field.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    return field
+
+
+def _int_val(field: QLineEdit, fallback: int = 0) -> int:
+    """Read an int from a QLineEdit, returning *fallback* on empty/invalid."""
+    try:
+        return int(field.text())
+    except (ValueError, TypeError):
+        return fallback
+
+
+def _make_crt_well(name: str) -> QFrame:
+    """Recessed CRT screen well — inset bevel with faint phosphor inner glow.
+
+    Simulates the look of a recessed display area on vintage hardware:
+    darker top/left edges (shadow), slightly brighter bottom/right (light catch),
+    warm amber radial glow from the centre.
+    """
+    well = QFrame()
+    well.setObjectName(name)
+    well.setStyleSheet(f"""
+        QFrame#{name} {{
+            background: qradialgradient(cx:0.5, cy:0.5, radius:0.9,
+                stop:0.0 rgba(240, 168, 48, 0.04),
+                stop:1.0 rgba(240, 168, 48, 0.00));
+            border-top:    1px solid rgba(0, 0, 0, 0.30);
+            border-left:   1px solid rgba(0, 0, 0, 0.20);
+            border-bottom: 1px solid rgba(255, 200, 80, 0.10);
+            border-right:  1px solid rgba(255, 200, 80, 0.08);
+            border-radius: 5px;
+        }}
+        QFrame#{name} QLabel {{
+            background: transparent;
+            border: none;
+        }}
+    """)
+    return well
+
 
 def _make_scanline_sep() -> QFrame:
     """Amber-phosphor scanline separator — matches setup_dialog divider style."""
@@ -183,13 +238,15 @@ class RunDialog(QDialog):
         self._demo_mode  = demo_mode
         self._worker     = None
         self._run_queue: List[tuple] = []
+        self._all_ssr_pending: dict = {}  # accumulated pending SSR reviews across all courses
 
         # Classify the flat union of all assignments for the config pane
         all_items = [a for _, _, items in selections for a in items]
         self._n_df, self._n_ci, self._df_grading_type = _classify_selection(all_items)
 
         self.setWindowTitle("Run Autograder4Canvas")
-        self.setMinimumWidth(540)
+        self.setMinimumWidth(380)
+        self.resize(690, 560)
         self._setup_ui()
         self._load_settings_defaults()
         self._update_visibility()
@@ -226,11 +283,21 @@ class RunDialog(QDialog):
         n_total   = len(all_items)
 
         if n_courses == 1:
-            title_text = self._selections[0][0].upper()
+            # display_name arrives as "Title (CODE)" — split into parts
+            raw = self._selections[0][0]
+            import re as _re
+            m = _re.match(r'^(.+?)\s*\(([^)]+)\)\s*$', raw)
+            if m:
+                course_title, course_code = m.group(1).strip(), m.group(2).strip()
+            else:
+                course_title, course_code = "", raw
+            heading_text = course_code.upper()
+            subtitle_text = course_title
         else:
-            title_text = f"{n_total} ASSIGNMENTS  ·  {n_courses} COURSES"
+            heading_text = f"{n_total} ASSIGNMENTS  ·  {n_courses} COURSES"
+            subtitle_text = ""
 
-        title_lbl = QLabel(title_text)
+        title_lbl = QLabel(heading_text)
         title_lbl.setStyleSheet(
             f"color: {PHOSPHOR_HOT}; font-size: {px(16)}px; font-weight: bold;"
             f" letter-spacing: 2px; background: transparent; border: none;"
@@ -238,39 +305,72 @@ class RunDialog(QDialog):
         apply_phosphor_glow(title_lbl, color=PHOSPHOR_HOT, blur=10, strength=0.40)
         layout.addWidget(title_lbl)
 
-        layout.addSpacing(4)
+        if subtitle_text:
+            course_title_lbl = QLabel(subtitle_text)
+            course_title_lbl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(12)}px;"
+                f" background: transparent; border: none;"
+            )
+            layout.addWidget(course_title_lbl)
 
-        # Per-course assignment summary
-        sub_lines = []
-        for cname, _, items in self._selections:
-            names = ", ".join(i["name"] for i in items[:3])
-            if len(items) > 3:
-                names += f"  +{len(items) - 3} more"
-            prefix = f"{cname}:  " if n_courses > 1 else ""
-            sub_lines.append(f"{prefix}{names}")
-
-        sub_lbl = QLabel("\n".join(sub_lines))
-        sub_lbl.setWordWrap(True)
-        sub_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; background: transparent; border: none;"
-        )
-        layout.addWidget(sub_lbl)
-
-        layout.addSpacing(12)
+        layout.addSpacing(10)
         layout.addWidget(_make_scanline_sep())
-        layout.addSpacing(12)
+        layout.addSpacing(16)
 
-        # ── Content panes ───────────────────────────────────────────────────
-        layout.addWidget(self._build_scope_pane())
-        layout.addSpacing(8)
-        layout.addWidget(self._build_aic_pane())
+        # ── Word counts (bare — no box) ──────────────────────────────────────
+        self._build_word_counts(layout)
+
+        layout.addSpacing(14)
+
+        # ── Option pairs (each in its own CRT well) ──────────────────────────
+        opts_row = QHBoxLayout()
+        opts_row.setContentsMargins(0, 0, 0, 0)
+        opts_row.setSpacing(10)
+
+        well_a = _make_crt_well("wellAbsent")
+        wa_lo = QVBoxLayout(well_a)
+        wa_lo.setContentsMargins(12, 10, 12, 10)
+        self._mark_incomplete_opt = OptionPair(
+            "Grade absent as Incomplete",
+            "Leave absent ungraded",
+            value=False,
+        )
+        self._mark_incomplete_opt.changed.connect(
+            lambda v: self._save_setting("grade_missing_as_incomplete", v))
+        wa_lo.addWidget(self._mark_incomplete_opt)
+        opts_row.addWidget(well_a)
+
+        well_b = _make_crt_well("wellRegrade")
+        wb_lo = QVBoxLayout(well_b)
+        wb_lo.setContentsMargins(12, 10, 12, 10)
+        self._preserve_grades_opt = OptionPair(
+            "New submissions only",
+            "Regrade from scratch",
+            value=True,
+        )
+        self._preserve_grades_opt.changed.connect(
+            lambda v: self._save_setting("preserve_existing_grades", v))
+        wb_lo.addWidget(self._preserve_grades_opt)
+        opts_row.addWidget(well_b)
+
+        layout.addLayout(opts_row)
+
+        layout.addSpacing(14)
+
+        # ── Analysis toggles (in a CRT well) ─────────────────────────────────
+        analysis_well = _make_crt_well("wellAnalysis")
+        analysis_inner = QVBoxLayout(analysis_well)
+        analysis_inner.setContentsMargins(14, 12, 14, 12)
+        analysis_inner.setSpacing(0)
+        self._build_toggles_row(analysis_inner)
+        layout.addWidget(analysis_well)
 
         layout.addStretch()
 
         # ── Button row ──────────────────────────────────────────────────────
-        layout.addSpacing(12)
+        layout.addSpacing(14)
         layout.addWidget(_make_scanline_sep())
-        layout.addSpacing(8)
+        layout.addSpacing(10)
 
         btn_row = QHBoxLayout()
         btn_row.setContentsMargins(0, 0, 0, 0)
@@ -295,142 +395,244 @@ class RunDialog(QDialog):
         layout.addLayout(btn_row)
         return page
 
-    def _build_scope_pane(self) -> QFrame:
-        pane = make_content_pane("scopePane")
-        lo = QVBoxLayout(pane)
-        lo.setContentsMargins(20, 16, 20, 16)
-        lo.setSpacing(6)
+    def _build_word_counts(self, layout: QVBoxLayout) -> None:
+        """Add word-count fields directly into *layout* (no surrounding box)."""
 
-        # ── Scope summary ────────────────────────────────────────────────────
-        lo.addWidget(make_section_label("Grading Scope"))
+        _lbl_qss = (f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
+                     f" background: transparent; border: none;")
+        _name_qss = (f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+                      f" background: transparent; border: none;")
+        _dim_qss = (f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+                     f" background: transparent; border: none;")
 
-        parts = []
-        if self._n_df > 0:
-            parts.append(f"{self._n_df} Discussion Forum{'s' if self._n_df != 1 else ''}")
-        if self._n_ci > 0:
-            parts.append(f"{self._n_ci} Complete / Incomplete")
-        scope_lbl = QLabel("  " + "  ·  ".join(parts))
-        scope_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: {px(12)}px; background: transparent; border: none;"
+        # Collect assignment names by type for listing
+        all_items = [a for _, _, items in self._selections for a in items]
+        ci_names = [a["name"] for a in all_items
+                    if "discussion_topic" not in (a.get("submission_types") or [])]
+        df_names = [a["name"] for a in all_items
+                    if "discussion_topic" in (a.get("submission_types") or [])]
+
+        # ── Submissions ──────────────────────────────────────────────────────
+        self._sub_section = QWidget()
+        sub_lo = QVBoxLayout(self._sub_section)
+        sub_lo.setContentsMargins(0, 0, 0, 0)
+        sub_lo.setSpacing(6)
+
+        n_ci_text = (f"{self._n_ci} Assignment{'s' if self._n_ci != 1 else ''}"
+                     if self._n_ci > 0 else "Submissions")
+        sub_lo.addWidget(make_section_label(n_ci_text))
+
+        if ci_names:
+            ci_list = ", ".join(ci_names[:3])
+            if len(ci_names) > 3:
+                ci_list += f"  +{len(ci_names) - 3} more"
+            ci_lbl = QLabel(ci_list)
+            ci_lbl.setWordWrap(True)
+            ci_lbl.setStyleSheet(_name_qss)
+            ci_lbl.setContentsMargins(8, 0, 0, 0)
+            sub_lo.addWidget(ci_lbl)
+
+        # ── Manual word count fields (visible when templates off) ─────────
+        self._manual_wc = QWidget()
+        self._manual_wc.setStyleSheet("background: transparent;")
+        _mwc_lo = QHBoxLayout(self._manual_wc)
+        _mwc_lo.setContentsMargins(8, 0, 0, 0)
+        _mwc_lo.setSpacing(10)
+        wc_lbl = QLabel("Min. words")
+        wc_lbl.setStyleSheet(_lbl_qss)
+        _mwc_lo.addWidget(wc_lbl)
+        self._min_word_field = _num_field(150)
+        _mwc_lo.addWidget(self._min_word_field)
+        _mwc_lo.addStretch()
+        sub_lo.addWidget(self._manual_wc)
+
+        # ── Template summary (visible when templates on) ──────────────────
+        self._template_summary = QLabel(
+            "Using Bulk Run template settings"
         )
-        lo.addWidget(scope_lbl)
+        self._template_summary.setStyleSheet(_dim_qss)
+        self._template_summary.setContentsMargins(8, 2, 0, 2)
+        self._template_summary.setVisible(False)
+        sub_lo.addWidget(self._template_summary)
 
-        if self._n_df > 0:
-            if self._df_grading_type == "points":
-                gt_text = "ᵢ  Discussion grading: Points / Letter grades"
-            else:
-                gt_text = "ᵢ  Discussion grading: Complete / Incomplete"
-            canvas_gt_lbl = QLabel(gt_text)
-            canvas_gt_lbl.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent; border: none;"
-            )
-            lo.addWidget(canvas_gt_lbl)
-
-        self._mixed_warn_lbl = QLabel(
-            "\u26a0  Mixed selection \u2014 each type will run its own script"
-            " with the parameters configured below."
+        # ── "Use Templates" toggle ────────────────────────────────────────
+        _tpl_row = QHBoxLayout()
+        _tpl_row.setContentsMargins(8, 2, 0, 0)
+        _tpl_row.setSpacing(8)
+        self._use_templates_toggle = SwitchToggle(
+            "Use Templates", wrap_width=100,
         )
-        self._mixed_warn_lbl.setWordWrap(True)
-        self._mixed_warn_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: {px(10)}px;"
-            f" background: transparent; border: none; padding-top: 2px;"
+        self._use_templates_toggle.setChecked(False)
+        self._use_templates_toggle.toggled.connect(self._on_template_mode_changed)
+        _tpl_row.addWidget(self._use_templates_toggle)
+        _tpl_hint = QLabel("per-group settings from Bulk Run")
+        _tpl_hint.setStyleSheet(_dim_qss)
+        _tpl_row.addWidget(_tpl_hint)
+        _tpl_row.addStretch()
+        sub_lo.addLayout(_tpl_row)
+
+        layout.addWidget(self._sub_section)
+
+        # ── Discussions ──────────────────────────────────────────────────────
+        self._df_section = QWidget()
+        df_lo = QVBoxLayout(self._df_section)
+        df_lo.setContentsMargins(0, 0, 0, 0)
+        df_lo.setSpacing(6)
+
+        self._df_sep = QWidget()
+        _sep_lo = QVBoxLayout(self._df_sep)
+        _sep_lo.setContentsMargins(0, 8, 0, 8)
+        _thin_line = QFrame()
+        _thin_line.setFixedHeight(1)
+        _thin_line.setStyleSheet("background: rgba(255, 200, 80, 0.12);")
+        _sep_lo.addWidget(_thin_line)
+        df_lo.addWidget(self._df_sep)
+
+        n_df_text = (f"{self._n_df} Discussion{'s' if self._n_df != 1 else ''}"
+                     if self._n_df > 0 else "Discussions")
+        df_lo.addWidget(make_section_label(n_df_text))
+
+        if df_names:
+            df_list = ", ".join(df_names[:3])
+            if len(df_names) > 3:
+                df_list += f"  +{len(df_names) - 3} more"
+            df_lbl = QLabel(df_list)
+            df_lbl.setWordWrap(True)
+            df_lbl.setStyleSheet(_name_qss)
+            df_lbl.setContentsMargins(8, 0, 0, 0)
+            df_lo.addWidget(df_lbl)
+
+        self._df_manual_fields = QWidget()
+        self._df_manual_fields.setStyleSheet("background: transparent;")
+        _df_mf_lo = QHBoxLayout(self._df_manual_fields)
+        _df_mf_lo.setContentsMargins(8, 0, 0, 0)
+        _df_mf_lo.setSpacing(10)
+        post_lbl = QLabel("Post min. words")
+        post_lbl.setStyleSheet(_lbl_qss)
+        _df_mf_lo.addWidget(post_lbl)
+        self._post_min_field = _num_field(150)
+        _df_mf_lo.addWidget(self._post_min_field)
+        _df_mf_lo.addSpacing(24)
+        reply_lbl = QLabel("Reply min. words")
+        reply_lbl.setStyleSheet(_lbl_qss)
+        _df_mf_lo.addWidget(reply_lbl)
+        self._reply_min_field = _num_field(50)
+        _df_mf_lo.addWidget(self._reply_min_field)
+        _df_mf_lo.addSpacing(24)
+        replies_lbl = QLabel("Min. replies")
+        replies_lbl.setStyleSheet(_lbl_qss)
+        _df_mf_lo.addWidget(replies_lbl)
+        self._min_replies_field = _num_field(2, max_val=20, width=40)
+        _df_mf_lo.addWidget(self._min_replies_field)
+        _df_mf_lo.addStretch()
+        df_lo.addWidget(self._df_manual_fields)
+
+        layout.addWidget(self._df_section)
+
+    def _build_toggles_row(self, layout: QVBoxLayout) -> None:
+        """Add three analysis toggles stacked vertically into *layout*."""
+
+        _desc_qss = (f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+                      f" background: transparent; border: none;")
+
+        # Fixed left margin for descriptions so they align across all rows
+        _DESC_LEFT = 200
+
+        def _toggle_row(toggle, desc_text):
+            row = QHBoxLayout()
+            row.setContentsMargins(0, 0, 0, 0)
+            row.setSpacing(0)
+            row.addWidget(toggle)
+            row.addSpacing(10)
+            desc = QLabel(desc_text)
+            desc.setStyleSheet(_desc_qss)
+            desc.setMinimumWidth(_DESC_LEFT)
+            row.addWidget(desc, 1)
+            return row
+
+        # ── AIC toggle — baby blue ───────────────────────────────────────────
+        _baby_blue = QColor(120, 180, 255)
+        self._aic_toggle = SwitchToggle(
+            "Integrity Check",
+            hover_color=_baby_blue,
         )
-        lo.addWidget(self._mixed_warn_lbl)
+        self._aic_toggle.setChecked(True)
+        self._aic_toggle.toggled.connect(self._on_aic_toggle_changed)
+        layout.addLayout(_toggle_row(self._aic_toggle, "assess academic integrity"))
+        layout.addSpacing(4)
 
-        # ── Options ──────────────────────────────────────────────────────────
-        lo.addWidget(make_h_rule())
-        lo.addWidget(make_section_label("Options"))
-        lo.addSpacing(4)
-
-        self._mark_incomplete_sw = OptionRocker(
-            "Grade absent work as Incomplete",
-            "Leave absent work ungraded",
-            value=False,
+        # Sub-option: Notes mode toggle (indented, visible when AIC on + manual mode)
+        self._aic_mode_row = QWidget()
+        self._aic_mode_row.setStyleSheet("background: transparent;")
+        _mode_lo = QHBoxLayout(self._aic_mode_row)
+        _mode_lo.setContentsMargins(28, 0, 0, 0)
+        _mode_lo.setSpacing(10)
+        self._notes_mode_toggle = SwitchToggle(
+            "Notes Mode", hover_color=_baby_blue,
         )
-        self._mark_incomplete_sw.setToolTip(
-            "Grade as Incomplete: assign Incomplete to students who never submitted.\n"
-            "Leave ungraded: skip absent students — do not post a grade."
+        self._notes_mode_toggle.setChecked(False)
+        self._notes_mode_toggle.toggled.connect(
+            lambda v: self._save_setting(
+                "quick_run_aic_mode", "notes" if v else "auto"))
+        _mode_lo.addWidget(self._notes_mode_toggle)
+        _mode_desc = QLabel("bullets, fragments, outlines")
+        _mode_desc.setStyleSheet(_desc_qss)
+        _mode_lo.addWidget(_mode_desc, 1)
+        layout.addWidget(self._aic_mode_row)
+
+        layout.addSpacing(14)
+
+        # ── Short submission review — amber ──────────────────────────────────
+        _amber = QColor(PHOSPHOR_HOT)
+        self._short_sub_toggle = SwitchToggle(
+            "Short Sub Review",
+            hover_color=_amber,
         )
-        self._mark_incomplete_sw.changed.connect(
-            lambda v: self._save_setting("grade_missing_as_incomplete", v))
+        self._short_sub_toggle.setChecked(False)
+        self._short_sub_toggle.toggled.connect(self._on_llm_toggle_changed)
+        layout.addLayout(_toggle_row(self._short_sub_toggle, "AI review of submissions below wordcount"))
+        layout.addSpacing(4)
 
-        self._preserve_grades_sw = OptionRocker(
-            "Grade new submissions only",
-            "Regrade from scratch",
-            value=True,
+        # Sub-option: auto-post (indented, visible only when SSR is on)
+        self._ssr_auto_post_row = QWidget()
+        self._ssr_auto_post_row.setStyleSheet("background: transparent;")
+        _ap_lo = QHBoxLayout(self._ssr_auto_post_row)
+        _ap_lo.setContentsMargins(28, 0, 0, 0)
+        _ap_lo.setSpacing(10)
+        self._ssr_auto_post_toggle = SwitchToggle("Auto-Post Credits", hover_color=_amber)
+        self._ssr_auto_post_toggle.setChecked(False)
+        self._ssr_auto_post_toggle.toggled.connect(
+            lambda v: self._save_setting("quick_run_short_sub_auto_post", v))
+        _ap_lo.addWidget(self._ssr_auto_post_toggle)
+        _ap_desc = QLabel("post ≥70% confidence credits to Canvas automatically")
+        _ap_desc.setStyleSheet(_desc_qss)
+        _ap_lo.addWidget(_ap_desc, 1)
+        self._ssr_auto_post_row.setVisible(False)
+        layout.addWidget(self._ssr_auto_post_row)
+
+        layout.addSpacing(14)
+
+        # ── Insights toggle — pink ───────────────────────────────────────────
+        _pink = QColor(255, 96, 144)
+        self._insights_toggle = SwitchToggle(
+            "Class Insights",
+            hover_color=_pink,
         )
-        self._preserve_grades_sw.setToolTip(
-            "New submissions only: grade work Canvas marks as ungraded (including\n"
-            "  re-submissions after an Incomplete). Existing grades are untouched.\n"
-            "Regrade from scratch: overwrite all grades as if none had been posted."
+        self._insights_toggle.setChecked(False)
+        self._insights_toggle.toggled.connect(self._on_llm_toggle_changed)
+        layout.addLayout(_toggle_row(self._insights_toggle, "class-wide themes and patterns"))
+
+        # LLM time note — always reserves space; text hidden via transparent color
+        layout.addSpacing(10)
+        self._llm_warn = QLabel(
+            "Local AI — short review: minutes, insights: hours"
         )
-        self._preserve_grades_sw.changed.connect(
-            lambda v: self._save_setting("preserve_existing_grades", v))
-
-        rocker_col = QVBoxLayout()
-        rocker_col.setContentsMargins(0, 0, 0, 0)
-        rocker_col.setSpacing(6)
-        rocker_col.addWidget(self._mark_incomplete_sw)
-        rocker_col.addWidget(self._preserve_grades_sw)
-        lo.addLayout(rocker_col)
-
-        return pane
-
-    def _build_aic_pane(self) -> QFrame:
-        pane = make_content_pane("aicPane")
-        lo = QVBoxLayout(pane)
-        lo.setContentsMargins(20, 16, 20, 16)
-        lo.setSpacing(6)
-
-        lo.addWidget(make_section_label("Academic Integrity Check"))
-        lo.addSpacing(4)
-
-        self._aic_seg = _SegmentedToggle(
-            ("Grade only",   "grade_only"),
-            ("Grade + AIC",  "grade_and_aic"),
-            ("AIC only",     "aic_only"),
-            accent="rose",
+        self._llm_warn_visible = False
+        self._llm_warn.setStyleSheet(
+            f"color: transparent; font-size: {px(10)}px;"
+            f" background: transparent; border: none; padding-left: 4px;"
         )
-        self._aic_seg.set_mode("grade_and_aic")
-        self._aic_seg.mode_changed.connect(lambda m: (
-            self._update_visibility(),
-            self._save_setting("aic_mode_default", m),
-        ))
-        aic_row = QHBoxLayout()
-        aic_row.setContentsMargins(0, 0, 0, 0)
-        aic_row.addWidget(self._aic_seg)
-        aic_row.addStretch()
-        lo.addLayout(aic_row)
-
-        lo.addSpacing(4)
-        lo.addWidget(make_h_rule())
-        lo.addSpacing(2)
-
-        lo.addWidget(make_section_label("Template"))
-
-        type_row = QHBoxLayout()
-        type_row.setContentsMargins(0, 4, 0, 0)
-        type_row.setSpacing(8)
-
-        self._type_combo = QComboBox()
-        self._populate_type_combo()
-        self._type_combo.currentIndexChanged.connect(self._update_template_summary)
-        type_row.addWidget(self._type_combo, 1)
-
-        edit_types_btn = QPushButton("Edit Templates")
-        edit_types_btn.setToolTip("Open the Template editor")
-        edit_types_btn.clicked.connect(self._open_type_editor)
-        type_row.addWidget(edit_types_btn)
-        lo.addLayout(type_row)
-
-        self._aic_type_note = QLabel()
-        self._aic_type_note.setWordWrap(True)
-        self._aic_type_note.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: {px(10)}px; background: transparent; border: none;"
-        )
-        lo.addWidget(self._aic_type_note)
-
-        return pane
+        layout.addWidget(self._llm_warn)
 
     # ── Page 1: Progress ─────────────────────────────────────────────────────
 
@@ -442,54 +644,94 @@ class RunDialog(QDialog):
         layout.setContentsMargins(24, 20, 24, 16)
         layout.setSpacing(10)
 
+        # ── Header row: title left, status right ─────────────────────────
+        hdr = QHBoxLayout()
         self._progress_heading = QLabel("RUNNING")
         self._progress_heading.setStyleSheet(
             f"color: {PHOSPHOR_HOT}; font-size: {px(16)}px; font-weight: bold;"
             f" letter-spacing: 2px; background: transparent; border: none;"
         )
-        layout.addWidget(self._progress_heading)
-
+        hdr.addWidget(self._progress_heading)
+        hdr.addStretch()
         self._progress_status = QLabel("Preparing…")
         self._progress_status.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; background: transparent; border: none;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+            f" background: transparent; border: none;"
         )
-        layout.addWidget(self._progress_status)
+        hdr.addWidget(self._progress_status)
+        layout.addLayout(hdr)
 
         self._progress_bar = _PhosphorProgressBar()
         layout.addWidget(self._progress_bar)
 
-        log_pane = make_content_pane("logPane")
-        log_inner = QVBoxLayout(log_pane)
-        log_inner.setContentsMargins(4, 4, 4, 4)
+        # ── Split pane: system log (left) | live surface (right) ─────────
+        splitter = GripSplitter.create(Qt.Horizontal)
+
+        # Left: System Log
+        left = QFrame()
+        left.setStyleSheet("background: transparent; border: none;")
+        left_lo = QVBoxLayout(left)
+        left_lo.setContentsMargins(0, SPACING_XS, 0, 0)
+        left_lo.setSpacing(4)
+        left_lo.addWidget(make_section_label("System Log"))
+
         self._log_output = QTextEdit()
         self._log_output.setReadOnly(True)
         make_monospace_textedit(self._log_output)
-        self._log_output.setMinimumHeight(240)
-        log_inner.addWidget(self._log_output)
-        layout.addWidget(log_pane, 1)
+        self._log_output.setStyleSheet(
+            f"background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+            f" border-radius: 6px; color: {PHOSPHOR_DIM};"
+            f" font-size: {px(10)}px; padding: 6px;"
+        )
+        left_lo.addWidget(self._log_output, 1)
+        splitter.addWidget(left)
+
+        # Right: Live Surface
+        right = QFrame()
+        right.setStyleSheet("background: transparent; border: none;")
+        right_lo = QVBoxLayout(right)
+        right_lo.setContentsMargins(0, SPACING_XS, 0, 0)
+        right_lo.setSpacing(4)
+        right_lo.addWidget(make_section_label("Surfacing"))
+
+        self._surface_scroll = QScrollArea()
+        self._surface_scroll.setWidgetResizable(True)
+        self._surface_scroll.setStyleSheet(
+            "QScrollArea { background: transparent; border: none; }"
+        )
+        surface_container = QWidget()
+        surface_container.setStyleSheet(f"background: {BG_VOID};")
+        self._surface_lo = QVBoxLayout(surface_container)
+        self._surface_lo.setContentsMargins(0, 0, SPACING_SM, 0)
+        self._surface_lo.setSpacing(SPACING_SM)
+        self._surface_lo.addStretch()
+        self._surface_scroll.setWidget(surface_container)
+        right_lo.addWidget(self._surface_scroll, 1)
+        splitter.addWidget(right)
+
+        splitter.setSizes([280, 520])
+        splitter.setStretchFactor(0, 0)
+        splitter.setStretchFactor(1, 1)
+        layout.addWidget(splitter, 1)
 
         layout.addWidget(_make_scanline_sep())
 
-        btn_row = QHBoxLayout()
-        btn_row.setContentsMargins(0, 6, 0, 0)
-        btn_row.setSpacing(10)
+        self._progress_btn_row = QHBoxLayout()
+        self._progress_btn_row.setContentsMargins(0, 6, 0, 0)
+        self._progress_btn_row.setSpacing(10)
 
         self._stop_btn = QPushButton("Stop")
         self._stop_btn.clicked.connect(self._on_stop)
-        btn_row.addWidget(self._stop_btn)
+        self._progress_btn_row.addWidget(self._stop_btn)
 
-        self._open_btn = QPushButton("Open Output")
-        self._open_btn.clicked.connect(self._on_open_output)
-        btn_row.addWidget(self._open_btn)
-
-        btn_row.addStretch()
+        self._progress_btn_row.addStretch()
 
         self._close_btn = QPushButton("Close")
         self._close_btn.clicked.connect(self.accept)
         self._close_btn.setEnabled(False)
-        btn_row.addWidget(self._close_btn)
+        self._progress_btn_row.addWidget(self._close_btn)
 
-        layout.addLayout(btn_row)
+        layout.addLayout(self._progress_btn_row)
         return page
 
     # ------------------------------------------------------------------
@@ -500,40 +742,39 @@ class RunDialog(QDialog):
         try:
             from settings import load_settings
             s = load_settings()
-            self._mark_incomplete_sw.setChecked(
+            self._mark_incomplete_opt.setChecked(
                 bool(s.get("grade_missing_as_incomplete", False)))
-            self._preserve_grades_sw.setChecked(
+            self._preserve_grades_opt.setChecked(
                 bool(s.get("preserve_existing_grades", True)))
-            aic_default = s.get("aic_mode_default", "grade_and_aic")
-            self._aic_seg.set_mode(aic_default)
+            self._aic_toggle.setChecked(bool(s.get("quick_run_aic", True)))
+            aic_on = self._aic_toggle.isChecked()
+            saved_mode = s.get("quick_run_aic_mode", "auto")
+            self._notes_mode_toggle.setChecked(saved_mode == "notes")
+            tpl_on = bool(s.get("quick_run_use_templates", False))
+            self._use_templates_toggle.setChecked(tpl_on)
+            self._manual_wc.setVisible(not tpl_on)
+            self._template_summary.setVisible(tpl_on)
+            self._df_manual_fields.setVisible(not tpl_on)
+            self._aic_mode_row.setVisible(aic_on and not tpl_on)
+            self._short_sub_toggle.setChecked(bool(s.get("quick_run_short_sub_review", False)))
+            self._ssr_auto_post_toggle.setChecked(bool(s.get("quick_run_short_sub_auto_post", False)))
+            self._ssr_auto_post_row.setVisible(self._short_sub_toggle.isChecked())
+            self._insights_toggle.setChecked(bool(s.get("quick_run_insights", False)))
+            either = self._short_sub_toggle.isChecked() or self._insights_toggle.isChecked()
+            self._set_llm_warn(either)
+
+            # Restore persisted quick-run word count defaults
+            qr = s.get("quick_run_defaults", {})
+            if "submission_min_words" in qr:
+                self._min_word_field.setText(str(int(qr["submission_min_words"])))
+            if "discussion_post_min_words" in qr:
+                self._post_min_field.setText(str(int(qr["discussion_post_min_words"])))
+            if "discussion_reply_min_words" in qr:
+                self._reply_min_field.setText(str(int(qr["discussion_reply_min_words"])))
+            if "discussion_min_replies" in qr:
+                self._min_replies_field.setText(str(int(qr["discussion_min_replies"])))
         except Exception:
-            self._preserve_grades_sw.setChecked(True)
-        self._update_template_summary()
-
-    def _update_template_summary(self) -> None:
-        """Refresh the read-only template summary line below the combo."""
-        ms = self._resolve_mode_settings()
-        tmpl_name = self._type_combo.currentData()
-
-        wc = ms["min_word_count"]
-        aic_mode = ms["aic_mode"]
-
-        has_df = self._n_df > 0
-        if has_df:
-            wc_text = f"posts {ms['post_min_words']} words  ·  replies {ms['reply_min_words']} words"
-        else:
-            wc_text = f"min {wc} words"
-
-        if not tmpl_name or tmpl_name == "auto":
-            prefix = "ᵢ  Auto-detect"
-            suffix = " — configure Templates to customise"
-        else:
-            prefix = f"ᵢ  {tmpl_name}"
-            suffix = ""
-
-        self._aic_type_note.setText(
-            f"{prefix}  ·  {wc_text}  ·  AIC: {aic_mode}{suffix}"
-        )
+            self._preserve_grades_opt.setChecked(True)
 
     def _save_setting(self, key: str, value) -> None:
         try:
@@ -548,21 +789,51 @@ class RunDialog(QDialog):
     # Visibility logic
     # ------------------------------------------------------------------
 
-    def _update_visibility(self) -> None:
-        has_df   = self._n_df > 0
-        has_ci   = self._n_ci > 0
-        aic_mode = self._aic_seg.mode
-        aic_on   = aic_mode != "grade_only"
+    def _on_aic_toggle_changed(self, on: bool) -> None:
+        self._save_setting("quick_run_aic", on)
+        tpl = self._use_templates_toggle.isChecked()
+        self._aic_mode_row.setVisible(on and not tpl)
 
-        is_mixed = has_ci and has_df
-        self._mixed_warn_lbl.setVisible(is_mixed)
-        self._aic_type_note.setVisible(aic_on)
+    def _on_template_mode_changed(self, on: bool) -> None:
+        self._save_setting("quick_run_use_templates", on)
+        self._manual_wc.setVisible(not on)
+        self._template_summary.setVisible(on)
+        # Hide AIC mode selector when templates are active (templates define it)
+        aic_on = self._aic_toggle.isChecked()
+        self._aic_mode_row.setVisible(aic_on and not on)
+        # Also hide discussion manual fields when templates are on
+        self._df_manual_fields.setVisible(not on)
+
+    def _on_llm_toggle_changed(self, _on: bool = False) -> None:
+        ssr_on = self._short_sub_toggle.isChecked()
+        either = ssr_on or self._insights_toggle.isChecked()
+        self._set_llm_warn(either)
+        self._ssr_auto_post_row.setVisible(ssr_on)
+        self._save_setting("quick_run_short_sub_review", ssr_on)
+        self._save_setting("quick_run_insights", self._insights_toggle.isChecked())
+
+    def _set_llm_warn(self, show: bool) -> None:
+        color = PHOSPHOR_DIM if show else "transparent"
+        self._llm_warn.setStyleSheet(
+            f"color: {color}; font-size: {px(10)}px;"
+            f" background: transparent; border: none; padding-left: 4px;"
+        )
+
+    def _update_visibility(self) -> None:
+        has_df = self._n_df > 0
+        has_ci = self._n_ci > 0
+
+        self._sub_section.setVisible(has_ci)
+        self._df_section.setVisible(has_df)
+        # Only show the separator between sections when both are visible
+        self._df_sep.setVisible(has_ci and has_df)
 
     # ------------------------------------------------------------------
     # Run
     # ------------------------------------------------------------------
 
     def _on_run(self) -> None:
+        self._persist_quick_run_defaults()
         self._run_queue = list(self._selections)
         n_total = sum(len(items) for _, _, items in self._selections)
 
@@ -591,15 +862,10 @@ class RunDialog(QDialog):
         else:
             self._progress_status.setText("Starting…")
 
-        aic_mode      = self._aic_seg.mode
-        aic_only      = aic_mode == "aic_only"
-        grade_only    = aic_mode == "grade_only"
-        effective_aic = not grade_only
+        effective_aic = self._aic_toggle.isChecked()
 
         n_df, n_ci, df_gt = _classify_selection(selected)
-        if aic_only:
-            atype = "aic"
-        elif n_df > 0 and n_ci > 0:
+        if n_df > 0 and n_ci > 0:
             atype = "mixed"
         elif n_df > 0:
             atype = "discussion_forum"
@@ -607,6 +873,10 @@ class RunDialog(QDialog):
             atype = "complete_incomplete"
 
         mode_settings = self._resolve_mode_settings()
+
+        if self._use_templates_toggle.isChecked():
+            overrides = self._resolve_template_overrides(course_id, selected)
+            mode_settings["group_overrides"] = overrides
 
         if self._demo_mode:
             from gui.workers import DemoRunWorker
@@ -626,16 +896,22 @@ class RunDialog(QDialog):
                 post_points=1.0,
                 reply_points=0.5,
                 min_posts=1,
-                min_replies=2,
+                min_replies=mode_settings["min_replies"],
                 run_adc=effective_aic,
-                preserve_grades=self._preserve_grades_sw.isChecked(),
-                mark_incomplete=self._mark_incomplete_sw.isChecked(),
+                run_insights=self._insights_toggle.isChecked(),
+                run_short_sub_review=self._short_sub_toggle.isChecked(),
+                short_sub_auto_post=self._ssr_auto_post_toggle.isChecked(),
+                preserve_grades=self._preserve_grades_opt.isChecked(),
+                mark_incomplete=self._mark_incomplete_opt.isChecked(),
                 dry_run=False,
                 mode_settings=mode_settings,
             )
         self._worker.log_line.connect(self._append_log)
         self._worker.progress.connect(self._on_progress)
+        self._worker.surface.connect(self._on_surface)
         self._worker.finished.connect(self._on_course_finished)
+        if hasattr(self._worker, "short_sub_reviews_ready"):
+            self._worker.short_sub_reviews_ready.connect(self._on_ssr_reviews_ready)
         self._worker.start()
 
     def _on_course_finished(self, success: bool, message: str) -> None:
@@ -646,6 +922,9 @@ class RunDialog(QDialog):
         else:
             self._on_all_done()
 
+    def _on_ssr_reviews_ready(self, reviews: dict) -> None:
+        self._all_ssr_pending.update(reviews)
+
     def _on_all_done(self) -> None:
         self._stop_btn.setEnabled(False)
         self._close_btn.setEnabled(True)
@@ -654,22 +933,381 @@ class RunDialog(QDialog):
         self._progress_heading.setText("COMPLETE")
         self._progress_status.setText(f"Done — {n_total} assignment{'s' if n_total != 1 else ''} graded.")
 
+        if self._all_ssr_pending:
+            n = len(self._all_ssr_pending)
+            self._review_ssr_btn = QPushButton(f"Review Short Submissions ({n})")
+            self._review_ssr_btn.setStyleSheet(
+                f"QPushButton {{ color: {PHOSPHOR_HOT}; border: 1px solid {PHOSPHOR_HOT};"
+                f" border-radius: 4px; padding: 4px 12px; background: transparent; }}"
+                f" QPushButton:hover {{ background: rgba(255,176,0,0.12); }}"
+            )
+            self._review_ssr_btn.clicked.connect(self._open_ssr_review_dialog)
+            idx = self._progress_btn_row.indexOf(self._close_btn)
+            self._progress_btn_row.insertWidget(idx, self._review_ssr_btn)
+
+    def _open_ssr_review_dialog(self) -> None:
+        from gui.dialogs.short_sub_review_dialog import ShortSubReviewDialog
+        dlg = ShortSubReviewDialog(
+            reviews=self._all_ssr_pending,
+            api=self._api,
+            parent=self,
+        )
+        dlg.exec()
+
     def _on_progress(self, done: int, total: int) -> None:
         self._progress_bar.setMaximum(total)
         self._progress_bar.setValue(done)
         pct = int(done / total * 100) if total > 0 else 0
         if done < total:
-            self._progress_status.setText(
-                f"Grading {done} of {total} students…  ({pct}%)"
-            )
+            self._progress_status.setText(f"Step {done} of {total}  ({pct}%)")
         else:
             self._progress_status.setText(f"Finishing up…  ({pct}%)")
 
     def _append_log(self, line: str) -> None:
         ts = datetime.datetime.now().strftime("%H:%M:%S")
-        self._log_output.append(f"[{ts}] {line}")
+        clean = _strip_emoji(line)
+        if not clean:
+            return
+        # Color-code by keyword
+        low = clean.lower()
+        if "grade(s) submitted" in low or clean.startswith("[Done]"):
+            color = TERM_GREEN
+        elif any(w in low[:40] for w in ("error", "failed", "warning", "stopped")):
+            color = BURN_RED
+        elif clean.startswith("=") or any(w in low[:40]
+                for w in ("academic", "integrity", "grading", "insight",
+                          "fetching", "analyzing", "running")):
+            color = PHOSPHOR_HOT
+        else:
+            color = PHOSPHOR_DIM
+        html = (f'<span style="color:{PHOSPHOR_DIM}">[{ts}]</span> '
+                f'<span style="color:{color}">{clean}</span>')
+        self._log_output.append(html)
         sb = self._log_output.verticalScrollBar()
         sb.setValue(sb.maximum())
+
+    # ------------------------------------------------------------------
+    # Right-panel surface cards
+    # ------------------------------------------------------------------
+
+    def _on_surface(self, card_type: str, data: dict) -> None:
+        """Render a live card in the right panel."""
+        card = self._make_surface_card(card_type, data)
+        if card:
+            insert_idx = max(0, self._surface_lo.count() - 1)  # before stretch
+            self._surface_lo.insertWidget(insert_idx, card)
+            QTimer.singleShot(50, lambda: self._surface_scroll.verticalScrollBar().setValue(
+                self._surface_scroll.verticalScrollBar().maximum()
+            ))
+
+    def _make_surface_card(self, card_type: str, data: dict):
+        """Build a styled QFrame card based on type."""
+        if card_type == "stage":
+            return self._card_stage(data)
+        elif card_type == "grading":
+            return self._card_grading(data)
+        elif card_type == "aic":
+            return self._card_aic(data)
+        elif card_type == "coding":
+            return self._card_coding(data)
+        elif card_type == "theme":
+            return self._card_theme(data)
+        elif card_type == "outlier":
+            return self._card_outlier(data)
+        elif card_type == "contradiction":
+            return self._card_contradiction(data)
+        return None
+
+    # ── Stage divider ────────────────────────────────────────────────────
+
+    def _card_stage(self, data: dict) -> QLabel:
+        text = data.get("text", "")
+        lbl = QLabel(f"── {text} ──")
+        lbl.setAlignment(Qt.AlignCenter)
+        lbl.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
+            f" letter-spacing: 1px; padding: 4px 0;"
+            f" background: transparent; border: none;"
+        )
+        return lbl
+
+    # ── Grading summary ──────────────────────────────────────────────────
+
+    def _card_grading(self, data: dict) -> QFrame:
+        aname = data.get("assignment", "")
+        complete = data.get("complete", 0)
+        incomplete = data.get("incomplete", 0)
+        skipped = data.get("skipped", 0)
+        incomplete_students = data.get("incomplete_students", [])
+        is_disc = data.get("is_discussion", False)
+
+        has_issues = incomplete > 0
+        border = ROSE_ACCENT if has_issues else BORDER_AMBER
+        accent = ROSE_ACCENT if has_issues else AMBER_BTN
+        card = self._styled_card(border, accent)
+        lo = QVBoxLayout(card)
+        lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+        lo.setSpacing(2)
+
+        hdr = QLabel(aname)
+        hdr.setWordWrap(True)
+        hdr.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: {px(12)}px; font-weight: bold;"
+            f" background: transparent; border: none;"
+        )
+        lo.addWidget(hdr)
+
+        parts = [f"{complete} complete", f"{incomplete} incomplete"]
+        if skipped:
+            parts.append(f"{skipped} already graded")
+        summary = QLabel(" · ".join(parts))
+        summary.setStyleSheet(
+            f"color: {PHOSPHOR_MID}; font-size: {px(10)}px;"
+            f" background: transparent; border: none;"
+        )
+        lo.addWidget(summary)
+
+        # Show incomplete student details
+        if incomplete_students:
+            for s in incomplete_students:
+                name = s.get("name", "")
+                flags = s.get("flags", [])
+                reason = ", ".join(flags) if flags else "No submission"
+                fl = QLabel(f"  {name}: {reason}")
+                fl.setWordWrap(True)
+                fl.setStyleSheet(
+                    f"color: {ROSE_ACCENT}; font-size: {px(10)}px;"
+                    f" background: transparent; border: none;"
+                )
+                lo.addWidget(fl)
+
+        return card
+
+    # ── AIC summary ──────────────────────────────────────────────────────
+
+    def _card_aic(self, data: dict) -> QFrame:
+        aname = data.get("assignment", "")
+        analyzed = data.get("analyzed", 0)
+        elevated = data.get("elevated", 0)
+        low = data.get("low", 0)
+        highlights = data.get("highlights", [])
+        students = data.get("students", [])
+
+        accent = ROSE_ACCENT if elevated else BORDER_AMBER
+        card = self._styled_card(accent, accent if elevated else AMBER_BTN)
+        lo = QVBoxLayout(card)
+        lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+        lo.setSpacing(2)
+
+        hdr = QLabel(f"Integrity Review — {aname}")
+        hdr.setWordWrap(True)
+        hdr.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: {px(12)}px; font-weight: bold;"
+            f" background: transparent; border: none;"
+        )
+        lo.addWidget(hdr)
+
+        parts = [f"{analyzed} analyzed"]
+        if elevated:
+            parts.append(f"{elevated} elevated")
+        if low:
+            parts.append(f"{low} low concern")
+        no_concern = analyzed - elevated - low
+        if no_concern > 0:
+            parts.append(f"{no_concern} clear")
+        summary = QLabel(" · ".join(parts))
+        summary.setStyleSheet(
+            f"color: {PHOSPHOR_MID}; font-size: {px(10)}px;"
+            f" background: transparent; border: none;"
+        )
+        lo.addWidget(summary)
+
+        # Show top markers triggered across the cohort
+        if highlights:
+            hl = QLabel("Markers: " + " · ".join(highlights))
+            hl.setWordWrap(True)
+            hl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(hl)
+
+        for s in students:
+            name = s.get("name", "")
+            concern = s.get("concern", "")
+            gun = " [smoking gun]" if s.get("smoking_gun") else ""
+            sl = QLabel(f"  {name} — {concern}{gun}")
+            sl.setWordWrap(True)
+            sl.setStyleSheet(
+                f"color: {ROSE_ACCENT}; font-size: {px(10)}px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(sl)
+
+        return card
+
+    # ── Insights: per-student coding card ────────────────────────────────
+
+    def _card_coding(self, data: dict) -> QFrame:
+        name = data.get("student_name", "")
+        register = data.get("emotional_register", "")
+        themes = data.get("themes", [])
+        quote = data.get("best_quote", "")
+        concerns = data.get("concerns", [])
+        text_preview = data.get("text_preview", "")
+
+        has_concerns = bool(concerns)
+        accent = ROSE_ACCENT if has_concerns else BORDER_AMBER
+        card = self._styled_card(accent, accent)
+        lo = QVBoxLayout(card)
+        lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+        lo.setSpacing(2)
+
+        hdr_text = f"{name}  ·  {register}" if register else name
+        hdr = QLabel(hdr_text)
+        hdr.setWordWrap(True)
+        hdr.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: {px(12)}px; font-weight: bold;"
+            f" background: transparent; border: none;"
+        )
+        lo.addWidget(hdr)
+
+        if text_preview:
+            preview = text_preview[:250] + ("…" if len(text_preview) > 250 else "")
+            pl = QLabel(preview)
+            pl.setWordWrap(True)
+            pl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+                f" padding: 2px 0 4px 0;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(pl)
+
+        if themes:
+            tag_text = " · ".join(themes[:5])
+            tl = QLabel(tag_text)
+            tl.setWordWrap(True)
+            tl.setStyleSheet(
+                f"color: {PHOSPHOR_MID}; font-size: {px(10)}px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(tl)
+
+        if quote:
+            qt = quote[:300] + ("…" if len(quote) > 300 else "")
+            ql = QLabel(f"\"{qt}\"")
+            ql.setWordWrap(True)
+            ql.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+                f" font-style: italic; padding: 2px 0;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(ql)
+
+        if has_concerns:
+            n = len(concerns)
+            cl = QLabel(f"⚠ {n} passage{'s' if n != 1 else ''} flagged for review")
+            cl.setStyleSheet(
+                f"color: {ROSE_ACCENT}; font-size: {px(10)}px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(cl)
+
+        return card
+
+    # ── Insights: emerging theme ─────────────────────────────────────────
+
+    def _card_theme(self, data: dict) -> QFrame:
+        name = data.get("name", "")
+        freq = data.get("frequency", 0)
+        desc = data.get("description", "")
+
+        card = self._styled_card(AMBER_BTN, AMBER_BTN)
+        lo = QVBoxLayout(card)
+        lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+        lo.setSpacing(2)
+
+        hdr = QLabel(f"◆ {name}  ({freq} students)")
+        hdr.setWordWrap(True)
+        hdr.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: {px(12)}px; font-weight: bold;"
+            f" background: transparent; border: none;"
+        )
+        lo.addWidget(hdr)
+
+        if desc:
+            dl = QLabel(desc[:150] + ("…" if len(desc) > 150 else ""))
+            dl.setWordWrap(True)
+            dl.setStyleSheet(
+                f"color: {PHOSPHOR_MID}; font-size: {px(10)}px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(dl)
+
+        return card
+
+    # ── Insights: outlier / unique voice ─────────────────────────────────
+
+    def _card_outlier(self, data: dict) -> QFrame:
+        name = data.get("name", "")
+        why = data.get("why_notable", "")
+
+        card = self._styled_card(TERM_GREEN, TERM_GREEN)
+        lo = QVBoxLayout(card)
+        lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+        lo.setSpacing(2)
+
+        hdr = QLabel(f"✦ {name} — unique voice")
+        hdr.setWordWrap(True)
+        hdr.setStyleSheet(
+            f"color: {TERM_GREEN}; font-size: {px(11)}px; font-weight: bold;"
+            f" background: transparent; border: none;"
+        )
+        lo.addWidget(hdr)
+
+        if why:
+            wl = QLabel(why[:120] + ("…" if len(why) > 120 else ""))
+            wl.setWordWrap(True)
+            wl.setStyleSheet(
+                f"color: {PHOSPHOR_MID}; font-size: {px(10)}px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(wl)
+
+        return card
+
+    # ── Insights: contradiction / tension ────────────────────────────────
+
+    def _card_contradiction(self, data: dict) -> QFrame:
+        desc = data.get("description", "")
+
+        card = self._styled_card(STATUS_WARN, STATUS_WARN)
+        lo = QVBoxLayout(card)
+        lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+        lo.setSpacing(2)
+
+        hdr = QLabel(f"⚡ Tension: {desc[:100]}")
+        hdr.setWordWrap(True)
+        hdr.setStyleSheet(
+            f"color: {STATUS_WARN}; font-size: {px(11)}px; font-weight: bold;"
+            f" background: transparent; border: none;"
+        )
+        lo.addWidget(hdr)
+
+        return card
+
+    # ── Card factory ─────────────────────────────────────────────────────
+
+    def _styled_card(self, border_color: str, accent_color: str) -> QFrame:
+        """Return a QFrame styled as a surface card with left accent border."""
+        card = QFrame()
+        card.setStyleSheet(
+            f"QFrame {{ background: {BG_CARD};"
+            f" border: 1px solid {border_color};"
+            f" border-left: 3px solid {accent_color};"
+            f" border-radius: 6px; }}"
+        )
+        return card
 
     def _on_stop(self) -> None:
         if self._worker and self._worker.isRunning():
@@ -678,74 +1316,62 @@ class RunDialog(QDialog):
         self._stop_btn.setEnabled(False)
         self._close_btn.setEnabled(True)
 
-    def _on_open_output(self) -> None:
-        try:
-            from autograder_utils import open_folder, get_output_base_dir
-            open_folder(get_output_base_dir())
-        except Exception:
-            pass
 
     def _resolve_mode_settings(self) -> dict:
-        """Return aic_mode, aic_config, and word counts from the selected template."""
-        tmpl_name = self._type_combo.currentData()
-        if not tmpl_name or tmpl_name == "auto":
-            tmpl = {}
-            base = {"aic_mode": "auto", "aic_config": aic_config_from_mode("auto")}
-        else:
-            tmpl = load_templates().get(tmpl_name, {})
-            base = {
-                "aic_mode":   tmpl.get("aic_mode", "auto"),
-                "aic_config": get_aic_config(tmpl),
-            }
+        """Return aic_config and word counts from the dialog spinboxes."""
+        # Essay mode (top option) → "auto"; Notes mode (bottom) → "notes"
+        aic_mode = "notes" if self._notes_mode_toggle.isChecked() else "auto"
         return {
-            **base,
-            "min_word_count":  tmpl.get("min_word_count", 200),
-            "post_min_words":  tmpl.get("post_min_words", 200),
-            "reply_min_words": tmpl.get("reply_min_words", 50),
+            "aic_mode":        aic_mode,
+            "aic_config":      aic_config_from_mode(aic_mode),
+            "min_word_count":  _int_val(self._min_word_field, 150),
+            "post_min_words":  _int_val(self._post_min_field, 150),
+            "reply_min_words": _int_val(self._reply_min_field, 50),
+            "min_replies":     _int_val(self._min_replies_field, 2),
         }
 
-    def _populate_type_combo(self) -> None:
-        """Rebuild the assignment-type combo from the current template store."""
-        current = self._type_combo.currentData()
-        self._type_combo.clear()
-        self._type_combo.addItem("Auto-detect", "auto")
-
+    def _resolve_template_overrides(self, course_id: int, assignments: list) -> dict:
+        """Build group_id → template_settings from Bulk Run mappings."""
+        from assignment_templates import (
+            load_templates, load_mappings, resolve_group, get_aic_config,
+        )
         templates = load_templates()
-        _mode_order = ["notes", "discussion", "draft", "personal", "essay", "lab"]
+        mappings = load_mappings()
+        overrides: dict = {}
+        seen_groups: set = set()
+        for a in assignments:
+            gid = a.get("assignment_group_id") or a.get("group_id")
+            if gid is None or gid in seen_groups:
+                continue
+            seen_groups.add(gid)
+            gname = a.get("group_name", "")
+            tname, _src = resolve_group(course_id, gname, templates, mappings)
+            if tname and tname in templates:
+                tpl = templates[tname]
+                overrides[gid] = {
+                    "min_word_count":  tpl.get("min_word_count", 150),
+                    "post_min_words":  tpl.get("post_min_words", 150),
+                    "reply_min_words": tpl.get("reply_min_words", 50),
+                    "run_aic":         tpl.get("run_aic", True),
+                    "assignment_type": tpl.get("assignment_type", "complete_incomplete"),
+                    "aic_config":      get_aic_config(tpl),
+                }
+        return overrides
 
-        def _sort_key(name: str) -> int:
-            mode = templates[name].get("aic_mode", "z")
-            try:
-                return _mode_order.index(mode)
-            except ValueError:
-                return 99
-
-        sys_names = sorted(
-            (n for n, t in templates.items() if t.get("is_system_default")),
-            key=_sort_key,
-        )
-        user_names = sorted(
-            n for n, t in templates.items() if not t.get("is_system_default")
-        )
-        for name in sys_names:
-            self._type_combo.addItem(name, name)
-        if user_names:
-            self._type_combo.insertSeparator(self._type_combo.count())
-            for name in user_names:
-                self._type_combo.addItem(name, name)
-
-        # Restore previous selection if it still exists
-        if current:
-            idx = self._type_combo.findData(current)
-            if idx >= 0:
-                self._type_combo.setCurrentIndex(idx)
-
-    def _open_type_editor(self) -> None:
+    def _persist_quick_run_defaults(self) -> None:
+        """Save current spinbox values so they're restored next time."""
         try:
-            from gui.dialogs.template_editor_dialog import TemplateEditorDialog
-            dlg = TemplateEditorDialog(parent=self)
-            dlg.exec()
-            self._populate_type_combo()   # refresh after edits
-        except Exception as exc:
-            from gui.dialogs.message_dialog import show_warning
-            show_warning(self, "Not Available", str(exc))
+            from settings import load_settings, save_settings
+            s = load_settings()
+            s["quick_run_defaults"] = {
+                "submission_min_words":       _int_val(self._min_word_field, 150),
+                "discussion_post_min_words":  _int_val(self._post_min_field, 150),
+                "discussion_reply_min_words": _int_val(self._reply_min_field, 50),
+                "discussion_min_replies":     _int_val(self._min_replies_field, 2),
+            }
+            s["quick_run_aic_mode"] = (
+                "notes" if self._notes_mode_toggle.isChecked() else "auto"
+            )
+            save_settings(s)
+        except Exception:
+            pass

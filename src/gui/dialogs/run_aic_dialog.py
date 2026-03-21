@@ -16,7 +16,9 @@ from PySide6.QtWidgets import (
     QComboBox, QFrame, QTextEdit, QSizePolicy, QCheckBox,
 )
 
+from gui.widgets.crt_combo import CRTComboBox
 from gui.styles import (
+    px, combo_qss,
     SPACING_SM, SPACING_MD, SPACING_LG,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM,
     ROSE_ACCENT, TERM_GREEN, BURN_RED, WARN_PINK,
@@ -25,27 +27,7 @@ from gui.styles import (
     make_run_button, make_secondary_button, make_monospace_textedit,
 )
 
-_COMBO_QSS = f"""
-    QComboBox {{
-        background: {BG_INSET};
-        color: {PHOSPHOR_MID};
-        border: 1px solid {BORDER_DARK};
-        border-radius: 4px;
-        padding: 4px 8px;
-        font-size: 12px;
-        min-height: 26px;
-    }}
-    QComboBox:hover {{ border-color: {BORDER_AMBER}; color: {PHOSPHOR_HOT}; }}
-    QComboBox:disabled {{ color: {PHOSPHOR_DIM}; }}
-    QComboBox::drop-down {{ border: none; width: 18px; }}
-    QComboBox QAbstractItemView {{
-        background: {BG_CARD};
-        color: {PHOSPHOR_MID};
-        selection-background-color: #2C1C08;
-        selection-color: {PHOSPHOR_HOT};
-        border: 1px solid {BORDER_DARK};
-    }}
-"""
+_COMBO_QSS = combo_qss()
 
 _EDU_LEVEL_OPTIONS = [
     ("community_college", "Community College  (default)"),
@@ -185,13 +167,13 @@ class RunAICDialog(QDialog):
         tb.setSpacing(4)
         title = QLabel("RUN ACADEMIC INTEGRITY CHECK")
         title.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 14px; font-weight: bold; letter-spacing: 2px;")
+            f"color: {PHOSPHOR_HOT}; font-size: {px(14)}px; font-weight: bold; letter-spacing: 2px;")
         tb.addWidget(title)
         sub = QLabel(
             "Analyzes submissions for integrity patterns. "
             "Results save to the Prior Runs dashboard automatically."
         )
-        sub.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px;")
+        sub.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;")
         sub.setWordWrap(True)
         tb.addWidget(sub)
         root.addWidget(title_bar)
@@ -206,10 +188,9 @@ class RunAICDialog(QDialog):
         # Course row
         course_row = QHBoxLayout()
         course_lbl = QLabel("Course:")
-        course_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px; min-width: 80px;")
+        course_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; min-width: 80px;")
         course_row.addWidget(course_lbl)
-        self._course_combo = QComboBox()
-        self._course_combo.setStyleSheet(_COMBO_QSS)
+        self._course_combo = CRTComboBox()
         self._course_combo.addItem("Loading courses…")
         self._course_combo.setEnabled(False)
         self._course_combo.currentIndexChanged.connect(self._on_course_changed)
@@ -219,10 +200,9 @@ class RunAICDialog(QDialog):
         # Assignment row
         assign_row = QHBoxLayout()
         assign_lbl = QLabel("Assignment:")
-        assign_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px; min-width: 80px;")
+        assign_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; min-width: 80px;")
         assign_row.addWidget(assign_lbl)
-        self._assign_combo = QComboBox()
-        self._assign_combo.setStyleSheet(_COMBO_QSS)
+        self._assign_combo = CRTComboBox()
         self._assign_combo.addItem("Select a course first")
         self._assign_combo.setEnabled(False)
         assign_row.addWidget(self._assign_combo, 1)
@@ -231,10 +211,9 @@ class RunAICDialog(QDialog):
         # Education level row
         edu_row = QHBoxLayout()
         edu_lbl = QLabel("Institution:")
-        edu_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px; min-width: 80px;")
+        edu_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; min-width: 80px;")
         edu_row.addWidget(edu_lbl)
-        self._edu_combo = QComboBox()
-        self._edu_combo.setStyleSheet(_COMBO_QSS)
+        self._edu_combo = CRTComboBox()
         for pid, plabel in _EDU_LEVEL_OPTIONS:
             self._edu_combo.addItem(plabel, pid)
         edu_row.addWidget(self._edu_combo, 1)
@@ -243,10 +222,9 @@ class RunAICDialog(QDialog):
         # Population overlays — compact 2-column grid
         pop_row1 = QHBoxLayout()
         esl_lbl = QLabel("ESL Population:")
-        esl_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px; min-width: 80px;")
+        esl_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; min-width: 80px;")
         pop_row1.addWidget(esl_lbl)
-        self._esl_combo = QComboBox()
-        self._esl_combo.setStyleSheet(_COMBO_QSS)
+        self._esl_combo = CRTComboBox()
         for pid, plabel in _POPULATION_LEVEL_OPTIONS:
             self._esl_combo.addItem(plabel, pid)
         pop_row1.addWidget(self._esl_combo, 1)
@@ -254,10 +232,9 @@ class RunAICDialog(QDialog):
 
         pop_row2 = QHBoxLayout()
         fg_lbl = QLabel("First-Gen Pop.:")
-        fg_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px; min-width: 80px;")
+        fg_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; min-width: 80px;")
         pop_row2.addWidget(fg_lbl)
-        self._first_gen_combo = QComboBox()
-        self._first_gen_combo.setStyleSheet(_COMBO_QSS)
+        self._first_gen_combo = CRTComboBox()
         for pid, plabel in _POPULATION_LEVEL_OPTIONS:
             self._first_gen_combo.addItem(plabel, pid)
         pop_row2.addWidget(self._first_gen_combo, 1)
@@ -267,7 +244,7 @@ class RunAICDialog(QDialog):
         nd_row.addSpacing(88)  # align with combo boxes
         self._nd_check = QCheckBox("Neurodivergent-Aware Mode")
         self._nd_check.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
         )
         nd_row.addWidget(self._nd_check)
         nd_row.addStretch()
@@ -279,7 +256,7 @@ class RunAICDialog(QDialog):
             "Review flagged submissions before any action."
         )
         ethics.setWordWrap(True)
-        ethics.setStyleSheet(f"color: {ROSE_ACCENT}; font-size: 11px; padding-top: 4px;")
+        ethics.setStyleSheet(f"color: {ROSE_ACCENT}; font-size: {px(11)}px; padding-top: 4px;")
         cf.addWidget(ethics)
 
         root.addWidget(config_frame)
@@ -299,7 +276,7 @@ class RunAICDialog(QDialog):
                 color: {PHOSPHOR_MID};
                 border: none;
                 font-family: "Menlo", "Consolas", "Courier New", monospace;
-                font-size: 12px;
+                font-size: {px(12)}px;
                 padding: 8px;
             }}
         """)
@@ -319,7 +296,7 @@ class RunAICDialog(QDialog):
         fl.setContentsMargins(SPACING_LG, SPACING_SM, SPACING_LG, SPACING_SM)
 
         self._status_lbl = QLabel("")
-        self._status_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 11px;")
+        self._status_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;")
         fl.addWidget(self._status_lbl)
         fl.addStretch()
 
@@ -495,7 +472,7 @@ class RunAICDialog(QDialog):
 
     def _set_status(self, text: str, error: bool = False, ok: bool = False) -> None:
         color = BURN_RED if error else (TERM_GREEN if ok else PHOSPHOR_DIM)
-        self._status_lbl.setStyleSheet(f"color: {color}; font-size: 11px;")
+        self._status_lbl.setStyleSheet(f"color: {color}; font-size: {px(11)}px;")
         self._status_lbl.setText(text)
 
     def closeEvent(self, event) -> None:

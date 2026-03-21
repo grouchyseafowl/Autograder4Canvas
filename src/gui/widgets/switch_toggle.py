@@ -10,6 +10,7 @@ from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QBrush, QRadialGradient
 
 from gui.styles import (
+    px,
     PHOSPHOR_HOT, PHOSPHOR_MID,
     apply_phosphor_glow, remove_glow,
 )
@@ -145,7 +146,15 @@ class SwitchToggle(QWidget):
         # hex color for glow effect (QGraphicsDropShadowEffect needs a string)
         self._glow_hex = hover_color.name() if hover_color else PHOSPHOR_HOT
         # label color when resting (unchecked, not hovered)
-        self._rest_css = rest_css or PHOSPHOR_MID
+        # If a custom hover_color is set, use a dimmed version of it as rest color
+        if rest_css:
+            self._rest_css = rest_css
+        elif hover_color:
+            self._rest_css = (
+                f"rgba({hover_color.red()},{hover_color.green()},{hover_color.blue()},0.45)"
+            )
+        else:
+            self._rest_css = PHOSPHOR_MID
 
         lo = QHBoxLayout(self)
         lo.setContentsMargins(0, 0, 0, 0)
@@ -158,7 +167,7 @@ class SwitchToggle(QWidget):
         self._lbl.setWordWrap(True)
         self._lbl.setFixedWidth(wrap_width)
         self._lbl.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 11px; line-height: 1.35;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(11)}px; line-height: 1.35;"
             f" background: transparent; border: none;"
         )
         lo.addWidget(self._lbl)
@@ -205,6 +214,6 @@ class SwitchToggle(QWidget):
             color = self._rest_css
             remove_glow(self._lbl)
         self._lbl.setStyleSheet(
-            f"color: {color}; font-size: 11px; line-height: 1.35;"
+            f"color: {color}; font-size: {px(11)}px; line-height: 1.35;"
             f" background: transparent; border: none;"
         )

@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.styles import (
+    px,
     SPACING_SM, SPACING_MD, SPACING_LG,
     PHOSPHOR_HOT,
     make_section_label, make_h_rule, make_content_pane,
@@ -66,12 +67,19 @@ class CleanupDialog(QDialog):
         self._sw_profiles.toggled.connect(self._update_preview)
         pane_lo.addWidget(self._sw_profiles)
 
+        self._sw_insights = SwitchToggle(
+            "Insights analysis data  (codings, themes, feedback drafts)", wrap_width=300
+        )
+        self._sw_insights.setChecked(True)
+        self._sw_insights.toggled.connect(self._update_preview)
+        pane_lo.addWidget(self._sw_insights)
+
         layout.addWidget(pane)
 
         # Preview
         self._preview_label = QLabel("Preview: calculating\u2026")
         self._preview_label.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 11px; background: transparent;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(11)}px; background: transparent;"
         )
         layout.addWidget(self._preview_label)
 
@@ -91,13 +99,17 @@ class CleanupDialog(QDialog):
 
     # ── Helpers ────────────────────────────────────────────────────────────
 
-    def _update_preview(self, *_) -> None:
-        if not any([
+    def _any_checked(self) -> bool:
+        return any([
             self._sw_grading.isChecked(),
             self._sw_aic.isChecked(),
             self._sw_notes.isChecked(),
             self._sw_profiles.isChecked(),
-        ]):
+            self._sw_insights.isChecked(),
+        ])
+
+    def _update_preview(self, *_) -> None:
+        if not self._any_checked():
             self._preview_label.setText("Preview: select at least one category.")
             return
         try:
@@ -121,6 +133,20 @@ class CleanupDialog(QDialog):
                 parts.append(f"{counts['notes']} notes")
             if self._sw_profiles.isChecked():
                 parts.append(f"{counts['profiles']} profile overrides")
+
+            # Insights data (separate store)
+            insights_count = 0
+            if self._sw_insights.isChecked():
+                try:
+                    from insights.insights_store import InsightsStore
+                    istore = InsightsStore()
+                    insights_count = istore.count_for_cleanup(0)
+                    istore.close()
+                except Exception:
+                    insights_count = 0
+                parts.append(f"{insights_count} insight runs")
+                total += insights_count
+
             detail = ",  ".join(parts)
             self._preview_label.setText(
                 f"Preview: {total} record{'s' if total != 1 else ''} would be deleted  \u2014  {detail}"
@@ -129,12 +155,7 @@ class CleanupDialog(QDialog):
             self._preview_label.setText(f"Preview unavailable: {exc}")
 
     def _on_run(self) -> None:
-        if not any([
-            self._sw_grading.isChecked(),
-            self._sw_aic.isChecked(),
-            self._sw_notes.isChecked(),
-            self._sw_profiles.isChecked(),
-        ]):
+        if not self._any_checked():
             show_warning(self, "No Categories", "Select at least one data category.")
             return
         try:
@@ -158,6 +179,19 @@ class CleanupDialog(QDialog):
                 parts.append(f"{deleted['notes']} notes")
             if self._sw_profiles.isChecked():
                 parts.append(f"{deleted['profiles']} profile overrides")
+
+            # Insights data (separate store)
+            if self._sw_insights.isChecked():
+                try:
+                    from insights.insights_store import InsightsStore
+                    istore = InsightsStore()
+                    ins_count = istore.delete_for_cleanup(0)
+                    istore.close()
+                    parts.append(f"{ins_count} insight runs")
+                    total += ins_count
+                except Exception:
+                    pass
+
             detail = ",  ".join(parts)
             show_info(
                 self, "Cleanup Complete",

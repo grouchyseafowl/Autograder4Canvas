@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 from gui.styles import (
+    px,
     BG_VOID, BG_INSET,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM, PHOSPHOR_GLOW,
     BORDER_DARK, BORDER_AMBER, ROSE_ACCENT,
@@ -326,7 +327,7 @@ class MarkerRow(QFrame):
 
         name = QLabel(marker["name"])
         name.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 12px;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(12)}px;"
             f" background: transparent; border: none;"
         )
         lo.addWidget(name)
@@ -386,7 +387,7 @@ class HintBar(QFrame):
         self._label = QLabel("")
         self._label.setWordWrap(True)
         self._label.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
             f" background: transparent; border: none;"
         )
         lo.addWidget(self._label, 1)
@@ -396,7 +397,7 @@ class HintBar(QFrame):
     def show_examples(self, text: str):
         self._label.setText(text)
         self._label.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 10px;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(10)}px;"
             f" background: transparent; border: none;"
         )
         self._gutter.setStyleSheet(
@@ -409,7 +410,7 @@ class HintBar(QFrame):
     def _set_idle(self):
         self._label.setText("Hover a signal to see what it looks for")
         self._label.setStyleSheet(
-            f"color: {PHOSPHOR_GLOW}; font-size: 10px; font-style: italic;"
+            f"color: {PHOSPHOR_GLOW}; font-size: {px(10)}px; font-style: italic;"
             f" background: transparent; border: none;"
         )
         self._gutter.setStyleSheet(
@@ -479,7 +480,7 @@ class SignalTuningDialog(QDialog):
         # Title
         title = QLabel("ACADEMIC INTEGRITY \u2014 SIGNAL TUNING")
         title.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 13px; font-weight: 500;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(13)}px; font-weight: 500;"
             f" background: transparent; border: none; letter-spacing: 2px;"
         )
         body.addWidget(title)
@@ -489,7 +490,7 @@ class SignalTuningDialog(QDialog):
         )
         desc.setWordWrap(True)
         desc.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
             f" background: transparent; border: none;"
         )
         body.addWidget(desc)
@@ -530,7 +531,7 @@ class SignalTuningDialog(QDialog):
         # Subtitle -- changes per mode
         self._subtitle = QLabel(_SUBTITLES["suspicious"])
         self._subtitle.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
             f" background: transparent; border: none;"
             f" padding: 0 {SPACING_XS}px;"
         )

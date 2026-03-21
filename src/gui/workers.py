@@ -213,6 +213,23 @@ class LoadCohortWorker(_StoreWorker):
             self.error.emit(str(exc))
 
 
+class LoadCourseMatrixWorker(_StoreWorker):
+    """Load the full student × assignment matrix for the class-over-time heatmap."""
+    matrix_loaded = Signal(list)  # List[Dict]
+
+    def __init__(self, store, course_id: str, parent=None):
+        super().__init__(store, parent)
+        self._course_id = course_id
+
+    def run(self) -> None:
+        try:
+            self.matrix_loaded.emit(
+                self._store.get_course_matrix(self._course_id)
+            )
+        except Exception as exc:
+            self.error.emit(str(exc))
+
+
 class LoadTrajectoryWorker(_StoreWorker):
     """Load sparkline data for one student across a course."""
     trajectory_loaded = Signal(list)  # List[Dict]
@@ -393,6 +410,8 @@ class RunWorker(CancellableWorker):
     log_line = Signal(str)
     progress = Signal(int, int)   # (completed, total)
     finished = Signal(bool, str)  # (success, summary_message)
+    surface  = Signal(str, dict)  # (card_type, data) for right-panel live cards
+    short_sub_reviews_ready = Signal(dict)  # pending SSR reviews for teacher
 
     def __init__(
         self,
@@ -411,6 +430,9 @@ class RunWorker(CancellableWorker):
         min_posts: int = 1,
         min_replies: int = 2,
         run_adc: bool = False,
+        run_insights: bool = False,
+        run_short_sub_review: bool = False,
+        short_sub_auto_post: bool = False,
         preserve_grades: bool = True,
         mark_incomplete: bool = True,
         dry_run: bool = False,
@@ -419,6 +441,7 @@ class RunWorker(CancellableWorker):
     ):
         super().__init__(api, parent)
         self.mode_settings = mode_settings or {}
+        self.group_overrides = (mode_settings or {}).get("group_overrides", {})
         self.course_id = course_id
         self.course_name = course_name
         self.selected_assignments = selected_assignments
@@ -433,9 +456,90 @@ class RunWorker(CancellableWorker):
         self.min_posts = min_posts
         self.min_replies = min_replies
         self.run_adc = run_adc
+        self.run_insights = run_insights
+        self.run_short_sub_review = run_short_sub_review
+        self.short_sub_auto_post = short_sub_auto_post
         self.preserve_grades = preserve_grades
+        # Accumulate pending SSR reviews across all assignments/courses for this run
+        self._ssr_accumulated_reviews: dict = {}
+        # Cache preprocessed submissions by assignment ID so they can be
+        # fetched + preprocessed once and shared across C/I grading and AIC.
+        self._submissions_cache: dict = {}  # {aid: {user_id: sub_dict}}
         self.mark_incomplete = mark_incomplete
         self.dry_run = dry_run
+
+    def _init_preprocessing(self) -> None:
+        """Initialize the preprocessing pipeline if translation/transcription is enabled."""
+        if hasattr(self, "_preproc_pipeline"):
+            return
+        self._preproc_pipeline = None
+        try:
+            from settings import load_settings
+            s = load_settings()
+            translate = s.get("insights_translate_enabled", True)
+            transcribe = s.get("insights_transcribe_enabled", True)
+            image_transcribe = s.get("insights_image_transcribe_enabled", True)
+            if not (translate or transcribe or image_transcribe):
+                return
+            from preprocessing import PreprocessingPipeline
+            headers = {}
+            if self._api and self._api.api_token:
+                headers["Authorization"] = f"Bearer {self._api.api_token}"
+            self._preproc_pipeline = PreprocessingPipeline(
+                canvas_headers=headers,
+                translation_enabled=translate,
+                transcription_enabled=transcribe,
+                image_transcription_enabled=image_transcribe,
+                translation_backend=s.get("insights_llm_backend", "ollama"),
+                translation_model=s.get("insights_translation_model", "llama3.1:8b"),
+                ollama_base_url=s.get("insights_ollama_url", "http://localhost:11434"),
+                cloud_api_key=s.get("insights_cloud_key", ""),
+                cloud_base_url=s.get("insights_cloud_url", ""),
+                cloud_model=s.get("insights_cloud_model", ""),
+                whisper_model=s.get("insights_whisper_model", "base"),
+                generate_teacher_comments=False,
+            )
+        except ImportError:
+            pass
+
+    def _preprocess_for_assignment(self, aid: int, submissions: dict) -> None:
+        """Run preprocessing on submissions, enriching body text in-place."""
+        self._init_preprocessing()
+        if not self._preproc_pipeline:
+            return
+        try:
+            sub_list = [sub for sub in submissions.values()
+                        if sub.get("workflow_state") not in ("unsubmitted", "not_submitted")]
+            if not sub_list:
+                return
+            # Ensure each sub has the assignment_id the pipeline expects
+            for sub in sub_list:
+                sub.setdefault("assignment_id", aid)
+            results = self._preproc_pipeline.process_submissions(sub_list)
+            # Inject preprocessed text back into submission dicts
+            for result in results:
+                uid = result.user_id
+                if uid in submissions and result.text:
+                    original = submissions[uid].get("body", "") or ""
+                    if len(result.text) > len(original):
+                        submissions[uid]["body"] = result.text
+                        if result.was_translated:
+                            print(f"   Translated submission for student {uid}")
+                        if result.was_transcribed:
+                            print(f"   Transcribed submission for student {uid}")
+                        if result.was_image_transcribed:
+                            print(f"   Transcribed handwriting for student {uid}")
+        except Exception as exc:
+            print(f"   Preprocessing: {exc}")
+
+    def _get_override(self, assignment: dict, key: str, fallback):
+        """Look up a per-group template override for an assignment, or return fallback."""
+        if not self.group_overrides:
+            return fallback
+        gid = assignment.get("assignment_group_id") or assignment.get("group_id")
+        if gid and gid in self.group_overrides:
+            return self.group_overrides[gid].get(key, fallback)
+        return fallback
 
     # ------------------------------------------------------------------
     # Entry point
@@ -474,12 +578,25 @@ class RunWorker(CancellableWorker):
         old_stdout = sys.stdout
         sys.stdout = _Capture()
 
-        self._progress_total = len(self.selected_assignments)
+        # ── Unified progress across all phases ────────────────────────
+        n_assign = len(self.selected_assignments)
+        phases = 1  # grading always runs
+        if self.run_adc:
+            phases += 1
+        if self.run_insights and not self.dry_run:
+            phases += 1
+        # short_sub_review runs inline during grading — not a separate phase
+        self._phase_total = n_assign * phases
+        self._phase_done  = 0
+        # Per-student progress within the current grading phase is mapped
+        # into the fraction of one assignment unit via _emit_student_progress.
+        self._progress_total = max(1, self._phase_total)
         self._progress_done  = 0
+        self.progress.emit(0, self._phase_total)
 
         try:
             if self.dry_run:
-                self.log_line.emit("🔍 DRY RUN MODE — No grades will be submitted")
+                self.log_line.emit("DRY RUN MODE — No grades will be submitted")
 
             if self.assignment_type == "aic":
                 self._run_aic()
@@ -507,6 +624,11 @@ class RunWorker(CancellableWorker):
                 if self.run_adc:
                     self._run_aic()
 
+            if self.run_insights and not self.dry_run:
+                self._run_insights()
+
+            if self._ssr_accumulated_reviews:
+                self.short_sub_reviews_ready.emit(self._ssr_accumulated_reviews)
             self.finished.emit(True, "Grading complete")
         except Exception as exc:
             self.finished.emit(False, str(exc))
@@ -519,8 +641,9 @@ class RunWorker(CancellableWorker):
     # ------------------------------------------------------------------
 
     def _emit_progress(self) -> None:
-        self._progress_done += 1
-        self.progress.emit(self._progress_done, self._progress_total)
+        """Advance by one phase unit (one assignment through one phase)."""
+        self._phase_done += 1
+        self.progress.emit(self._phase_done, self._phase_total)
 
     def _load_module(self, filename: str):
         """Dynamically load a Programs script as a module."""
@@ -575,17 +698,25 @@ class RunWorker(CancellableWorker):
         """Grade selected assignments using the Complete/Incomplete script."""
         ci = self._load_module("Autograder_Complete-Incomplete_v1-3.py")
 
-        print(f"📚 {self.course_name}")
+        self.surface.emit("stage", {"text": f"Grading — {self.course_name}"})
+        print(f"{self.course_name}")
         students = ci.get_active_students(self.course_id)
         if not students:
-            print("❌ No active students found.")
+            print("No active students found.")
             return
-        print(f"✅ {len(students)} active students")
+        print(f"{len(students)} active students")
 
-        # Switch to per-student progress tracking for smooth progress bar
-        self._progress_total = len(students) * len(self.selected_assignments)
-        self._progress_done = 0
-        self.progress.emit(0, max(1, self._progress_total))
+        # Detect LLM backend once before the assignment loop
+        _short_sub_backend = None
+        if self.run_short_sub_review:
+            try:
+                from insights.short_sub_reviewer import review_short_submission
+                from insights.llm_backend import auto_detect_backend as _adb
+                _short_sub_backend = _adb(tier="lightweight")
+                if not _short_sub_backend:
+                    print("   Short Sub Review: no LLM backend available — skipping")
+            except ImportError:
+                pass
 
         for assignment in self.selected_assignments:
             if self.is_cancelled():
@@ -596,10 +727,17 @@ class RunWorker(CancellableWorker):
                 continue
 
             print(f"\n{'=' * 60}")
-            print(f"📝 {aname}")
+            print(f"{aname}")
             print(f"{'=' * 60}")
 
+            # Per-group template override for word count
+            effective_min_words = self._get_override(
+                assignment, "min_word_count", self.min_word_count)
+
             submissions = ci.get_submissions(self.course_id, aid)
+            self._preprocess_for_assignment(aid, submissions)
+            # Cache for AIC reuse (avoids re-fetching + re-preprocessing)
+            self._submissions_cache[aid] = submissions
             all_subs = list(submissions.values())
 
             grade_data = {}
@@ -607,13 +745,17 @@ class RunWorker(CancellableWorker):
             eval_cache = {}
             # Track skipped students for RunStore persistence
             skipped_users = []
+            # Track short sub review results: {user_id: ShortSubReview}
+            short_sub_results = {}
+            # user_ids credited by SSR but not auto-posting (queued for teacher review)
+            _ssr_pending = set()
             complete = incomplete = skipped = 0
+            assignment_desc = assignment.get("description", "")
+            review_guidance = self.mode_settings.get("short_sub_guidance", "")
             for enrollment in students:
                 user_id = enrollment.get("user_id")
                 if not user_id:
                     continue
-                self._progress_done += 1
-                self.progress.emit(self._progress_done, self._progress_total)
                 sub = submissions.get(user_id)
                 if sub and sub.get("workflow_state") not in ("unsubmitted", "not_submitted"):
                     if self.preserve_grades and sub.get("grade") == "complete":
@@ -621,7 +763,52 @@ class RunWorker(CancellableWorker):
                         skipped_users.append(user_id)
                         eval_cache[user_id] = ("complete", [])
                         continue
-                    is_ok, flags = ci.evaluate_submission(sub, all_subs, self.min_word_count)
+                    is_ok, flags = ci.evaluate_submission(sub, all_subs, effective_min_words)
+                    # ── Short Submission Review (inline) ──────────────────
+                    if (self.run_short_sub_review
+                            and _short_sub_backend
+                            and not is_ok
+                            and self._has_short_flag(flags)):
+                        body = sub.get("body", "")
+                        wc = len(body.split()) if body else 0
+                        if wc > 0:  # skip zero-word (truly no submission)
+                            student_name = sub.get("user", {}).get("name", "")
+                            ssr = review_short_submission(
+                                student_name=student_name,
+                                submission_text=body,
+                                word_count=wc,
+                                min_word_count=effective_min_words,
+                                assignment_prompt=assignment_desc,
+                                review_guidance=review_guidance,
+                                backend=_short_sub_backend,
+                            )
+                            if ssr:
+                                short_sub_results[user_id] = ssr
+                                if ssr.verdict == "CREDIT":
+                                    is_ok = True
+                                    flags = list(flags) + [
+                                        f"Short Sub Review: CREDIT — {ssr.rationale}"
+                                    ]
+                                    # Grade exclusion: only add to grade_data if auto-posting
+                                    if self.short_sub_auto_post and ssr.confidence >= 0.7:
+                                        pass  # will be added to grade_data below
+                                    else:
+                                        _ssr_pending.add(user_id)
+                                        self._ssr_accumulated_reviews[f"{aid}:{user_id}"] = {
+                                            "student_name": student_name,
+                                            "submission_text": body,
+                                            "assignment_id": aid,
+                                            "assignment_name": aname,
+                                            "course_id": self.course_id,
+                                            "course_name": self.course_name,
+                                            "user_id": user_id,
+                                            "review": ssr.model_dump(),
+                                        }
+                                else:
+                                    flags = list(flags) + [
+                                        f"Short Sub Review: TEACHER_REVIEW — {ssr.rationale}"
+                                    ]
+                    # ─────────────────────────────────────────────────────
                     grade = "complete" if is_ok else "incomplete"
                     # Mode: criteria_strict — flagged submissions → incomplete
                     if self.mode_settings.get("criteria_strict") and flags and is_ok:
@@ -640,19 +827,27 @@ class RunWorker(CancellableWorker):
                     grade = "incomplete"
                     eval_cache[user_id] = (grade, ["No submission"])
                     incomplete += 1
-                grade_data[user_id] = grade
+                # Only add to grade_data if not queued for teacher review
+                if user_id not in _ssr_pending:
+                    grade_data[user_id] = grade
 
             if not grade_data:
-                msg = f"⚠️  No students to grade"
+                msg = f"No students to grade"
                 if skipped:
                     msg += f" ({skipped} already complete)"
                 print(msg)
-                # Still persist skipped students to RunStore
                 self._persist_ci_results(
                     ci, aid, aname, submissions, all_subs, students,
                     grade_data, eval_cache, skipped_users,
                     complete, incomplete, skipped,
+                    short_sub_results,
                 )
+                self.surface.emit("grading", {
+                    "assignment": aname, "complete": complete,
+                    "incomplete": incomplete, "skipped": skipped,
+                    "flagged_students": [],
+                })
+                self._emit_progress()
                 continue
 
             print(
@@ -660,29 +855,56 @@ class RunWorker(CancellableWorker):
                 + (f", {skipped} skipped (already complete)" if skipped else "")
             )
             if self.dry_run:
-                print("🔍 DRY RUN — no grades submitted")
+                print("DRY RUN — no grades submitted")
             else:
                 self._submit_individual(aid, grade_data)
+
+            # Build detailed student info for surface card
+            incomplete_info = []
+            for uid, (g, f) in eval_cache.items():
+                if g == "incomplete" and uid not in skipped_users:
+                    sub = submissions.get(uid, {})
+                    sname = sub.get("user", {}).get("name", f"Student {uid}")
+                    incomplete_info.append({"name": sname, "flags": f})
+
+            self.surface.emit("grading", {
+                "assignment": aname,
+                "complete": complete,
+                "incomplete": incomplete,
+                "skipped": skipped,
+                "incomplete_students": incomplete_info[:8],
+                "flagged_students": [],
+            })
 
             # Persist grading results to RunStore
             self._persist_ci_results(
                 ci, aid, aname, submissions, all_subs, students,
                 grade_data, eval_cache, skipped_users,
                 complete, incomplete, skipped,
+                short_sub_results,
             )
+            self._emit_progress()
+
+    @staticmethod
+    def _has_short_flag(flags: list) -> bool:
+        """Return True if CI evaluation flags indicate a short-text submission."""
+        return any("short" in f.lower() or "below" in f.lower() for f in flags)
 
     def _persist_ci_results(
         self, ci, aid, aname, submissions, all_subs, students,
         grade_data, eval_cache, skipped_users,
         complete, incomplete, skipped,
+        short_sub_results: dict = None,
     ) -> None:
         """Best-effort save of CI grading results to RunStore."""
         try:
             from automation.run_store import RunStore
             store = RunStore()
 
-            # Save per-student results (graded + skipped)
-            all_user_ids = list(grade_data.keys()) + skipped_users
+            # Save per-student results (graded + skipped + SSR pending)
+            # eval_cache contains ALL processed students; grade_data may
+            # exclude SSR-pending students, so use eval_cache as the source
+            all_user_ids = list(eval_cache.keys())
             for user_id in all_user_ids:
                 sub = submissions.get(user_id, {})
                 user_info = sub.get("user", {})
@@ -712,6 +934,7 @@ class RunWorker(CancellableWorker):
                 else:
                     reason = "Incomplete submission"
 
+                ssr = (short_sub_results or {}).get(user_id)
                 store.save_grading_result({
                     "student_id": str(user_id),
                     "assignment_id": str(aid),
@@ -731,6 +954,7 @@ class RunWorker(CancellableWorker):
                     "grading_tool": "ci",
                     "min_word_count": self.min_word_count,
                     "was_skipped": was_skipped,
+                    "short_sub_review": json.dumps(ssr.model_dump()) if ssr else None,
                 })
 
             # Save run-level metadata
@@ -761,19 +985,27 @@ class RunWorker(CancellableWorker):
         """Grade selected discussion assignments using the Discussion Forum script."""
         df = self._load_module("Autograder_Discussion_Forum_v1-3.py")
 
-        print(f"📚 {self.course_name}")
+        self.surface.emit("stage", {"text": f"Discussion Grading — {self.course_name}"})
+        print(f"{self.course_name}")
         students = df.get_active_students(self.course_id)
         if not students:
-            print("❌ No active students found.")
+            print("No active students found.")
             return
-
-        # Switch to per-student progress tracking for smooth progress bar
-        self._progress_total = len(students) * len(self.selected_assignments)
-        self._progress_done = 0
-        self.progress.emit(0, max(1, self._progress_total))
 
         grading_type_str = "pass_fail" if self.grading_type == "complete_incomplete" else "points"
         grading_criteria = {"complete": {"total_words": self.post_min_words, "min_replies": 0}}
+
+        # Detect LLM backend once before the assignment loop
+        _short_sub_backend = None
+        if self.run_short_sub_review:
+            try:
+                from insights.short_sub_reviewer import review_short_submission
+                from insights.llm_backend import auto_detect_backend as _adb
+                _short_sub_backend = _adb(tier="lightweight")
+                if not _short_sub_backend:
+                    print("   Short Sub Review: no LLM backend available — skipping")
+            except ImportError:
+                pass
 
         for assignment in self.selected_assignments:
             if self.is_cancelled():
@@ -827,14 +1059,18 @@ class RunWorker(CancellableWorker):
             eval_cache = {}
             # Track skipped students for RunStore persistence
             skipped_users = []
+            # Track short sub review results: {user_id: ShortSubReview}
+            short_sub_results = {}
+            # user_ids credited by SSR but not auto-posting (queued for teacher review)
+            _ssr_pending = set()
             complete = incomplete = skipped = 0
             student_ids = {s.get("user_id") for s in students}
+            review_guidance = self.mode_settings.get("short_sub_guidance", "")
+            assignment_desc = assignment.get("description", "")
             for s in students:
                 user_id = s.get("user_id")
                 if not user_id or user_id not in student_ids:
                     continue
-                self._progress_done += 1
-                self.progress.emit(self._progress_done, self._progress_total)
                 posts = student_posts.get(user_id)
                 if not posts:
                     continue  # no posts — leave ungraded
@@ -855,24 +1091,85 @@ class RunWorker(CancellableWorker):
                 else:
                     max_pts = assignment.get("points_possible") or 10
                     grade = str(max_pts) if status not in ("incomplete", "F") else "0"
+                # ── Short Submission Review (inline) ──────────────────
+                is_incomplete = grade == "incomplete" or (grading_type_str != "pass_fail" and grade == "0")
+                if (self.run_short_sub_review
+                        and _short_sub_backend
+                        and is_incomplete
+                        and self._has_short_flag(flags)):
+                    combined = " ".join(posts)
+                    wc = len(combined.split()) if combined else 0
+                    if wc > 0:
+                        student_name = s.get("user", {}).get("name", "")
+                        thread_ctx = (
+                            {"parent_post": assignment_desc[:500],
+                             "sibling_replies": [],
+                             "reviewed_reply_index": -1}
+                            if assignment_desc else None
+                        )
+                        ssr = review_short_submission(
+                            student_name=student_name,
+                            submission_text=combined,
+                            word_count=wc,
+                            min_word_count=self.post_min_words,
+                            assignment_prompt=assignment_desc,
+                            review_guidance=review_guidance,
+                            thread_context=thread_ctx,
+                            backend=_short_sub_backend,
+                        )
+                        if ssr:
+                            short_sub_results[user_id] = ssr
+                            if ssr.verdict == "CREDIT":
+                                grade = "complete" if grading_type_str == "pass_fail" else str(max_pts)
+                                flags = list(flags) + [
+                                    f"Short Sub Review: CREDIT — {ssr.rationale}"
+                                ]
+                                if self.short_sub_auto_post and ssr.confidence >= 0.7:
+                                    pass  # will be added to grade_data below
+                                else:
+                                    _ssr_pending.add(user_id)
+                                    self._ssr_accumulated_reviews[f"{aid}:{user_id}"] = {
+                                        "student_name": student_name,
+                                        "submission_text": combined,
+                                        "assignment_id": aid,
+                                        "assignment_name": aname,
+                                        "course_id": self.course_id,
+                                        "course_name": self.course_name,
+                                        "user_id": user_id,
+                                        "review": ssr.model_dump(),
+                                    }
+                            else:
+                                flags = list(flags) + [
+                                    f"Short Sub Review: TEACHER_REVIEW — {ssr.rationale}"
+                                ]
+                # ─────────────────────────────────────────────────────
                 eval_cache[user_id] = (grade, flags, _wc, _pc, _avg)
                 if grade in ("complete",) or (grading_type_str != "pass_fail" and grade != "0"):
                     complete += 1
                 else:
                     incomplete += 1
-                grade_data[user_id] = grade
+                # Only add to grade_data if not queued for teacher review
+                if user_id not in _ssr_pending:
+                    grade_data[user_id] = grade
 
             if not grade_data:
-                msg = "   ⚠️  No students to grade"
+                msg = f"No students to grade"
                 if skipped:
                     msg += f" ({skipped} already graded)"
                 print(msg)
-                # Still persist skipped students to RunStore
                 self._persist_df_results(
                     aid, aname, student_posts, students,
                     grade_data, eval_cache, skipped_users,
                     complete, incomplete, skipped,
+                    short_sub_results,
                 )
+                self.surface.emit("grading", {
+                    "assignment": aname, "complete": complete,
+                    "incomplete": incomplete, "skipped": skipped,
+                    "is_discussion": True, "incomplete_students": [],
+                    "flagged_students": [],
+                })
+                self._emit_progress()
                 continue
 
             print(
@@ -880,29 +1177,52 @@ class RunWorker(CancellableWorker):
                 + (f", {skipped} skipped (already graded)" if skipped else "")
             )
             if self.dry_run:
-                print("   🔍 DRY RUN — no grades submitted")
+                print("DRY RUN — no grades submitted")
             else:
                 self._submit_individual(aid, grade_data)
 
-            # Persist grading results to RunStore
+            # Build detailed student info for surface card
+            student_lookup = {s.get("user_id"): s for s in students}
+            incomplete_info = []
+            for uid, (g, f, *rest) in eval_cache.items():
+                if g in ("incomplete", "0") and uid not in skipped_users:
+                    sname = student_lookup.get(uid, {}).get(
+                        "user", {}).get("name", f"Student {uid}")
+                    incomplete_info.append({"name": sname, "flags": f})
+
+            self.surface.emit("grading", {
+                "assignment": aname,
+                "complete": complete,
+                "incomplete": incomplete,
+                "skipped": skipped,
+                "is_discussion": True,
+                "incomplete_students": incomplete_info[:8],
+                "flagged_students": [],
+            })
+
             self._persist_df_results(
                 aid, aname, student_posts, students,
                 grade_data, eval_cache, skipped_users,
                 complete, incomplete, skipped,
+                short_sub_results,
             )
+            self._emit_progress()
 
     def _persist_df_results(
         self, aid, aname, student_posts, students,
         grade_data, eval_cache, skipped_users,
         complete, incomplete, skipped,
+        short_sub_results: dict = None,
     ) -> None:
         """Best-effort save of DF grading results to RunStore."""
         try:
             from automation.run_store import RunStore
             store = RunStore()
 
-            # Save per-student results (graded + skipped)
-            all_user_ids = list(grade_data.keys()) + skipped_users
+            # Save per-student results (graded + skipped + SSR pending)
+            # eval_cache contains ALL processed students; grade_data may
+            # exclude SSR-pending students, so use eval_cache as the source
+            all_user_ids = list(eval_cache.keys())
             for user_id in all_user_ids:
                 # Find student name from enrollment list
                 student_name = f"User {user_id}"
@@ -932,6 +1252,7 @@ class RunWorker(CancellableWorker):
                 else:
                     reason = "Incomplete submission"
 
+                ssr = (short_sub_results or {}).get(user_id)
                 store.save_grading_result({
                     "student_id": str(user_id),
                     "assignment_id": str(aid),
@@ -954,6 +1275,7 @@ class RunWorker(CancellableWorker):
                     "post_count": post_count,
                     "reply_count": max(0, post_count - 1) if post_count > 0 else 0,
                     "avg_words_per_post": avg_words,
+                    "short_sub_review": json.dumps(ssr.model_dump()) if ssr else None,
                 })
 
             # Save run-level metadata
@@ -984,15 +1306,16 @@ class RunWorker(CancellableWorker):
         """Run the Academic Integrity Checker on selected assignments."""
         aic = self._load_aic_module()
 
-        settings   = self.mode_settings or {}
-        aic_config = settings.get("aic_config")
-        aic_mode   = (aic_config or {}).get("aic_mode") or settings.get("aic_mode", "auto")
+        settings    = self.mode_settings or {}
+        global_aic  = settings.get("aic_config")
+        global_mode = (global_aic or {}).get("aic_mode") or settings.get("aic_mode", "auto")
 
+        self.surface.emit("stage", {"text": "Academic Integrity Check"})
         print(f"\n{'=' * 60}")
-        print("🔍 Academic Integrity Check")
+        print("Academic Integrity Check")
         print(f"{'=' * 60}")
-        if aic_mode and aic_mode != "auto":
-            print(f"   Assignment mode: {aic_mode}")
+        if global_mode and global_mode != "auto":
+            print(f"   Assignment mode: {global_mode}")
 
         for assignment in self.selected_assignments:
             if self.is_cancelled():
@@ -1002,7 +1325,11 @@ class RunWorker(CancellableWorker):
             if not aid:
                 continue
 
-            print(f"\n📋 {aname}")
+            print(f"\n{aname}")
+
+            # Per-group template override for AIC config
+            aic_config = self._get_override(assignment, "aic_config", global_aic)
+            aic_mode = (aic_config or {}).get("aic_mode") or global_mode
 
             # AIC works on text-entry, file uploads (.txt/.docx/.pdf), and discussions.
             # Skip only non-text types (URL-only, on_paper, etc.).
@@ -1010,27 +1337,127 @@ class RunWorker(CancellableWorker):
             _analyzable = {"online_text_entry", "online_upload", "discussion_topic"}
             if not any(t in _analyzable for t in sub_types):
                 type_str = ", ".join(sub_types) if sub_types else "none"
-                print(f"⚠️  AIC skipped — no analyzable text content (type: {type_str})")
+                print(f"AIC skipped — no analyzable text (type: {type_str})")
+                self._emit_progress()
                 continue
 
             if self.dry_run:
-                print(f"🔍 DRY RUN: Would run AIC on assignment {aid}")
+                print(f"DRY RUN: Would run AIC on assignment {aid}")
+                self._emit_progress()
             else:
-                # Phase 9: pass full aic_config when available; fall back to bare mode name
-                if aic_config:
-                    results, _ = aic.analyze_assignment(
-                        self.course_id, aid, aic_config=aic_config,
-                        generate_report=False,
-                    )
-                elif aic_mode and aic_mode != "auto":
-                    results, _ = aic.analyze_assignment(
-                        self.course_id, aid, assignment_type=aic_mode,
-                        generate_report=False,
-                    )
+                # Use cached preprocessed submissions if available (from C/I phase)
+                cached = self._submissions_cache.get(aid)
+                if cached is not None:
+                    pre_subs = list(cached.values())
                 else:
-                    results, _ = aic.analyze_assignment(
-                        self.course_id, aid, generate_report=False,
-                    )
+                    # Not in cache (AIC-only run, or discussion).
+                    # Fetch and preprocess now so AIC sees translated text.
+                    try:
+                        _aic_mod = aic
+                        raw_subs = _aic_mod.get_submissions(self.course_id, aid)
+                        if raw_subs:
+                            subs_by_uid = {s.get("user_id"): s for s in raw_subs}
+                            self._preprocess_for_assignment(aid, subs_by_uid)
+                            self._submissions_cache[aid] = subs_by_uid
+                            pre_subs = list(subs_by_uid.values())
+                        else:
+                            pre_subs = None
+                    except Exception:
+                        pre_subs = None
+
+                # Phase 9: pass full aic_config when available; fall back to bare mode name
+                aic_kwargs = {"generate_report": False}
+                if aic_config:
+                    aic_kwargs["aic_config"] = aic_config
+                elif aic_mode and aic_mode != "auto":
+                    aic_kwargs["assignment_type"] = aic_mode
+                if pre_subs is not None:
+                    aic_kwargs["submissions"] = pre_subs
+
+                results, _ = aic.analyze_assignment(
+                    self.course_id, aid, **aic_kwargs,
+                )
+
+                # Surface card: AIC summary with highlights
+                if results:
+                    elevated = [r for r in results
+                                if getattr(r, "concern_level", "") in ("high", "elevated")]
+                    low = [r for r in results
+                           if getattr(r, "concern_level", "") == "low"]
+                    # Build highlights: top markers triggered across cohort
+                    from collections import Counter
+                    all_markers = Counter()
+                    for r in results:
+                        for marker, cnt in getattr(r, "marker_counts", {}).items():
+                            if cnt > 0:
+                                all_markers[marker] += 1  # count students, not instances
+                    top_markers = [f"{name} ({cnt})"
+                                   for name, cnt in all_markers.most_common(4)]
+                    self.surface.emit("aic", {
+                        "assignment": aname,
+                        "analyzed": len(results),
+                        "elevated": len(elevated),
+                        "low": len(low),
+                        "highlights": top_markers,
+                        "students": [
+                            {"name": getattr(r, "student_name", ""),
+                             "concern": getattr(r, "concern_level", ""),
+                             "smoking_gun": getattr(r, "smoking_gun", False)}
+                            for r in elevated[:5]
+                        ],
+                    })
+                self._emit_progress()
+
+    def _run_insights(self) -> None:
+        """Run Insights Engine on each selected assignment after grading."""
+        try:
+            from insights.engine import InsightsEngine
+        except ImportError as e:
+            print(f"\nInsights skipped — import failed: {e}")
+            return
+
+        print(f"\n{'=' * 60}")
+        print("Generating Class Insights")
+        print(f"{'=' * 60}")
+
+        self.surface.emit("stage", {"text": "Generating Class Insights"})
+
+        engine = InsightsEngine(api=self._api)
+
+        _surface = self.surface  # capture for closures
+
+        for assignment in self.selected_assignments:
+            if self.is_cancelled():
+                break
+            aid = assignment.get("id")
+            aname = assignment.get("name", f"Assignment {aid}")
+            if not aid:
+                continue
+
+            is_disc = "discussion_topic" in (assignment.get("submission_types") or [])
+
+            print(f"\n{aname}")
+
+            def _result(result_type, data):
+                _surface.emit(result_type, data)
+
+            try:
+                run_id = engine.run_analysis(
+                    course_id=self.course_id,
+                    course_name=self.course_name,
+                    assignment_id=aid,
+                    assignment_name=aname,
+                    is_discussion=is_disc,
+                    progress_callback=lambda msg: print(f"   {msg}"),
+                    result_callback=_result,
+                )
+                if run_id:
+                    print(f"   Insights complete (run {run_id})")
+                else:
+                    print(f"   No insights generated")
+            except Exception as e:
+                print(f"   Insights failed: {e}")
+            self._emit_progress()
 
 
 # ---------------------------------------------------------------------------
@@ -1423,6 +1850,7 @@ class DemoRunWorker(QThread):
     log_line = Signal(str)
     progress = Signal(int, int)   # (completed, total)
     finished = Signal(bool, str)  # (success, summary_message)
+    surface  = Signal(str, dict)  # (card_type, data) — matches RunWorker
 
     def __init__(self, selected_items: list, parent=None):
         super().__init__(parent)
@@ -1838,3 +2266,163 @@ class BatchInsightsWorker(CancellableWorker):
         except Exception as exc:
             log.exception("BatchInsightsWorker failed: %s", exc)
             self.error.emit(str(exc))
+
+
+# ---------------------------------------------------------------------------
+# Resume workers for interrupted runs
+# ---------------------------------------------------------------------------
+
+class RerunWorker(CancellableWorker):
+    """Resume a partial run from themes/outliers/synthesis stage.
+
+    Uses engine.run_partial() to pick up where the pipeline stopped.
+    """
+
+    progress_update = Signal(str)
+    analysis_complete = Signal(str)
+
+    def __init__(
+        self,
+        store,
+        *,
+        run_id: str,
+        start_stage: str,
+        settings: Optional[dict] = None,
+        parent=None,
+    ):
+        super().__init__(api=None, parent=parent)
+        self._store = store
+        self._run_id = run_id
+        self._start_stage = start_stage
+        self._settings = settings or {}
+
+    def run(self) -> None:
+        try:
+            from insights.engine import InsightsEngine
+
+            engine = InsightsEngine(
+                store=self._store,
+                settings=self._settings,
+            )
+
+            def _progress(msg: str) -> None:
+                self.progress_update.emit(msg)
+                if self.is_cancelled():
+                    engine.cancel()
+
+            result = engine.run_partial(
+                run_id=self._run_id,
+                start_stage=self._start_stage,
+                progress_callback=_progress,
+            )
+
+            if result:
+                self.analysis_complete.emit(self._run_id)
+            elif not self.is_cancelled():
+                self.error.emit("Resume returned no results.")
+        except Exception as exc:
+            log.exception("RerunWorker failed: %s", exc)
+            self.error.emit(str(exc))
+
+
+class ResumeInsightsWorker(CancellableWorker):
+    """Resume an interrupted run from coding or concerns stage.
+
+    Re-runs the full pipeline but skips already-coded students
+    and already-completed stages.
+    """
+
+    progress_update = Signal(str)
+    result_ready = Signal(str, dict)
+    analysis_complete = Signal(str)
+
+    def __init__(
+        self,
+        api,
+        *,
+        store=None,
+        run_id: str,
+        settings: Optional[dict] = None,
+        parent=None,
+    ):
+        super().__init__(api, parent)
+        self._store = store
+        self._run_id = run_id
+        self._settings = settings or {}
+
+    def run(self) -> None:
+        try:
+            from insights.engine import InsightsEngine
+
+            engine = InsightsEngine(
+                api=self._api,
+                store=self._store,
+                settings=self._settings,
+            )
+
+            def _progress(msg: str) -> None:
+                self.progress_update.emit(msg)
+                if self.is_cancelled():
+                    engine.cancel()
+
+            def _result(result_type: str, data: dict) -> None:
+                self.result_ready.emit(result_type, data)
+
+            result = engine.resume_run(
+                run_id=self._run_id,
+                progress_callback=_progress,
+                result_callback=_result,
+            )
+
+            if result:
+                self.analysis_complete.emit(self._run_id)
+            elif not self.is_cancelled():
+                self.error.emit("Resume returned no results.")
+        except Exception as exc:
+            log.exception("ResumeInsightsWorker failed: %s", exc)
+            self.error.emit(str(exc))
+
+
+# ---------------------------------------------------------------------------
+# PostCanvasCommentWorker
+# ---------------------------------------------------------------------------
+
+class PostCanvasCommentWorker(QThread):
+    """Post a text comment on a student's Canvas submission."""
+
+    comment_result = Signal(bool, str)  # (ok, message)
+
+    def __init__(self, api, course_id: str, assignment_id: str,
+                 student_id: str, text: str, parent=None):
+        super().__init__(parent)
+        self._api = api
+        self._course_id = course_id
+        self._assignment_id = assignment_id
+        self._student_id = student_id
+        self._text = text
+
+    def run(self):
+        try:
+            import requests as _requests
+            if not self._api or not self._api.base_url:
+                self.comment_result.emit(False, "Canvas API not configured")
+                return
+            url = (
+                f"{self._api.base_url.rstrip('/')}/api/v1"
+                f"/courses/{self._course_id}"
+                f"/assignments/{self._assignment_id}"
+                f"/submissions/{self._student_id}"
+            )
+            resp = _requests.put(
+                url,
+                headers=self._api.headers,
+                json={"comment": {"text_comment": self._text}},
+                timeout=30,
+            )
+            if resp.status_code in (200, 201):
+                self.comment_result.emit(True, "")
+            else:
+                self.comment_result.emit(False, f"HTTP {resp.status_code}")
+        except Exception as exc:
+            log.exception("PostCanvasCommentWorker failed: %s", exc)
+            self.comment_result.emit(False, str(exc))

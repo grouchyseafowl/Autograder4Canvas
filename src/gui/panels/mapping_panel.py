@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal
 
 from gui.styles import (
+    px,
     SPACING_SM, SPACING_MD,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM, PHOSPHOR_GLOW,
     ROSE_ACCENT, AMBER_BTN, TERM_GREEN, WARN_PINK,
@@ -21,7 +22,9 @@ from gui.styles import (
     BG_VOID, BG_CARD, BG_INSET, BG_PANEL,
     PANE_BG_GRADIENT,
     make_secondary_button,
+    combo_qss,
 )
+from gui.widgets.crt_combo import CRTComboBox
 
 # ---------------------------------------------------------------------------
 # Stylesheets
@@ -43,32 +46,14 @@ _SCROLL_QSS = f"""
 
 _SECTION_HDR_QSS = (
     f"QPushButton {{"
-    f"  color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: bold;"
+    f"  color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
     f"  letter-spacing: 1px; background: transparent; border: none;"
     f"  text-align: left; padding: 8px 8px 3px 8px;"
     f"}}"
     f"QPushButton:hover {{ color: {PHOSPHOR_HOT}; }}"
 )
 
-_COMBO_QSS = f"""
-    QComboBox {{
-        background: {BG_INSET};
-        border: 1px solid {BORDER_DARK};
-        border-radius: 3px;
-        padding: 2px 6px;
-        color: {PHOSPHOR_MID};
-        font-size: 11px;
-        min-height: 20px;
-    }}
-    QComboBox:focus {{ border-color: {BORDER_AMBER}; }}
-    QComboBox QAbstractItemView {{
-        background: {BG_CARD};
-        border: 1px solid {BORDER_DARK};
-        color: {PHOSPHOR_MID};
-        selection-background-color: #2C1C08;
-        selection-color: {PHOSPHOR_HOT};
-    }}
-"""
+_COMBO_QSS = combo_qss()
 
 _UNASSIGNED = "— Skip (do not grade) —"
 
@@ -103,7 +88,7 @@ class _GroupMappingRow(QWidget):
         # Group name — fixed width so all rows' combos align
         name_lbl = QLabel(self._group_name)
         name_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 11px;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(11)}px;"
             f" background: transparent; border: none;"
         )
         name_lbl.setFixedWidth(150)
@@ -111,8 +96,7 @@ class _GroupMappingRow(QWidget):
         row.addWidget(name_lbl, 0)
 
         # Template dropdown
-        self._combo = QComboBox()
-        self._combo.setStyleSheet(_COMBO_QSS)
+        self._combo = CRTComboBox()
         self._combo.setFixedHeight(22)
         self._combo.setMinimumWidth(130)
         self._combo.setMaximumWidth(220)
@@ -148,13 +132,13 @@ class _GroupMappingRow(QWidget):
         if assigned:
             self._status.setText("✓")
             self._status.setStyleSheet(
-                f"color: {TERM_GREEN}; font-size: 12px;"
+                f"color: {TERM_GREEN}; font-size: {px(12)}px;"
                 f" background: transparent; border: none;"
             )
         else:
             self._status.setText("—")
             self._status.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 13px;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(13)}px;"
                 f" background: transparent; border: none;"
             )
 
@@ -248,7 +232,7 @@ class _CourseMappingSection(QWidget):
         if not groups:
             empty_lbl = QLabel("No assignment groups found in Canvas")
             empty_lbl.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 11px; font-style: italic;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; font-style: italic;"
                 f" background: transparent; border: none; padding: 6px 12px;"
             )
             self._body_lo.addWidget(empty_lbl)
@@ -336,7 +320,7 @@ class MappingPanel(QFrame):
         hdr_row = QHBoxLayout()
         hdr_lbl = QLabel("ASSIGNMENT MAPPINGS")
         hdr_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: bold;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
             f" letter-spacing: 1px; background: transparent; border: none;"
         )
         hdr_row.addWidget(hdr_lbl)
@@ -351,7 +335,7 @@ class MappingPanel(QFrame):
         # ── Status line ───────────────────────────────────────────────
         self._status_lbl = QLabel("Select courses to load assignment mappings.")
         self._status_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
             f" background: transparent; border: none;"
         )
         lo.addWidget(self._status_lbl)
@@ -377,7 +361,7 @@ class MappingPanel(QFrame):
         # ── Hint ──────────────────────────────────────────────────────
         hint = QLabel("Auto-matched by keyword  ·  — = will be skipped")
         hint.setStyleSheet(
-            f"color: {PHOSPHOR_GLOW}; font-size: 10px;"
+            f"color: {PHOSPHOR_GLOW}; font-size: {px(10)}px;"
             f" background: transparent; border: none; padding-top: 4px;"
         )
         lo.addWidget(hint)
@@ -583,13 +567,13 @@ class MappingPanel(QFrame):
                 "Select courses to load assignment mappings."
             )
             self._status_lbl.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
                 f" background: transparent; border: none;"
             )
         elif total_groups == 0:
             self._status_lbl.setText("Loading groups…")
             self._status_lbl.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
                 f" background: transparent; border: none;"
             )
         elif unmatched == 0:
@@ -597,7 +581,7 @@ class MappingPanel(QFrame):
                 f"✓  All {total_groups} groups mapped across {n_courses} course(s)"
             )
             self._status_lbl.setStyleSheet(
-                f"color: {TERM_GREEN}; font-size: 10px; font-weight: 600;"
+                f"color: {TERM_GREEN}; font-size: {px(10)}px; font-weight: 600;"
                 f" background: transparent; border: none;"
             )
         else:
@@ -606,7 +590,7 @@ class MappingPanel(QFrame):
                 f"{unmatched} skipped"
             )
             self._status_lbl.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
                 f" background: transparent; border: none;"
             )
 

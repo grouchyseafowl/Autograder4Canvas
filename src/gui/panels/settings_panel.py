@@ -10,11 +10,12 @@ Layout:
 """
 from PySide6.QtWidgets import (
     QWidget, QScrollArea, QVBoxLayout, QHBoxLayout,
-    QLabel, QLineEdit, QPushButton,
+    QLabel, QLineEdit, QPushButton, QProgressBar,
     QComboBox, QSpinBox, QSizePolicy,
 )
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import Signal, Qt, QTimer
 
+from gui.widgets.crt_combo import CRTComboBox
 from gui.widgets.phosphor_chip import PhosphorChip
 from gui.widgets.switch_toggle import SwitchToggle
 
@@ -43,6 +44,7 @@ _FIRST_GEN_LEVEL_OPTIONS = [
 ]
 
 from gui.styles import (
+    px,
     SPACING_SM, SPACING_MD, SPACING_LG,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM,
     BG_VOID, BG_INSET, BORDER_DARK,
@@ -59,7 +61,7 @@ from gui.styles import (
 def _field_label(text: str) -> QLabel:
     lbl = QLabel(text)
     lbl.setStyleSheet(
-        f"color: {PHOSPHOR_DIM}; font-size: 11px; font-weight: 500;"
+        f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; font-weight: 500;"
         f" letter-spacing: 0.8px; background: transparent; border: none;"
         f" text-transform: uppercase;"
     )
@@ -78,8 +80,13 @@ class SettingsPanel(QWidget):
     def __init__(self, api=None, parent=None):
         super().__init__(parent)
         self._api = api
+        self._autosave_timer = QTimer(self)
+        self._autosave_timer.setSingleShot(True)
+        self._autosave_timer.setInterval(800)  # debounce 800ms
+        self._autosave_timer.timeout.connect(self._on_save)
         self._setup_ui()
         self._load_current_settings()
+        self._connect_autosave()
 
     # ------------------------------------------------------------------
     # UI construction
@@ -107,12 +114,12 @@ class SettingsPanel(QWidget):
         # Page header
         title = QLabel("SETTINGS")
         title.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(16)}px; font-weight: bold;"
             f" background: transparent; border: none; letter-spacing: 2px;"
         )
         sub = QLabel("Configure Canvas connection and data retention.")
         sub.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
             f" background: transparent; border: none;"
         )
         sub.setWordWrap(True)
@@ -176,7 +183,7 @@ class SettingsPanel(QWidget):
         footer_lo.setContentsMargins(SPACING_LG, SPACING_SM, SPACING_LG, SPACING_SM)
         self._save_status = QLabel("")
         self._save_status.setStyleSheet(
-            f"font-size: 11px; background: transparent; border: none;"
+            f"font-size: {px(11)}px; background: transparent; border: none;"
         )
         footer_lo.addStretch()
         footer_lo.addWidget(self._save_status)
@@ -194,7 +201,7 @@ class SettingsPanel(QWidget):
         # Profile first
         lo.addWidget(_field_label("Institution Profile"))
         profile_row = QHBoxLayout()
-        self._profile_combo = QComboBox()
+        self._profile_combo = CRTComboBox()
         self._profile_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self._profile_combo.currentIndexChanged.connect(self._on_profile_switched)
         profile_row.addWidget(self._profile_combo)
@@ -225,7 +232,7 @@ class SettingsPanel(QWidget):
         lo.addLayout(token_row)
 
         self._test_status = QLabel("")
-        self._test_status.setStyleSheet("font-size: 12px; padding: 2px 0; background: transparent;")
+        self._test_status.setStyleSheet(f"font-size: {px(12)}px; padding: 2px 0; background: transparent;")
         lo.addWidget(self._test_status)
 
         lo.addWidget(make_h_rule())
@@ -235,13 +242,13 @@ class SettingsPanel(QWidget):
             "Weights adjust to your school's specific student population."
         )
         aic_note.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; background: transparent; padding: 2px 0;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent; padding: 2px 0;"
         )
         aic_note.setWordWrap(True)
         lo.addWidget(aic_note)
 
         lo.addWidget(_field_label("Education Level"))
-        self._edu_level_combo = QComboBox()
+        self._edu_level_combo = CRTComboBox()
         self._edu_level_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
         self._edu_level_combo.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         for pid, plabel in _EDU_LEVEL_OPTIONS:
@@ -258,7 +265,7 @@ class SettingsPanel(QWidget):
         esl_col = QVBoxLayout()
         esl_col.setSpacing(2)
         esl_col.addWidget(_field_label("ESL Population"))
-        self._pop_esl_combo = QComboBox()
+        self._pop_esl_combo = CRTComboBox()
         self._pop_esl_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
         self._pop_esl_combo.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         for pid, plabel in _ESL_LEVEL_OPTIONS:
@@ -269,7 +276,7 @@ class SettingsPanel(QWidget):
         fg_col = QVBoxLayout()
         fg_col.setSpacing(2)
         fg_col.addWidget(_field_label("First-Gen Population"))
-        self._pop_first_gen_combo = QComboBox()
+        self._pop_first_gen_combo = CRTComboBox()
         self._pop_first_gen_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
         self._pop_first_gen_combo.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         for pid, plabel in _FIRST_GEN_LEVEL_OPTIONS:
@@ -308,21 +315,43 @@ class SettingsPanel(QWidget):
         left.setSpacing(SPACING_SM)
 
         left.addWidget(_field_label("Local Model Backend"))
-        self._llm_backend_combo = QComboBox()
-        self._llm_backend_combo.addItem("Ollama (recommended)", "ollama")
-        self._llm_backend_combo.addItem("MLX (Apple Silicon)", "mlx")
+        self._llm_backend_combo = CRTComboBox()
+        from gui.dialogs.insights_setup_dialog import _is_apple_silicon
+        if _is_apple_silicon():
+            self._llm_backend_combo.addItem("MLX (Apple Silicon — recommended)", "mlx")
+            self._llm_backend_combo.addItem("Ollama", "ollama")
+        else:
+            self._llm_backend_combo.addItem("Ollama", "ollama")
         self._llm_backend_combo.currentIndexChanged.connect(
             self._on_llm_backend_changed
         )
         left.addWidget(self._llm_backend_combo)
 
-        left.addWidget(_field_label("Ollama Model"))
+        # -- MLX model fields (shown when MLX selected) --
+        self._mlx_text_label = _field_label("MLX Text Model")
+        left.addWidget(self._mlx_text_label)
+        self._mlx_text_edit = QLineEdit()
+        self._mlx_text_edit.setPlaceholderText("mlx-community/Qwen2.5-7B-Instruct-4bit")
+        self._mlx_text_edit.setText("mlx-community/Qwen2.5-7B-Instruct-4bit")
+        left.addWidget(self._mlx_text_edit)
+
+        self._mlx_vision_label = _field_label("MLX Vision Model")
+        left.addWidget(self._mlx_vision_label)
+        self._mlx_vision_edit = QLineEdit()
+        self._mlx_vision_edit.setPlaceholderText("mlx-community/Qwen2.5-VL-3B-Instruct-4bit")
+        self._mlx_vision_edit.setText("mlx-community/Qwen2.5-VL-3B-Instruct-4bit")
+        left.addWidget(self._mlx_vision_edit)
+
+        # -- Ollama model fields (shown when Ollama selected) --
+        self._ollama_model_label = _field_label("Ollama Text Model")
+        left.addWidget(self._ollama_model_label)
         self._llm_model_edit = QLineEdit()
         self._llm_model_edit.setPlaceholderText("llama3.1:8b")
         self._llm_model_edit.setText("llama3.1:8b")
         left.addWidget(self._llm_model_edit)
 
-        left.addWidget(_field_label("Ollama URL"))
+        self._ollama_url_label = _field_label("Ollama URL")
+        left.addWidget(self._ollama_url_label)
         self._ollama_url_edit = QLineEdit()
         self._ollama_url_edit.setPlaceholderText("http://localhost:11434")
         self._ollama_url_edit.setText("http://localhost:11434")
@@ -331,14 +360,23 @@ class SettingsPanel(QWidget):
         # Status check
         self._llm_status = QLabel("")
         self._llm_status.setStyleSheet(
-            f"font-size: 11px; background: transparent; border: none;"
+            f"font-size: {px(11)}px; background: transparent; border: none;"
         )
         left.addWidget(self._llm_status)
 
+        btn_row = QHBoxLayout()
         check_btn = QPushButton("Check Model")
         make_secondary_button(check_btn)
         check_btn.clicked.connect(self._check_llm_status)
-        left.addWidget(check_btn)
+        btn_row.addWidget(check_btn)
+
+        self._install_mlx_btn = QPushButton("Install MLX")
+        make_secondary_button(self._install_mlx_btn)
+        self._install_mlx_btn.setVisible(False)
+        self._install_mlx_btn.clicked.connect(self._install_mlx)
+        btn_row.addWidget(self._install_mlx_btn)
+        btn_row.addStretch()
+        left.addLayout(btn_row)
 
         left.addStretch()
         cols.addLayout(left, stretch=1)
@@ -378,7 +416,7 @@ class SettingsPanel(QWidget):
         )
         self._ferpa_label.setWordWrap(True)
         self._ferpa_label.setStyleSheet(
-            f"color: {STATUS_WARN}; font-size: 11px;"
+            f"color: {STATUS_WARN}; font-size: {px(11)}px;"
             f" background: transparent; border: none; padding: 4px 0;"
         )
         right.addWidget(self._ferpa_label)
@@ -412,7 +450,7 @@ class SettingsPanel(QWidget):
         # Whisper model
         whisper_col = QVBoxLayout()
         whisper_col.addWidget(_field_label("Whisper Model (Audio Transcription)"))
-        self._whisper_combo = QComboBox()
+        self._whisper_combo = CRTComboBox()
         self._whisper_combo.addItem("tiny — fastest, lowest quality", "tiny")
         self._whisper_combo.addItem("base — good balance (recommended)", "base")
         self._whisper_combo.addItem("small — better quality, ~2GB RAM", "small")
@@ -426,12 +464,69 @@ class SettingsPanel(QWidget):
         ))
         bottom.addLayout(whisper_col, stretch=1)
 
+        # Keep Awake
+        awake_col = QVBoxLayout()
+        awake_col.addWidget(_field_label("Overnight Analysis"))
+        self._keep_awake_toggle = SwitchToggle(
+            "Keep awake while analysis runs", wrap_width=220
+        )
+        self._keep_awake_toggle.setChecked(True)
+        awake_col.addWidget(self._keep_awake_toggle)
+        import platform
+        if platform.system() == "Darwin":
+            awake_note = (
+                "Prevents your Mac from sleeping during analysis.\n"
+                "For lid-closed operation: System Settings → Battery\n"
+                "→ Options → 'Prevent sleeping when display is off'\n"
+                "must be enabled, and computer must be plugged in."
+            )
+        elif platform.system() == "Windows":
+            awake_note = (
+                "Disables sleep while analysis runs (AC power).\n"
+                "Normal sleep settings are restored when done."
+            )
+        else:
+            awake_note = (
+                "Prevents system sleep while analysis runs.\n"
+                "Uses systemd-inhibit if available."
+            )
+        awake_col.addWidget(QLabel(awake_note))
+        bottom.addLayout(awake_col, stretch=1)
+
         lo.addLayout(bottom)
+
+        # ── Draft Feedback toggle ──
+        lo.addWidget(make_h_rule())
+        fb_row = QHBoxLayout()
+        fb_row.setSpacing(SPACING_SM)
+        fb_row.addWidget(_field_label("Draft Student Feedback"))
+        self._draft_feedback_toggle = SwitchToggle(
+            "Generate draft feedback for each student", wrap_width=260
+        )
+        fb_row.addWidget(self._draft_feedback_toggle)
+        fb_row.addStretch()
+        lo.addLayout(fb_row)
+        lo.addWidget(QLabel(
+            "When enabled, the insights pipeline drafts personalized feedback\n"
+            "for each student based on your analysis lens. You review and\n"
+            "approve each draft before anything is posted."
+        ))
 
     def _on_llm_backend_changed(self, index: int) -> None:
         is_ollama = self._llm_backend_combo.currentData() == "ollama"
-        self._llm_model_edit.setEnabled(is_ollama)
-        self._ollama_url_edit.setEnabled(is_ollama)
+        is_mlx = not is_ollama
+        # Ollama fields
+        self._ollama_model_label.setVisible(is_ollama)
+        self._llm_model_edit.setVisible(is_ollama)
+        self._ollama_url_label.setVisible(is_ollama)
+        self._ollama_url_edit.setVisible(is_ollama)
+        # MLX fields
+        self._mlx_text_label.setVisible(is_mlx)
+        self._mlx_text_edit.setVisible(is_mlx)
+        self._mlx_vision_label.setVisible(is_mlx)
+        self._mlx_vision_edit.setVisible(is_mlx)
+        self._install_mlx_btn.setVisible(False)
+        self._llm_status.setText("")
 
     def _check_llm_status(self) -> None:
         """Test if the configured LLM backend is reachable."""
@@ -448,7 +543,7 @@ class SettingsPanel(QWidget):
                            for m in models):
                         self._llm_status.setText(f"✓ {model} available")
                         self._llm_status.setStyleSheet(
-                            f"color: {STATUS_OK}; font-size: 11px;"
+                            f"color: {STATUS_OK}; font-size: {px(11)}px;"
                             f" background: transparent; border: none;"
                         )
                     else:
@@ -457,13 +552,13 @@ class SettingsPanel(QWidget):
                             f"✗ {model} not found. Available: {available}"
                         )
                         self._llm_status.setStyleSheet(
-                            f"color: {STATUS_ERR}; font-size: 11px;"
+                            f"color: {STATUS_ERR}; font-size: {px(11)}px;"
                             f" background: transparent; border: none;"
                         )
                 else:
                     self._llm_status.setText("✗ Ollama not responding")
                     self._llm_status.setStyleSheet(
-                        f"color: {STATUS_ERR}; font-size: 11px;"
+                        f"color: {STATUS_ERR}; font-size: {px(11)}px;"
                         f" background: transparent; border: none;"
                     )
             except Exception:
@@ -472,62 +567,206 @@ class SettingsPanel(QWidget):
                     "(Terminal: ollama serve)"
                 )
                 self._llm_status.setStyleSheet(
-                    f"color: {STATUS_ERR}; font-size: 11px;"
+                    f"color: {STATUS_ERR}; font-size: {px(11)}px;"
                     f" background: transparent; border: none;"
                 )
         elif backend == "mlx":
-            try:
-                import mlx_lm  # noqa: F401
+            from gui.dialogs.insights_setup_dialog import _check_mlx
+            if _check_mlx():
                 self._llm_status.setText("✓ MLX available")
                 self._llm_status.setStyleSheet(
-                    f"color: {STATUS_OK}; font-size: 11px;"
+                    f"color: {STATUS_OK}; font-size: {px(11)}px;"
                     f" background: transparent; border: none;"
                 )
-            except ImportError:
+                self._install_mlx_btn.setVisible(False)
+            else:
                 self._llm_status.setText(
-                    "✗ mlx-lm not installed. "
-                    "Terminal: pip install mlx-lm"
+                    "✗ mlx-lm not installed"
                 )
                 self._llm_status.setStyleSheet(
-                    f"color: {STATUS_ERR}; font-size: 11px;"
+                    f"color: {STATUS_ERR}; font-size: {px(11)}px;"
                     f" background: transparent; border: none;"
                 )
+                self._install_mlx_btn.setVisible(True)
+
+    def _install_mlx(self) -> None:
+        """Install mlx-lm in-app using the setup dialog's installer."""
+        from gui.dialogs.insights_setup_dialog import (
+            _InstallerWorker, _is_externally_managed,
+        )
+
+        install_mode = "global"
+        if _is_externally_managed():
+            from PySide6.QtWidgets import QDialog
+            dlg = QDialog(self)
+            dlg.setWindowTitle("Install MLX")
+            dlg.setFixedWidth(480)
+            dlg.setStyleSheet(f"QDialog {{ background: {BG_CARD}; }}")
+            lo = QVBoxLayout(dlg)
+            lo.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
+            lo.setSpacing(SPACING_MD)
+
+            title = QLabel("HOMEBREW PYTHON DETECTED")
+            title.setStyleSheet(
+                f"color: {PHOSPHOR_HOT}; font-size: {px(14)}px;"
+                f" font-weight: bold; letter-spacing: 2px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(title)
+
+            desc = QLabel(
+                "Your Python is managed by Homebrew (PEP 668), which "
+                "restricts direct package installs. Choose where to "
+                "install the MLX framework:"
+            )
+            desc.setWordWrap(True)
+            desc.setStyleSheet(
+                f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(desc)
+
+            lo.addWidget(make_h_rule())
+
+            # Option 1: Global
+            g_title = QLabel("Install Globally")
+            g_title.setStyleSheet(
+                f"color: {PHOSPHOR_HOT}; font-size: {px(12)}px;"
+                f" font-weight: bold; background: transparent; border: none;"
+            )
+            lo.addWidget(g_title)
+            g_desc = QLabel(
+                "Runs: pip install --break-system-packages mlx-lm\n"
+                "Installs alongside your other Python packages."
+            )
+            g_desc.setWordWrap(True)
+            g_desc.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(g_desc)
+
+            lo.addSpacing(SPACING_SM)
+
+            # Option 2: App Venv
+            v_title = QLabel("Install in App Venv")
+            v_title.setStyleSheet(
+                f"color: {PHOSPHOR_HOT}; font-size: {px(12)}px;"
+                f" font-weight: bold; background: transparent; border: none;"
+            )
+            lo.addWidget(v_title)
+            v_desc = QLabel(
+                "Creates an isolated virtual environment at:\n"
+                "~/.autograder4canvas/venv/\n"
+                "Keeps your system Python untouched."
+            )
+            v_desc.setWordWrap(True)
+            v_desc.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(v_desc)
+
+            lo.addWidget(make_h_rule())
+
+            # Buttons: [Install Globally] [Cancel] [Install in App Venv]
+            btn_row = QHBoxLayout()
+            btn_row.setSpacing(SPACING_SM)
+            global_btn = QPushButton("Install Globally")
+            make_run_button(global_btn)
+            cancel_btn = QPushButton("Cancel")
+            make_secondary_button(cancel_btn)
+            venv_btn = QPushButton("Install in App Venv")
+            make_secondary_button(venv_btn)
+            btn_row.addWidget(global_btn)
+            btn_row.addWidget(cancel_btn)
+            btn_row.addWidget(venv_btn)
+            lo.addLayout(btn_row)
+
+            result = {"mode": None}
+            global_btn.clicked.connect(lambda: (result.update(mode="global"), dlg.accept()))
+            venv_btn.clicked.connect(lambda: (result.update(mode="venv"), dlg.accept()))
+            cancel_btn.clicked.connect(dlg.reject)
+
+            if dlg.exec() != QDialog.Accepted or result["mode"] is None:
+                return
+            install_mode = result["mode"]
+
+        self._install_mlx_btn.setEnabled(False)
+        self._install_mlx_btn.setText("Installing…")
+        self._mlx_worker = _InstallerWorker("mlx_install", install_mode)
+        self._mlx_worker.progress.connect(
+            lambda msg: self._llm_status.setText(msg)
+        )
+        self._mlx_worker.finished.connect(self._on_mlx_install_done)
+        self._mlx_worker.start()
+
+    def _on_mlx_install_done(self, success: bool, msg: str) -> None:
+        self._install_mlx_btn.setText("Install MLX")
+        self._install_mlx_btn.setEnabled(True)
+        if success:
+            self._llm_status.setText(f"✓ {msg}")
+            self._llm_status.setStyleSheet(
+                f"color: {STATUS_OK}; font-size: {px(11)}px;"
+                f" background: transparent; border: none;"
+            )
+            self._install_mlx_btn.setVisible(False)
+        else:
+            self._llm_status.setText(f"✗ {msg}")
+            self._llm_status.setStyleSheet(
+                f"color: {STATUS_ERR}; font-size: {px(11)}px;"
+                f" background: transparent; border: none;"
+            )
 
     def _build_retention_section(self, lo: QVBoxLayout) -> None:
         lo.addWidget(make_section_label("Data Retention"))
         lo.addWidget(make_h_rule())
 
         desc = QLabel(
-            "Reports and AIC data are stored internally and exported on demand. "
-            "Auto-delete aged internal data below."
+            "Grading, AIC, and Insights data are stored internally. "
+            "Auto-delete aged records on each app launch."
         )
         desc.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
             f" background: transparent; padding: 2px 0;"
         )
         desc.setWordWrap(True)
         lo.addWidget(desc)
 
-        # Auto-delete master toggle + threshold
+        # Auto-delete master toggle
         self._retention_enabled_cb = SwitchToggle("Auto-delete internal data", wrap_width=160)
         lo.addWidget(self._retention_enabled_cb)
 
-        days_row = QHBoxLayout()
-        days_row.addSpacing(43)   # indent past track width
+        # Threshold: years + days
+        age_row = QHBoxLayout()
+        age_row.addSpacing(43)
         older_lbl = QLabel("older than")
         older_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px; background: transparent;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; background: transparent;"
         )
-        days_row.addWidget(older_lbl)
-        self._retention_days = QSpinBox()
-        self._retention_days.setRange(1, 3650)
-        self._retention_days.setValue(90)
-        self._retention_days.setSuffix(" days")
-        days_row.addWidget(self._retention_days)
-        days_row.addStretch()
-        lo.addLayout(days_row)
+        age_row.addWidget(older_lbl)
 
-        # Category selection chips (which data types to include)
+        self._retention_years = QSpinBox()
+        self._retention_years.setRange(0, 10)
+        self._retention_years.setValue(0)
+        age_row.addWidget(self._retention_years)
+        yr_lbl = QLabel("years")
+        yr_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; background: transparent;")
+        age_row.addWidget(yr_lbl)
+
+        self._retention_days = QSpinBox()
+        self._retention_days.setRange(0, 364)
+        self._retention_days.setValue(180)
+        age_row.addWidget(self._retention_days)
+        days_lbl = QLabel("days")
+        days_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; background: transparent;")
+        age_row.addWidget(days_lbl)
+        age_row.addStretch()
+        lo.addLayout(age_row)
+
+        # Category selection chips
         cats_row = QHBoxLayout()
         cats_row.addSpacing(43)
         self._retention_grading_cb = PhosphorChip("Grading Reports", accent="amber")
@@ -537,8 +776,53 @@ class SettingsPanel(QWidget):
         self._retention_aic_cb = PhosphorChip("AIC Data", accent="amber")
         self._retention_aic_cb.setChecked(True)
         cats_row.addWidget(self._retention_aic_cb)
+        cats_row.addSpacing(6)
+        self._retention_insights_cb = PhosphorChip("Insights Data", accent="amber")
+        self._retention_insights_cb.setChecked(True)
+        cats_row.addWidget(self._retention_insights_cb)
         cats_row.addStretch()
         lo.addLayout(cats_row)
+
+        # Teacher notes — separate toggle + its own timer
+        self._retention_notes_cb = SwitchToggle("Also delete teacher notes", wrap_width=180)
+        self._retention_notes_cb.setChecked(False)
+        lo.addWidget(self._retention_notes_cb)
+
+        self._notes_age_row = QHBoxLayout()
+        self._notes_age_row_widgets = []   # track for enable/disable
+        self._notes_age_row.addSpacing(43)
+        notes_older_lbl = QLabel("notes older than")
+        notes_older_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; background: transparent;")
+        self._notes_age_row.addWidget(notes_older_lbl)
+        self._notes_age_row_widgets.append(notes_older_lbl)
+
+        self._retention_notes_years = QSpinBox()
+        self._retention_notes_years.setRange(0, 10)
+        self._retention_notes_years.setValue(3)
+        self._notes_age_row.addWidget(self._retention_notes_years)
+        self._notes_age_row_widgets.append(self._retention_notes_years)
+        notes_yr_lbl = QLabel("years")
+        notes_yr_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; background: transparent;")
+        self._notes_age_row.addWidget(notes_yr_lbl)
+        self._notes_age_row_widgets.append(notes_yr_lbl)
+
+        self._retention_notes_days = QSpinBox()
+        self._retention_notes_days.setRange(0, 364)
+        self._retention_notes_days.setValue(0)
+        self._notes_age_row.addWidget(self._retention_notes_days)
+        self._notes_age_row_widgets.append(self._retention_notes_days)
+        notes_days_lbl = QLabel("days")
+        notes_days_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; background: transparent;")
+        self._notes_age_row.addWidget(notes_days_lbl)
+        self._notes_age_row_widgets.append(notes_days_lbl)
+        self._notes_age_row.addStretch()
+        lo.addLayout(self._notes_age_row)
+
+        self._retention_notes_cb.toggled.connect(self._on_notes_retention_toggled)
+        self._on_notes_retention_toggled(False)
 
         self._retention_enabled_cb.toggled.connect(self._on_retention_toggled)
         self._on_retention_toggled(self._retention_enabled_cb.isChecked())
@@ -548,7 +832,7 @@ class SettingsPanel(QWidget):
 
         cleanup_row = QHBoxLayout()
         cleanup_row.addStretch()
-        cleanup_btn = QPushButton("⊙  Clean Up Now…")
+        cleanup_btn = QPushButton("Clean Up Now\u2026")
         cleanup_btn.clicked.connect(self._on_run_cleanup)
         make_secondary_button(cleanup_btn)
         cleanup_row.addWidget(cleanup_btn)
@@ -559,7 +843,7 @@ class SettingsPanel(QWidget):
         lo.addWidget(make_h_rule())
 
         lo.addWidget(_field_label("Text Size"))
-        self._text_size_combo = QComboBox()
+        self._text_size_combo = CRTComboBox()
         self._text_size_combo.addItem("Small", 1.0)
         self._text_size_combo.addItem("Default", 1.25)
         self._text_size_combo.addItem("Large", 1.5)
@@ -567,11 +851,60 @@ class SettingsPanel(QWidget):
 
         note = QLabel("Takes effect after saving and restarting.")
         note.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
             f" background: transparent; border: none;"
         )
         note.setWordWrap(True)
         lo.addWidget(note)
+
+        lo.addSpacing(SPACING_SM)
+        lo.addWidget(make_section_label("Warnings"))
+        lo.addWidget(make_h_rule())
+
+        warn_row = QHBoxLayout()
+        warn_lbl = QLabel("Warn when grades will be reinterpreted")
+        warn_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+            f" background: transparent; border: none;"
+        )
+        warn_lbl.setWordWrap(True)
+        self._warn_reinterpret_toggle = SwitchToggle("")
+        warn_row.addWidget(warn_lbl, 1)
+        warn_row.addWidget(self._warn_reinterpret_toggle, 0)
+        lo.addLayout(warn_row)
+
+        lo.addSpacing(SPACING_SM)
+        lo.addWidget(make_section_label("Submission Processing"))
+        lo.addWidget(make_h_rule())
+
+        _pp_qss = (f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+                    f" background: transparent; border: none;")
+
+        def _pp_row(label_text: str) -> tuple:
+            row = QHBoxLayout()
+            lbl = QLabel(label_text)
+            lbl.setStyleSheet(_pp_qss)
+            lbl.setWordWrap(True)
+            toggle = SwitchToggle("")
+            row.addWidget(lbl, 1)
+            row.addWidget(toggle, 0)
+            return row, toggle
+
+        r1, self._pp_translate_toggle = _pp_row("Translate non-English submissions")
+        lo.addLayout(r1)
+        r2, self._pp_transcribe_toggle = _pp_row("Transcribe audio/video submissions")
+        lo.addLayout(r2)
+        r3, self._pp_image_toggle = _pp_row("Transcribe handwritten submissions")
+        lo.addLayout(r3)
+
+        pp_note = QLabel("Requires a local LLM (Ollama or MLX) or cloud API.")
+        pp_note.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+            f" background: transparent; border: none;"
+        )
+        pp_note.setWordWrap(True)
+        lo.addWidget(pp_note)
+
         lo.addStretch()
 
     def _on_open_signal_tuning(self) -> None:
@@ -584,7 +917,20 @@ class SettingsPanel(QWidget):
     # ------------------------------------------------------------------
 
     def _on_retention_toggled(self, enabled: bool) -> None:
+        self._retention_years.setEnabled(enabled)
         self._retention_days.setEnabled(enabled)
+        self._retention_grading_cb.setEnabled(enabled)
+        self._retention_aic_cb.setEnabled(enabled)
+        self._retention_insights_cb.setEnabled(enabled)
+        self._retention_notes_cb.setEnabled(enabled)
+        self._on_notes_retention_toggled(
+            enabled and self._retention_notes_cb.isChecked())
+
+    def _on_notes_retention_toggled(self, enabled: bool) -> None:
+        # Also require master toggle
+        active = enabled and self._retention_enabled_cb.isChecked()
+        for w in self._notes_age_row_widgets:
+            w.setEnabled(active)
 
     def _on_test_connection(self) -> None:
         from automation.canvas_helpers import CanvasAutomationAPI
@@ -642,15 +988,25 @@ class SettingsPanel(QWidget):
                                        s.get("cleanup_mode", "none") != "none")
             self._retention_enabled_cb.setChecked(bool(retention_enabled))
 
+            self._retention_years.setValue(int(s.get("data_retention_years", 0)))
             legacy_days = s.get("cleanup_threshold_days", 180)
             self._retention_days.setValue(int(s.get("data_retention_days", legacy_days)))
 
             self._retention_grading_cb.setChecked(bool(s.get("data_retention_grading", True)))
             self._retention_aic_cb.setChecked(bool(s.get("data_retention_aic", True)))
+            self._retention_insights_cb.setChecked(bool(s.get("data_retention_insights", True)))
+
+            notes_enabled = bool(s.get("data_retention_notes", False))
+            self._retention_notes_cb.setChecked(notes_enabled)
+            self._retention_notes_years.setValue(int(s.get("data_retention_notes_years", 3)))
+            self._retention_notes_days.setValue(int(s.get("data_retention_notes_days", 0)))
+
             self._on_retention_toggled(bool(retention_enabled))
 
             # Insights & AI settings
-            backend = s.get("insights_llm_backend", "ollama")
+            from gui.dialogs.insights_setup_dialog import _is_apple_silicon
+            default_backend = "mlx" if _is_apple_silicon() else "ollama"
+            backend = s.get("insights_llm_backend", default_backend)
             idx = self._llm_backend_combo.findData(backend)
             if idx >= 0:
                 self._llm_backend_combo.setCurrentIndex(idx)
@@ -660,6 +1016,18 @@ class SettingsPanel(QWidget):
             self._ollama_url_edit.setText(
                 s.get("insights_ollama_url", "http://localhost:11434")
             )
+            self._mlx_text_edit.setText(
+                s.get("insights_mlx_model",
+                      "mlx-community/Qwen2.5-7B-Instruct-4bit")
+            )
+            self._mlx_vision_edit.setText(
+                s.get("insights_mlx_vision_model",
+                      "mlx-community/Qwen2.5-VL-3B-Instruct-4bit")
+            )
+            # Sync field visibility and run initial check
+            self._on_llm_backend_changed(self._llm_backend_combo.currentIndex())
+            self._check_llm_status()
+
             self._cloud_url_edit.setText(s.get("insights_cloud_url", ""))
             self._cloud_key_edit.setText(s.get("insights_cloud_key", ""))
             self._cloud_model_edit.setText(s.get("insights_cloud_model", ""))
@@ -670,12 +1038,30 @@ class SettingsPanel(QWidget):
             widx = self._whisper_combo.findData(whisper)
             if widx >= 0:
                 self._whisper_combo.setCurrentIndex(widx)
+            self._keep_awake_toggle.setChecked(
+                bool(s.get("insights_keep_awake", True))
+            )
+            self._draft_feedback_toggle.setChecked(
+                bool(s.get("insights_draft_feedback", False))
+            )
 
             # Accessibility
             font_scale = float(s.get("font_scale", 1.0))
             sidx = self._text_size_combo.findData(font_scale)
             if sidx >= 0:
                 self._text_size_combo.setCurrentIndex(sidx)
+            self._warn_reinterpret_toggle.setChecked(
+                bool(s.get("warn_grading_type_reinterpret", True))
+            )
+            self._pp_translate_toggle.setChecked(
+                bool(s.get("insights_translate_enabled", True))
+            )
+            self._pp_transcribe_toggle.setChecked(
+                bool(s.get("insights_transcribe_enabled", True))
+            )
+            self._pp_image_toggle.setChecked(
+                bool(s.get("insights_image_transcribe_enabled", True))
+            )
 
             data = load_credentials()
             self._refresh_profile_combo(data)
@@ -735,6 +1121,70 @@ class SettingsPanel(QWidget):
 
         self._pop_nd_check.setChecked(bool(profile.get("population_neurodivergent_aware", False)))
 
+    # ------------------------------------------------------------------
+    # Auto-save
+    # ------------------------------------------------------------------
+
+    def _schedule_autosave(self) -> None:
+        """Restart the debounce timer — saves 800ms after last change."""
+        self._autosave_timer.start()
+
+    def _connect_autosave(self) -> None:
+        """Wire every settings widget's change signal to auto-save."""
+        trigger = self._schedule_autosave
+
+        # Toggles / checkboxes
+        for toggle in (
+            self._keep_awake_toggle,
+            self._draft_feedback_toggle,
+            self._warn_reinterpret_toggle,
+            self._pp_translate_toggle,
+            self._pp_transcribe_toggle,
+            self._pp_image_toggle,
+            self._retention_enabled_cb,
+            self._retention_grading_cb,
+            self._retention_aic_cb,
+            self._retention_insights_cb,
+            self._retention_notes_cb,
+            self._pop_nd_check,
+        ):
+            toggle.toggled.connect(trigger)
+
+        # Combo boxes
+        for combo in (
+            self._llm_backend_combo,
+            self._edu_level_combo,
+            self._pop_esl_combo,
+            self._pop_first_gen_combo,
+            self._whisper_combo,
+            self._text_size_combo,
+        ):
+            combo.currentIndexChanged.connect(trigger)
+
+        # Spin boxes
+        for spin in (
+            self._retention_years,
+            self._retention_days,
+            self._retention_notes_years,
+            self._retention_notes_days,
+            self._throttle_spin,
+        ):
+            spin.valueChanged.connect(trigger)
+
+        # Line edits — use editingFinished so we don't save on every keystroke
+        for edit in (
+            self._url_edit,
+            self._token_edit,
+            self._llm_model_edit,
+            self._ollama_url_edit,
+            self._mlx_text_edit,
+            self._mlx_vision_edit,
+            self._cloud_url_edit,
+            self._cloud_key_edit,
+            self._cloud_model_edit,
+        ):
+            edit.editingFinished.connect(trigger)
+
     def _on_save(self) -> None:
         try:
             from credentials import (
@@ -783,14 +1233,22 @@ class SettingsPanel(QWidget):
 
             # Data retention — save new keys and also translate to legacy cleanup keys
             enabled = self._retention_enabled_cb.isChecked()
+            years = self._retention_years.value()
             days = self._retention_days.value()
             incl_grading = self._retention_grading_cb.isChecked()
             incl_aic = self._retention_aic_cb.isChecked()
+            incl_insights = self._retention_insights_cb.isChecked()
+            incl_notes = self._retention_notes_cb.isChecked()
 
             s["data_retention_enabled"] = enabled
+            s["data_retention_years"] = years
             s["data_retention_days"] = days
             s["data_retention_grading"] = incl_grading
             s["data_retention_aic"] = incl_aic
+            s["data_retention_insights"] = incl_insights
+            s["data_retention_notes"] = incl_notes
+            s["data_retention_notes_years"] = self._retention_notes_years.value()
+            s["data_retention_notes_days"] = self._retention_notes_days.value()
 
             # Legacy cleanup keys (used by TUI and cleanup.py)
             s["cleanup_mode"] = "trash" if enabled else "none"
@@ -812,6 +1270,14 @@ class SettingsPanel(QWidget):
             s["insights_ollama_url"] = (
                 self._ollama_url_edit.text().strip() or "http://localhost:11434"
             )
+            s["insights_mlx_model"] = (
+                self._mlx_text_edit.text().strip()
+                or "mlx-community/Qwen2.5-7B-Instruct-4bit"
+            )
+            s["insights_mlx_vision_model"] = (
+                self._mlx_vision_edit.text().strip()
+                or "mlx-community/Qwen2.5-VL-3B-Instruct-4bit"
+            )
             s["insights_cloud_url"] = self._cloud_url_edit.text().strip()
             s["insights_cloud_key"] = self._cloud_key_edit.text().strip()
             s["insights_cloud_model"] = self._cloud_model_edit.text().strip()
@@ -819,9 +1285,15 @@ class SettingsPanel(QWidget):
             s["insights_whisper_model"] = (
                 self._whisper_combo.currentData() or "base"
             )
+            s["insights_keep_awake"] = self._keep_awake_toggle.isChecked()
+            s["insights_draft_feedback"] = self._draft_feedback_toggle.isChecked()
 
             # Accessibility
             s["font_scale"] = self._text_size_combo.currentData() or 1.0
+            s["warn_grading_type_reinterpret"] = self._warn_reinterpret_toggle.isChecked()
+            s["insights_translate_enabled"] = self._pp_translate_toggle.isChecked()
+            s["insights_transcribe_enabled"] = self._pp_transcribe_toggle.isChecked()
+            s["insights_image_transcribe_enabled"] = self._pp_image_toggle.isChecked()
 
             save_settings(s)
             self.settings_saved.emit()
@@ -834,7 +1306,7 @@ class SettingsPanel(QWidget):
         from PySide6.QtCore import QTimer
         color = STATUS_OK if ok else STATUS_ERR
         self._save_status.setStyleSheet(
-            f"color: {color}; font-size: 11px; background: transparent; border: none;"
+            f"color: {color}; font-size: {px(11)}px; background: transparent; border: none;"
         )
         self._save_status.setText(msg)
         QTimer.singleShot(3000, lambda: self._save_status.setText(""))

@@ -58,11 +58,37 @@ def _format_signal_matrix_tuples(signals: list) -> str:
     return "\n".join(lines) if lines else "No non-LLM concern signals."
 
 
+# Phrases that indicate the LLM is flagging course content, not student wellbeing
+_CONTENT_FLAG_MARKERS = re.compile(
+    r"\b(triggering|disturbing content|graphic|violent content|"
+    r"may be triggering|this passage may|difficult material|"
+    r"sensitive (content|material|topic)|mature content|"
+    r"content warning|distressing (content|material)|"
+    r"indication of distress)\b",
+    re.IGNORECASE,
+)
+
+# Phrases in why_flagged that suggest the model is concerned about subject
+# matter rather than the student's personal state
+_SUBJECT_MATTER_EXPLANATIONS = re.compile(
+    r"\b(discusses? (rape|violence|murder|assault|genocide|trauma|abuse)|"
+    r"mentions? (rape|violence|murder|assault|genocide|trauma|abuse)|"
+    r"references? (to )?(rape|violence|murder|assault|genocide|trauma|abuse)|"
+    r"describes? (rape|violence|murder|assault|genocide|trauma|abuse)|"
+    r"course (content|material) .{0,30}(difficult|heavy|disturbing|graphic))\b",
+    re.IGNORECASE,
+)
+
+
 def _check_bias_in_output(concerns: List[ConcernRecord], submission_text: str) -> List[ConcernRecord]:
     """Anti-bias post-processing: check LLM concern output for bias markers.
 
     If the LLM's 'why_flagged' uses tone-policing language AND the flagged
     passage contains structural critique keywords, add a warning.
+
+    Also checks for the model confusing course content with student distress:
+    if the model flags a passage because the SUBJECT MATTER is disturbing
+    (not because the STUDENT is in distress), demote the flag.
     """
     checked = []
     for concern in concerns:
@@ -78,6 +104,22 @@ def _check_bias_in_output(concerns: List[ConcernRecord], submission_text: str) -
                     f"{concern.why_flagged}"
                 )
                 concern.confidence = max(0.1, concern.confidence - 0.3)
+
+        # Check if the model is flagging course CONTENT rather than student
+        # WELLBEING — e.g., "this passage discusses rape" or "may be triggering"
+        why = concern.why_flagged
+        if (_CONTENT_FLAG_MARKERS.search(why)
+                or _SUBJECT_MATTER_EXPLANATIONS.search(why)):
+            # The model appears to be concerned about the subject matter,
+            # not the student's personal state. Demote significantly.
+            concern.why_flagged = (
+                f"\u26a0 LIKELY COURSE CONTENT (not student distress): The model "
+                f"flagged this because the subject matter is disturbing, not "
+                f"because the student appears to be in personal crisis. "
+                f"Original model assessment: {why}"
+            )
+            concern.confidence = max(0.1, concern.confidence - 0.4)
+
         checked.append(concern)
     return checked
 
@@ -153,6 +195,9 @@ def detect_concerns(
 
     # Anti-bias post-processing
     concerns = _check_bias_in_output(concerns, submission_text)
+
+    # Drop low-confidence flags to reduce noise in teacher's view
+    concerns = [c for c in concerns if c.confidence >= 0.7]
 
     return concerns
 

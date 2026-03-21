@@ -42,6 +42,7 @@ from insights.patterns import (
     INSIGHT_PATTERNS,
     KEYWORD_CATEGORIES,
     classify_vader_polarity,
+    has_critical_keywords,
     match_all_patterns,
     signal_matrix_classify,
 )
@@ -52,16 +53,64 @@ log = logging.getLogger(__name__)
 # Common English stopwords (avoids NLTK dependency)
 # ---------------------------------------------------------------------------
 _STOPWORDS = frozenset(
+    # ---- Core English function words (NLTK-style) ----
     "a an the and or but is are was were be been being have has had do does did "
     "will would shall should may might can could i me my we our you your he she "
     "it they them their his her its this that these those am not no nor so if "
     "then than too very just about also how all each every both few more most "
-    "other some such only own same than through during before after above below "
+    "other some such only own same through during before after above below "
     "to from up down in out on off over under again further of at by for with "
-    "as into between because until while during where when which who whom what "
-    "there here why how much many any no dont didnt cant wont im ive hed shed "
-    "well get got one two still even really like think know want make way much "
-    "many thing things going went said says doesnt thats theres heres".split()
+    "as into between because until while where when which who whom what "
+    "there here why how much many any dont didnt cant wont im ive hed shed "
+    "doesnt thats theres heres theyre youre were theyd youd wed "
+    "ill youll hell shell theyll well weve youve theyve "
+    "isnt arent wasnt werent hasnt havent hadnt shouldnt wouldnt couldnt "
+    "mustnt must neednt shant lets thats whats hows whos whys having "
+    # ---- Common verbs / verb forms (no analytical signal) ----
+    "get got gets getting give gave gives giving given go goes going gone went "
+    "make makes making made come comes coming came become becomes becoming became "
+    "take takes taking took taken put puts putting set sets setting run runs "
+    "running ran say says said saying tell tells telling told talk talks talking "
+    "talked think thinks thinking thought know knows knowing knew known "
+    "see sees seeing saw seen find finds finding found show shows showing showed "
+    "shown want wants wanting wanted need needs needing needed keep keeps keeping "
+    "kept let letting seem seems seemed seeming try tries trying tried "
+    "help helps helping helped start starts starting started use uses using used "
+    "look looks looking looked turn turns turning turned call calls calling called "
+    "ask asks asking asked work works working worked move moves moving moved "
+    "live lives living lived believe believes believed feel feels feeling felt "
+    "bring brings bringing brought hold holds holding held stand stands standing "
+    "stood happen happens happening happened leave leaves leaving left "
+    "begin begins beginning began begun mean means meaning meant "
+    # ---- Generic adverbs / adjectives / fillers ----
+    "really actually already always never ever still even back away "
+    "just quite rather often however instead also yet ago soon enough "
+    "maybe perhaps sometimes usually generally probably certainly definitely "
+    "simply basically essentially merely nearly almost truly indeed "
+    "well lot lots kind sort able like "
+    "now right around already since without within along upon onto toward "
+    "towards across behind beyond beside besides among throughout against "
+    "big small great good bad new old long short high low different "
+    "important large little young certain sure whole real "
+    # ---- Generic nouns / pronouns (no analytical signal) ----
+    "people person thing things something anything nothing everything "
+    "someone anyone everyone nobody somebody everybody "
+    "way ways part parts place places time times day days year years "
+    "world life man men woman women idea ideas point fact "
+    "number case end side hand example reason area state "
+    "one two three four five six seven eight nine ten "
+    # ---- Conjunctions / prepositions / determiners ----
+    "although though whether either neither nor yet thus hence therefore "
+    "moreover furthermore meanwhile nonetheless nevertheless "
+    "else another per via ought dare etc "
+    # ---- HTML entities that leak through ----
+    "nbsp amp quot lt gt ndash mdash hellip rsquo lsquo rdquo ldquo "
+    # ---- Common academic filler (no analytical signal) ----
+    "week reading readings assignment class course professor teacher students "
+    "student wrote write writing essay paper paragraph page pages chapter "
+    "question questions answer topic discussion response reflection submission "
+    "canvas homework grade point points due today yesterday last next first "
+    "second third new also another".split()
 )
 
 
@@ -140,7 +189,7 @@ class QuickAnalyzer:
         result.keyword_hits = self._keyword_hits(texts, meta)
 
         self._progress("Computing sentiment...")
-        result.sentiments, result.sentiment_distribution = self._vader_sentiment(texts)
+        result.sentiments, result.sentiment_distribution = self._vader_sentiment(texts, meta)
 
         self._progress("Clustering submissions...")
         result.clusters, result.embedding_outlier_ids = self._embedding_clusters(texts, meta)
@@ -356,8 +405,14 @@ class QuickAnalyzer:
     # 6. VADER sentiment
     # ------------------------------------------------------------------
 
+    # Submission types where word_count=0 means "unreadable file", not
+    # "empty submission".  These must never be labelled perfunctory /
+    # disengaged — the student DID submit; the pipeline just can't
+    # extract text from their file.
+    _FILE_SUBMISSION_TYPES = frozenset({"online_upload", "media_recording"})
+
     def _vader_sentiment(
-        self, texts: Dict[str, str]
+        self, texts: Dict[str, str], meta: Dict[str, Dict]
     ) -> Tuple[Dict[str, Dict[str, float]], Dict[str, int]]:
         try:
             from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
@@ -377,15 +432,44 @@ class QuickAnalyzer:
                 "neu": scores["neu"],
                 "compound": scores["compound"],
             }
+
+            wc = len(body.split())
+            sub_type = (meta.get(sid, {}).get("submission_type") or "").lower()
+
+            # File uploads / media recordings with no extractable text
+            # should be excluded from the sentiment register distribution
+            # entirely — VADER on an empty string is meaningless.
+            if wc == 0 and sub_type in self._FILE_SUBMISSION_TYPES:
+                continue
+
             # Classify emotional register
             compound = scores["compound"]
-            wc = len(body.split())
             if wc < 50 and abs(compound) < 0.2:
                 register = "perfunctory"
             elif compound >= 0.3 and scores["pos"] > 0.15:
                 register = "passionate"
             elif compound <= -0.3:
-                register = "urgent"
+                # Negative VADER may be topic-driven (colonialism, racism,
+                # genocide, etc.) rather than student distress.  Check for
+                # engagement markers: if the student also shows critical
+                # analysis, conceptual connections, evidence use, or
+                # personal reflection, the negativity comes from the
+                # *subject matter*, not emotional crisis.
+                _engagement_patterns = (
+                    "critical_analysis",
+                    "conceptual_connection",
+                    "evidence_use",
+                    "personal_reflection",
+                )
+                has_engagement = any(
+                    INSIGHT_PATTERNS[p].search(body)
+                    for p in _engagement_patterns
+                    if p in INSIGHT_PATTERNS
+                )
+                if has_engagement or has_critical_keywords(body):
+                    register = "passionate"
+                else:
+                    register = "urgent"
             elif abs(compound) < 0.15 and scores["neu"] > 0.7:
                 register = "analytical"
             elif scores["pos"] > 0.1 and "my " in body.lower():
@@ -445,12 +529,18 @@ class QuickAnalyzer:
                 cluster_text = " ".join(texts[sid] for sid in c_sids)
                 top = Counter(_tokenize(cluster_text)).most_common(5)
 
+                # Find submission closest to cluster centroid
+                centroid = km.cluster_centers_[cid]
+                best_idx = min(indices, key=lambda idx: np.linalg.norm(embeddings[idx] - centroid))
+                centroid_snippet = texts[sids[best_idx]][:150].strip()
+
                 clusters.append(EmbeddingCluster(
                     cluster_id=cid,
                     size=len(c_sids),
                     student_ids=c_sids,
                     student_names=c_names,
                     top_terms=[t for t, _ in top],
+                    centroid_text=centroid_snippet,
                 ))
 
             # Outlier detection: submissions far from their cluster center
@@ -580,8 +670,18 @@ class QuickAnalyzer:
     ) -> List[ConcernSignal]:
         signals = []
         for sid, body in texts.items():
-            compound = sentiments.get(sid, {}).get("compound", 0.0)
             wc = len(body.split())
+            sub_type = (meta.get(sid, {}).get("submission_type") or "").lower()
+
+            # Skip signal matrix for file uploads / media recordings whose
+            # text could not be extracted.  word_count=0 here means the
+            # pipeline can't read the file, NOT that the student was
+            # disengaged.  Running the matrix would produce a false
+            # "PERFUNCTORY" / disengagement signal.
+            if wc == 0 and sub_type in self._FILE_SUBMISSION_TYPES:
+                continue
+
+            compound = sentiments.get(sid, {}).get("compound", 0.0)
             classifications = signal_matrix_classify(
                 body, compound, wc, median_wc
             )

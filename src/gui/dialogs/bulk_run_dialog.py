@@ -13,6 +13,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QPalette, QFont, QPainter, QPainterPath, QRadialGradient
 
 from gui.styles import (
+    px,
     SPACING_SM, SPACING_MD,
     LEFT_PANEL_MIN, LEFT_PANEL_PREF,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM, PHOSPHOR_GLOW,
@@ -52,7 +53,7 @@ _SCROLL_QSS = f"""
 _CB_QSS = f"""
     QCheckBox {{
         color: {PHOSPHOR_MID};
-        font-size: 12px;
+        font-size: {px(12)}px;
         background: transparent;
         spacing: 6px;
     }}
@@ -72,7 +73,7 @@ _CB_QSS = f"""
 _SCOPE_CB_QSS = f"""
     QCheckBox {{
         color: {PHOSPHOR_MID};
-        font-size: 12px;
+        font-size: {px(12)}px;
         background: transparent;
         spacing: 8px;
         padding: 4px 0;
@@ -94,7 +95,7 @@ _SCOPE_CB_QSS = f"""
 _INDENT_CB_QSS = f"""
     QCheckBox {{
         color: {PHOSPHOR_MID};
-        font-size: 12px;
+        font-size: {px(12)}px;
         background: transparent;
         spacing: 8px;
         padding-left: 22px;
@@ -125,7 +126,7 @@ _PILL_QSS = f"""
         border: 1px solid rgba(90,60,8,0.55);
         border-radius: 12px;
         padding: 3px 14px;
-        font-size: 12px;
+        font-size: {px(12)}px;
         min-height: 24px;
     }}
     QPushButton:hover:!checked {{
@@ -176,7 +177,7 @@ class PipCheckRow(QWidget):
         self._cb = QCheckBox(label)
         self._cb.setStyleSheet(
             "QCheckBox { spacing: 8px; background: transparent; border: none;"
-            f" color: {PHOSPHOR_MID}; font-size: 12px; }}"
+            f" color: {PHOSPHOR_MID}; font-size: {px(12)}px; }}"
             "QCheckBox::indicator { width: 0px; height: 0px; border: none; }"
         )
         self._cb.toggled.connect(self.toggled)          # forward signal
@@ -324,7 +325,7 @@ class _CourseRow(QWidget):
             pill.setFixedSize(_PILL_W, 16)
             pill.setAlignment(Qt.AlignmentFlag.AlignCenter)
             pill.setStyleSheet(
-                f"color: {tag_color}; font-size: 9px; font-weight: bold;"
+                f"color: {tag_color}; font-size: {px(9)}px; font-weight: bold;"
                 f" border: 1px solid {tag_color}; border-radius: 3px;"
                 f" background: transparent;"
             )
@@ -340,7 +341,7 @@ class _CourseRow(QWidget):
 
         code_lbl = QLabel(code)
         code_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 12px;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
             f" font-weight: bold; background: transparent; border: none;"
         )
         text.addWidget(code_lbl)
@@ -348,7 +349,7 @@ class _CourseRow(QWidget):
         if title:
             title_lbl = QLabel(title)
             title_lbl.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
                 f" background: transparent; border: none;"
             )
             text.addWidget(title_lbl)
@@ -467,7 +468,7 @@ class _TermSection(QWidget):
         self._hdr_btn.setStyleSheet(
             f"QPushButton {{"
             f"  color: {PHOSPHOR_HOT if is_current else PHOSPHOR_DIM};"
-            f"  font-size: 10px; font-weight: bold; letter-spacing: 1px;"
+            f"  font-size: {px(10)}px; font-weight: bold; letter-spacing: 1px;"
             f"  background: transparent; border: none;"
             f"  text-align: left; padding: 8px 8px 3px 8px;"
             f"}}"
@@ -570,7 +571,7 @@ class BulkRunPage(QWidget):
         # Title
         title = QLabel("BULK RUN")
         title.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(16)}px; font-weight: bold;"
             f" background: transparent; border: none; letter-spacing: 2px;"
         )
         sub = QLabel(
@@ -578,7 +579,7 @@ class BulkRunPage(QWidget):
             "Applies to all autogradeable assignments matching the chosen scope."
         )
         sub.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
             f" background: transparent; border: none;"
         )
         sub.setWordWrap(True)
@@ -610,7 +611,7 @@ class BulkRunPage(QWidget):
         footer = QHBoxLayout()
         self._status_lbl = QLabel("No courses selected")
         self._status_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px; background: transparent;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; background: transparent;"
         )
         footer.addWidget(self._status_lbl)
         footer.addStretch()
@@ -624,7 +625,7 @@ class BulkRunPage(QWidget):
         make_secondary_button(self._preview_btn)
         footer.addWidget(self._preview_btn)
 
-        self._run_btn = QPushButton("▶  Run & Post Grades")
+        self._run_btn = QPushButton("▶  Run Autograder")
         self._run_btn.clicked.connect(lambda: self._on_run(dry_run=False))
         make_run_button(self._run_btn)
         footer.addWidget(self._run_btn)
@@ -983,14 +984,14 @@ class BulkProgressWindow(QDialog):
 
         self._heading = QLabel(mode_label)
         self._heading.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(16)}px; font-weight: bold;"
             f" letter-spacing: 2px; background: transparent; border: none;"
         )
         layout.addWidget(self._heading)
 
         self._status_lbl = QLabel("Starting…")
         self._status_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
             f" background: transparent; border: none;"
         )
         layout.addWidget(self._status_lbl)

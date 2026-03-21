@@ -12,6 +12,8 @@ Contradictions are first-class data, not an afterthought.
 
 import json
 import logging
+from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 from typing import Dict, List, Optional
 
 from insights.llm_backend import BackendConfig, parse_json_response, send_text
@@ -37,10 +39,60 @@ log = logging.getLogger(__name__)
 
 # Group size limits by tier
 _GROUP_SIZES = {
-    "lightweight": 12,
-    "medium": 22,
-    "deep_thinking": 40,
+    "lightweight": 5,   # Tiny groups for 8B — larger batches timeout on 20+ students
+    "medium": 15,
+    "deep_thinking": 30,
 }
+
+# Per-call timeout (seconds). If the LLM hasn't responded in this window,
+# we fall back to a non-LLM result so the pipeline doesn't stall.
+_LLM_CALL_TIMEOUT = 300  # 5 minutes
+
+
+def _fallback_theme_set_from_records(
+    records: List["SubmissionCodingRecord"],
+) -> "ThemeSet":
+    """Build a ThemeSet without LLM, from tag frequency in the records.
+
+    Used when an LLM call times out so the pipeline can continue.
+    """
+    tag_counter: Counter = Counter()
+    tag_students: Dict[str, List[str]] = {}
+    for r in records:
+        for tag in r.theme_tags:
+            tag_counter[tag] += 1
+            tag_students.setdefault(tag, []).append(r.student_id)
+
+    themes = []
+    for tag, count in tag_counter.most_common(10):
+        if tag in ("insufficient text for analysis",
+                    "file upload — text not extracted",
+                    "blank submission"):
+            continue  # Skip infrastructure tags
+        themes.append(Theme(
+            name=tag,
+            description=f"Auto-grouped from coding tag '{tag}' (LLM timed out)",
+            frequency=count,
+            student_ids=tag_students.get(tag, []),
+            supporting_quotes=[],
+            confidence=0.3,
+        ))
+
+    if not themes and records:
+        # No tags at all — create a single placeholder theme
+        themes.append(Theme(
+            name="(theme generation timed out)",
+            description=(
+                f"LLM theme generation timed out for {len(records)} records. "
+                f"Try resuming the run or reducing the number of submissions."
+            ),
+            frequency=len(records),
+            student_ids=[r.student_id for r in records],
+            supporting_quotes=[],
+            confidence=0.1,
+        ))
+
+    return ThemeSet(themes=themes, contradictions=[])
 
 
 def _build_interests_fragment(teacher_interests: list) -> str:
@@ -63,25 +115,27 @@ def _records_to_compact_json(records: List[SubmissionCodingRecord]) -> str:
     """Convert coding records to compact JSON for prompt injection.
 
     Includes only the fields the theme generator needs, to conserve context.
+    Stripped to the minimum viable set: tags, confidence, register, quote.
+    readings/concepts/connections removed — they bloat context on 8B models
+    and themes are primarily driven by the four retained fields.
     """
     compact = []
     for r in records:
+        best_quote = ""
+        if r.notable_quotes:
+            best_quote = r.notable_quotes[0].text[:200]
         entry = {
-            "student_id": r.student_id,
-            "student_name": r.student_name,
-            "theme_tags": r.theme_tags,
-            "theme_confidence": r.theme_confidence,
-            "emotional_register": r.emotional_register,
-            "notable_quotes": [
-                {"text": q.text, "significance": q.significance}
-                for q in r.notable_quotes
-            ],
-            "readings_referenced": r.readings_referenced,
-            "concepts_applied": r.concepts_applied,
-            "personal_connections": r.personal_connections[:2],  # trim for context
+            "name": r.student_name,
+            "id": r.student_id,
+            "tags": r.theme_tags[:5],
+            "confidence": {
+                t: c for t, c in list(r.theme_confidence.items())[:5]
+            } if r.theme_confidence else {},
+            "register": r.emotional_register,
+            "quote": best_quote,
         }
         compact.append(entry)
-    return json.dumps(compact, indent=1)
+    return json.dumps(compact, separators=(",", ":"))
 
 
 def _group_by_cluster(
@@ -228,30 +282,60 @@ def _generate_single(
     backend: BackendConfig,
     profile_fragment: str = "",
 ) -> ThemeSet:
-    """Generate themes from a single group of records."""
-    prompt = THEME_GENERATION_PROMPT.format(
-        n_records=len(records),
-        assignment_name=assignment_name,
-        teacher_interests=interests_text,
-        records_json=_records_to_compact_json(records),
-        lens_fragment=lens_fragment,
-        profile_fragment=profile_fragment,
-    )
+    """Generate themes from a single group of records.
 
-    raw = send_text(backend, prompt, SYSTEM_PROMPT)
-    parsed = parse_json_response(raw)
-
-    if "_parse_error" in parsed:
-        log.warning("Theme generation JSON parse failed, retrying")
-        from insights.prompts import JSON_REPAIR_PROMPT
-        repair = JSON_REPAIR_PROMPT.format(
-            raw_response=raw[:2000],
-            expected_format='{"themes": [...], "contradictions": [...]}',
+    Wrapped with a timeout — if the LLM call exceeds _LLM_CALL_TIMEOUT
+    seconds, returns a fallback ThemeSet built from tag frequencies so the
+    pipeline doesn't stall on slow 8B models.
+    """
+    def _inner() -> ThemeSet:
+        prompt = THEME_GENERATION_PROMPT.format(
+            n_records=len(records),
+            assignment_name=assignment_name,
+            teacher_interests=interests_text,
+            records_json=_records_to_compact_json(records),
+            lens_fragment=lens_fragment,
+            profile_fragment=profile_fragment,
         )
-        raw = send_text(backend, repair, SYSTEM_PROMPT)
+
+        raw = send_text(backend, prompt, SYSTEM_PROMPT)
         parsed = parse_json_response(raw)
 
-    return _parse_theme_set(parsed)
+        if "_parse_error" in parsed:
+            log.warning("Theme generation JSON parse failed, retrying")
+            from insights.prompts import JSON_REPAIR_PROMPT
+            repair = JSON_REPAIR_PROMPT.format(
+                raw_response=raw[:2000],
+                expected_format='{"themes": [...], "contradictions": [...]}',
+            )
+            raw2 = send_text(backend, repair, SYSTEM_PROMPT)
+            parsed2 = parse_json_response(raw2)
+            return _parse_theme_set(parsed2)
+
+        return _parse_theme_set(parsed)
+
+    pool = ThreadPoolExecutor(max_workers=1)
+    try:
+        future = pool.submit(_inner)
+        return future.result(timeout=_LLM_CALL_TIMEOUT)
+    except FuturesTimeoutError:
+        log.warning(
+            "Theme generation timed out after %ds for %d records — "
+            "falling back to tag-frequency themes",
+            _LLM_CALL_TIMEOUT, len(records),
+        )
+        # Don't wait for the orphaned thread — let it finish on its own
+        pool.shutdown(wait=False, cancel_futures=True)
+        return _fallback_theme_set_from_records(records)
+    except Exception as exc:
+        log.warning(
+            "Theme generation failed (%s) for %d records — "
+            "falling back to tag-frequency themes",
+            exc, len(records),
+        )
+        return _fallback_theme_set_from_records(records)
+    finally:
+        pool.shutdown(wait=False)
 
 
 def _meta_synthesize(
@@ -261,53 +345,73 @@ def _meta_synthesize(
     backend: BackendConfig,
     profile_fragment: str = "",
 ) -> ThemeSet:
-    """Merge multiple ThemeSets into one via meta-synthesis LLM call."""
-    sets_json = []
-    for i, ts in enumerate(theme_sets):
-        sets_json.append({
-            "group": i + 1,
-            "themes": [
-                {
-                    "name": t.name,
-                    "description": t.description,
-                    "frequency": t.frequency,
-                    "student_ids": t.student_ids,
-                    "confidence": t.confidence,
-                    "supporting_quotes": [
-                        {"text": q.text, "significance": q.significance}
-                        for q in t.supporting_quotes[:2]
-                    ],
-                }
-                for t in ts.themes
-            ],
-            "contradictions": [
-                {
-                    "description": c.description,
-                    "side_a": c.side_a,
-                    "side_a_students": c.side_a_students,
-                    "side_b": c.side_b,
-                    "side_b_students": c.side_b_students,
-                }
-                for c in ts.contradictions
-            ],
-        })
+    """Merge multiple ThemeSets into one via meta-synthesis LLM call.
 
-    prompt = THEME_META_SYNTHESIS_PROMPT.format(
-        n_groups=len(theme_sets),
-        assignment_name=assignment_name,
-        teacher_interests=interests_text,
-        theme_sets_json=json.dumps(sets_json, indent=1),
-        profile_fragment=profile_fragment,
-    )
+    Wrapped with a timeout — falls back to _manual_merge if the LLM
+    exceeds _LLM_CALL_TIMEOUT seconds.
+    """
+    def _inner() -> ThemeSet:
+        sets_json = []
+        for i, ts in enumerate(theme_sets):
+            sets_json.append({
+                "group": i + 1,
+                "themes": [
+                    {
+                        "name": t.name,
+                        "description": t.description,
+                        "frequency": t.frequency,
+                        "student_ids": t.student_ids,
+                        "confidence": t.confidence,
+                        "supporting_quotes": [
+                            {"text": q.text, "significance": q.significance}
+                            for q in t.supporting_quotes[:2]
+                        ],
+                    }
+                    for t in ts.themes
+                ],
+                "contradictions": [
+                    {
+                        "description": c.description,
+                        "side_a": c.side_a,
+                        "side_a_students": c.side_a_students,
+                        "side_b": c.side_b,
+                        "side_b_students": c.side_b_students,
+                    }
+                    for c in ts.contradictions
+                ],
+            })
 
-    raw = send_text(backend, prompt, SYSTEM_PROMPT)
-    parsed = parse_json_response(raw)
+        prompt = THEME_META_SYNTHESIS_PROMPT.format(
+            n_groups=len(theme_sets),
+            assignment_name=assignment_name,
+            teacher_interests=interests_text,
+            theme_sets_json=json.dumps(sets_json, indent=1),
+            profile_fragment=profile_fragment,
+        )
 
-    if "_parse_error" in parsed:
-        log.warning("Meta-synthesis parse failed — combining theme sets manually")
+        raw = send_text(backend, prompt, SYSTEM_PROMPT)
+        parsed = parse_json_response(raw)
+
+        if "_parse_error" in parsed:
+            log.warning("Meta-synthesis parse failed — combining theme sets manually")
+            return _manual_merge(theme_sets)
+
+        return _parse_theme_set(parsed)
+
+    pool = ThreadPoolExecutor(max_workers=1)
+    try:
+        future = pool.submit(_inner)
+        return future.result(timeout=_LLM_CALL_TIMEOUT)
+    except FuturesTimeoutError:
+        log.warning(
+            "Meta-synthesis timed out after %ds for %d theme sets — "
+            "falling back to manual merge",
+            _LLM_CALL_TIMEOUT, len(theme_sets),
+        )
+        pool.shutdown(wait=False, cancel_futures=True)
         return _manual_merge(theme_sets)
-
-    return _parse_theme_set(parsed)
+    finally:
+        pool.shutdown(wait=False)
 
 
 def _manual_merge(theme_sets: List[ThemeSet]) -> ThemeSet:
@@ -390,8 +494,12 @@ def surface_outliers(
         outliers_json=json.dumps(outliers_data, indent=1),
     )
 
-    raw = send_text(backend, prompt, SYSTEM_PROMPT)
-    parsed = parse_json_response(raw)
+    try:
+        raw = send_text(backend, prompt, SYSTEM_PROMPT)
+        parsed = parse_json_response(raw)
+    except Exception as exc:
+        log.warning("Outlier analysis LLM call failed (%s) — using minimal report", exc)
+        return _minimal_outlier_report(outlier_records, embedding_outlier_ids)
 
     if "_parse_error" in parsed:
         log.warning("Outlier analysis parse failed — using minimal report")

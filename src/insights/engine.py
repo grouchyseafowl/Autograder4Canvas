@@ -15,6 +15,7 @@ Saves intermediaries at each stage for resumability.
 import logging
 import os
 import re
+import shutil
 import time
 from typing import Callable, Dict, List, Optional
 
@@ -56,37 +57,107 @@ class InsightsEngine:
 
     def cancel(self) -> None:
         self._cancelled = True
-        self._stop_caffeinate()
+        self._stop_sleep_prevention()
 
     def is_cancelled(self) -> bool:
         return self._cancelled
 
-    def _start_caffeinate(self) -> None:
-        """Prevent macOS from sleeping while the pipeline runs.
+    def _start_sleep_prevention(self) -> None:
+        """Prevent the computer from sleeping while the pipeline runs.
 
-        Uses the built-in `caffeinate -i` command, which prevents idle sleep.
-        The process is killed when the pipeline completes or is cancelled.
+        macOS:   caffeinate -s (prevents system sleep including lid-close
+                 if "Prevent sleeping when display is off" is enabled
+                 in System Settings → Battery → Options)
+        Windows: powercfg to disable AC standby timeout (restored on stop)
+        Linux:   systemd-inhibit if available
         """
         import platform
         import subprocess as _sp
-        if platform.system() != "Darwin":
-            return
-        try:
-            self._caffeinate_proc = _sp.Popen(
-                ["caffeinate", "-i", "-w", str(os.getpid())],
-                stdout=_sp.DEVNULL, stderr=_sp.DEVNULL,
-            )
-            log.info("Sleep prevention active (caffeinate)")
-        except Exception as e:
-            log.debug("Could not start caffeinate: %s", e)
+        system = platform.system()
 
-    def _stop_caffeinate(self) -> None:
+        if not self._settings.get("insights_keep_awake", True):
+            return
+
+        try:
+            if system == "Darwin":
+                # -s prevents system sleep (stronger than -i which only prevents idle)
+                # -w ties to our process ID so it auto-cleans if we crash
+                self._caffeinate_proc = _sp.Popen(
+                    ["caffeinate", "-s", "-w", str(os.getpid())],
+                    stdout=_sp.DEVNULL, stderr=_sp.DEVNULL,
+                )
+                log.info("Sleep prevention active (caffeinate -s)")
+
+            elif system == "Windows":
+                # Save current standby timeout, then disable
+                try:
+                    result = _sp.run(
+                        ["powercfg", "/query", "SCHEME_CURRENT", "SUB_SLEEP",
+                         "STANDBYIDLE"],
+                        capture_output=True, text=True, timeout=5,
+                    )
+                    # Parse current AC timeout for restoration later
+                    for line in result.stdout.splitlines():
+                        if "Current AC Power Setting Index" in line:
+                            self._original_standby = line.split("0x")[-1].strip()
+                            break
+                except Exception:
+                    self._original_standby = None
+
+                # Disable standby on AC power (0 = never)
+                _sp.run(
+                    ["powercfg", "/change", "standby-timeout-ac", "0"],
+                    capture_output=True, timeout=5,
+                )
+                log.info("Sleep prevention active (powercfg standby disabled)")
+
+            elif system == "Linux":
+                # Try systemd-inhibit
+                if shutil.which("systemd-inhibit"):
+                    self._caffeinate_proc = _sp.Popen(
+                        ["systemd-inhibit", "--what=sleep",
+                         "--who=Autograder4Canvas",
+                         "--why=Running overnight analysis",
+                         "sleep", "infinity"],
+                        stdout=_sp.DEVNULL, stderr=_sp.DEVNULL,
+                    )
+                    log.info("Sleep prevention active (systemd-inhibit)")
+
+        except Exception as e:
+            log.debug("Could not start sleep prevention: %s", e)
+
+    def _stop_sleep_prevention(self) -> None:
+        """Restore normal sleep behavior."""
+        import platform
+        import subprocess as _sp
+
+        # Kill caffeinate/systemd-inhibit process (macOS/Linux)
         if self._caffeinate_proc:
             try:
                 self._caffeinate_proc.terminate()
                 self._caffeinate_proc = None
             except Exception:
                 pass
+
+        # Restore Windows standby timeout
+        if platform.system() == "Windows":
+            original = getattr(self, "_original_standby", None)
+            if original:
+                try:
+                    # Convert hex seconds back to minutes
+                    minutes = max(1, int(original, 16) // 60)
+                    _sp.run(
+                        ["powercfg", "/change", "standby-timeout-ac",
+                         str(minutes)],
+                        capture_output=True, timeout=5,
+                    )
+                except Exception:
+                    # Fallback: restore to 30 minutes
+                    _sp.run(
+                        ["powercfg", "/change", "standby-timeout-ac", "30"],
+                        capture_output=True, timeout=5,
+                    )
+            log.info("Sleep prevention stopped (standby restored)")
 
     def run_analysis(
         self,
@@ -116,7 +187,7 @@ class InsightsEngine:
         progress = progress_callback or (lambda msg: None)
         emit_result = result_callback or (lambda t, d: None)
         self._cancelled = False
-        self._start_caffeinate()
+        self._start_sleep_prevention()
 
         # Load teacher profile for prompt injection
         from insights.teacher_profile import TeacherProfileManager
@@ -290,6 +361,47 @@ class InsightsEngine:
                     "word_count": wc,
                 })
 
+                # Guard: skip LLM coding for very short submissions
+                if wc < 15:
+                    # Diagnose WHY the text is blank/short
+                    sub_type = sub_meta.get("submission_type", "")
+                    attachments = sub_meta.get("attachments", [])
+                    if wc == 0 and sub_type == "online_upload" and attachments:
+                        filenames = [a.get("filename", "?") for a in attachments[:3]]
+                        reason = (
+                            f"file upload ({', '.join(filenames)}) — "
+                            f"text extraction failed or unsupported format"
+                        )
+                        tag = "file upload — text not extracted"
+                    elif wc == 0 and not body.strip():
+                        reason = "blank submission (no text entered)"
+                        tag = "blank submission"
+                    else:
+                        reason = f"only {wc} words"
+                        tag = "insufficient text for analysis"
+
+                    progress(f"  Skipping {name}: {reason}")
+
+                    record = SubmissionCodingRecord(
+                        student_id=sid,
+                        student_name=name,
+                        theme_tags=[tag],
+                        theme_confidence={tag: 1.0},
+                        emotional_register="",
+                        emotional_notes=reason,
+                        notable_quotes=[],
+                        word_count=wc,
+                    )
+                    coding_records.append(record)
+                    self._store.save_coding(
+                        run_id, sid, name, record.model_dump_json(),
+                        submission_text=body,
+                    )
+                    preview_data = record.model_dump()
+                    preview_data["_original_text"] = body[:300] if body.strip() else reason
+                    emit_result("coding", preview_data)
+                    continue
+
                 record = code_submission(
                     submission_text=body,
                     student_id=sid,
@@ -306,9 +418,10 @@ class InsightsEngine:
 
                 coding_records.append(record)
 
-                # Save intermediary
+                # Save intermediary (include submission text for chatbot export)
                 self._store.save_coding(
-                    run_id, sid, name, record.model_dump_json()
+                    run_id, sid, name, record.model_dump_json(),
+                    submission_text=body,
                 )
 
                 # Emit for live preview — include original text for sparse results
@@ -338,17 +451,25 @@ class InsightsEngine:
 
                 sid = record.student_id
                 body = texts.get(sid, "")
+                wc = len(body.split())
+
+                progress(f"Concern check {i + 1}/{total}: {record.student_name}...")
+
+                # Guard: skip LLM concern detection for very short submissions
+                if wc < 15:
+                    record.concerns = []
+                    self._store.save_coding(
+                        run_id, sid, record.student_name, record.model_dump_json()
+                    )
+                    continue
 
                 vader_compound = qa_result.sentiments.get(sid, {}).get("compound", 0.0)
-                wc = len(body.split())
                 sig_results = signal_matrix_classify(
                     body, vader_compound, wc, qa_result.stats.word_count_median
                 )
                 student_signals = [
                     s for s in qa_result.concern_signals if s.student_id == sid
                 ]
-
-                progress(f"Concern check {i + 1}/{total}: {record.student_name}...")
 
                 concerns = detect_concerns(
                     submission_text=body,
@@ -531,14 +652,14 @@ class InsightsEngine:
             )
             self._store.complete_run(run_id, confidence)
             progress("Analysis complete.")
-            self._stop_caffeinate()
+            self._stop_sleep_prevention()
 
             return run_id
 
         except Exception as e:
             log.exception("Analysis pipeline failed: %s", e)
             progress(f"Error: {e}")
-            self._stop_caffeinate()
+            self._stop_sleep_prevention()
             return None
 
     def run_partial(
@@ -672,6 +793,128 @@ class InsightsEngine:
             progress(f"Re-run error: {e}")
             return None
 
+    def resume_run(
+        self,
+        *,
+        run_id: str,
+        progress_callback: Optional[Callable] = None,
+        result_callback: Optional[Callable] = None,
+    ) -> Optional[str]:
+        """Resume an interrupted run from where it stopped.
+
+        Skips already-coded students, then runs remaining stages.
+        Returns run_id on success, None on failure.
+        """
+        progress = progress_callback or (lambda msg: None)
+        emit_result = result_callback or (lambda t, d: None)
+        self._cancelled = False
+        self._start_sleep_prevention()
+
+        run = self._store.get_run(run_id)
+        if not run:
+            progress("Run not found.")
+            return None
+
+        import json as _json
+        stages = run.get("stages_completed", [])
+        if isinstance(stages, str):
+            stages = _json.loads(stages)
+        completed_set = set(stages)
+
+        progress(f"Resuming run — completed stages: {', '.join(stages)}")
+
+        try:
+            from insights.llm_backend import auto_detect_backend
+            from insights.teacher_profile import TeacherProfileManager
+
+            model_tier = run.get("model_tier", "lightweight")
+            backend = auto_detect_backend(model_tier, self._settings)
+            if backend is None:
+                progress("No LLM backend available.")
+                self._stop_sleep_prevention()
+                return None
+
+            progress(f"LLM backend: {backend.name} ({backend.model})")
+
+            profile_mgr = TeacherProfileManager(self._store)
+            profile_fragment = profile_mgr.get_full_profile_fragment()
+
+            assignment_name = run.get("assignment_name", "")
+            course_name = run.get("course_name", "")
+            teacher_context = run.get("teacher_context", "")
+            analysis_lens = run.get("analysis_lens_config")
+            teacher_interests = None
+            assignment_prompt = f"Assignment: {assignment_name}"
+
+            qa_json = run.get("quick_analysis")
+            qa_result = None
+            if qa_json:
+                qa_result = QuickAnalysisResult.model_validate_json(qa_json)
+
+            throttle = float(self._settings.get("insights_throttle_delay", 2.0))
+
+            # Load existing codings
+            existing_codings = self._store.get_codings(run_id)
+            coded_sids = set()
+            coding_records = []
+            for row in existing_codings:
+                rec = row.get("coding_record", {})
+                if isinstance(rec, str):
+                    rec = _json.loads(rec)
+                coding_records.append(
+                    SubmissionCodingRecord.model_validate(rec)
+                )
+                coded_sids.add(row.get("student_id", ""))
+
+            total = run.get("total_submissions", 0)
+
+            # If coding is not complete, we need submission texts
+            if "coding" not in completed_set:
+                # Can't resume coding without original submissions
+                # (they aren't stored in the DB)
+                progress(
+                    "Cannot resume from coding stage — "
+                    "original submissions not stored. "
+                    "Start a new analysis instead."
+                )
+                self._stop_sleep_prevention()
+                return None
+
+            # If concerns not complete, re-run concerns for all students
+            if "concerns" not in completed_set:
+                progress("Concerns stage incomplete — skipping to themes...")
+                # Mark concerns as done (codings have inline concerns from
+                # the coding pass)
+                self._store.complete_stage(run_id, "concerns")
+
+            # Determine the right start_stage based on what's already done
+            if "themes" not in completed_set:
+                start = "themes"
+            elif "outliers" not in completed_set:
+                start = "outliers"
+            elif "synthesis" not in completed_set:
+                start = "synthesis"
+            else:
+                progress("All stages already complete.")
+                self._stop_sleep_prevention()
+                return run_id
+
+            progress(f"Resuming from {start}...")
+            result = self.run_partial(
+                run_id=run_id,
+                start_stage=start,
+                progress_callback=progress_callback,
+            )
+
+            self._stop_sleep_prevention()
+            return result
+
+        except Exception as e:
+            log.exception("Resume run failed: %s", e)
+            progress(f"Resume error: {e}")
+            self._stop_sleep_prevention()
+            return None
+
     def _preprocess(
         self,
         raw_submissions: List[Dict],
@@ -692,6 +935,7 @@ class InsightsEngine:
         whisper_model = s.get("insights_whisper_model", "base")
         translation_backend = s.get("insights_translation_backend", "ollama")
         translation_model = s.get("insights_translation_model", "llama3.1:8b")
+        handwriting_enabled = s.get("insights_handwriting_enabled", False)
 
         canvas_headers = {}
         if self._api:
@@ -702,6 +946,7 @@ class InsightsEngine:
                 canvas_headers=canvas_headers,
                 translation_enabled=translate_enabled,
                 transcription_enabled=transcribe_enabled,
+                image_transcription_enabled=handwriting_enabled,
                 whisper_model=whisper_model,
                 translation_backend=translation_backend,
                 translation_model=translation_model,
@@ -723,6 +968,7 @@ class InsightsEngine:
             sub["body"] = result.text
             sub["was_translated"] = result.was_translated
             sub["was_transcribed"] = result.was_transcribed
+            sub["was_image_transcribed"] = result.was_image_transcribed
             sub["original_language_name"] = result.original_language_name
             sub["original_text"] = result.original_text
             if result.teacher_comment:

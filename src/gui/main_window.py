@@ -102,8 +102,6 @@ class MainWindow(QMainWindow):
         self._prefetch_worker = None
         self._assignments_cache: dict = {}  # course_id → [group_dicts]
         self._active_workers: list = []  # prevent premature GC of running workers
-        # Cross-course selection: course_id → (course_name, [selected assignment dicts])
-        self._cross_selections: dict = {}
 
         if demo_mode:
             label = _PROFILE_LABEL.get(demo_profile, demo_profile)
@@ -116,6 +114,7 @@ class MainWindow(QMainWindow):
 
         if not demo_mode:
             self._init_api()
+            self._run_auto_retention()
         self._build_ui()
         self._connect_signals()
         self._refresh_courses()
@@ -139,6 +138,16 @@ class MainWindow(QMainWindow):
                 self._editor = CanvasEditor(base_url=url, api_token=token)
         except Exception:
             pass
+
+    @staticmethod
+    def _run_auto_retention() -> None:
+        """Fire-and-forget data retention on a background thread."""
+        try:
+            from threading import Thread
+            from automation.data_retention import run_auto_retention
+            Thread(target=run_auto_retention, daemon=True).start()
+        except Exception:
+            pass  # never block startup
 
     # ------------------------------------------------------------------
     # UI construction
@@ -240,8 +249,8 @@ class MainWindow(QMainWindow):
             btn.setStyleSheet(_ACTION_BTN_QSS)
             return btn
 
-        # Course Select → page 0
-        self._btn_courses = _nav_btn("Course Select")
+        # Quick Run → page 0
+        self._btn_courses = _nav_btn("Quick Run")
         self._btn_courses.clicked.connect(lambda: self._stack.setCurrentIndex(0))
         self._nav_group.addButton(self._btn_courses)
         h.addWidget(self._btn_courses)
@@ -328,13 +337,13 @@ class MainWindow(QMainWindow):
         cl.setSpacing(12)
 
         # Page header (matches Bulk Run's title bar)
-        cs_title = QLabel("COURSE SELECT")
+        cs_title = QLabel("QUICK RUN")
         cs_title.setStyleSheet(
             f"color: {PHOSPHOR_HOT}; font-size: {px(16)}px; font-weight: bold;"
             f" background: transparent; border: none; letter-spacing: 2px;"
         )
         cs_sub = QLabel(
-            "Select a course to view assignments and run the autograder."
+            "Select a course and assignments, then run the autograder."
         )
         cs_sub.setStyleSheet(
             f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
@@ -370,15 +379,25 @@ class MainWindow(QMainWindow):
         from gui.panels.review_panel import ReviewPanel
         if self._demo_mode:
             from automation.demo_store import DemoRunStore
+            self._demo_store = DemoRunStore(profile=self._demo_profile)
             self._review_panel = ReviewPanel(
                 api=None,
-                store=DemoRunStore(profile=self._demo_profile),
+                store=self._demo_store,
                 insights_panel=self._insights_panel,
+            )
+            self._review_panel.set_stores(
+                grading_store=self._demo_store,
+                insights_store=self._insights_store,
             )
         else:
             self._review_panel = ReviewPanel(
                 api=self._api,
                 insights_panel=self._insights_panel,
+            )
+            from automation.run_store import RunStore
+            self._review_panel.set_stores(
+                grading_store=RunStore(),
+                insights_store=self._insights_store,
             )
         self._stack.addWidget(self._review_panel)  # index 3
 
@@ -391,11 +410,13 @@ class MainWindow(QMainWindow):
 
 
     def _show_review_page(self) -> None:
-        """Switch to the Review page, ensuring Insights has fresh course data."""
+        """Switch to the Review page, ensuring sidebar + Insights have fresh course data."""
         courses_by_term = self._course_panel.get_all_courses_by_term()
         self._insights_panel.refresh_courses(
             courses_by_term, self._assignments_cache
         )
+        # Feed the shared sidebar
+        self._review_panel.set_courses(courses_by_term, self._assignments_cache)
         self._stack.setCurrentIndex(3)
 
     def _build_statusbar(self) -> None:
@@ -483,16 +504,6 @@ class MainWindow(QMainWindow):
         self._set_status("Demo courses loaded. Select a course to get started.")
 
     def _on_course_selected(self, course_id: int, course_name: str) -> None:
-        # Save current selection before switching away
-        if self._current_course_id is not None:
-            saved = self._assignment_panel.get_selected_assignments()
-            if saved:
-                self._cross_selections[self._current_course_id] = (
-                    self._current_course_name, saved
-                )
-            else:
-                self._cross_selections.pop(self._current_course_id, None)
-
         self._current_course_id = course_id
         self._current_course_name = course_name
         self._assignment_panel.set_course(course_id, course_name)
@@ -580,12 +591,9 @@ class MainWindow(QMainWindow):
             self._on_assignments_loaded(groups)
 
     def _on_assignments_loaded(self, groups: list) -> None:
-        self._assignment_panel.populate_tree(groups)
-        # Restore any previously saved selection for this course
-        if self._current_course_id in self._cross_selections:
-            _, saved_items = self._cross_selections[self._current_course_id]
-            saved_ids = {a["id"] for a in saved_items if a.get("id")}
-            self._assignment_panel.restore_selection(saved_ids)
+        preserve = getattr(self, "_edit_refresh_pending", False)
+        self._edit_refresh_pending = False
+        self._assignment_panel.populate_tree(groups, preserve_scroll=preserve)
         self._set_status("Assignments loaded.")
 
     # ------------------------------------------------------------------
@@ -685,6 +693,7 @@ class MainWindow(QMainWindow):
 
     def _on_edit_completed(self) -> None:
         """Re-fetch assignments after a Canvas edit to get fresh data."""
+        self._edit_refresh_pending = True
         self._refresh_assignments()
 
     def _on_settings_saved(self) -> None:
@@ -755,4 +764,10 @@ class MainWindow(QMainWindow):
             self._bulk_run_page._mapping_panel.stop_and_wait()
         if hasattr(self, "_insights_panel"):
             self._insights_panel.cleanup()
+        if hasattr(self, "_review_panel"):
+            if hasattr(self._review_panel, "_aic_panel"):
+                self._review_panel._aic_panel.cleanup()
+            if hasattr(self._review_panel, "_grading_panel"):
+                for w in getattr(self._review_panel._grading_panel, "_active_workers", []):
+                    w.wait(3000)
         event.accept()

@@ -11,6 +11,17 @@ _src_dir = str(Path(__file__).resolve().parent.parent)
 if _src_dir not in sys.path:
     sys.path.insert(0, _src_dir)
 
+# If the app-managed venv exists (created by Insights Setup for Homebrew
+# users), add its site-packages so packages installed there are importable.
+_app_venv_sp = (
+    Path.home() / ".autograder4canvas" / "venv" / "lib"
+)
+if _app_venv_sp.exists():
+    for _sp in _app_venv_sp.glob("python*/site-packages"):
+        _sp_str = str(_sp)
+        if _sp_str not in sys.path:
+            sys.path.append(_sp_str)
+
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import Qt
 

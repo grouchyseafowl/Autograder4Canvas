@@ -21,12 +21,13 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QFrame, QPushButton,
-    QMessageBox,
+    QMessageBox, QCheckBox,
 )
 from PySide6.QtCore import Qt, QPoint
 from PySide6.QtGui import QFont
 
 from gui.styles import (
+    px,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM,
     BORDER_DARK, BORDER_AMBER,
     BURN_RED,
@@ -48,7 +49,7 @@ _BTN_SECONDARY = f"""
         border-radius: 4px;
         padding: 5px 18px;
         font-family: {_MONO_STACK};
-        font-size: 11px;
+        font-size: {px(11)}px;
     }}
     QPushButton:hover {{
         background: #241400;
@@ -66,7 +67,7 @@ _BTN_PRIMARY = f"""
         border-radius: 4px;
         padding: 5px 18px;
         font-family: {_MONO_STACK};
-        font-size: 11px;
+        font-size: {px(11)}px;
     }}
     QPushButton:hover {{
         background: #2E1A00;
@@ -83,7 +84,7 @@ _BTN_DANGER = f"""
         border-radius: 4px;
         padding: 5px 18px;
         font-family: {_MONO_STACK};
-        font-size: 11px;
+        font-size: {px(11)}px;
     }}
     QPushButton:hover {{
         background: #280C00;
@@ -148,6 +149,7 @@ class _AmberDialog(QDialog):
         *,
         severity: str,
         btn_specs: list[tuple[str, str, _SB]],
+        checkbox_label: str | None = None,
     ) -> None:
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
@@ -231,6 +233,42 @@ class _AmberDialog(QDialog):
 
         root.addWidget(body)
 
+        # ── Optional "don't ask again" checkbox ─────────────────────────
+        self._suppress_cb: QCheckBox | None = None
+        if checkbox_label:
+            cb_frame = QFrame()
+            cb_frame.setStyleSheet("QFrame { background: transparent; border: none; }")
+            cb_lay = QHBoxLayout(cb_frame)
+            cb_lay.setContentsMargins(20, 0, 20, 10)
+            self._suppress_cb = QCheckBox(checkbox_label)
+            self._suppress_cb.setStyleSheet(f"""
+                QCheckBox {{
+                    color: {PHOSPHOR_DIM};
+                    font-family: {_MONO_STACK};
+                    font-size: {px(10)}px;
+                    background: transparent;
+                    border: none;
+                    spacing: 6px;
+                }}
+                QCheckBox::indicator {{
+                    width: 13px; height: 13px;
+                    border: 1px solid {BORDER_DARK};
+                    border-radius: 2px;
+                    background: #0A0700;
+                }}
+                QCheckBox::indicator:checked {{
+                    background: #1E1200;
+                    border-color: {PHOSPHOR_DIM};
+                    image: none;
+                }}
+                QCheckBox::indicator:checked::after {{
+                    color: {PHOSPHOR_DIM};
+                }}
+            """)
+            cb_lay.addWidget(self._suppress_cb)
+            cb_lay.addStretch()
+            root.addWidget(cb_frame)
+
         # ── Footer separator ──────────────────────────────────────────────
         sep = QFrame()
         sep.setFixedHeight(1)
@@ -263,6 +301,10 @@ class _AmberDialog(QDialog):
 
         # Drag support (frameless window needs manual move)
         self._drag_pos: QPoint | None = None
+
+    @property
+    def suppress_checked(self) -> bool:
+        return self._suppress_cb is not None and self._suppress_cb.isChecked()
 
     def _finish(self, result: _SB) -> None:
         self._chosen = result
@@ -325,3 +367,42 @@ def show_question(
 ) -> _SB:
     """Show a confirmation question. Returns the StandardButton clicked."""
     return _run(parent, title, text, "question", _parse_buttons(buttons, "question"))
+
+
+def show_with_action(
+    parent,
+    title: str,
+    text: str,
+    action_label: str,
+    severity: str = "warning",
+) -> bool:
+    """Show a dialog with a custom action button + Cancel.
+
+    Returns True if the user clicked the action button, False for Cancel.
+    """
+    btn_specs = [
+        ("Cancel", "secondary", _SB.Cancel),
+        (action_label, "primary", _SB.Yes),
+    ]
+    return _run(parent, title, text, severity, btn_specs) == _SB.Yes
+
+
+def show_warning_suppressible(
+    parent,
+    title: str,
+    text: str,
+    checkbox_label: str = "Don't show this again",
+    buttons: _SB = _SB.Yes | _SB.Cancel,
+) -> tuple[_SB, bool]:
+    """Show a warning with a 'don't ask again' checkbox.
+
+    Returns (button_clicked, suppress_checked).
+    """
+    dlg = _AmberDialog(
+        parent, title, text,
+        severity="warning",
+        btn_specs=_parse_buttons(buttons, "warning"),
+        checkbox_label=checkbox_label,
+    )
+    dlg.exec()
+    return dlg._chosen, dlg.suppress_checked

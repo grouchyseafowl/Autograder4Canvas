@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal, QThread
 
 from gui.styles import (
+    px,
     SPACING_SM, SPACING_MD, SPACING_LG,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM,
     TERM_GREEN, BURN_RED, STATUS_WARN, AMBER_BTN,
@@ -46,6 +47,17 @@ def _is_apple_silicon() -> bool:
         platform.system() == "Darwin"
         and platform.machine() == "arm64"
     )
+
+
+def _is_externally_managed() -> bool:
+    """Detect Homebrew / system Python that blocks bare pip install."""
+    v = sys.version_info
+    lib_dir = f"lib/python{v.major}.{v.minor}"
+    for prefix in (sys.prefix, sys.base_prefix):
+        marker = Path(prefix) / lib_dir / "EXTERNALLY-MANAGED"
+        if marker.exists():
+            return True
+    return False
 
 
 def _check_mlx() -> bool:
@@ -141,18 +153,67 @@ def _check_whisper() -> bool:
     return shutil.which("whisper-cli") is not None
 
 
+def _check_file_extraction() -> bool:
+    """Check if DOCX and PDF text extraction libraries are available."""
+    try:
+        from docx import Document  # noqa: F401
+        from pdfminer.high_level import extract_text  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+def _check_vision_model() -> bool:
+    """Check if a vision model is available for handwriting transcription."""
+    try:
+        import requests
+        r = requests.get("http://localhost:11434/api/tags", timeout=3)
+        if r.status_code == 200:
+            models = [m["name"] for m in r.json().get("models", [])]
+            return any(
+                v in m.lower() for m in models
+                for v in ("llava", "vision", "bakllava", "moondream")
+            )
+    except Exception:
+        pass
+    return False
+
+
 # ---------------------------------------------------------------------------
 # Background installer worker
 # ---------------------------------------------------------------------------
+
+# Where the app creates its own venv for managed package installs.
+_APP_VENV = Path.home() / ".autograder4canvas" / "venv"
+
+
+def _ensure_app_venv() -> Path:
+    """Create the app-managed venv if it doesn't exist. Returns venv pip path."""
+    venv_pip = _APP_VENV / "bin" / "pip"
+    if not venv_pip.exists():
+        import venv as _venv
+        _APP_VENV.parent.mkdir(parents=True, exist_ok=True)
+        _venv.create(str(_APP_VENV), with_pip=True, system_site_packages=True)
+    return venv_pip
+
+
+def app_venv_python() -> str:
+    """Return the path to the app venv's Python, or sys.executable if no venv."""
+    p = _APP_VENV / "bin" / "python3"
+    return str(p) if p.exists() else sys.executable
+
 
 class _InstallerWorker(QThread):
     """Runs pip install or other setup commands in background."""
     progress = Signal(str)
     finished = Signal(bool, str)  # success, message
 
-    def __init__(self, task: str, parent=None):
+    # install_mode: "global" uses sys.executable + --break-system-packages
+    #               "venv" creates/uses ~/.autograder4canvas/venv/
+    def __init__(self, task: str, install_mode: str = "global", parent=None):
         super().__init__(parent)
         self._task = task
+        self._install_mode = install_mode
 
     def run(self):
         try:
@@ -169,6 +230,18 @@ class _InstallerWorker(QThread):
         except Exception as e:
             self.finished.emit(False, str(e))
 
+    def _pip_install_cmd(self, *packages: str) -> list[str]:
+        """Build pip install command using the chosen install mode."""
+        if self._install_mode == "venv":
+            venv_pip = _ensure_app_venv()
+            return [str(venv_pip), "install", "--quiet"] + list(packages)
+        else:
+            cmd = [sys.executable, "-m", "pip", "install", "--quiet"]
+            if _is_externally_managed():
+                cmd.append("--break-system-packages")
+            cmd.extend(packages)
+            return cmd
+
     def _install_pip_deps(self):
         """Install missing pip packages."""
         packages = []
@@ -178,6 +251,8 @@ class _InstallerWorker(QThread):
             packages.append("sentence-transformers")
         if not _check_sklearn():
             packages.append("scikit-learn")
+        if not _check_file_extraction():
+            packages.extend(["python-docx", "pdfminer.six"])
         try:
             import pydantic  # noqa: F401
         except ImportError:
@@ -197,7 +272,7 @@ class _InstallerWorker(QThread):
 
         self.progress.emit(f"Installing {', '.join(packages)}...")
         result = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--quiet"] + packages,
+            self._pip_install_cmd(*packages),
             capture_output=True, text=True, timeout=300,
         )
         if result.returncode == 0:
@@ -209,7 +284,7 @@ class _InstallerWorker(QThread):
         """Install mlx-lm for Apple Silicon native inference."""
         self.progress.emit("Installing MLX (Apple Silicon AI framework)...")
         result = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--quiet", "mlx-lm"],
+            self._pip_install_cmd("mlx-lm"),
             capture_output=True, text=True, timeout=300,
         )
         if result.returncode == 0:
@@ -289,7 +364,7 @@ class InsightsSetupDialog(QDialog):
 
         title = QLabel("INSIGHTS ENGINE SETUP")
         title.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(16)}px; font-weight: bold;"
             f" letter-spacing: 2px; background: transparent; border: none;"
         )
         lo.addWidget(title)
@@ -305,7 +380,7 @@ class InsightsSetupDialog(QDialog):
         )
         sub.setWordWrap(True)
         sub.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 12px;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
             f" background: transparent; border: none;"
         )
         lo.addWidget(sub)
@@ -327,7 +402,7 @@ class InsightsSetupDialog(QDialog):
         self._progress_label = QLabel("")
         self._progress_label.setWordWrap(True)
         self._progress_label.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 12px;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
             f" background: transparent; border: none;"
         )
         lo.addWidget(self._progress_label)
@@ -446,11 +521,29 @@ class InsightsSetupDialog(QDialog):
         self._check_lo.addWidget(make_h_rule())
         self._check_lo.addWidget(make_section_label("Optional (not required for basic use)"))
 
+        self._add_check("File text extraction (DOCX, PDF)",
+                        "Extracts text from uploaded documents so students who "
+                        "submit Word or PDF files are included in the analysis. "
+                        "Without this, file uploads appear as blank submissions.",
+                        _check_file_extraction(),
+                        auto_installable=True)
+
         self._add_check("Audio transcription (Whisper)",
                         "For transcribing audio/video student submissions. "
                         "Only needed if students submit voice memos or videos. "
                         "Runs locally — no audio leaves your machine.",
                         _check_whisper(),
+                        auto_installable=False,
+                        optional=True)
+
+        self._add_check("Handwriting transcription (Vision AI)",
+                        "For reading handwritten notes submitted as photos. "
+                        "Requires a vision model in Ollama (e.g. llava or "
+                        "llama3.2-vision). This is SLOW (30-60 sec per image) "
+                        "and the transcription WILL contain errors — you'll be "
+                        "asked to verify each transcription before it enters "
+                        "the analysis.",
+                        _check_vision_model(),
                         auto_installable=False,
                         optional=True)
 
@@ -488,14 +581,14 @@ class InsightsSetupDialog(QDialog):
         if ok:
             icon = QLabel("✓")
             icon.setStyleSheet(
-                f"color: {TERM_GREEN}; font-size: 18px; font-weight: bold;"
+                f"color: {TERM_GREEN}; font-size: {px(18)}px; font-weight: bold;"
                 f" background: transparent; border: none;"
             )
         else:
             icon = QLabel("○" if optional else "✗")
             color = PHOSPHOR_DIM if optional else BURN_RED
             icon.setStyleSheet(
-                f"color: {color}; font-size: 18px; font-weight: bold;"
+                f"color: {color}; font-size: {px(18)}px; font-weight: bold;"
                 f" background: transparent; border: none;"
             )
         icon.setFixedWidth(24)
@@ -507,7 +600,7 @@ class InsightsSetupDialog(QDialog):
         name_lbl = QLabel(name)
         name_color = PHOSPHOR_HOT if ok else (PHOSPHOR_DIM if optional else PHOSPHOR_MID)
         name_lbl.setStyleSheet(
-            f"color: {name_color}; font-size: 13px; font-weight: bold;"
+            f"color: {name_color}; font-size: {px(13)}px; font-weight: bold;"
             f" background: transparent; border: none;"
         )
         text_lo.addWidget(name_lbl)
@@ -515,7 +608,7 @@ class InsightsSetupDialog(QDialog):
         desc_lbl = QLabel(description)
         desc_lbl.setWordWrap(True)
         desc_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
             f" background: transparent; border: none;"
         )
         text_lo.addWidget(desc_lbl)

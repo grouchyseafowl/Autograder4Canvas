@@ -104,8 +104,87 @@ AIC_MODE_WEIGHT_PRESETS: dict = {
 }
 
 DEFAULT_TEMPLATES: dict = {
-    "Notes / Summary": {
-        "description": "Lecture notes, reading summaries, and any note-taking work",
+    # ── Writing ─────────────────────────────────────────────────────────────
+    "Personal / Reflection": {
+        "assignment_type": "complete_incomplete",
+        "min_word_count": 150,
+        "post_min_words": 150,
+        "reply_min_words": 50,
+        "run_aic": True,
+        "aic_mode": "personal",
+        "aic_context": "standard",
+        "aic_sensitivity": "lenient",
+        "keywords": ["reflection", "journal", "response", "reflect", "personal", "self"],
+        "group": "writing",
+        "is_system_default": True,
+        "short_sub_guidance": (
+            "PERSONAL/REFLECTION: authentic engagement > length. A brief moment of "
+            "genuine vulnerability or a single sharp connection to the reading "
+            "constitutes complete work. Do not penalize informal register."
+        ),
+        **AIC_MODE_WEIGHT_PRESETS["personal"],
+    },
+    "Formal Essay / Research": {
+        "assignment_type": "complete_incomplete",
+        "min_word_count": 400,
+        "post_min_words": 400,
+        "reply_min_words": 100,
+        "run_aic": True,
+        "aic_mode": "essay",
+        "aic_context": "standard",
+        "aic_sensitivity": "high",
+        # Lab/technical keywords folded in — same AIC profile applies
+        "keywords": ["essay", "paper", "report", "analysis", "research",
+                     "argument", "thesis", "final", "lab", "technical",
+                     "experiment", "methodology", "procedure", "results"],
+        "group": "writing",
+        "is_system_default": True,
+        "short_sub_guidance": (
+            "FORMAL ESSAY: brevity is more concerning here, but a dense paragraph "
+            "with thesis, evidence, and analysis can still demonstrate engagement."
+        ),
+        **AIC_MODE_WEIGHT_PRESETS["essay"],
+    },
+    # ── Pre-Writing ──────────────────────────────────────────────────────────
+    "Draft": {
+        "assignment_type": "complete_incomplete",
+        "min_word_count": 150,
+        "post_min_words": 150,
+        "reply_min_words": 50,
+        "run_aic": True,
+        "aic_mode": "draft",
+        "aic_context": "standard",
+        "aic_sensitivity": "lenient",
+        "keywords": ["draft", "brainstorm", "rough", "in-progress", "plan"],
+        "group": "prewriting",
+        "is_system_default": True,
+        "short_sub_guidance": (
+            "DRAFT: rough, incomplete, messy by nature. False starts and fragments "
+            "are authentic drafting. Even a single clear idea direction is engagement."
+        ),
+        **AIC_MODE_WEIGHT_PRESETS["draft"],
+    },
+    "Outline": {
+        "assignment_type": "complete_incomplete",
+        "min_word_count": 75,
+        "post_min_words": 75,
+        "reply_min_words": 25,
+        "run_aic": True,
+        "aic_mode": "outline",
+        "aic_context": "standard",
+        "aic_sensitivity": "lenient",
+        "keywords": ["outline", "structure", "framework", "skeleton",
+                     "pre-writing", "prewriting", "map"],
+        "group": "prewriting",
+        "is_system_default": True,
+        "short_sub_guidance": (
+            "OUTLINE: hierarchical and concise by design. Look for structure and "
+            "topic coverage, not word count. A few tightly organized lines is complete work."
+        ),
+        **AIC_MODE_WEIGHT_PRESETS["outline"],
+    },
+    # ── Notes ────────────────────────────────────────────────────────────────
+    "Reading Notes": {
         "assignment_type": "complete_incomplete",
         "min_word_count": 100,
         "post_min_words": 100,
@@ -116,95 +195,78 @@ DEFAULT_TEMPLATES: dict = {
         "aic_sensitivity": "lenient",
         "keywords": ["notes", "note", "summary", "recap", "reading",
                      "module", "lecture", "chapter"],
+        "group": "notes",
         "is_system_default": True,
+        "short_sub_guidance": (
+            "READING NOTES: inherently brief and fragmentary. Bullet points, "
+            "keywords, page references, and brief reactions are authentic note-taking. "
+            "Do not expect prose."
+        ),
         **AIC_MODE_WEIGHT_PRESETS["notes"],
     },
-    "Outline / Structure": {
-        "description": "Structured outlines, topic trees, hierarchical plans, and pre-writing frameworks",
-        "assignment_type": "complete_incomplete",
-        "min_word_count": 75,
-        "post_min_words": 75,
-        "reply_min_words": 25,
-        "run_aic": True,
-        "aic_mode": "outline",
-        "aic_context": "standard",
-        "aic_sensitivity": "lenient",
-        "keywords": ["outline", "structure", "framework", "hierarchy",
-                     "map", "pre-writing", "prewriting", "skeleton"],
-        "is_system_default": True,
-        **AIC_MODE_WEIGHT_PRESETS["outline"],
-    },
-    "Discussion / Response": {
-        "description": "Discussion board posts, replies, and peer responses",
-        "assignment_type": "discussion_forum",
-        "min_word_count": 200,
-        "post_min_words": 200,
+    # ── Discussion ───────────────────────────────────────────────────────────
+    "Discussion Post (C/I)": {
+        "assignment_type": "discussion_ci",
+        "post_min_words": 150,
         "reply_min_words": 50,
+        "min_replies": 2,
         "run_aic": True,
         "aic_mode": "discussion",
         "aic_context": "standard",
         "aic_sensitivity": "medium",
         "keywords": ["discussion", "forum", "post", "reply", "thread", "respond"],
+        "group": "discussion",
         "is_system_default": True,
+        "short_sub_guidance": (
+            "DISCUSSION: a short, incisive response that directly engages a peer's "
+            "argument or applies a course concept can be more substantive than a long "
+            "generic post. Evaluate replies in context of the thread."
+        ),
         **AIC_MODE_WEIGHT_PRESETS["discussion"],
     },
-    "Draft (any stage)": {
-        "description": "In-progress drafts, rough work, brainstorming, and outlines",
-        "assignment_type": "complete_incomplete",
-        "min_word_count": 150,
+    "Discussion Forum (Points)": {
+        "assignment_type": "discussion_points",
         "post_min_words": 150,
         "reply_min_words": 50,
+        "points_per_post": 7.0,
+        "points_per_reply": 1.5,
         "run_aic": True,
-        "aic_mode": "draft",
+        "aic_mode": "discussion",
         "aic_context": "standard",
-        "aic_sensitivity": "lenient",
-        "keywords": ["draft", "brainstorm", "rough", "in-progress", "plan"],
+        "aic_sensitivity": "medium",
+        "keywords": [],
+        "group": "discussion",
         "is_system_default": True,
-        **AIC_MODE_WEIGHT_PRESETS["draft"],
+        "short_sub_guidance": (
+            "DISCUSSION: a short, incisive response that directly engages a peer's "
+            "argument or applies a course concept can be more substantive than a long "
+            "generic post. Evaluate replies in context of the thread."
+        ),
+        **AIC_MODE_WEIGHT_PRESETS["discussion"],
     },
-    "Personal / Reflective": {
-        "description": "Journals, reflections, personal responses, and self-assessments",
-        "assignment_type": "complete_incomplete",
-        "min_word_count": 150,
-        "post_min_words": 200,
+    "Discussion Forum (Letter Grade)": {
+        "assignment_type": "discussion_letter",
+        "post_min_words": 150,
         "reply_min_words": 50,
+        # Reply count thresholds — defaults: 2=A, 1=B, 0=C, None=D tier disabled
+        # "no post" is always F; grades convert to Canvas % via LETTER_GRADE_PERCENTAGES
+        "replies_for_a": 2,
+        "replies_for_b": 1,
+        "replies_for_c": 0,
+        "replies_for_d": None,
         "run_aic": True,
-        "aic_mode": "personal",
-        "aic_context": "community_college",
-        "aic_sensitivity": "lenient",
-        "keywords": ["reflection", "journal", "response", "reflect", "personal", "self"],
-        "is_system_default": True,
-        **AIC_MODE_WEIGHT_PRESETS["personal"],
-    },
-    "Formal Essay / Research": {
-        "description": "Formal essays, research papers, analytical and argumentative writing",
-        "assignment_type": "complete_incomplete",
-        "min_word_count": 400,
-        "post_min_words": 400,
-        "reply_min_words": 100,
-        "run_aic": True,
-        "aic_mode": "essay",
+        "aic_mode": "discussion",
         "aic_context": "standard",
-        "aic_sensitivity": "high",
-        "keywords": ["essay", "paper", "report", "analysis", "research",
-                     "argument", "thesis", "final"],
+        "aic_sensitivity": "medium",
+        "keywords": [],
+        "group": "discussion",
         "is_system_default": True,
-        **AIC_MODE_WEIGHT_PRESETS["essay"],
-    },
-    "Lab / Technical": {
-        "description": "Lab reports, technical write-ups, and methodology sections",
-        "assignment_type": "complete_incomplete",
-        "min_word_count": 200,
-        "post_min_words": 200,
-        "reply_min_words": 50,
-        "run_aic": True,
-        "aic_mode": "lab",
-        "aic_context": "standard",
-        "aic_sensitivity": "high",
-        "keywords": ["lab", "technical", "report", "experiment", "methodology",
-                     "procedure", "results", "data"],
-        "is_system_default": True,
-        **AIC_MODE_WEIGHT_PRESETS["lab"],
+        "short_sub_guidance": (
+            "DISCUSSION: a short, incisive response that directly engages a peer's "
+            "argument or applies a course concept can be more substantive than a long "
+            "generic post. Evaluate replies in context of the thread."
+        ),
+        **AIC_MODE_WEIGHT_PRESETS["discussion"],
     },
 }
 
@@ -215,17 +277,27 @@ SYSTEM_DEFAULT_NAMES: frozenset = frozenset(
 
 # Field defaults for new templates
 TEMPLATE_FIELD_DEFAULTS: dict = {
-    "description": "",
     "assignment_type": "complete_incomplete",
     "min_word_count": 200,
-    "post_min_words": 200,
+    "post_min_words": 150,
     "reply_min_words": 50,
+    # discussion_ci
+    "min_replies": 2,
+    # discussion_points
+    "points_per_post": 5.0,
+    "points_per_reply": 1.0,
+    # discussion_letter
+    "replies_for_a": 2,
+    "replies_for_b": 1,
+    "replies_for_c": 0,
+    "replies_for_d": None,
     "run_aic": False,
     "aic_mode": "auto",
     "aic_context": "standard",
     "aic_sensitivity": "medium",
     "keywords": [],
     "is_system_default": False,
+    "short_sub_guidance": "",   # Optional LLM guidance for short submission review
     # AIC signal config — inline weights (mode preset values on creation)
     **AIC_MODE_WEIGHT_PRESETS["auto"],
 }
@@ -273,9 +345,14 @@ AIC_STUDENT_PROFILE_LABELS = {
 
 ASSIGNMENT_TYPE_LABELS = {
     "complete_incomplete": "Complete / Incomplete",
-    "discussion_forum":    "Discussion Forum",
+    "discussion_ci":       "Discussion — Complete/Incomplete",
+    "discussion_points":   "Discussion — Points",
+    "discussion_letter":   "Discussion — Letter Grade",
     "mixed":               "Mixed (auto-detect)",
 }
+
+# Letter grade → Canvas percentage conversion (used when submitting scores to Canvas)
+LETTER_GRADE_PERCENTAGES: dict = {"A": 100, "B": 85, "C": 75, "D": 65, "F": 0}
 
 
 # ---------------------------------------------------------------------------
@@ -339,10 +416,16 @@ def _save_file(data: dict) -> None:
 
 
 def _migrate_template(tmpl: dict) -> dict:
-    """Migrate a template from aic_profile (v2) to aic_mode (v3) in-place. Returns tmpl."""
+    """Migrate stored templates forward. Returns tmpl."""
+    # v2 → v3: aic_profile → aic_mode
     if "aic_profile" in tmpl and "aic_mode" not in tmpl:
         old = tmpl.pop("aic_profile")
         tmpl["aic_mode"] = _AIC_PROFILE_MIGRATION.get(old, "auto")
+    # v3 → v4: old discussion_forum assignment_type → discussion_ci
+    if tmpl.get("assignment_type") == "discussion_forum":
+        tmpl["assignment_type"] = "discussion_ci"
+        if "min_replies" not in tmpl:
+            tmpl["min_replies"] = 2
     return tmpl
 
 

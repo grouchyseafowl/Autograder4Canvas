@@ -12,14 +12,16 @@ from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QFrame, QScrollArea, QWidget, QLineEdit, QComboBox,
     QSpinBox, QDoubleSpinBox, QMessageBox, QListWidget, QListWidgetItem,
-    QSizePolicy, QSplitter,
+    QSizePolicy, QSplitter, QPlainTextEdit,
 )
+from gui.widgets.crt_combo import CRTComboBox
 from gui.widgets.switch_toggle import SwitchToggle
 from gui.dialogs.message_dialog import show_question
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont, QColor
 
 from gui.styles import (
+    px,
     SPACING_SM, SPACING_MD,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM, PHOSPHOR_GLOW,
     ROSE_ACCENT, AMBER_BTN, TERM_GREEN, WARN_PINK, BURN_RED,
@@ -27,13 +29,14 @@ from gui.styles import (
     BG_VOID, BG_CARD, BG_INSET, BG_PANEL,
     PANE_BG_GRADIENT,
     make_run_button, make_secondary_button, make_section_label, make_h_rule,
+    combo_qss,
 )
 from assignment_templates import (
     load_templates, save_templates,
     DEFAULT_TEMPLATES, TEMPLATE_FIELD_DEFAULTS, SYSTEM_DEFAULT_NAMES,
     AIC_MODE_LABELS, AIC_MODE_WEIGHT_PRESETS,
     AIC_CONTEXT_LABELS, AIC_SENSITIVITY_LABELS,
-    ASSIGNMENT_TYPE_LABELS,
+    ASSIGNMENT_TYPE_LABELS, LETTER_GRADE_PERCENTAGES,
 )
 
 # ---------------------------------------------------------------------------
@@ -68,7 +71,7 @@ _LIST_QSS = f"""
     QListWidget {{
         background: {BG_INSET};
         border: none;
-        font-size: 12px;
+        font-size: {px(12)}px;
         outline: none;
     }}
     QListWidget::item {{
@@ -90,12 +93,12 @@ _LIST_QSS = f"""
 """
 
 _FIELD_LABEL_QSS = (
-    f"color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: normal;"
+    f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: normal;"
     f" letter-spacing: 0.5px; background: transparent; border: none;"
 )
 
 _SUBTEXT_QSS = (
-    f"color: {PHOSPHOR_GLOW}; font-size: 10px;"
+    f"color: {PHOSPHOR_GLOW}; font-size: {px(10)}px;"
     f" background: transparent; border: none;"
 )
 
@@ -106,37 +109,18 @@ _INPUT_QSS = f"""
         border-radius: 3px;
         padding: 4px 8px;
         color: {PHOSPHOR_HOT};
-        font-size: 12px;
+        font-size: {px(12)}px;
     }}
     QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus {{ border-color: {BORDER_AMBER}; }}
 """
 
-_COMBO_QSS = f"""
-    QComboBox {{
-        background: {BG_INSET};
-        border: 1px solid {BORDER_DARK};
-        border-radius: 3px;
-        padding: 4px 8px;
-        color: {PHOSPHOR_HOT};
-        font-size: 12px;
-        min-height: 22px;
-    }}
-    QComboBox:focus {{ border-color: {BORDER_AMBER}; }}
-    QComboBox::drop-down {{ border: none; width: 18px; }}
-    QComboBox QAbstractItemView {{
-        background: {BG_CARD};
-        border: 1px solid {BORDER_DARK};
-        color: {PHOSPHOR_MID};
-        selection-background-color: #2C1C08;
-        selection-color: {PHOSPHOR_HOT};
-    }}
-"""
+_COMBO_QSS = combo_qss()
 
 _SMALL_BTN_QSS = (
     f"QPushButton {{"
     f" background: transparent; color: {PHOSPHOR_DIM};"
     f" border: 1px solid {BORDER_DARK}; border-radius: 3px;"
-    f" padding: 3px 10px; font-size: 11px; }}"
+    f" padding: 3px 10px; font-size: {px(11)}px; }}"
     f"QPushButton:hover {{"
     f" border-color: {BORDER_AMBER}; color: {PHOSPHOR_MID}; }}"
     f"QPushButton:pressed {{"
@@ -147,7 +131,7 @@ _DELETE_BTN_QSS = (
     f"QPushButton {{"
     f" background: transparent; color: rgba(192,64,32,0.70);"
     f" border: 1px solid rgba(192,64,32,0.35); border-radius: 3px;"
-    f" padding: 3px 10px; font-size: 11px; }}"
+    f" padding: 3px 10px; font-size: {px(11)}px; }}"
     f"QPushButton:hover {{"
     f" border-color: rgba(192,64,32,0.80); color: {BURN_RED}; }}"
     f"QPushButton:disabled {{ color: {PHOSPHOR_GLOW}; border-color: {BORDER_DARK}; }}"
@@ -157,7 +141,7 @@ _ADV_BTN_QSS = (
     f"QPushButton {{"
     f" background: transparent; color: {PHOSPHOR_DIM};"
     f" border: 1px solid {BORDER_DARK}; border-radius: 3px;"
-    f" padding: 4px 10px; font-size: 11px; text-align: left; }}"
+    f" padding: 4px 10px; font-size: {px(11)}px; text-align: left; }}"
     f"QPushButton:hover {{"
     f" border-color: {BORDER_AMBER}; color: {PHOSPHOR_MID}; }}"
     f"QPushButton:checked {{"
@@ -207,6 +191,10 @@ def _scroll_wrap(inner: QWidget) -> QScrollArea:
 # _BasicGradingForm — centre panel
 # ---------------------------------------------------------------------------
 
+_DISC_TYPES = {"discussion_ci", "discussion_points", "discussion_letter",
+               "discussion_forum", "mixed"}
+
+
 class _BasicGradingForm(QWidget):
     """Template identification + grading settings."""
 
@@ -233,13 +221,6 @@ class _BasicGradingForm(QWidget):
         self._name_edit.textChanged.connect(self._emit)
         form.addWidget(self._name_edit)
 
-        form.addWidget(_field_label("Description"))
-        self._desc_edit = QLineEdit()
-        self._desc_edit.setStyleSheet(_INPUT_QSS)
-        self._desc_edit.setPlaceholderText("Short description for teachers")
-        self._desc_edit.textChanged.connect(self._emit)
-        form.addWidget(self._desc_edit)
-
         form.addWidget(_field_label("Keywords"))
         self._kw_edit = QLineEdit()
         self._kw_edit.setStyleSheet(_INPUT_QSS)
@@ -254,52 +235,184 @@ class _BasicGradingForm(QWidget):
         form.addWidget(_section_header("GRADING"))
 
         form.addWidget(_field_label("Assignment type"))
-        self._type_combo = QComboBox()
-        self._type_combo.setStyleSheet(_COMBO_QSS)
+        self._type_combo = CRTComboBox()
         for key, label in ASSIGNMENT_TYPE_LABELS.items():
             self._type_combo.addItem(label, key)
         self._type_combo.currentIndexChanged.connect(self._on_type_changed)
         form.addWidget(self._type_combo)
 
-        form.addWidget(_field_label("Minimum word counts"))
-
-        wc_row = QHBoxLayout()
-        wc_row.setSpacing(SPACING_MD)
-
-        wc_col = QVBoxLayout()
-        wc_col.setSpacing(3)
-        wc_col.addWidget(_field_label("Total"))
+        # ── Non-discussion: single min word count ────────────────────────
+        self._non_disc_widget = QWidget()
+        self._non_disc_widget.setStyleSheet("background: transparent;")
+        nd_lo = QVBoxLayout(self._non_disc_widget)
+        nd_lo.setContentsMargins(0, 4, 0, 0)
+        nd_lo.setSpacing(3)
+        nd_lo.addWidget(_field_label("Min word count"))
         self._min_wc = QSpinBox()
         self._min_wc.setRange(0, 5000)
         self._min_wc.setSingleStep(25)
         self._min_wc.setStyleSheet(_INPUT_QSS)
         self._min_wc.valueChanged.connect(self._emit)
-        wc_col.addWidget(self._min_wc)
-        wc_row.addLayout(wc_col)
+        nd_lo.addWidget(self._min_wc)
+        form.addWidget(self._non_disc_widget)
 
-        self._post_col = QVBoxLayout()
-        self._post_col.setSpacing(3)
-        self._post_col.addWidget(_field_label("Post"))
+        # ── Discussion shared: post + reply word counts ──────────────────
+        self._disc_shared_widget = QWidget()
+        self._disc_shared_widget.setStyleSheet("background: transparent;")
+        ds_lo = QVBoxLayout(self._disc_shared_widget)
+        ds_lo.setContentsMargins(0, 4, 0, 0)
+        ds_lo.setSpacing(SPACING_SM)
+
+        ds_lo.addWidget(_field_label("Minimum word counts"))
+        wc_row = QHBoxLayout()
+        wc_row.setSpacing(SPACING_MD)
+
+        post_col = QVBoxLayout()
+        post_col.setSpacing(3)
+        post_col.addWidget(_field_label("Post"))
         self._post_wc = QSpinBox()
         self._post_wc.setRange(0, 5000)
         self._post_wc.setSingleStep(25)
         self._post_wc.setStyleSheet(_INPUT_QSS)
         self._post_wc.valueChanged.connect(self._emit)
-        self._post_col.addWidget(self._post_wc)
-        wc_row.addLayout(self._post_col)
+        post_col.addWidget(self._post_wc)
+        wc_row.addLayout(post_col)
 
-        self._reply_col = QVBoxLayout()
-        self._reply_col.setSpacing(3)
-        self._reply_col.addWidget(_field_label("Reply"))
+        reply_col = QVBoxLayout()
+        reply_col.setSpacing(3)
+        reply_col.addWidget(_field_label("Reply"))
         self._reply_wc = QSpinBox()
         self._reply_wc.setRange(0, 2000)
         self._reply_wc.setSingleStep(10)
         self._reply_wc.setStyleSheet(_INPUT_QSS)
         self._reply_wc.valueChanged.connect(self._emit)
-        self._reply_col.addWidget(self._reply_wc)
-        wc_row.addLayout(self._reply_col)
+        reply_col.addWidget(self._reply_wc)
+        wc_row.addLayout(reply_col)
+        wc_row.addStretch()
 
-        form.addLayout(wc_row)
+        ds_lo.addLayout(wc_row)
+        form.addWidget(self._disc_shared_widget)
+
+        # ── Discussion C/I: min replies ──────────────────────────────────
+        self._ci_widget = QWidget()
+        self._ci_widget.setStyleSheet("background: transparent;")
+        ci_lo = QVBoxLayout(self._ci_widget)
+        ci_lo.setContentsMargins(0, 4, 0, 0)
+        ci_lo.setSpacing(3)
+        ci_lo.addWidget(_field_label("Min replies for Complete"))
+        self._min_replies = QSpinBox()
+        self._min_replies.setRange(0, 20)
+        self._min_replies.setSingleStep(1)
+        self._min_replies.setStyleSheet(_INPUT_QSS)
+        self._min_replies.valueChanged.connect(self._emit)
+        ci_lo.addWidget(self._min_replies)
+        ci_lo.addWidget(_subtext(
+            "Student must post and reply at least this many times to be marked Complete."
+        ))
+        form.addWidget(self._ci_widget)
+
+        # ── Discussion Points: per-post and per-reply point values ───────
+        self._pts_widget = QWidget()
+        self._pts_widget.setStyleSheet("background: transparent;")
+        pts_lo = QVBoxLayout(self._pts_widget)
+        pts_lo.setContentsMargins(0, 4, 0, 0)
+        pts_lo.setSpacing(SPACING_SM)
+
+        pts_lo.addWidget(_field_label("Points"))
+        pts_row = QHBoxLayout()
+        pts_row.setSpacing(SPACING_MD)
+
+        ppp_col = QVBoxLayout()
+        ppp_col.setSpacing(3)
+        ppp_col.addWidget(_field_label("Per post"))
+        self._pts_per_post = QDoubleSpinBox()
+        self._pts_per_post.setRange(0.0, 100.0)
+        self._pts_per_post.setSingleStep(0.5)
+        self._pts_per_post.setDecimals(1)
+        self._pts_per_post.setStyleSheet(_INPUT_QSS)
+        self._pts_per_post.valueChanged.connect(self._emit)
+        ppp_col.addWidget(self._pts_per_post)
+        pts_row.addLayout(ppp_col)
+
+        ppr_col = QVBoxLayout()
+        ppr_col.setSpacing(3)
+        ppr_col.addWidget(_field_label("Per reply"))
+        self._pts_per_reply = QDoubleSpinBox()
+        self._pts_per_reply.setRange(0.0, 100.0)
+        self._pts_per_reply.setSingleStep(0.5)
+        self._pts_per_reply.setDecimals(1)
+        self._pts_per_reply.setStyleSheet(_INPUT_QSS)
+        self._pts_per_reply.valueChanged.connect(self._emit)
+        ppr_col.addWidget(self._pts_per_reply)
+        pts_row.addLayout(ppr_col)
+        pts_row.addStretch()
+
+        pts_lo.addLayout(pts_row)
+        form.addWidget(self._pts_widget)
+
+        # ── Discussion Letter Grade: reply thresholds ────────────────────
+        self._lg_widget = QWidget()
+        self._lg_widget.setStyleSheet("background: transparent;")
+        lg_lo = QVBoxLayout(self._lg_widget)
+        lg_lo.setContentsMargins(0, 4, 0, 0)
+        lg_lo.setSpacing(SPACING_SM)
+
+        lg_lo.addWidget(_field_label("Replies needed for each grade"))
+
+        abc_row = QHBoxLayout()
+        abc_row.setSpacing(SPACING_MD)
+        for attr, lbl, default in [
+            ("_replies_a", "A", 2),
+            ("_replies_b", "B", 1),
+            ("_replies_c", "C", 0),
+        ]:
+            col = QVBoxLayout()
+            col.setSpacing(3)
+            col.addWidget(_field_label(lbl))
+            spin = QSpinBox()
+            spin.setRange(0, 20)
+            spin.setValue(default)
+            spin.setStyleSheet(_INPUT_QSS)
+            spin.valueChanged.connect(self._emit)
+            setattr(self, attr, spin)
+            col.addWidget(spin)
+            abc_row.addLayout(col)
+        abc_row.addStretch()
+        lg_lo.addLayout(abc_row)
+
+        lg_lo.addWidget(_subtext(
+            "C = posted (any number of qualifying replies).  No post = F."
+        ))
+
+        # D-tier enable toggle + spinbox
+        d_row = QHBoxLayout()
+        d_row.setSpacing(SPACING_SM)
+        from gui.widgets.switch_toggle import SwitchToggle as _ST
+        self._d_enable = _ST("Enable D tier")
+        self._d_enable.toggled.connect(self._on_d_toggled)
+        d_row.addWidget(self._d_enable)
+
+        d_spin_col = QVBoxLayout()
+        d_spin_col.setSpacing(3)
+        d_spin_col.addWidget(_field_label("Replies for D"))
+        self._replies_d = QSpinBox()
+        self._replies_d.setRange(0, 20)
+        self._replies_d.setValue(0)
+        self._replies_d.setStyleSheet(_INPUT_QSS)
+        self._replies_d.valueChanged.connect(self._emit)
+        d_spin_col.addWidget(self._replies_d)
+        d_row.addLayout(d_spin_col)
+        d_row.addStretch()
+        lg_lo.addLayout(d_row)
+
+        # Canvas % conversion info
+        pct_str = "  ".join(
+            f"{k}→{v}%" for k, v in LETTER_GRADE_PERCENTAGES.items()
+        )
+        lg_lo.addWidget(_subtext(f"Canvas score:  {pct_str}"))
+
+        form.addWidget(self._lg_widget)
+
         form.addStretch()
 
         outer = QVBoxLayout(self)
@@ -316,18 +429,25 @@ class _BasicGradingForm(QWidget):
             self.changed.emit()
 
     def _set_enabled(self, enabled: bool) -> None:
-        for w in (self._name_edit, self._desc_edit, self._kw_edit,
-                  self._type_combo, self._min_wc, self._post_wc, self._reply_wc):
+        for w in (self._name_edit, self._kw_edit, self._type_combo,
+                  self._min_wc, self._post_wc, self._reply_wc,
+                  self._min_replies, self._pts_per_post, self._pts_per_reply,
+                  self._replies_a, self._replies_b, self._replies_c,
+                  self._d_enable, self._replies_d):
             w.setEnabled(enabled)
 
     def _on_type_changed(self, *_) -> None:
-        key = self._type_combo.currentData()
-        is_discussion = key in ("discussion_forum", "mixed")
-        for w_layout in (self._post_col, self._reply_col):
-            for i in range(w_layout.count()):
-                item = w_layout.itemAt(i)
-                if item and item.widget():
-                    item.widget().setVisible(is_discussion)
+        key = self._type_combo.currentData() or "complete_incomplete"
+        is_disc = key in _DISC_TYPES
+        self._non_disc_widget.setVisible(not is_disc)
+        self._disc_shared_widget.setVisible(is_disc)
+        self._ci_widget.setVisible(key == "discussion_ci")
+        self._pts_widget.setVisible(key == "discussion_points")
+        self._lg_widget.setVisible(key == "discussion_letter")
+        self._emit()
+
+    def _on_d_toggled(self, checked: bool) -> None:
+        self._replies_d.setEnabled(checked)
         self._emit()
 
     # ── public ────────────────────────────────────────────────────────
@@ -336,7 +456,6 @@ class _BasicGradingForm(QWidget):
         self._loading = True
         self._set_enabled(True)
         self._name_edit.setText(name)
-        self._desc_edit.setText(data.get("description", ""))
         self._kw_edit.setText(", ".join(data.get("keywords", [])))
 
         atype = data.get("assignment_type", "complete_incomplete")
@@ -344,8 +463,21 @@ class _BasicGradingForm(QWidget):
         self._type_combo.setCurrentIndex(idx if idx >= 0 else 0)
 
         self._min_wc.setValue(data.get("min_word_count", 200))
-        self._post_wc.setValue(data.get("post_min_words", 200))
+        self._post_wc.setValue(data.get("post_min_words", 150))
         self._reply_wc.setValue(data.get("reply_min_words", 50))
+
+        self._min_replies.setValue(data.get("min_replies", 2))
+        self._pts_per_post.setValue(float(data.get("points_per_post", 5.0)))
+        self._pts_per_reply.setValue(float(data.get("points_per_reply", 1.0)))
+        self._replies_a.setValue(data.get("replies_for_a", 2))
+        self._replies_b.setValue(data.get("replies_for_b", 1))
+        self._replies_c.setValue(data.get("replies_for_c", 0))
+
+        d_val = data.get("replies_for_d", None)
+        d_enabled = d_val is not None
+        self._d_enable.setChecked(d_enabled)
+        self._replies_d.setValue(d_val if d_val is not None else 0)
+        self._replies_d.setEnabled(d_enabled)
 
         self._loading = False
         self._on_type_changed()
@@ -353,11 +485,19 @@ class _BasicGradingForm(QWidget):
     def clear(self) -> None:
         self._set_enabled(False)
         self._name_edit.clear()
-        self._desc_edit.clear()
         self._kw_edit.clear()
         self._min_wc.setValue(200)
-        self._post_wc.setValue(200)
+        self._post_wc.setValue(150)
         self._reply_wc.setValue(50)
+        self._min_replies.setValue(2)
+        self._pts_per_post.setValue(5.0)
+        self._pts_per_reply.setValue(1.0)
+        self._replies_a.setValue(2)
+        self._replies_b.setValue(1)
+        self._replies_c.setValue(0)
+        self._d_enable.setChecked(False)
+        self._replies_d.setValue(0)
+        self._replies_d.setEnabled(False)
 
     def set_name_readonly(self, readonly: bool) -> None:
         self._name_edit.setReadOnly(readonly)
@@ -368,12 +508,19 @@ class _BasicGradingForm(QWidget):
     def get_data(self) -> dict:
         kw_raw = self._kw_edit.text()
         keywords = [k.strip() for k in kw_raw.split(",") if k.strip()]
+        d_enabled = self._d_enable.isChecked()
         return {
-            "description":     self._desc_edit.text().strip(),
             "assignment_type": self._type_combo.currentData(),
             "min_word_count":  self._min_wc.value(),
             "post_min_words":  self._post_wc.value(),
             "reply_min_words": self._reply_wc.value(),
+            "min_replies":     self._min_replies.value(),
+            "points_per_post": self._pts_per_post.value(),
+            "points_per_reply":self._pts_per_reply.value(),
+            "replies_for_a":   self._replies_a.value(),
+            "replies_for_b":   self._replies_b.value(),
+            "replies_for_c":   self._replies_c.value(),
+            "replies_for_d":   self._replies_d.value() if d_enabled else None,
             "keywords":        keywords,
         }
 
@@ -413,8 +560,7 @@ class _AICForm(QWidget):
 
         # ── Assignment mode ────────────────────────────────────────────
         ag.addWidget(_field_label("Assignment mode"))
-        self._aic_profile = QComboBox()
-        self._aic_profile.setStyleSheet(_COMBO_QSS)
+        self._aic_profile = CRTComboBox()
         for key, label in AIC_MODE_LABELS.items():
             self._aic_profile.addItem(label, key)
         self._aic_profile.currentIndexChanged.connect(self._on_mode_changed)
@@ -423,7 +569,7 @@ class _AICForm(QWidget):
         self._mode_desc = QLabel("")
         self._mode_desc.setWordWrap(True)
         self._mode_desc.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; font-style: italic;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-style: italic;"
             f" background: transparent; border: none;"
         )
         ag.addWidget(self._mode_desc)
@@ -468,8 +614,7 @@ class _AICForm(QWidget):
         sen_col = QVBoxLayout()
         sen_col.setSpacing(3)
         sen_col.addWidget(_field_label("Sensitivity"))
-        self._aic_sensitivity = QComboBox()
-        self._aic_sensitivity.setStyleSheet(_COMBO_QSS)
+        self._aic_sensitivity = CRTComboBox()
         for key, label in AIC_SENSITIVITY_LABELS.items():
             self._aic_sensitivity.addItem(label, key)
         self._aic_sensitivity.currentIndexChanged.connect(self._emit)
@@ -479,8 +624,7 @@ class _AICForm(QWidget):
         ctx_col = QVBoxLayout()
         ctx_col.setSpacing(3)
         ctx_col.addWidget(_field_label("School context"))
-        self._aic_context = QComboBox()
-        self._aic_context.setStyleSheet(_COMBO_QSS)
+        self._aic_context = CRTComboBox()
         for key, label in AIC_CONTEXT_LABELS.items():
             self._aic_context.addItem(label, key)
         self._aic_context.currentIndexChanged.connect(self._emit)
@@ -516,7 +660,7 @@ class _AICForm(QWidget):
             txt_col.setSpacing(1)
             name_lbl = QLabel(lbl_text)
             name_lbl.setStyleSheet(
-                f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                f"color: {PHOSPHOR_MID}; font-size: {px(11)}px;"
                 f" background: transparent; border: none;"
             )
             help_lbl = QLabel(help_text)
@@ -575,6 +719,29 @@ class _AICForm(QWidget):
         ag.addWidget(self._adv_body)
 
         form.addWidget(self._aic_group)
+
+        # ── Short Submission Review guidance ──────────────────────────────
+        form.addWidget(_hsep())
+        form.addWidget(_section_header("SHORT SUBMISSION REVIEW"))
+        form.addWidget(_field_label("Genre guidance (optional)"))
+        form.addWidget(_subtext(
+            "Describe the assignment format or engagement expectations. "
+            "The AI reviewer uses this when assessing submissions below the word count threshold."
+        ))
+        self._short_sub_guidance = QPlainTextEdit()
+        self._short_sub_guidance.setMaximumHeight(80)
+        self._short_sub_guidance.setPlaceholderText(
+            "e.g. 'Students write 1–2 paragraph reflections connecting the reading to personal experience.'"
+        )
+        self._short_sub_guidance.setStyleSheet(
+            f"QPlainTextEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+            f" border-radius: 3px; padding: 4px 8px; color: {PHOSPHOR_HOT};"
+            f" font-size: {px(12)}px; }}"
+            f"QPlainTextEdit:focus {{ border-color: {BORDER_AMBER}; }}"
+        )
+        self._short_sub_guidance.textChanged.connect(self._emit)
+        form.addWidget(self._short_sub_guidance)
+
         form.addStretch()
 
         outer = QVBoxLayout(self)
@@ -683,6 +850,7 @@ class _AICForm(QWidget):
             float(data.get("weight_rough_work", preset["weight_rough_work"]))
         )
         self._mode_desc.setText(_AIC_MODE_DESCRIPTIONS.get(mode, ""))
+        self._short_sub_guidance.setPlainText(data.get("short_sub_guidance", ""))
 
         self._loading = False
         self._on_aic_toggled(run_aic)
@@ -696,6 +864,7 @@ class _AICForm(QWidget):
         self._wt_ai_patterns.setValue(1.0)
         self._wt_course_content.setValue(1.0)
         self._wt_rough_work.setValue(1.0)
+        self._short_sub_guidance.setPlainText("")
 
     def get_data(self) -> dict:
         return {
@@ -709,6 +878,7 @@ class _AICForm(QWidget):
             "weight_rough_work":        self._wt_rough_work.value(),
             "aic_context":              self._aic_context.currentData(),
             "aic_sensitivity":          self._aic_sensitivity.currentData(),
+            "short_sub_guidance":       self._short_sub_guidance.toPlainText(),
         }
 
 
@@ -748,7 +918,7 @@ class TemplateEditorDialog(QDialog):
 
         title = QLabel("ASSIGNMENT TEMPLATES")
         title.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 15px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(15)}px; font-weight: bold;"
             f" background: transparent; border: none; letter-spacing: 2px;"
         )
         root.addWidget(title)
@@ -758,7 +928,7 @@ class TemplateEditorDialog(QDialog):
             "They are auto-matched to Canvas assignment groups by keyword."
         )
         sub.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
             f" background: transparent; border: none;"
         )
         sub.setWordWrap(True)
@@ -784,7 +954,7 @@ class TemplateEditorDialog(QDialog):
 
         list_hdr = QLabel("TEMPLATES")
         list_hdr.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; letter-spacing: 1px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; letter-spacing: 1px;"
             f" background: transparent; border: none;"
         )
         left_lo.addWidget(list_hdr)
@@ -832,7 +1002,7 @@ class TemplateEditorDialog(QDialog):
         mid_hdr_row.setContentsMargins(14, 0, 14, 8)
         self._mid_title = QLabel("SELECT A TEMPLATE")
         self._mid_title.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; letter-spacing: 1px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; letter-spacing: 1px;"
             f" background: transparent; border: none;"
         )
         mid_hdr_row.addWidget(self._mid_title)
@@ -868,7 +1038,7 @@ class TemplateEditorDialog(QDialog):
         right_hdr_row.setContentsMargins(14, 0, 14, 8)
         right_hdr_lbl = QLabel("INTEGRITY CHECK")
         right_hdr_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; letter-spacing: 1px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; letter-spacing: 1px;"
             f" background: transparent; border: none;"
         )
         right_hdr_row.addWidget(right_hdr_lbl)
@@ -902,7 +1072,7 @@ class TemplateEditorDialog(QDialog):
         footer = QHBoxLayout()
         self._status_lbl = QLabel("")
         self._status_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px; background: transparent;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; background: transparent;"
         )
         footer.addWidget(self._status_lbl)
         footer.addStretch()
@@ -1056,9 +1226,9 @@ class TemplateEditorDialog(QDialog):
         reply = show_question(
             self, "Restore System Defaults",
             "Restore all system default templates to their original settings?\n\n"
-            "Notes / Summary, Outline / Structure, Discussion / Response, "
-            "Draft (any stage), Personal / Reflective, "
-            "Formal Essay / Research, Lab / Technical\n\n"
+            "Personal / Reflection, Formal Essay / Research, Draft, Outline, "
+            "Reading Notes, Discussion Post (C/I), "
+            "Discussion Forum (Points), Discussion Forum (Letter Grade)\n\n"
             "Your custom templates will not be affected.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
@@ -1085,5 +1255,5 @@ class TemplateEditorDialog(QDialog):
         color = BURN_RED if error else TERM_GREEN
         self._status_lbl.setText(msg)
         self._status_lbl.setStyleSheet(
-            f"color: {color}; font-size: 11px; background: transparent;"
+            f"color: {color}; font-size: {px(11)}px; background: transparent;"
         )

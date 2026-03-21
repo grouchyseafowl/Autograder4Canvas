@@ -14,6 +14,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 
 from gui.styles import (
+    px,
     SPACING_SM, SPACING_MD, SPACING_LG,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM,
     ROSE_ACCENT, ROSE_DIM, TERM_GREEN, WARN_PINK,
@@ -249,7 +250,7 @@ class AICInfoDialog(QDialog):
         title_lbl = QLabel("HOW THE ACADEMIC INTEGRITY CHECK WORKS")
         title_lbl.setStyleSheet(f"""
             color: {PHOSPHOR_HOT};
-            font-size: 14px;
+            font-size: {px(14)}px;
             font-weight: bold;
             letter-spacing: 2px;
         """)
@@ -259,7 +260,7 @@ class AICInfoDialog(QDialog):
             "Patterns for conversation, not verdicts  —  "
             "Read this before reviewing any flags."
         )
-        subtitle_lbl.setStyleSheet(f"color: {ROSE_ACCENT}; font-size: 12px;")
+        subtitle_lbl.setStyleSheet(f"color: {ROSE_ACCENT}; font-size: {px(12)}px;")
         tb_layout.addWidget(subtitle_lbl)
 
         root.addWidget(title_bar)
@@ -332,7 +333,7 @@ class AICInfoDialog(QDialog):
         heading = QLabel(section["heading"].upper())
         heading.setStyleSheet(f"""
             color: {section['accent']};
-            font-size: 10px;
+            font-size: {px(10)}px;
             font-weight: bold;
             letter-spacing: 1px;
         """)
@@ -350,7 +351,7 @@ class AICInfoDialog(QDialog):
         body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         body.setStyleSheet(f"""
             color: {PHOSPHOR_MID};
-            font-size: 12px;
+            font-size: {px(12)}px;
             line-height: 1.6;
             padding: 4px 0;
         """)

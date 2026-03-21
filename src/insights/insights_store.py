@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS insights_codings (
     student_id          TEXT NOT NULL,
     student_name        TEXT,
     coding_record       TEXT,
+    submission_text     TEXT,
     teacher_edited      INTEGER DEFAULT 0,
     teacher_edits       TEXT,
     PRIMARY KEY (run_id, student_id)
@@ -194,6 +195,17 @@ class InsightsStore:
                 self._conn.commit()
             except sqlite3.OperationalError:
                 pass  # column already exists
+        self._migrate_v4()
+
+    def _migrate_v4(self) -> None:
+        """Add submission_text column to codings for chatbot export."""
+        try:
+            self._conn.execute(
+                "ALTER TABLE insights_codings ADD COLUMN submission_text TEXT"
+            )
+            self._conn.commit()
+        except sqlite3.OperationalError:
+            pass  # column already exists
 
     @staticmethod
     def generate_run_id() -> str:
@@ -323,17 +335,23 @@ class InsightsStore:
 
     def save_coding(
         self, run_id: str, student_id: str, student_name: str,
-        coding_record_json: str,
+        coding_record_json: str, submission_text: str = "",
     ) -> None:
         self._conn.execute(
             """
-            INSERT INTO insights_codings (run_id, student_id, student_name, coding_record)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO insights_codings
+                (run_id, student_id, student_name, coding_record, submission_text)
+            VALUES (?, ?, ?, ?, ?)
             ON CONFLICT (run_id, student_id) DO UPDATE SET
                 student_name = excluded.student_name,
-                coding_record = excluded.coding_record
+                coding_record = excluded.coding_record,
+                submission_text = COALESCE(
+                    NULLIF(excluded.submission_text, ''),
+                    insights_codings.submission_text
+                )
             """,
-            (run_id, str(student_id), student_name, coding_record_json),
+            (run_id, str(student_id), student_name, coding_record_json,
+             submission_text),
         )
         self._conn.commit()
 

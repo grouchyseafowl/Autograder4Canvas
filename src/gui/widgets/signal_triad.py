@@ -1,21 +1,33 @@
 """
-SignalTriad — three horizontal score bars with CRT phosphor glow.
+SignalTriad — Verdict-first authorship signal display.
 
-Displays suspicion, authenticity, and human-presence scores as
-coloured fill bars with a bloom edge, consistent with the amber
-terminal aesthetic used throughout the Prior Runs panel.
+Replaces three separate equal-weight bars with:
+  • A concern-level badge + human-presence % on a single header row
+  • One "Authorship Spectrum" bar: fill = human presence (0 → AI, 100 → human)
+    with a gradient (rose → amber → teal) so the fill edge immediately shows
+    where the submission sits on the spectrum
+  • A midpoint equilibrium marker at 50%
+  • A compact support row: suspicion score · authenticity score · HP%
+
+This makes the big picture obvious (single bar = one conclusion) while
+preserving the three underlying metrics for teachers who want the detail.
 """
 
 from typing import Optional
 
 from PySide6.QtWidgets import QWidget, QSizePolicy
-from PySide6.QtCore import Qt, QSize, QRectF
+from PySide6.QtCore import Qt, QSize, QRectF, QPointF
 from PySide6.QtGui import (
     QPainter, QPen, QColor, QFont,
-    QRadialGradient, QLinearGradient, QPainterPath,
+    QLinearGradient, QRadialGradient, QPainterPath,
 )
 
-from gui.styles import BG_INSET, BORDER_DARK, PHOSPHOR_DIM
+from gui.styles import (
+    BG_INSET, BORDER_DARK, BORDER_AMBER,
+    PHOSPHOR_DIM, PHOSPHOR_MID,
+    px,
+)
+from gui.aic_palette import CONCERN_COLOR, CONCERN_LABEL
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -23,7 +35,6 @@ from gui.styles import BG_INSET, BORDER_DARK, PHOSPHOR_DIM
 # ──────────────────────────────────────────────────────────────────────────────
 
 def _lerp_color(c0: tuple, c1: tuple, t: float) -> QColor:
-    """Linear interpolate between two RGB tuples at parameter t (0–1)."""
     t = max(0.0, min(1.0, t))
     r = int(c0[0] + (c1[0] - c0[0]) * t)
     g = int(c0[1] + (c1[1] - c0[1]) * t)
@@ -31,25 +42,16 @@ def _lerp_color(c0: tuple, c1: tuple, t: float) -> QColor:
     return QColor(r, g, b)
 
 
-# Named colour stops (RGB tuples)
-_TEAL     = (88, 200, 184)
-_AMBER    = (240, 168, 48)
-_BURN_RED = (192, 64, 32)
-_TERM_GRN = (114, 184, 90)
+_ROSE  = (192, 64, 100)   # low HP: AI signals
+_AMBER = (232, 160, 48)   # midpoint: equilibrium
+_TEAL  = (88,  200, 184)  # high HP: human
 
 
-def _suspicion_color(v: float) -> QColor:
-    """teal → amber → red as suspicion rises (0→1)."""
-    if v <= 0.4:
-        return _lerp_color(_TEAL, _AMBER, v / 0.4)
-    return _lerp_color(_AMBER, _BURN_RED, (v - 0.4) / 0.6)
-
-
-def _authenticity_color(v: float) -> QColor:
-    """red → amber → green — high value is good."""
-    if v <= 0.5:
-        return _lerp_color(_BURN_RED, _AMBER, v / 0.5)
-    return _lerp_color(_AMBER, _TERM_GRN, (v - 0.5) / 0.5)
+def _hp_color(hp_frac: float) -> QColor:
+    """Colour at a given human-presence fraction (0 = AI/rose, 1 = human/teal)."""
+    if hp_frac <= 0.5:
+        return _lerp_color(_ROSE, _AMBER, hp_frac / 0.5)
+    return _lerp_color(_AMBER, _TEAL, (hp_frac - 0.5) / 0.5)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -57,29 +59,33 @@ def _authenticity_color(v: float) -> QColor:
 # ──────────────────────────────────────────────────────────────────────────────
 
 class SignalTriad(QWidget):
-    """Three horizontal phosphor score bars.
+    """Authorship Spectrum bar with verdict badge and support metrics.
 
     Call set_scores() to populate; the widget repaints automatically.
     """
 
-    _LABEL_W  = 110   # px reserved for right-aligned label text
-    _VALUE_W  = 52    # px reserved for right-aligned value text
-    _BAR_H    = 22
-    _GAP      = 5
-    _Y_START  = 4
-    _HEIGHT   = _Y_START + 3 * (_BAR_H + _GAP) + 4
+    _BAR_H = 20     # spectrum bar height
+    _PAD   = 8      # outer padding
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._suspicion:     float = 0.0
-        self._authenticity:  float = 0.0
-        self._human:         Optional[float] = None
-        self._concern:       str = "none"
-        self.setFixedHeight(self._HEIGHT)
-        self.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Fixed,
+        self._suspicion:    float = 0.0
+        self._authenticity: float = 0.0
+        self._human:        Optional[float] = None
+        self._concern:      str = "none"
+
+        # Dynamic height so everything stays proportional under font scaling
+        h = (
+            self._PAD
+            + px(13) + 4          # header row
+            + px(10) + 4          # legend row
+            + self._BAR_H + 2     # spectrum bar
+            + px(10) + 4          # tick row
+            + px(10) + 4          # support row
+            + self._PAD
         )
+        self.setFixedHeight(h)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
     def set_scores(
         self,
@@ -95,110 +101,199 @@ class SignalTriad(QWidget):
         self.update()
 
     def sizeHint(self) -> QSize:
-        return QSize(300, self._HEIGHT)
+        return QSize(300, self.height())
 
     # ── Painting ──────────────────────────────────────────────────────────────
 
-    def paintEvent(self, _event) -> None:
+    def paintEvent(self, _event) -> None:  # noqa: N802
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        w = self.width()
-        lw = self._LABEL_W
-        vw = self._VALUE_W
-        bar_x = lw + 8
-        bar_w = max(20, w - bar_x - vw - 8)
+        w   = self.width()
+        pd  = self._PAD
 
-        bars = [
-            ("SUSPICION",      self._suspicion,    _suspicion_color(self._suspicion),    self._fmt_suspicion()),
-            ("AUTHENTICITY",   self._authenticity,  _authenticity_color(self._authenticity), self._fmt_authenticity()),
-            ("HUMAN PRESENCE", (self._human or 0.0) / 100.0, _authenticity_color((self._human or 0.0) / 100.0), self._fmt_human()),
-        ]
+        hp_frac = (self._human / 100.0) if self._human is not None else None
+        hp_str  = f"{self._human:.0f}%" if self._human is not None else "—"
 
-        font = QFont("Menlo", 11)
-        font_b = QFont("Menlo", 11)
-        font_b.setBold(True)
+        c_hex  = CONCERN_COLOR.get(self._concern, PHOSPHOR_DIM)
+        c_text = CONCERN_LABEL.get(self._concern, self._concern).upper()
+        c_col  = QColor(c_hex)
 
-        track_bg  = QColor(BG_INSET)
-        track_bdr = QColor(BORDER_DARK)
-        label_col = QColor(PHOSPHOR_DIM)
+        # ── Fonts ─────────────────────────────────────────────────────────────
+        hdr_font  = QFont("Menlo", px(10))
+        hdr_font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 1.0)
+        val_font  = QFont("Menlo", px(12))
+        val_font.setBold(True)
+        leg_font  = QFont("Menlo", px(10))
+        tick_font = QFont("Menlo", px(9))
+        sup_font  = QFont("Menlo", px(10))
 
-        for i, (label, frac, bar_color, val_text) in enumerate(bars):
-            by = self._Y_START + i * (self._BAR_H + self._GAP)
-            bcy = by + self._BAR_H / 2
+        dim_c = QColor(PHOSPHOR_DIM)
+        mid_c = QColor(PHOSPHOR_MID)
+        trk_c = QColor(BG_INSET)
+        bdr_c = QColor(BORDER_DARK)
 
-            # 1. Label (right-aligned in lw area)
-            p.setFont(font)
-            p.setPen(label_col)
+        # ── Row 1: header — "AUTHORSHIP SPECTRUM"  HP%  [CONCERN] ───────────
+        y = self._PAD
+        row_h = px(13)
+
+        p.setFont(hdr_font)
+        p.setPen(dim_c)
+        p.drawText(
+            QRectF(pd, y, w * 0.45, row_h),
+            Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+            "AUTHORSHIP SPECTRUM",
+        )
+
+        # Concern badge — measure first so HP text can avoid it
+        p.setFont(hdr_font)
+        fm  = p.fontMetrics()
+        btw = fm.horizontalAdvance(c_text)
+        bw  = btw + px(14)
+        bh  = row_h
+        bx  = w - pd - bw
+        by  = y
+
+        # HP% value — positioned between header and badge
+        if hp_frac is not None:
+            hp_edge_col = _hp_color(hp_frac)
+            p.setFont(val_font)
+            p.setPen(hp_edge_col)
+            hp_left = w * 0.45
+            hp_avail = bx - hp_left - px(6)   # gap before badge
             p.drawText(
-                int(0), int(by), int(lw), int(self._BAR_H),
+                QRectF(hp_left, y, max(hp_avail, 0), row_h),
                 Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight,
-                label,
+                hp_str + " human",
             )
 
-            # 2. Bar track
-            track_rect = QRectF(bar_x, by + 2, bar_w, self._BAR_H - 4)
-            track_path = QPainterPath()
-            track_path.addRoundedRect(track_rect, 3, 3)
-            p.fillPath(track_path, track_bg)
-            p.setPen(QPen(track_bdr, 1))
-            p.setBrush(Qt.BrushStyle.NoBrush)
-            p.drawPath(track_path)
+        badge_rect = QRectF(bx, by, bw, bh)
+        badge_path = QPainterPath()
+        badge_path.addRoundedRect(badge_rect, bh / 2, bh / 2)
 
-            # 3. Bar fill gradient (clipped to track)
-            fill_w = max(0.0, frac * bar_w)
-            if fill_w > 1:
-                fill_grad = QLinearGradient(bar_x, 0, bar_x + bar_w, 0)
-                r, g, b = bar_color.red(), bar_color.green(), bar_color.blue()
-                fill_grad.setColorAt(0.0, QColor(r, g, b, 180))
-                bloom_stop = max(0.0, min(1.0, frac - 0.05))
-                fill_grad.setColorAt(bloom_stop, QColor(r, g, b, 220))
-                fill_grad.setColorAt(min(1.0, frac), QColor(r, g, b, 60))
-                if frac < 1.0:
-                    fill_grad.setColorAt(min(1.0, frac + 0.001), QColor(r, g, b, 0))
+        bg = QColor(c_col)
+        bg.setAlpha(35)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.fillPath(badge_path, bg)
+        p.setPen(QPen(c_col, 1))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawPath(badge_path)
 
-                fill_rect = QRectF(bar_x, by + 2, fill_w, self._BAR_H - 4)
-                fill_path = QPainterPath()
-                fill_path.addRoundedRect(fill_rect, 3, 3)
-                # Clip to track boundary
-                clipped = fill_path.intersected(track_path)
-                p.setPen(Qt.PenStyle.NoPen)
-                p.fillPath(clipped, fill_grad)
+        p.setPen(c_col)
+        p.drawText(badge_rect, Qt.AlignmentFlag.AlignCenter, c_text)
 
-                # 4. Glow at fill edge
-                glow_cx = bar_x + fill_w
-                glow_r  = self._BAR_H * 1.2
-                glow = QRadialGradient(glow_cx, bcy, glow_r)
-                glow.setColorAt(0.0, QColor(r, g, b, 55))
-                glow.setColorAt(1.0, QColor(r, g, b, 0))
-                p.save()
-                p.setClipPath(track_path)
-                p.setPen(Qt.PenStyle.NoPen)
-                p.setBrush(glow)
-                p.drawEllipse(
-                    int(glow_cx - glow_r), int(bcy - glow_r),
-                    int(glow_r * 2), int(glow_r * 2),
-                )
-                p.restore()
+        y += row_h + 4
 
-            # 5. Value text (right-aligned in value area)
-            p.setFont(font_b)
-            p.setPen(bar_color)
-            p.drawText(
-                int(bar_x + bar_w + 4), int(by), int(vw), int(self._BAR_H),
-                Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight,
-                val_text,
+        # ── Row 2: axis legend ─────────────────────────────────────────────────
+        leg_h = px(10)
+        p.setFont(leg_font)
+        p.setPen(dim_c)
+        bar_x = pd
+        bar_w = w - pd * 2
+
+        p.drawText(
+            QRectF(bar_x, y, bar_w * 0.5, leg_h + 2),
+            Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+            "← AI signals",
+        )
+        p.drawText(
+            QRectF(bar_x, y, bar_w, leg_h + 2),
+            Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight,
+            "human →",
+        )
+
+        y += leg_h + 4
+
+        # ── Row 3: spectrum bar ────────────────────────────────────────────────
+        bar_rect = QRectF(bar_x, y, bar_w, self._BAR_H)
+        bar_path = QPainterPath()
+        bar_path.addRoundedRect(bar_rect, 3, 3)
+
+        # Track (background)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.fillPath(bar_path, trk_c)
+        p.setPen(QPen(bdr_c, 1))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawPath(bar_path)
+
+        # Spectrum fill: gradient rose → amber → teal clipped to hp_frac
+        if hp_frac is not None and hp_frac > 0.01:
+            fill_w = hp_frac * bar_w
+            fill_rect = QRectF(bar_x, y, fill_w, self._BAR_H)
+            fill_path = QPainterPath()
+            fill_path.addRoundedRect(fill_rect, 3, 3)
+            clipped = fill_path.intersected(bar_path)
+
+            # Gradient spans the full bar width so the visible colour at the
+            # fill edge corresponds exactly to the HP fraction position.
+            grad = QLinearGradient(bar_x, 0, bar_x + bar_w, 0)
+            grad.setColorAt(0.00, QColor(_ROSE[0],  _ROSE[1],  _ROSE[2],  110))
+            grad.setColorAt(0.50, QColor(_AMBER[0], _AMBER[1], _AMBER[2], 160))
+            grad.setColorAt(1.00, QColor(_TEAL[0],  _TEAL[1],  _TEAL[2],  190))
+
+            p.setPen(Qt.PenStyle.NoPen)
+            p.fillPath(clipped, grad)
+
+            # Glow at fill edge
+            ec   = _hp_color(hp_frac)
+            gx   = bar_x + fill_w
+            gy   = y + self._BAR_H / 2
+            gr   = self._BAR_H * 1.4
+            glow = QRadialGradient(gx, gy, gr)
+            glow.setColorAt(0.0, QColor(ec.red(), ec.green(), ec.blue(), 60))
+            glow.setColorAt(1.0, QColor(ec.red(), ec.green(), ec.blue(), 0))
+            p.save()
+            p.setClipPath(bar_path)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(glow)
+            p.drawEllipse(
+                int(gx - gr), int(gy - gr),
+                int(gr * 2),  int(gr * 2),
             )
+            p.restore()
+
+        # Midpoint equilibrium line (dashed amber)
+        mid_x = bar_x + bar_w * 0.5
+        p.setPen(QPen(QColor(BORDER_AMBER), 1, Qt.PenStyle.DashLine))
+        p.drawLine(
+            QPointF(mid_x, y + 3),
+            QPointF(mid_x, y + self._BAR_H - 3),
+        )
+
+        y += self._BAR_H + 2
+
+        # ── Row 4: tick labels ─────────────────────────────────────────────────
+        tick_h = px(10)
+        p.setFont(tick_font)
+        p.setPen(dim_c)
+        p.drawText(
+            QRectF(bar_x, y, 28, tick_h + 2),
+            Qt.AlignmentFlag.AlignLeft, "0%",
+        )
+        p.drawText(
+            QRectF(bar_x, y, bar_w, tick_h + 2),
+            Qt.AlignmentFlag.AlignCenter, "50%",
+        )
+        p.drawText(
+            QRectF(bar_x, y, bar_w, tick_h + 2),
+            Qt.AlignmentFlag.AlignRight, "100%",
+        )
+
+        y += tick_h + 4
+
+        # ── Row 5: support metrics ─────────────────────────────────────────────
+        sup_h   = px(10)
+        sus_lbl = f"suspicion {self._suspicion:.2f}"
+        aut_lbl = f"auth {self._authenticity:.2f}"
+        hp_lbl  = f"{hp_str} human"
+        support = f"{sus_lbl}  ·  {aut_lbl}  ·  {hp_lbl}"
+
+        p.setFont(sup_font)
+        p.setPen(dim_c)
+        p.drawText(
+            QRectF(bar_x, y, bar_w, sup_h + 4),
+            Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
+            support,
+        )
 
         p.end()
-
-    def _fmt_suspicion(self) -> str:
-        return f"{self._suspicion:.2f}"
-
-    def _fmt_authenticity(self) -> str:
-        return f"{self._authenticity:.2f}"
-
-    def _fmt_human(self) -> str:
-        if self._human is None:
-            return "—"
-        return f"{self._human:.0f}%"

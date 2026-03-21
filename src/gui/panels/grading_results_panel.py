@@ -13,20 +13,26 @@ Indicators per assignment:
 """
 
 import json
+import os
+import tempfile
+import urllib.request
+from pathlib import Path
 from typing import Dict, List, Optional
 
 from PySide6.QtWidgets import (
     QWidget, QFrame, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QScrollArea, QSplitter, QSizePolicy, QComboBox, QLineEdit,
-    QTextBrowser, QStackedWidget,
+    QTextBrowser, QStackedWidget, QTextEdit, QSlider, QMenu,
 )
-from PySide6.QtCore import Qt, Signal, QSize, QTimer
+from PySide6.QtCore import Qt, Signal, QSize, QTimer, QThread, QUrl
 from PySide6.QtGui import (
     QColor, QPainter, QPen, QFont, QFontMetrics,
-    QRadialGradient, QPainterPath,
+    QRadialGradient, QPainterPath, QPixmap, QDesktopServices, QAction,
 )
+from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 
 from gui.styles import (
+    px,
     SPACING_XS, SPACING_SM, SPACING_MD, SPACING_LG,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM, PHOSPHOR_GLOW,
     ROSE_ACCENT, ROSE_DIM, WARN_PINK, TERM_GREEN, BURN_RED, AMBER_BTN,
@@ -35,8 +41,10 @@ from gui.styles import (
     CARD_GRADIENT, PANEL_GRADIENT,
     make_secondary_button, make_run_button, GripSplitter,
     make_section_label, make_h_rule, make_content_pane,
+    combo_qss,
 )
 from gui.aic_palette import CONCERN_COLOR, CONCERN_LABEL
+from gui.widgets.crt_combo import CRTComboBox
 from gui.widgets.phosphor_chip import PhosphorChip
 
 
@@ -51,25 +59,7 @@ _SIDEBAR_QSS = f"""
     }}
 """
 
-_FILTER_COMBO_QSS = f"""
-    QComboBox {{
-        background: {BG_INSET};
-        color: {PHOSPHOR_MID};
-        border: 1px solid {BORDER_DARK};
-        border-radius: 4px;
-        padding: 3px 8px;
-        font-size: 11px;
-    }}
-    QComboBox:hover {{ border-color: {BORDER_AMBER}; color: {PHOSPHOR_HOT}; }}
-    QComboBox::drop-down {{ border: none; width: 18px; }}
-    QComboBox QAbstractItemView {{
-        background: {BG_CARD};
-        color: {PHOSPHOR_MID};
-        selection-background-color: {BG_PANEL};
-        selection-color: {PHOSPHOR_HOT};
-        border: 1px solid {BORDER_DARK};
-    }}
-"""
+_FILTER_COMBO_QSS = combo_qss()
 
 _SEARCH_QSS = f"""
     QLineEdit {{
@@ -78,7 +68,7 @@ _SEARCH_QSS = f"""
         border: 1px solid {BORDER_DARK};
         border-radius: 4px;
         padding: 4px 8px;
-        font-size: 11px;
+        font-size: {px(11)}px;
     }}
     QLineEdit:focus {{ border-color: {PHOSPHOR_HOT}; }}
 """
@@ -88,76 +78,64 @@ _ASSIGNMENT_ROW_QSS = f"""
         background: transparent;
         border: none;
         border-left: 3px solid transparent;
-        border-bottom: 1px solid {BORDER_DARK};
         padding: 2px 0;
     }}
     QFrame:hover {{
-        background: qradialgradient(cx:0.06,cy:0.5,radius:1.2,fx:0.02,fy:0.5,
-            stop:0.0 rgba(240,168,48,0.14),stop:0.45 rgba(240,168,48,0.04),stop:1.0 transparent);
-        border-left-color: {BORDER_AMBER};
+        background: qradialgradient(cx:0.15,cy:0.5,radius:1.20,
+            stop:0.00 #231A06,stop:0.70 #191406,stop:1.00 #141003);
     }}
 """
 
 _ASSIGNMENT_ROW_SEL_QSS = f"""
     QFrame {{
-        background: qradialgradient(cx:0.06,cy:0.5,radius:1.2,fx:0.02,fy:0.5,
-            stop:0.0 rgba(204,82,130,0.22),stop:0.45 rgba(204,82,130,0.06),stop:1.0 transparent);
+        background: qradialgradient(cx:0.15,cy:0.5,radius:1.30,
+            stop:0.00 #3A2408,stop:0.65 #2C1C08,stop:1.00 #1A1205);
         border: none;
-        border-left: 3px solid {PHOSPHOR_HOT};
-        border-bottom: 1px solid {BORDER_DARK};
+        border-left: 3px solid {ROSE_ACCENT};
     }}
 """
 
-_STUDENT_ROW_QSS = f"""
-    QFrame {{
+_STUDENT_ROW_QSS = """
+    QFrame {
         background: transparent;
         border: none;
-        border-left: 3px solid transparent;
-        border-bottom: 1px solid {BORDER_DARK};
-    }}
-    QFrame:hover {{
-        background: qradialgradient(cx:0.06,cy:0.5,radius:1.2,fx:0.02,fy:0.5,
-            stop:0.0 rgba(240,168,48,0.12),stop:0.45 rgba(240,168,48,0.03),stop:1.0 transparent);
-        border-left-color: {BORDER_AMBER};
-    }}
+    }
+    QFrame:hover {
+        background: qradialgradient(cx:0.20,cy:0.5,radius:0.85,
+            stop:0.0 rgba(240,168,48,45),stop:0.6 rgba(240,168,48,15),stop:1.0 transparent);
+    }
 """
 
-_STUDENT_ROW_SEL_QSS = f"""
-    QFrame {{
-        background: qradialgradient(cx:0.06,cy:0.5,radius:1.2,fx:0.02,fy:0.5,
-            stop:0.0 rgba(204,82,130,0.22),stop:0.45 rgba(204,82,130,0.06),stop:1.0 transparent);
+_STUDENT_ROW_SEL_QSS = """
+    QFrame {
+        background: qradialgradient(cx:0.20,cy:0.5,radius:0.85,
+            stop:0.0 rgba(204,82,130,65),stop:0.6 rgba(204,82,130,15),stop:1.0 transparent);
         border: none;
-        border-left: 3px solid {PHOSPHOR_HOT};
-        border-bottom: 1px solid {BORDER_DARK};
-    }}
+    }
 """
 
-_STUDENT_ROW_FLAGGED_QSS = f"""
-    QFrame {{
+_STUDENT_ROW_FLAGGED_QSS = """
+    QFrame {
         background: qradialgradient(cx:0.06,cy:0.5,radius:1.2,fx:0.02,fy:0.5,
             stop:0.0 rgba(224,128,42,0.14),stop:0.45 rgba(224,128,42,0.04),stop:1.0 transparent);
         border: none;
-        border-left: 3px solid {WARN_PINK};
-        border-bottom: 1px solid {BORDER_DARK};
-    }}
-    QFrame:hover {{
-        background: qradialgradient(cx:0.06,cy:0.5,radius:1.2,fx:0.02,fy:0.5,
-            stop:0.0 rgba(224,128,42,0.22),stop:0.45 rgba(224,128,42,0.06),stop:1.0 transparent);
-    }}
+    }
+    QFrame:hover {
+        background: qradialgradient(cx:0.20,cy:0.5,radius:0.85,
+            stop:0.0 rgba(240,168,48,45),stop:0.6 rgba(240,168,48,15),stop:1.0 transparent);
+    }
 """
 
-_STUDENT_ROW_AIC_QSS = f"""
-    QFrame {{
+_STUDENT_ROW_AIC_QSS = """
+    QFrame {
         background: qradialgradient(cx:0.06,cy:0.5,radius:1.2,fx:0.02,fy:0.5,
-            stop:0.0 rgba(204,82,130,0.12),stop:0.45 rgba(204,82,130,0.03),stop:1.0 transparent);
+            stop:0.0 rgba(120,180,220,0.12),stop:0.45 rgba(120,180,220,0.03),stop:1.0 transparent);
         border: none;
-        border-left: 3px solid {ROSE_DIM};
-        border-bottom: 1px solid {BORDER_DARK};
-    }}
-    QFrame:hover {{
-        background: qradialgradient(cx:0.06,cy:0.5,radius:1.2,fx:0.02,fy:0.5,
-            stop:0.0 rgba(204,82,130,0.22),stop:0.45 rgba(204,82,130,0.06),stop:1.0 transparent);
-    }}
+    }
+    QFrame:hover {
+        background: qradialgradient(cx:0.20,cy:0.5,radius:0.85,
+            stop:0.0 rgba(240,168,48,45),stop:0.6 rgba(240,168,48,15),stop:1.0 transparent);
+    }
 """
 
 
@@ -198,11 +176,11 @@ class AICPipWidget(QWidget):
         cx, cy = self.width() // 2, self.height() // 2
 
         if self._smoking_gun:
-            # Glow ring
+            # Glow ring (baby blue — AIC system colour)
             glow = QRadialGradient(cx, cy, 7)
-            glow.setColorAt(0.0, QColor(ROSE_ACCENT))
-            glow.setColorAt(0.5, QColor(204, 82, 130, 120))
-            glow.setColorAt(1.0, QColor(204, 82, 130, 0))
+            glow.setColorAt(0.0, QColor(120, 180, 220))
+            glow.setColorAt(0.5, QColor(120, 180, 220, 120))
+            glow.setColorAt(1.0, QColor(120, 180, 220, 0))
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(glow)
             p.drawEllipse(cx - 7, cy - 7, 14, 14)
@@ -284,11 +262,11 @@ def _collapsible_header(text: str, initially_open: bool = True) -> tuple:
     hl = QHBoxLayout(header)
     hl.setContentsMargins(SPACING_SM, 0, SPACING_SM, 0)
     arrow_lbl = QLabel("▾" if initially_open else "▸")
-    arrow_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 10px; background: transparent;")
+    arrow_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent;")
     hl.addWidget(arrow_lbl)
     title_lbl = QLabel(text.upper())
     title_lbl.setStyleSheet(
-        f"color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: bold;"
+        f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
         f" letter-spacing: 1.5px; background: transparent;"
     )
     hl.addWidget(title_lbl)
@@ -334,8 +312,7 @@ class _GradingSidebar(QFrame):
         # Filter combo
         filter_row = QHBoxLayout()
         filter_row.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
-        self._filter_combo = QComboBox()
-        self._filter_combo.setStyleSheet(_FILTER_COMBO_QSS)
+        self._filter_combo = CRTComboBox()
         self._filter_combo.addItem("All", "all")
         self._filter_combo.addItem("Needs Attention", "attention")
         self._filter_combo.addItem("Manual Review", "review")
@@ -349,7 +326,7 @@ class _GradingSidebar(QFrame):
         refresh_btn.setStyleSheet(f"""
             QPushButton {{
                 background: transparent; border: none;
-                color: {PHOSPHOR_DIM}; font-size: 14px;
+                color: {PHOSPHOR_DIM}; font-size: {px(14)}px;
             }}
             QPushButton:hover {{ color: {PHOSPHOR_HOT}; }}
         """)
@@ -428,12 +405,12 @@ class _GradingSidebar(QFrame):
 
             is_collapsed = self._course_collapsed.get(cid, False)
             arrow = QLabel("▸" if is_collapsed else "▾")
-            arrow.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 10px; background: transparent;")
+            arrow.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent;")
             hl.addWidget(arrow)
 
             name_lbl = QLabel(data["name"].upper())
             name_lbl.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: bold;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
                 f" letter-spacing: 1px; background: transparent;"
             )
             hl.addWidget(name_lbl)
@@ -510,16 +487,16 @@ class _GradingSidebar(QFrame):
         # Status indicators
         if has_grading_flag and has_aic_concern:
             indicator = QLabel("⚠ ●")
-            indicator.setStyleSheet(f"color: {WARN_PINK}; font-size: 11px; background: transparent;")
+            indicator.setStyleSheet(f"color: {WARN_PINK}; font-size: {px(11)}px; background: transparent;")
         elif has_grading_flag:
             indicator = QLabel("⚠")
-            indicator.setStyleSheet(f"color: #E0802A; font-size: 11px; background: transparent;")
+            indicator.setStyleSheet(f"color: #E0802A; font-size: {px(11)}px; background: transparent;")
         elif has_aic_concern:
             indicator = QLabel("●")
-            indicator.setStyleSheet(f"color: {ROSE_ACCENT}; font-size: 11px; background: transparent;")
+            indicator.setStyleSheet(f"color: {ROSE_ACCENT}; font-size: {px(11)}px; background: transparent;")
         else:
             indicator = QLabel("✓")
-            indicator.setStyleSheet(f"color: {TERM_GREEN}; font-size: 11px; background: transparent; opacity: 0.6;")
+            indicator.setStyleSheet(f"color: {TERM_GREEN}; font-size: {px(11)}px; background: transparent; opacity: 0.6;")
         indicator.setFixedWidth(20)
         rl.addWidget(indicator)
 
@@ -527,7 +504,7 @@ class _GradingSidebar(QFrame):
         name_lbl = QLabel(aname)
         name_lbl.setStyleSheet(
             f"color: {PHOSPHOR_HOT if is_selected else PHOSPHOR_MID};"
-            f" font-size: 12px; background: transparent;"
+            f" font-size: {px(12)}px; background: transparent;"
         )
         rl.addWidget(name_lbl, 1)
 
@@ -543,7 +520,7 @@ class _GradingSidebar(QFrame):
         count_lbl = QLabel(count_text)
         color = WARN_PINK if flagged else (ROSE_ACCENT if aic_sg else PHOSPHOR_DIM)
         count_lbl.setStyleSheet(
-            f"color: {color}; font-size: 10px; background: transparent;"
+            f"color: {color}; font-size: {px(10)}px; background: transparent;"
         )
         rl.addWidget(count_lbl)
 
@@ -579,8 +556,6 @@ class _StudentList(QFrame):
 
     student_selected = Signal(dict)  # full student row dict
     export_requested = Signal()
-    prev_flagged = Signal()
-    next_flagged = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -612,7 +587,7 @@ class _StudentList(QFrame):
         top_row = QHBoxLayout()
         self._title_lbl = QLabel("Select an assignment")
         self._title_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 13px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(13)}px; font-weight: bold;"
             f" background: transparent;"
         )
         top_row.addWidget(self._title_lbl, 1)
@@ -622,7 +597,7 @@ class _StudentList(QFrame):
         self._export_btn.setStyleSheet(f"""
             QPushButton {{
                 background: transparent; border: 1px solid {BORDER_DARK};
-                color: {PHOSPHOR_DIM}; font-size: 10px; padding: 2px 10px;
+                color: {PHOSPHOR_DIM}; font-size: {px(10)}px; padding: 2px 10px;
                 border-radius: 3px;
             }}
             QPushButton:hover {{ border-color: {BORDER_AMBER}; color: {PHOSPHOR_HOT}; }}
@@ -634,7 +609,7 @@ class _StudentList(QFrame):
 
         self._subtitle_lbl = QLabel("")
         self._subtitle_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; background: transparent;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent;"
         )
         hl.addWidget(self._subtitle_lbl)
 
@@ -642,8 +617,8 @@ class _StudentList(QFrame):
         self._aic_banner = QLabel("")
         self._aic_banner.setWordWrap(True)
         self._aic_banner.setStyleSheet(
-            f"color: {ROSE_ACCENT}; font-size: 10px; background: rgba(204,82,130,0.08);"
-            f" border: 1px solid {ROSE_DIM}; border-radius: 3px; padding: 3px 6px;"
+            f"color: #78B4DC; font-size: {px(10)}px; background: transparent;"
+            f" border: none; padding: 3px 0px;"
         )
         self._aic_banner.setVisible(False)
         hl.addWidget(self._aic_banner)
@@ -662,8 +637,7 @@ class _StudentList(QFrame):
 
         chip_row.addStretch()
 
-        self._sort_combo = QComboBox()
-        self._sort_combo.setStyleSheet(_FILTER_COMBO_QSS)
+        self._sort_combo = CRTComboBox()
         self._sort_combo.setFixedWidth(100)
         self._sort_combo.addItem("Name", "name")
         self._sort_combo.addItem("Grade", "grade")
@@ -688,7 +662,7 @@ class _StudentList(QFrame):
         self._flash_bar.setFixedHeight(24)
         self._flash_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._flash_bar.setStyleSheet(
-            f"font-size: 11px; font-weight: bold; background: transparent; border: none;"
+            f"font-size: {px(11)}px; font-weight: bold; background: transparent; border: none;"
         )
         self._flash_bar.setVisible(False)
         layout.addWidget(self._flash_bar)
@@ -710,53 +684,9 @@ class _StudentList(QFrame):
         scroll.setWidget(self._list_container)
         layout.addWidget(scroll, 1)
 
-        # Footer: summary + nav buttons
-        footer = QFrame()
-        footer.setStyleSheet(f"""
-            QFrame {{ background: {BG_CARD}; border-top: 1px solid {BORDER_DARK}; }}
-        """)
-        fl = QHBoxLayout(footer)
-        fl.setContentsMargins(SPACING_MD, SPACING_XS, SPACING_MD, SPACING_XS)
-
+        # Summary label (inline at bottom of scroll area)
         self._summary_lbl = QLabel("")
-        self._summary_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; background: transparent;"
-        )
-        fl.addWidget(self._summary_lbl, 1)
-
         self._review_progress = QLabel("")
-        self._review_progress.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; background: transparent;"
-        )
-        fl.addWidget(self._review_progress)
-
-        prev_btn = QPushButton("← Prev flagged")
-        prev_btn.setFixedHeight(22)
-        prev_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: transparent; border: 1px solid {BORDER_DARK};
-                color: {PHOSPHOR_DIM}; font-size: 10px; padding: 1px 6px;
-                border-radius: 3px;
-            }}
-            QPushButton:hover {{ border-color: {BORDER_AMBER}; color: {PHOSPHOR_MID}; }}
-        """)
-        prev_btn.clicked.connect(self.prev_flagged)
-        fl.addWidget(prev_btn)
-
-        next_btn = QPushButton("Next flagged →")
-        next_btn.setFixedHeight(22)
-        next_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: transparent; border: 1px solid {BORDER_DARK};
-                color: {PHOSPHOR_DIM}; font-size: 10px; padding: 1px 6px;
-                border-radius: 3px;
-            }}
-            QPushButton:hover {{ border-color: {BORDER_AMBER}; color: {PHOSPHOR_MID}; }}
-        """)
-        next_btn.clicked.connect(self.next_flagged)
-        fl.addWidget(next_btn)
-
-        layout.addWidget(footer)
 
     def set_assignment(self, name: str, subtitle: str) -> None:
         self._assignment_name = name
@@ -814,7 +744,8 @@ class _StudentList(QFrame):
         if self._filter_mode == "complete":
             filtered = [s for s in filtered if s.get("grade", "").lower() == "complete"]
         elif self._filter_mode == "incomplete":
-            filtered = [s for s in filtered if s.get("grade", "").lower() == "incomplete"]
+            # Show everyone who is NOT complete (includes incomplete, ungraded, no submission)
+            filtered = [s for s in filtered if s.get("grade", "").lower() != "complete"]
         elif self._filter_mode == "flagged":
             filtered = [s for s in filtered if s.get("is_flagged")]
 
@@ -876,45 +807,72 @@ class _StudentList(QFrame):
         rl.setContentsMargins(SPACING_SM, 2, SPACING_SM, 2)
         rl.setSpacing(6)
 
-        # AIC pip
-        pip = AICPipWidget(aic_concern or "none", bool(aic_sg))
-        rl.addWidget(pip)
-
-        # Name
+        # Name — dim by default, bright only when needs attention
         name_lbl = QLabel(name)
-        name_color = PHOSPHOR_HOT if is_selected else PHOSPHOR_MID
-        name_lbl.setStyleSheet(f"color: {name_color}; font-size: 12px; background: transparent;")
+        is_aic_concern = aic_concern in ("elevated", "high") or aic_sg
+        needs_attention = flagged or is_aic_concern
+        if is_selected:
+            name_color = PHOSPHOR_HOT
+        elif needs_attention and not has_override:
+            name_color = PHOSPHOR_MID
+        else:
+            name_color = PHOSPHOR_DIM
+        name_lbl.setStyleSheet(f"color: {name_color}; font-size: {px(12)}px; background: transparent;")
         rl.addWidget(name_lbl, 1)
 
         # Flagged / needs review badge
         # Show for: grading flags on a real submission, OR elevated+ AIC concern
-        is_aic_concern = aic_concern in ("elevated", "high") or aic_sg
         if (flagged or is_aic_concern) and not has_override:
             flag_lbl = QLabel("NEEDS REVIEW")
-            badge_color = ROSE_ACCENT if (is_aic_concern and not flagged) else "#E0802A"
+            if is_aic_concern and not flagged:
+                # AIC-only: baby blue
+                badge_color = "#78B4DC"
+                bg_rgba = "rgba(120,180,220,0.12)"
+                border_rgba = "rgba(120,180,220,0.3)"
+            else:
+                # Grading flags: amber
+                badge_color = "#E0802A"
+                bg_rgba = "rgba(224,128,42,0.12)"
+                border_rgba = "rgba(224,128,42,0.3)"
             flag_lbl.setStyleSheet(
-                f"color: {badge_color}; font-size: 9px; font-weight: bold;"
-                f" background: rgba(224,128,42,0.12); border: 1px solid rgba(224,128,42,0.3);"
+                f"color: {badge_color}; font-size: {px(9)}px; font-weight: bold;"
+                f" background: {bg_rgba}; border: 1px solid {border_rgba};"
                 f" border-radius: 2px; padding: 1px 4px;"
             )
             rl.addWidget(flag_lbl)
         elif has_override:
             check_lbl = QLabel("✓")
             check_lbl.setStyleSheet(
-                f"color: {TERM_GREEN}; font-size: 11px; background: transparent;"
+                f"color: {TERM_GREEN}; font-size: {px(11)}px; background: transparent;"
             )
             check_lbl.setToolTip("Teacher reviewed")
             rl.addWidget(check_lbl)
 
         # Grade badge
+        reason = s.get("reason", "")
         badge = GradeBadge(grade)
+        if grade.lower() != "complete" and reason:
+            badge.setToolTip(reason)
         rl.addWidget(badge)
+
+        # Reason hint for non-complete students (compact, elided)
+        if grade.lower() != "complete" and reason and reason not in ("Incomplete submission", "Meets requirements"):
+            reason_lbl = QLabel(reason)
+            reason_lbl.setMaximumWidth(160)
+            reason_lbl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(9)}px;"
+                f" background: transparent;"
+            )
+            reason_lbl.setToolTip(reason)
+            from PySide6.QtWidgets import QSizePolicy as _SP
+            reason_lbl.setSizePolicy(_SP.Policy.Preferred, _SP.Policy.Fixed)
+            rl.addWidget(reason_lbl)
 
         # Word count
         wc_lbl = QLabel(f"{wc}w" if wc else "—")
         wc_lbl.setFixedWidth(40)
         wc_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        wc_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: 10px; background: transparent;")
+        wc_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent;")
         rl.addWidget(wc_lbl)
 
         row.mousePressEvent = lambda e, student=s: self._on_student_clicked(student)
@@ -928,10 +886,9 @@ class _StudentList(QFrame):
     def _update_summary(self) -> None:
         total = len(self._students)
         comp = sum(1 for s in self._students if s.get("grade", "").lower() == "complete")
-        inc = sum(1 for s in self._students if s.get("grade", "").lower() == "incomplete")
-        skip = sum(1 for s in self._students if s.get("was_skipped"))
+        not_comp = total - comp
         self._summary_lbl.setText(
-            f"{comp} comp · {inc} inc" + (f" · {skip} skip" if skip else "")
+            f"{comp} comp · {not_comp} inc"
         )
 
         # Review progress
@@ -988,7 +945,7 @@ class _StudentList(QFrame):
         text = message or ("✓ Saved" if success else "✗ Failed")
         self._flash_bar.setText(text)
         self._flash_bar.setStyleSheet(
-            f"color: {color}; font-size: 11px; font-weight: bold;"
+            f"color: {color}; font-size: {px(11)}px; font-weight: bold;"
             f" background: {bg}; border-bottom: 1px solid {color}40;"
         )
         self._flash_bar.setVisible(True)
@@ -1030,17 +987,246 @@ class _StudentList(QFrame):
 # ──────────────────────────────────────────────────────────────────────────────
 # Right column: Student detail
 # ──────────────────────────────────────────────────────────────────────────────
+# Attachment display helpers
+# ──────────────────────────────────────────────────────────────────────────────
+
+_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".heic", ".heif", ".tiff"}
+_AUDIO_EXTS = {".mp3", ".m4a", ".wav", ".ogg", ".aac", ".flac", ".opus", ".weba"}
+_VIDEO_EXTS = {".mp4", ".mov", ".webm", ".mkv", ".avi"}
+
+
+def _att_ext(att: Dict) -> str:
+    return Path(att.get("filename", "")).suffix.lower()
+
+
+def _is_image(att: Dict) -> bool:
+    ct = att.get("content_type", "")
+    return ct.startswith("image/") or _att_ext(att) in _IMAGE_EXTS
+
+
+def _is_audio(att: Dict) -> bool:
+    ct = att.get("content_type", "")
+    return (
+        ct.startswith("audio/") or ct.startswith("video/")
+        or _att_ext(att) in _AUDIO_EXTS
+        or _att_ext(att) in _VIDEO_EXTS
+    )
+
+
+class _DownloadThread(QThread):
+    """Download a URL to a temp file, emit the path when done."""
+    finished_path = Signal(str)   # temp file path
+    failed = Signal(str)          # error message
+
+    def __init__(self, url: str, headers: dict, suffix: str = "", parent=None):
+        super().__init__(parent)
+        self._url = url
+        self._headers = headers
+        self._suffix = suffix
+
+    def run(self):
+        try:
+            req = urllib.request.Request(self._url, headers=self._headers)
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = resp.read()
+            fd, path = tempfile.mkstemp(suffix=self._suffix)
+            os.write(fd, data)
+            os.close(fd)
+            self.finished_path.emit(path)
+        except Exception as e:
+            self.failed.emit(str(e))
+
+
+class _ImageAttachmentWidget(QFrame):
+    """Shows a Canvas image attachment inline with async download."""
+
+    def __init__(self, att: Dict, api=None, parent=None):
+        super().__init__(parent)
+        self._att = att
+        self._api = api
+        self._tmp_path: Optional[str] = None
+        self._thread: Optional[_DownloadThread] = None
+
+        self.setStyleSheet(
+            f"QFrame {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+            f" border-radius: 4px; }}"
+        )
+
+        vl = QVBoxLayout(self)
+        vl.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+        vl.setSpacing(4)
+
+        name_lbl = QLabel(f"🖼  {att.get('filename', 'image')}")
+        name_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_MID}; font-size: {px(11)}px; background: transparent;"
+        )
+        vl.addWidget(name_lbl)
+
+        self._img_lbl = QLabel("Loading…")
+        self._img_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._img_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent;"
+        )
+        self._img_lbl.setMinimumHeight(120)
+        vl.addWidget(self._img_lbl)
+
+        url = att.get("url", "")
+        if url:
+            headers = (api.headers if api else {})
+            ext = _att_ext(att) or ".png"
+            self._thread = _DownloadThread(url, headers, suffix=ext, parent=self)
+            self._thread.finished_path.connect(self._on_downloaded)
+            self._thread.failed.connect(self._on_error)
+            self._thread.start()
+        else:
+            self._img_lbl.setText("(no URL available)")
+
+    def _on_downloaded(self, path: str):
+        self._tmp_path = path
+        px_map = QPixmap(path)
+        if px_map.isNull():
+            self._img_lbl.setText("(could not render image)")
+            return
+        max_w = 480
+        if px_map.width() > max_w:
+            px_map = px_map.scaledToWidth(max_w, Qt.TransformationMode.SmoothTransformation)
+        self._img_lbl.setPixmap(px_map)
+        self._img_lbl.setFixedHeight(px_map.height())
+
+    def _on_error(self, msg: str):
+        self._img_lbl.setText(f"(download failed: {msg})")
+
+    def closeEvent(self, event):
+        if self._tmp_path and os.path.exists(self._tmp_path):
+            try:
+                os.unlink(self._tmp_path)
+            except OSError:
+                pass
+        super().closeEvent(event)
+
+
+class _AudioAttachmentWidget(QFrame):
+    """Play/pause control for a Canvas audio or video attachment."""
+
+    def __init__(self, att: Dict, api=None, parent=None):
+        super().__init__(parent)
+        self._att = att
+        self._api = api
+        self._tmp_path: Optional[str] = None
+        self._thread: Optional[_DownloadThread] = None
+
+        self.setStyleSheet(
+            f"QFrame {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+            f" border-radius: 4px; }}"
+        )
+
+        hl = QHBoxLayout(self)
+        hl.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+        hl.setSpacing(SPACING_SM)
+
+        self._play_btn = QPushButton("▶  Load")
+        self._play_btn.setFixedWidth(90)
+        self._play_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: rgba(180,130,60,0.15); border: 1px solid {BORDER_AMBER};
+                color: {PHOSPHOR_MID}; font-size: {px(11)}px; padding: 4px 8px;
+                border-radius: 3px;
+            }}
+            QPushButton:hover {{ background: rgba(180,130,60,0.30); color: {PHOSPHOR_HOT}; }}
+        """)
+        hl.addWidget(self._play_btn)
+
+        name_lbl = QLabel(f"🎵  {att.get('filename', 'audio')}")
+        name_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_MID}; font-size: {px(11)}px; background: transparent;"
+        )
+        hl.addWidget(name_lbl, 1)
+
+        self._status_lbl = QLabel(f"({_fmt_size(att.get('size', 0))})")
+        self._status_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent;"
+        )
+        hl.addWidget(self._status_lbl)
+
+        # Media player (lazy-init)
+        self._player: Optional[QMediaPlayer] = None
+        self._audio_out: Optional[QAudioOutput] = None
+        self._loaded = False
+
+        self._play_btn.clicked.connect(self._on_play_clicked)
+
+    def _on_play_clicked(self):
+        if not self._loaded:
+            self._status_lbl.setText("Downloading…")
+            self._play_btn.setEnabled(False)
+            url = self._att.get("url", "")
+            if not url:
+                self._status_lbl.setText("(no URL)")
+                self._play_btn.setEnabled(True)
+                return
+            headers = (self._api.headers if self._api else {})
+            ext = _att_ext(self._att) or ".mp3"
+            self._thread = _DownloadThread(url, headers, suffix=ext, parent=self)
+            self._thread.finished_path.connect(self._on_downloaded)
+            self._thread.failed.connect(self._on_error)
+            self._thread.start()
+        elif self._player:
+            if self._player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+                self._player.pause()
+                self._play_btn.setText("▶  Play")
+            else:
+                self._player.play()
+                self._play_btn.setText("⏸  Pause")
+
+    def _on_downloaded(self, path: str):
+        self._tmp_path = path
+        self._loaded = True
+        self._audio_out = QAudioOutput(self)
+        self._player = QMediaPlayer(self)
+        self._player.setAudioOutput(self._audio_out)
+        self._player.setSource(QUrl.fromLocalFile(path))
+        self._player.playbackStateChanged.connect(self._on_state_changed)
+        self._player.play()
+        self._play_btn.setText("⏸  Pause")
+        self._play_btn.setEnabled(True)
+        self._status_lbl.setText("Playing")
+
+    def _on_error(self, msg: str):
+        self._status_lbl.setText(f"Error: {msg}")
+        self._play_btn.setEnabled(True)
+
+    def _on_state_changed(self, state):
+        if state == QMediaPlayer.PlaybackState.StoppedState:
+            self._play_btn.setText("▶  Play")
+            self._status_lbl.setText("Done")
+
+    def closeEvent(self, event):
+        if self._player:
+            self._player.stop()
+        if self._tmp_path and os.path.exists(self._tmp_path):
+            try:
+                os.unlink(self._tmp_path)
+            except OSError:
+                pass
+        super().closeEvent(event)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 
 class _StudentDetail(QFrame):
     """Right column: grade card, AIC card, submission viewer, triage actions."""
 
     override_requested = Signal(str, str, str, str)  # student_id, assignment_id, grade, reason
     view_aic_detail = Signal(str, str)  # student_id, assignment_id
+    post_comment_requested = Signal(str, str, str, str)  # course_id, assignment_id, student_id, text
 
-    def __init__(self, parent=None):
+    def __init__(self, api=None, parent=None):
         super().__init__(parent)
+        self._api = api
         self.setStyleSheet(f"QFrame {{ background: {BG_VOID}; border: none; }}")
         self._student: Dict = {}
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._show_context_menu)
         self._build_ui()
 
     def _build_ui(self) -> None:
@@ -1068,11 +1254,44 @@ class _StudentDetail(QFrame):
         self._empty_label = QLabel("Select a student to view details")
         self._empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._empty_label.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 13px; background: transparent;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(13)}px; background: transparent;"
         )
         self._content_layout.addStretch()
         self._content_layout.addWidget(self._empty_label)
         self._content_layout.addStretch()
+
+    def _show_context_menu(self, pos) -> None:
+        s = self._student
+        if not s:
+            return
+        base_url = (self._api.base_url.rstrip("/") if self._api and self._api.base_url else "")
+        course_id = s.get("course_id", "")
+        assignment_id = s.get("assignment_id", "")
+        student_id = s.get("student_id", "")
+
+        from gui.styles import menu_qss
+        menu = QMenu(self)
+        menu.setStyleSheet(menu_qss())
+
+        if base_url and course_id and assignment_id and student_id:
+            sg_url = (
+                f"{base_url}/courses/{course_id}/gradebook/speed_grader"
+                f"?assignment_id={assignment_id}&student_id={student_id}"
+            )
+            open_sg = QAction("Open in SpeedGrader ↗", self)
+            open_sg.triggered.connect(lambda: QDesktopServices.openUrl(QUrl(sg_url)))
+            menu.addAction(open_sg)
+
+            assign_url = f"{base_url}/courses/{course_id}/assignments/{assignment_id}"
+            open_assign = QAction("Open Assignment Page ↗", self)
+            open_assign.triggered.connect(lambda: QDesktopServices.openUrl(QUrl(assign_url)))
+            menu.addAction(open_assign)
+        else:
+            no_api = QAction("(Canvas URL not configured)", self)
+            no_api.setEnabled(False)
+            menu.addAction(no_api)
+
+        menu.exec(self.mapToGlobal(pos))
 
     def load(self, student: Dict) -> None:
         self._student = student
@@ -1084,17 +1303,24 @@ class _StudentDetail(QFrame):
         self._empty_label = QLabel("Select a student to view details")
         self._empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._empty_label.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 13px; background: transparent;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(13)}px; background: transparent;"
         )
         self._content_layout.addStretch()
         self._content_layout.addWidget(self._empty_label)
         self._content_layout.addStretch()
 
     def _clear_content(self) -> None:
-        while self._content_layout.count():
-            item = self._content_layout.takeAt(0)
+        def _delete_item(item):
             if item.widget():
                 item.widget().deleteLater()
+            elif item.layout():
+                lay = item.layout()
+                while lay.count():
+                    _delete_item(lay.takeAt(0))
+                lay.deleteLater()
+
+        while self._content_layout.count():
+            _delete_item(self._content_layout.takeAt(0))
 
     def _rebuild(self) -> None:
         s = self._student
@@ -1131,8 +1357,8 @@ class _StudentDetail(QFrame):
         aic_human = s.get("aic_human_presence_confidence")
         aic_sg = s.get("aic_smoking_gun")
 
-        # ── Cards row (Grade + AIC side by side) ───────────────────────────
-        cards_row = QHBoxLayout()
+        # ── Cards column (Grade + AIC stacked) ─────────────────────────────
+        cards_row = QVBoxLayout()
         cards_row.setSpacing(SPACING_SM)
 
         # Grade card
@@ -1143,7 +1369,7 @@ class _StudentDetail(QFrame):
 
         gc_header = QLabel("GRADE")
         gc_header.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: bold;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
             f" letter-spacing: 1.5px; background: transparent;"
         )
         gc_layout.addWidget(gc_header)
@@ -1155,27 +1381,27 @@ class _StudentDetail(QFrame):
 
         gc_grade = QLabel(grade_text)
         gc_grade.setStyleSheet(
-            f"color: {grade_color}; font-size: 16px; font-weight: bold; background: transparent;"
+            f"color: {grade_color}; font-size: {px(16)}px; font-weight: bold; background: transparent;"
         )
         gc_layout.addWidget(gc_grade)
 
         if override and override != grade:
             orig = QLabel(f"Original: {grade}")
             orig.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 10px; background: transparent;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent;"
             )
             gc_layout.addWidget(orig)
 
         gc_reason = QLabel(reason)
         gc_reason.setWordWrap(True)
         gc_reason.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 11px; background: transparent;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(11)}px; background: transparent;"
         )
         gc_layout.addWidget(gc_reason)
 
         gc_meta = QLabel(f"{wc} words · {sub_type or 'unknown'} · {grading_tool.upper()}")
         gc_meta.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px; background: transparent;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent;"
         )
         gc_layout.addWidget(gc_meta)
 
@@ -1190,7 +1416,7 @@ class _StudentDetail(QFrame):
                     f" · Avg words/post: {avg_words:.0f}" if avg_words else ""
                 )
                 df_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_DIM}; font-size: 10px; background: transparent;"
+                    f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent;"
                 )
                 gc_layout.addWidget(df_lbl)
 
@@ -1201,11 +1427,11 @@ class _StudentDetail(QFrame):
                 fl = QLabel(f"⚠ {flag_text}")
                 fl.setWordWrap(True)
                 fl.setStyleSheet(
-                    f"color: #E0802A; font-size: 11px; background: transparent;"
+                    f"color: #E0802A; font-size: {px(11)}px; background: transparent;"
                 )
                 gc_layout.addWidget(fl)
 
-        cards_row.addWidget(grade_card, 1)
+        cards_row.addWidget(grade_card)
 
         # AIC card (only if AIC data exists)
         if aic_concern and aic_concern != "none":
@@ -1214,48 +1440,104 @@ class _StudentDetail(QFrame):
             ac_layout.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
             ac_layout.setSpacing(4)
 
-            ac_header = QLabel("AIC")
+            # Header + concern level
+            concern_color = CONCERN_COLOR.get(aic_concern, PHOSPHOR_DIM)
+            concern_label = CONCERN_LABEL.get(aic_concern, aic_concern)
+            ac_header = QLabel(f"AIC — {concern_label}")
             ac_header.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: bold;"
-                f" letter-spacing: 1.5px; background: transparent;"
+                f"color: {concern_color}; font-size: {px(11)}px; font-weight: bold;"
+                f" background: transparent;"
             )
             ac_layout.addWidget(ac_header)
 
-            concern_color = CONCERN_COLOR.get(aic_concern, PHOSPHOR_DIM)
-            concern_label = CONCERN_LABEL.get(aic_concern, aic_concern)
-            pip_row = QHBoxLayout()
-            pip = AICPipWidget(aic_concern, bool(aic_sg))
-            pip_row.addWidget(pip)
-            cl_lbl = QLabel(concern_label)
-            cl_lbl.setStyleSheet(
-                f"color: {concern_color}; font-size: 13px; font-weight: bold;"
-                f" background: transparent;"
-            )
-            pip_row.addWidget(cl_lbl)
-            pip_row.addStretch()
-            ac_layout.addLayout(pip_row)
-
-            if aic_score is not None:
-                score_lbl = QLabel(f"Suspicion: {aic_score:.2f}")
-                score_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 11px; background: transparent;"
-                )
-                ac_layout.addWidget(score_lbl)
-
-            if aic_human is not None:
-                human_lbl = QLabel(f"Human presence: {aic_human:.0%}")
-                human_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 11px; background: transparent;"
-                )
-                ac_layout.addWidget(human_lbl)
-
+            # Smoking gun details
             if aic_sg:
-                sg_lbl = QLabel("SMOKING GUN DETECTED")
+                sg_details = s.get("aic_smoking_gun_details", [])
+                if isinstance(sg_details, str):
+                    try:
+                        sg_details = json.loads(sg_details)
+                    except (json.JSONDecodeError, TypeError):
+                        sg_details = []
+                sg_text = "; ".join(sg_details) if sg_details else "Chatbot artifacts detected"
+                sg_lbl = QLabel(f"Smoking gun: {sg_text}")
+                sg_lbl.setWordWrap(True)
                 sg_lbl.setStyleSheet(
-                    f"color: {ROSE_ACCENT}; font-size: 10px; font-weight: bold;"
-                    f" background: transparent;"
+                    f"color: #90C8F0; font-size: {px(10)}px; background: transparent;"
                 )
                 ac_layout.addWidget(sg_lbl)
+
+            # Marker-based reasons (the WHY)
+            marker_counts = s.get("aic_marker_counts", {})
+            if isinstance(marker_counts, str):
+                try:
+                    marker_counts = json.loads(marker_counts)
+                except (json.JSONDecodeError, TypeError):
+                    marker_counts = {}
+
+            # Suspicious markers (higher count = more concern)
+            _MARKER_LABELS = {
+                "ai_transitions": "Formal transitions / academic phrasing",
+                "generic_phrases": "Generic or vague language",
+                "inflated_vocabulary": "Unusually formal vocabulary",
+                "ai_specific_organization": "AI-style organizational patterns",
+            }
+            # Positive markers (presence = authenticity signals)
+            _POSITIVE_LABELS = {
+                "personal_voice": "Personal voice",
+                "emotional_language": "Emotional language",
+                "cognitive_diversity": "Cognitive diversity",
+            }
+
+            has_markers = False
+            for mid, label in _MARKER_LABELS.items():
+                count = marker_counts.get(mid, 0)
+                if count > 0:
+                    has_markers = True
+                    m_lbl = QLabel(f"  ▸ {label} ({count})")
+                    m_lbl.setStyleSheet(
+                        f"color: #78B4DC; font-size: {px(10)}px; background: transparent;"
+                    )
+                    ac_layout.addWidget(m_lbl)
+
+            # Show positive signals present (these are protective)
+            has_positive = False
+            for mid, label in _POSITIVE_LABELS.items():
+                count = marker_counts.get(mid, 0)
+                if count > 0:
+                    has_positive = True
+                    m_lbl = QLabel(f"  ✓ {label} ({count})")
+                    m_lbl.setStyleSheet(
+                        f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; background: transparent;"
+                    )
+                    ac_layout.addWidget(m_lbl)
+
+            # Show absent positive signals only when suspicious markers exist
+            if has_markers:
+                for mid, label in _POSITIVE_LABELS.items():
+                    count = marker_counts.get(mid, 0)
+                    if count == 0:
+                        m_lbl = QLabel(f"  ✗ No {label.lower()} detected")
+                        m_lbl.setStyleSheet(
+                            f"color: #5A7A90; font-size: {px(10)}px; background: transparent;"
+                        )
+                        ac_layout.addWidget(m_lbl)
+
+            # Context adjustments (equity notes)
+            ctx = s.get("aic_context_adjustments", [])
+            if isinstance(ctx, str):
+                try:
+                    ctx = json.loads(ctx)
+                except (json.JSONDecodeError, TypeError):
+                    ctx = []
+            if ctx:
+                for note in ctx[:2]:
+                    ctx_lbl = QLabel(f"  Note: {note}")
+                    ctx_lbl.setWordWrap(True)
+                    ctx_lbl.setStyleSheet(
+                        f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+                        f" font-style: italic; background: transparent;"
+                    )
+                    ac_layout.addWidget(ctx_lbl)
 
             # Link to full AIC detail
             aic_link = QPushButton("View Full AIC Detail →")
@@ -1263,17 +1545,17 @@ class _StudentDetail(QFrame):
             aic_link.setStyleSheet(f"""
                 QPushButton {{
                     background: transparent; border: none;
-                    color: {ROSE_ACCENT}; font-size: 11px; text-align: left;
+                    color: #78B4DC; font-size: {px(11)}px; text-align: left;
                     padding: 2px 0;
                 }}
-                QPushButton:hover {{ color: {PHOSPHOR_HOT}; }}
+                QPushButton:hover {{ color: #90C8F0; }}
             """)
             sid = str(s.get("student_id", ""))
             aid = str(s.get("assignment_id", ""))
             aic_link.clicked.connect(lambda _, si=sid, ai=aid: self.view_aic_detail.emit(si, ai))
             ac_layout.addWidget(aic_link)
 
-            cards_row.addWidget(aic_card, 1)
+            cards_row.addWidget(aic_card)
 
         self._content_layout.addLayout(cards_row)
 
@@ -1285,38 +1567,75 @@ class _StudentDetail(QFrame):
         work_layout.setContentsMargins(0, 0, 0, 0)
         work_layout.setSpacing(4)
 
+        has_content = False
+
         if sub_body:
+            has_content = True
             viewer = QTextBrowser()
             viewer.setOpenExternalLinks(True)
             viewer.setStyleSheet(f"""
                 QTextBrowser {{
                     background: {BG_INSET};
-                    color: {PHOSPHOR_MID};
+                    color: {PHOSPHOR_DIM};
                     border: 1px solid {BORDER_DARK};
                     border-radius: 4px;
-                    padding: 8px;
-                    font-size: 12px;
+                    padding: 10px;
+                    font-size: {px(12)}px;
                 }}
             """)
-            viewer.setMinimumHeight(450)
+            viewer.document().setDefaultStyleSheet(
+                f"body {{ line-height: 1.6; color: {PHOSPHOR_DIM}; }}"
+            )
+            viewer.setMinimumHeight(200)
             viewer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
             viewer.setHtml(sub_body)
             work_layout.addWidget(viewer, 1)
-        elif attachments:
-            for att in attachments:
+
+        # Render each attachment by type (images inline, audio with player, others as link)
+        for att in attachments:
+            has_content = True
+            if _is_image(att):
+                img_w = _ImageAttachmentWidget(att, api=self._api)
+                work_layout.addWidget(img_w)
+            elif _is_audio(att):
+                aud_w = _AudioAttachmentWidget(att, api=self._api)
+                work_layout.addWidget(aud_w)
+            else:
+                # Generic file — show filename + open-in-browser button
+                row = QHBoxLayout()
+                row.setSpacing(SPACING_SM)
                 att_lbl = QLabel(
-                    f"📎 {att.get('filename', 'file')}  "
+                    f"📎  {att.get('filename', 'file')}  "
                     f"({_fmt_size(att.get('size', 0))})"
                 )
                 att_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 12px; background: transparent;"
-                    f" padding: 4px 0;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(11)}px; background: transparent;"
                 )
-                work_layout.addWidget(att_lbl)
-        else:
+                row.addWidget(att_lbl, 1)
+                url = att.get("url", "")
+                if url:
+                    open_btn = QPushButton("Open ↗")
+                    open_btn.setStyleSheet(f"""
+                        QPushButton {{
+                            background: transparent; border: 1px solid {BORDER_DARK};
+                            color: {PHOSPHOR_DIM}; font-size: {px(10)}px;
+                            padding: 2px 8px; border-radius: 3px;
+                        }}
+                        QPushButton:hover {{ border-color: {BORDER_AMBER}; color: {PHOSPHOR_MID}; }}
+                    """)
+                    open_btn.clicked.connect(
+                        lambda _, u=url: QDesktopServices.openUrl(QUrl(u))
+                    )
+                    row.addWidget(open_btn)
+                row_w = QWidget()
+                row_w.setStyleSheet("background: transparent;")
+                row_w.setLayout(row)
+                work_layout.addWidget(row_w)
+
+        if not has_content:
             no_sub = QLabel("No submission content available")
             no_sub.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 12px; background: transparent;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(12)}px; background: transparent;"
                 f" padding: 12px 0;"
             )
             no_sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -1324,13 +1643,62 @@ class _StudentDetail(QFrame):
 
         self._content_layout.addWidget(work_content, 1)  # stretch to fill
 
-        # ── Triage actions (for flagged students) ──────────────────────────
-        if is_flagged and not override:
+        sid = str(s.get("student_id", ""))
+        aid = str(s.get("assignment_id", ""))
+        cid = str(s.get("course_id", ""))
+
+        # ── Comment composer (default expanded) ────────────────────────────
+        comment_header, comment_content, _ = _collapsible_header("Post Comment to Canvas", True)
+        self._content_layout.addWidget(comment_header)
+
+        cc_layout = QVBoxLayout(comment_content)
+        cc_layout.setContentsMargins(0, SPACING_SM, 0, 0)
+        cc_layout.setSpacing(SPACING_SM)
+
+        self._comment_edit = QTextEdit()
+        self._comment_edit.setPlaceholderText("Type a comment to post on the student's submission…")
+        self._comment_edit.setMaximumHeight(100)
+        self._comment_edit.setStyleSheet(f"""
+            QTextEdit {{
+                background: {BG_INSET}; color: {PHOSPHOR_MID};
+                border: 1px solid {BORDER_DARK}; border-radius: 4px;
+                padding: 6px; font-size: {px(12)}px;
+            }}
+            QTextEdit:focus {{ border-color: {BORDER_AMBER}; }}
+        """)
+        cc_layout.addWidget(self._comment_edit)
+
+        self._post_btn = QPushButton("Post Comment")
+        self._post_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: rgba(180,130,60,0.15); border: 1px solid {BORDER_AMBER};
+                color: {PHOSPHOR_MID}; font-size: {px(12)}px; padding: 6px 16px;
+                border-radius: 4px; font-weight: bold;
+            }}
+            QPushButton:hover {{ background: rgba(180,130,60,0.30); color: {PHOSPHOR_HOT}; }}
+            QPushButton:disabled {{ opacity: 0.4; }}
+        """)
+        self._post_btn.clicked.connect(
+            lambda: self._on_post_comment(cid, aid, sid)
+        )
+        self._comment_result_lbl = QLabel("")
+        self._comment_result_lbl.setStyleSheet(
+            f"color: {TERM_GREEN}; font-size: {px(11)}px; background: transparent;"
+        )
+        btn_row2 = QHBoxLayout()
+        btn_row2.addWidget(self._post_btn)
+        btn_row2.addWidget(self._comment_result_lbl, 1)
+        cc_layout.addLayout(btn_row2)
+
+        self._content_layout.addWidget(comment_content)
+
+        # ── Triage actions (always shown unless already overridden) ─────────
+        if not override:
             triage_card = _make_card("triageCard")
             triage_card.setStyleSheet(f"""
                 QFrame#triageCard {{
                     background: {CARD_GRADIENT};
-                    border: 1px solid #E0802A;
+                    border: 1px solid {BORDER_DARK};
                     border-radius: 6px;
                 }}
             """)
@@ -1340,7 +1708,7 @@ class _StudentDetail(QFrame):
 
             triage_hdr = QLabel("TRIAGE")
             triage_hdr.setStyleSheet(
-                f"color: #E0802A; font-size: 10px; font-weight: bold;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
                 f" letter-spacing: 1.5px; background: transparent;"
             )
             tl.addWidget(triage_hdr)
@@ -1348,45 +1716,78 @@ class _StudentDetail(QFrame):
             btn_row = QHBoxLayout()
             btn_row.setSpacing(SPACING_SM)
 
-            complete_btn = QPushButton("✓ Mark Complete")
-            complete_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: rgba(114,184,90,0.10); border: 1px solid {TERM_GREEN};
-                    color: {TERM_GREEN}; font-size: 12px; padding: 6px 14px;
-                    border-radius: 4px; font-weight: bold;
-                }}
-                QPushButton:hover {{ background: rgba(114,184,90,0.20); }}
-            """)
-            sid = str(s.get("student_id", ""))
-            aid = str(s.get("assignment_id", ""))
-            complete_btn.clicked.connect(
-                lambda _, si=sid, ai=aid: self.override_requested.emit(
-                    si, ai, "complete", "Teacher override: marked complete after review"
+            if grading_tool == "points" or grading_tool == "df":
+                # Points / discussion forum grading — adjust grade
+                approve_btn = QPushButton("✓ Approve Grade")
+                approve_btn.setStyleSheet(f"""
+                    QPushButton {{
+                        background: rgba(114,184,90,0.10); border: 1px solid {TERM_GREEN};
+                        color: {TERM_GREEN}; font-size: {px(12)}px; padding: 6px 14px;
+                        border-radius: 4px; font-weight: bold;
+                    }}
+                    QPushButton:hover {{ background: rgba(114,184,90,0.20); }}
+                """)
+                approve_btn.clicked.connect(
+                    lambda _, si=sid, ai=aid, g=grade: self.override_requested.emit(
+                        si, ai, g, "Teacher approved grade after review"
+                    )
                 )
-            )
-            btn_row.addWidget(complete_btn)
+                btn_row.addWidget(approve_btn)
 
-            keep_btn = QPushButton("✗ Keep Incomplete")
-            keep_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: rgba(224,128,42,0.10); border: 1px solid #E0802A;
-                    color: #E0802A; font-size: 12px; padding: 6px 14px;
-                    border-radius: 4px;
-                }}
-                QPushButton:hover {{ background: rgba(224,128,42,0.20); }}
-            """)
-            keep_btn.clicked.connect(
-                lambda _, si=sid, ai=aid: self.override_requested.emit(
-                    si, ai, "incomplete", "Teacher confirmed: keep incomplete"
+                adjust_btn = QPushButton("✎ Adjust Grade")
+                adjust_btn.setStyleSheet(f"""
+                    QPushButton {{
+                        background: rgba(224,128,42,0.10); border: 1px solid {BORDER_AMBER};
+                        color: {PHOSPHOR_MID}; font-size: {px(12)}px; padding: 6px 14px;
+                        border-radius: 4px;
+                    }}
+                    QPushButton:hover {{ background: rgba(224,128,42,0.20); color: {PHOSPHOR_HOT}; }}
+                """)
+                adjust_btn.clicked.connect(
+                    lambda _, si=sid, ai=aid: self.override_requested.emit(
+                        si, ai, "adjust", "Teacher requested grade adjustment"
+                    )
                 )
-            )
-            btn_row.addWidget(keep_btn)
+                btn_row.addWidget(adjust_btn)
+            else:
+                # Complete/incomplete grading
+                complete_btn = QPushButton("✓ Mark Complete")
+                complete_btn.setStyleSheet(f"""
+                    QPushButton {{
+                        background: rgba(114,184,90,0.10); border: 1px solid {TERM_GREEN};
+                        color: {TERM_GREEN}; font-size: {px(12)}px; padding: 6px 14px;
+                        border-radius: 4px; font-weight: bold;
+                    }}
+                    QPushButton:hover {{ background: rgba(114,184,90,0.20); }}
+                """)
+                complete_btn.clicked.connect(
+                    lambda _, si=sid, ai=aid: self.override_requested.emit(
+                        si, ai, "complete", "Teacher override: marked complete after review"
+                    )
+                )
+                btn_row.addWidget(complete_btn)
+
+                keep_btn = QPushButton("✗ Keep Incomplete")
+                keep_btn.setStyleSheet(f"""
+                    QPushButton {{
+                        background: rgba(224,128,42,0.10); border: 1px solid #E0802A;
+                        color: #E0802A; font-size: {px(12)}px; padding: 6px 14px;
+                        border-radius: 4px;
+                    }}
+                    QPushButton:hover {{ background: rgba(224,128,42,0.20); }}
+                """)
+                keep_btn.clicked.connect(
+                    lambda _, si=sid, ai=aid: self.override_requested.emit(
+                        si, ai, "incomplete", "Teacher confirmed: keep incomplete"
+                    )
+                )
+                btn_row.addWidget(keep_btn)
 
             skip_btn = QPushButton("⊘ Skip")
             skip_btn.setStyleSheet(f"""
                 QPushButton {{
                     background: transparent; border: 1px solid {BORDER_DARK};
-                    color: {PHOSPHOR_DIM}; font-size: 12px; padding: 6px 14px;
+                    color: {PHOSPHOR_DIM}; font-size: {px(12)}px; padding: 6px 14px;
                     border-radius: 4px;
                 }}
                 QPushButton:hover {{ border-color: {BORDER_AMBER}; color: {PHOSPHOR_MID}; }}
@@ -1397,6 +1798,29 @@ class _StudentDetail(QFrame):
             self._content_layout.addWidget(triage_card)
 
         self._content_layout.addStretch()
+
+    def _on_post_comment(self, course_id: str, assignment_id: str, student_id: str) -> None:
+        text = self._comment_edit.toPlainText().strip()
+        if not text:
+            return
+        self._post_btn.setEnabled(False)
+        self._comment_result_lbl.setText("Posting…")
+        self.post_comment_requested.emit(course_id, assignment_id, student_id, text)
+
+    def comment_post_result(self, ok: bool, msg: str) -> None:
+        """Called by parent after the comment API call completes."""
+        self._post_btn.setEnabled(True)
+        if ok:
+            self._comment_result_lbl.setStyleSheet(
+                f"color: {TERM_GREEN}; font-size: {px(11)}px; background: transparent;"
+            )
+            self._comment_result_lbl.setText("✓ Posted")
+            self._comment_edit.clear()
+        else:
+            self._comment_result_lbl.setStyleSheet(
+                f"color: {BURN_RED}; font-size: {px(11)}px; background: transparent;"
+            )
+            self._comment_result_lbl.setText(f"✗ {msg or 'Failed'}")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -1453,74 +1877,50 @@ class GradingResultsPanel(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # 3-column splitter
+        # 2-column splitter (sidebar removed — shared ReviewSidebar at parent level)
         self._splitter = GripSplitter.create(Qt.Orientation.Horizontal)
         self._splitter.setHandleWidth(10)
 
-        self._sidebar = _GradingSidebar()
         self._student_list = _StudentList()
-        self._student_detail = _StudentDetail()
+        self._student_detail = _StudentDetail(api=self._api)
 
-        self._splitter.addWidget(self._sidebar)
         self._splitter.addWidget(self._student_list)
         self._splitter.addWidget(self._student_detail)
 
         self._splitter.setStretchFactor(0, 0)
-        self._splitter.setStretchFactor(1, 0)
-        self._splitter.setStretchFactor(2, 1)
-        self._splitter.setSizes([220, 380, 500])
+        self._splitter.setStretchFactor(1, 1)
+        self._splitter.setSizes([380, 600])
 
-        self._sidebar.setMinimumWidth(180)
         self._student_list.setMinimumWidth(280)
 
         layout.addWidget(self._splitter, 1)
 
     def _connect_signals(self) -> None:
-        self._sidebar.assignment_selected.connect(self._on_assignment_selected)
-        self._sidebar.refresh_requested.connect(self.refresh)
         self._student_list.student_selected.connect(self._on_student_selected)
         self._student_list.export_requested.connect(self._on_export)
-        self._student_list.prev_flagged.connect(lambda: self._student_list.select_next_flagged(-1))
-        self._student_list.next_flagged.connect(lambda: self._student_list.select_next_flagged(1))
         self._student_detail.override_requested.connect(self._on_override)
         self._student_detail.view_aic_detail.connect(self.view_aic_detail)
+        self._student_detail.post_comment_requested.connect(self._on_post_comment)
 
     # ── Public API ────────────────────────────────────────────────────────
 
     def set_course(self, course_id: str, course_name: str) -> None:
-        """Called when the user selects a course in Course Select.
-
-        Stores the course context; the sidebar will auto-select the first
-        assignment for that course next time assignments load.
-        """
+        """Called when the user selects a course in Course Select."""
         self._filter_course_id = str(course_id)
 
+    def load_assignment(self, course_id: str, assignment_id: str,
+                        course_name: str = "", assignment_name: str = "") -> None:
+        """Load an assignment selected via the shared ReviewSidebar."""
+        self._on_assignment_selected(course_id, assignment_id, course_name, assignment_name)
+
     def refresh(self) -> None:
-        """Reload assignment tree from SQLite."""
-        from gui.workers import LoadGradingAssignmentsWorker
-        store = self._get_store()
-        w = LoadGradingAssignmentsWorker(store)
-        w.assignments_loaded.connect(self._on_assignments_loaded)
-        w.error.connect(lambda msg: print(f"LoadGradingAssignments error: {msg}"))
-        w.start()
-        self._track_worker(w)
+        """No-op — sidebar is now external. Kept for backward compat."""
+        pass
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
-        self.refresh()
 
     # ── Slots ─────────────────────────────────────────────────────────────
-
-    def _on_assignments_loaded(self, assignments: List[Dict]) -> None:
-        self._sidebar.populate(assignments)
-        if not assignments:
-            self._student_list.set_assignment(
-                "No grading runs yet",
-                "Run the autograder to see results here."
-            )
-            return
-        if self._filter_course_id:
-            self._sidebar.select_first_for_course(self._filter_course_id)
 
     def _on_assignment_selected(self, cid: str, aid: str, cname: str, aname: str) -> None:
         self._current_course_id = cid
@@ -1579,6 +1979,14 @@ class GradingResultsPanel(QFrame):
         else:
             self._student_list.flash_result(False, f"✗ {msg or 'Save failed'}")
             print(f"Override failed: {msg}")
+
+    def _on_post_comment(self, course_id: str, assignment_id: str,
+                         student_id: str, text: str) -> None:
+        from gui.workers import PostCanvasCommentWorker
+        w = PostCanvasCommentWorker(self._api, course_id, assignment_id, student_id, text)
+        w.comment_result.connect(self._student_detail.comment_post_result)
+        w.start()
+        self._track_worker(w)
 
     def _on_export(self) -> None:
         if not self._current_course_id or not self._current_assignment_id:

@@ -23,7 +23,7 @@ from typing import Any, Dict, List, Optional
 
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QDialogButtonBox,
-    QFrame, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
+    QFrame, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QScrollArea, QSizePolicy, QStackedWidget,
     QTextEdit, QVBoxLayout, QWidget,
 )
@@ -33,6 +33,7 @@ from PySide6.QtGui import QColor, QPainter, QPainterPath, QRadialGradient
 from gui.widgets.status_pip import draw_pip
 
 from gui.styles import (
+    px,
     SPACING_XS, SPACING_SM, SPACING_MD, SPACING_LG,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM, PHOSPHOR_GLOW,
     ROSE_ACCENT, ROSE_DIM, TERM_GREEN, BURN_RED, AMBER_BTN,
@@ -42,7 +43,9 @@ from gui.styles import (
     make_run_button, make_secondary_button,
     make_section_label, make_h_rule, make_content_pane,
     GripSplitter,
+    combo_qss,
 )
+from gui.widgets.crt_combo import CRTComboBox
 from gui.widgets.switch_toggle import SwitchToggle
 from gui.widgets.segmented_toggle import SegmentedToggle
 from gui.dialogs.bulk_run_dialog import _CourseRow, _TermSection
@@ -137,7 +140,7 @@ class _AssignRow(QWidget):
             cpill.setFixedSize(_PILL_W, 16)
             cpill.setAlignment(Qt.AlignmentFlag.AlignCenter)
             cpill.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 9px; font-weight: bold;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(9)}px; font-weight: bold;"
                 f" border: 1px solid {BORDER_DARK}; border-radius: 3px;"
                 f" background: transparent;"
             )
@@ -152,7 +155,7 @@ class _AssignRow(QWidget):
 
         name_lbl = QLabel(name)
         name_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 12px;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
             f" font-weight: bold; background: transparent; border: none;"
         )
         text.addWidget(name_lbl)
@@ -160,11 +163,16 @@ class _AssignRow(QWidget):
         # Subtitle: due date + submission count (count populated async)
         self._sub_lbl = QLabel(due if due else "")
         self._sub_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
             f" background: transparent; border: none;"
         )
         self._due_text = due
         text.addWidget(self._sub_lbl)
+
+        outer.addLayout(text, 1)
+        self.setStyleSheet("background: transparent;")
+        self.setMouseTracking(True)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def set_submission_count(self, count: int) -> None:
         """Update the subtitle with actual submission count (called async)."""
@@ -175,11 +183,6 @@ class _AssignRow(QWidget):
             parts.append(self._due_text)
         parts.append(f"{count} submissions")
         self._sub_lbl.setText("  \u00b7  ".join(parts))
-
-        outer.addLayout(text, 1)
-        self.setStyleSheet("background: transparent;")
-        self.setMouseTracking(True)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def is_checked(self) -> bool:
         return self._cb.isChecked()
@@ -277,7 +280,7 @@ class _DeadlineSection(QWidget):
 
         lbl = QLabel(label)
         lbl.setStyleSheet(
-            f"color: {color}; font-size: 9px; font-weight: bold;"
+            f"color: {color}; font-size: {px(9)}px; font-weight: bold;"
             f" letter-spacing: 1.5px; background: transparent; border: none;"
         )
         lo.addWidget(lbl)
@@ -307,7 +310,7 @@ class _GroupSection(QWidget):
         self._hdr_btn.setStyleSheet(
             f"QPushButton {{"
             f"  color: {PHOSPHOR_MID};"
-            f"  font-size: 10px; font-weight: bold; letter-spacing: 1px;"
+            f"  font-size: {px(10)}px; font-weight: bold; letter-spacing: 1px;"
             f"  background: transparent; border: none;"
             f"  text-align: left; padding: 8px 8px 3px 8px;"
             f"}}"
@@ -344,7 +347,7 @@ class _GroupSection(QWidget):
 def _field_label(text: str) -> QLabel:
     lbl = QLabel(text)
     lbl.setStyleSheet(
-        f"color: {PHOSPHOR_DIM}; font-size: 11px; font-weight: 500;"
+        f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; font-weight: 500;"
         f" letter-spacing: 0.8px; background: transparent; border: none;"
         f" text-transform: uppercase;"
     )
@@ -355,7 +358,7 @@ def _muted_label(text: str, wrap: bool = True) -> QLabel:
     lbl = QLabel(text)
     lbl.setWordWrap(wrap)
     lbl.setStyleSheet(
-        f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+        f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
         f" background: transparent; border: none; padding: 2px 0;"
     )
     return lbl
@@ -370,14 +373,14 @@ def _placeholder_layer(name: str) -> QWidget:
     title = QLabel(name.upper())
     title.setAlignment(Qt.AlignmentFlag.AlignCenter)
     title.setStyleSheet(
-        f"color: {PHOSPHOR_DIM}; font-size: 16px; letter-spacing: 4px;"
+        f"color: {PHOSPHOR_DIM}; font-size: {px(16)}px; letter-spacing: 4px;"
         f" background: transparent; border: none;"
     )
     lo.addWidget(title)
     sub = QLabel("Available after LLM analysis (Phase 2)")
     sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
     sub.setStyleSheet(
-        f"color: {PHOSPHOR_GLOW}; font-size: 11px;"
+        f"color: {PHOSPHOR_GLOW}; font-size: {px(11)}px;"
         f" background: transparent; border: none;"
     )
     lo.addWidget(sub)
@@ -425,6 +428,16 @@ class InsightsPanel(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
+        # ── Top navigation toggle (always visible) ──
+        self._view_toggle = SegmentedToggle(
+            ("New Analysis", "setup"),
+            ("Live", "running"),
+            ("Results", "review"),
+            accent="amber",
+        )
+        self._view_toggle.mode_changed.connect(self._on_view_toggle)
+        root.addWidget(self._view_toggle)
+
         self._state_stack = QStackedWidget()
         root.addWidget(self._state_stack, 1)
 
@@ -434,6 +447,17 @@ class InsightsPanel(QWidget):
         self._state_stack.addWidget(self._build_review_view())    # 2
 
         self._state_stack.setCurrentIndex(0)
+
+    def _on_view_toggle(self, mode: str) -> None:
+        """Handle top-level view toggle clicks."""
+        idx = {"setup": 0, "running": 1, "review": 2}.get(mode, 0)
+        self._state_stack.setCurrentIndex(idx)
+
+    def _switch_view(self, idx: int) -> None:
+        """Switch state stack and sync the top navigation toggle."""
+        self._state_stack.setCurrentIndex(idx)
+        mode = {0: "setup", 1: "running", 2: "review"}.get(idx, "setup")
+        self._view_toggle.set_mode(mode)
 
     # ── Setup view ─────────────────────────────────────────────────────
 
@@ -453,12 +477,12 @@ class InsightsPanel(QWidget):
         # Header
         title = QLabel("GENERATE INSIGHTS")
         title.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(16)}px; font-weight: bold;"
             f" background: transparent; border: none; letter-spacing: 2px;"
         )
         sub = QLabel("Hear what your students said.")
         sub.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
             f" background: transparent; border: none;"
         )
         outer.addWidget(title)
@@ -501,7 +525,7 @@ class InsightsPanel(QWidget):
         footer.setContentsMargins(0, SPACING_SM, 0, 0)
         self._setup_summary = QLabel("")
         self._setup_summary.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
             f" background: transparent; border: none;"
         )
         footer.addWidget(self._setup_summary)
@@ -634,6 +658,17 @@ class InsightsPanel(QWidget):
         self._transcribe_toggle.setChecked(True)
         lo.addWidget(self._transcribe_toggle)
 
+        self._handwriting_toggle = SwitchToggle(
+            "Transcribe handwritten notes (photos)", wrap_width=220
+        )
+        self._handwriting_toggle.setChecked(False)
+        lo.addWidget(self._handwriting_toggle)
+        self._handwriting_warn = _muted_label(
+            "Slow (30-60s/image). Requires vision model in Ollama. "
+            "You will verify each transcription before it enters analysis."
+        )
+        lo.addWidget(self._handwriting_warn)
+
         lo.addWidget(make_h_rule())
         lo.addWidget(make_section_label("Draft Feedback"))
 
@@ -649,7 +684,7 @@ class InsightsPanel(QWidget):
 
         # Subject template picker
         lo.addWidget(make_section_label("Subject Area"))
-        self._subject_combo = QComboBox()
+        self._subject_combo = CRTComboBox()
         from insights.lens_templates import get_template_choices, get_template
         for key, display in get_template_choices():
             self._subject_combo.addItem(display, key)
@@ -682,7 +717,7 @@ class InsightsPanel(QWidget):
         self._input_warning = QLabel("")
         self._input_warning.setWordWrap(True)
         self._input_warning.setStyleSheet(
-            f"color: {STATUS_WARN}; font-size: 11px;"
+            f"color: {STATUS_WARN}; font-size: {px(11)}px;"
             f" background: transparent; border: none; padding: 2px 0;"
         )
         self._input_warning.setVisible(False)
@@ -698,7 +733,7 @@ class InsightsPanel(QWidget):
         restore_btn.setStyleSheet(
             f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
             f" border: 1px solid {BORDER_DARK}; border-radius: 4px;"
-            f" padding: 3px 10px; font-size: 11px; }}"
+            f" padding: 3px 10px; font-size: {px(11)}px; }}"
             f"QPushButton:hover {{ color: {PHOSPHOR_MID};"
             f" border-color: {BORDER_AMBER}; }}"
         )
@@ -809,7 +844,7 @@ class InsightsPanel(QWidget):
         btn.setStyleSheet(
             f"QPushButton {{ background: transparent; color: {PHOSPHOR_MID};"
             f" border: none; text-align: left; padding: 4px 0;"
-            f" font-size: 12px; }}"
+            f" font-size: {px(12)}px; }}"
             f"QPushButton:hover {{ color: {PHOSPHOR_HOT}; }}"
         )
         btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -820,7 +855,7 @@ class InsightsPanel(QWidget):
         te.setVisible(False)
         te.setStyleSheet(
             f"QTextEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
-            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: 12px;"
+            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: {px(12)}px;"
             f" padding: 4px; }}"
         )
 
@@ -854,7 +889,7 @@ class InsightsPanel(QWidget):
         header = QHBoxLayout()
         title = QLabel("GENERATE INSIGHTS")
         title.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(16)}px; font-weight: bold;"
             f" background: transparent; border: none; letter-spacing: 2px;"
         )
         header.addWidget(title)
@@ -862,7 +897,7 @@ class InsightsPanel(QWidget):
 
         self._progress_label = QLabel("Preparing analysis...")
         self._progress_label.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 12px;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
             f" background: transparent; border: none;"
         )
         header.addWidget(self._progress_label)
@@ -909,7 +944,7 @@ class InsightsPanel(QWidget):
             f"  color: {PHOSPHOR_DIM};"
             f"  font-family: 'JetBrains Mono', 'Cascadia Code', 'Menlo',"
             f"   'Consolas', monospace;"
-            f"  font-size: 10px;"
+            f"  font-size: {px(10)}px;"
             f"  padding: 6px;"
             f"  selection-background-color: {PHOSPHOR_GLOW};"
             f"  selection-color: {PHOSPHOR_HOT};"
@@ -930,7 +965,7 @@ class InsightsPanel(QWidget):
         self._live_header = QLabel("")
         self._live_header.setWordWrap(True)
         self._live_header.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 12px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(12)}px; font-weight: bold;"
             f" background: transparent; border: none; padding: 2px 0;"
         )
         self._live_header.setVisible(False)
@@ -1031,7 +1066,7 @@ class InsightsPanel(QWidget):
             reg_text = f"  \u00b7  {register}" if register else ""
             header = QLabel(f"{name}{reg_text}")
             header.setStyleSheet(
-                f"color: {PHOSPHOR_HOT}; font-size: 12px; font-weight: bold;"
+                f"color: {PHOSPHOR_HOT}; font-size: {px(12)}px; font-weight: bold;"
                 f" background: transparent; border: none;"
             )
             clo.addWidget(header)
@@ -1045,7 +1080,7 @@ class InsightsPanel(QWidget):
                 orig_lbl = QLabel(display_orig)
                 orig_lbl.setWordWrap(True)
                 orig_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+                    f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
                     f" background: transparent; border: none;"
                     f" padding: 2px 0 4px 0;"
                 )
@@ -1057,7 +1092,7 @@ class InsightsPanel(QWidget):
                 tag_lbl = QLabel(tag_text)
                 tag_lbl.setWordWrap(True)
                 tag_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 10px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(10)}px;"
                     f" background: transparent; border: none;"
                     f" padding: 1px 0;"
                 )
@@ -1077,7 +1112,7 @@ class InsightsPanel(QWidget):
                     sparse_note = QLabel("(model returned limited analysis — student text shown)")
                     sparse_note.setWordWrap(True)
                     sparse_note.setStyleSheet(
-                        f"color: {PHOSPHOR_DIM}; font-size: 9px;"
+                        f"color: {PHOSPHOR_DIM}; font-size: {px(9)}px;"
                         f" background: transparent; border: none;"
                     )
                     clo.addWidget(sparse_note)
@@ -1089,7 +1124,7 @@ class InsightsPanel(QWidget):
                 qlbl = QLabel(f"\u201c{display}\u201d")
                 qlbl.setWordWrap(True)
                 qlbl.setStyleSheet(
-                    f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+                    f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
                     f" font-style: italic;"
                     f" background: transparent; border: none;"
                     f" padding: 2px 0;"
@@ -1101,7 +1136,7 @@ class InsightsPanel(QWidget):
                 flag = QLabel(f"\u26a0 {len(concerns)} passage{'s' if len(concerns) != 1 else ''} flagged for review")
                 flag.setWordWrap(True)
                 flag.setStyleSheet(
-                    f"color: {ROSE_ACCENT}; font-size: 10px;"
+                    f"color: {ROSE_ACCENT}; font-size: {px(10)}px;"
                     f" background: transparent; border: none;"
                 )
                 clo.addWidget(flag)
@@ -1126,7 +1161,7 @@ class InsightsPanel(QWidget):
 
             header = QLabel(f"\u25c6 {name}  ({freq} students)")
             header.setStyleSheet(
-                f"color: {PHOSPHOR_HOT}; font-size: 12px; font-weight: bold;"
+                f"color: {PHOSPHOR_HOT}; font-size: {px(12)}px; font-weight: bold;"
                 f" background: transparent; border: none;"
             )
             clo.addWidget(header)
@@ -1135,7 +1170,7 @@ class InsightsPanel(QWidget):
                 dlbl = QLabel(desc[:150])
                 dlbl.setWordWrap(True)
                 dlbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 10px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(10)}px;"
                     f" background: transparent; border: none;"
                 )
                 clo.addWidget(dlbl)
@@ -1156,7 +1191,7 @@ class InsightsPanel(QWidget):
             header = QLabel(f"\u26a1 Tension: {data.get('description', '')[:100]}")
             header.setWordWrap(True)
             header.setStyleSheet(
-                f"color: {STATUS_WARN}; font-size: 11px; font-weight: bold;"
+                f"color: {STATUS_WARN}; font-size: {px(11)}px; font-weight: bold;"
                 f" background: transparent; border: none;"
             )
             clo.addWidget(header)
@@ -1178,7 +1213,7 @@ class InsightsPanel(QWidget):
 
             header = QLabel(f"\u2726 {name} — unique voice")
             header.setStyleSheet(
-                f"color: {TERM_GREEN}; font-size: 11px; font-weight: bold;"
+                f"color: {TERM_GREEN}; font-size: {px(11)}px; font-weight: bold;"
                 f" background: transparent; border: none;"
             )
             clo.addWidget(header)
@@ -1187,7 +1222,7 @@ class InsightsPanel(QWidget):
                 wlbl = QLabel(why[:120])
                 wlbl.setWordWrap(True)
                 wlbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 10px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(10)}px;"
                     f" background: transparent; border: none;"
                 )
                 clo.addWidget(wlbl)
@@ -1212,7 +1247,7 @@ class InsightsPanel(QWidget):
 
             header = QLabel(f"{name}  ·  {wc} words  ·  reading...")
             header.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 11px; font-weight: bold;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; font-weight: bold;"
                 f" background: transparent; border: none;"
             )
             clo.addWidget(header)
@@ -1224,7 +1259,7 @@ class InsightsPanel(QWidget):
             txt_lbl = QLabel(preview)
             txt_lbl.setWordWrap(True)
             txt_lbl.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
                 f" background: transparent; border: none;"
                 f" font-style: italic; padding: 2px 0;"
             )
@@ -1234,14 +1269,21 @@ class InsightsPanel(QWidget):
 
         elif result_type == "stage":
             # Stage transition marker
-            label = QLabel(f"── {data.get('stage', '')} ──")
+            stage_text = data.get("stage", "")
+            label = QLabel(f"── {stage_text} ──")
             label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             label.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 10px; font-weight: bold;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
                 f" letter-spacing: 1px; background: transparent; border: none;"
                 f" padding: 4px 0;"
             )
             self._live_lo.insertWidget(insert_idx, label)
+
+            # Update the header when batch moves to a new assignment
+            if stage_text.startswith("RUN "):
+                # Strip "RUN 2/3: " prefix to get the assignment info
+                header_text = stage_text.split(": ", 1)[-1] if ": " in stage_text else stage_text
+                self._live_header.setText(header_text)
 
         # Auto-scroll to bottom
         from PySide6.QtCore import QTimer
@@ -1264,48 +1306,6 @@ class InsightsPanel(QWidget):
         outer.setContentsMargins(SPACING_LG, SPACING_LG, SPACING_LG, SPACING_LG)
         outer.setSpacing(SPACING_MD)
 
-        title = QLabel("GENERATE INSIGHTS")
-        title.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 16px; font-weight: bold;"
-            f" background: transparent; border: none; letter-spacing: 2px;"
-        )
-        outer.addWidget(title)
-        outer.addWidget(make_h_rule())
-
-        splitter = GripSplitter.create(Qt.Orientation.Horizontal)
-        splitter.setHandleWidth(10)
-
-        # ── Left: run sidebar ──
-        sidebar = make_content_pane("insightsRunSidebar")
-        sidebar_lo = QVBoxLayout(sidebar)
-        sidebar_lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
-        sidebar_lo.setSpacing(SPACING_XS)
-        sidebar_lo.addWidget(make_section_label("Completed Runs"))
-        sidebar_lo.addWidget(make_h_rule())
-
-        self._run_list = QListWidget()
-        self._run_list.setStyleSheet(
-            f"QListWidget {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
-            f" border-radius: 4px; color: {PHOSPHOR_MID}; outline: none; }}"
-            f"QListWidget::item {{ padding: 5px 8px; }}"
-            f"QListWidget::item:selected {{ background: rgba(90,60,8,0.3);"
-            f" color: {PHOSPHOR_HOT}; border-left: 3px solid {ROSE_ACCENT}; }}"
-        )
-        self._run_list.currentRowChanged.connect(self._on_run_selected)
-        sidebar_lo.addWidget(self._run_list, 1)
-
-        new_btn = QPushButton("▶  New Analysis")
-        new_btn.clicked.connect(lambda: self._state_stack.setCurrentIndex(0))
-        make_secondary_button(new_btn)
-        sidebar_lo.addWidget(new_btn)
-        splitter.addWidget(sidebar)
-
-        # ── Right: layer content ──
-        right = QWidget()
-        right_lo = QVBoxLayout(right)
-        right_lo.setContentsMargins(0, 0, 0, 0)
-        right_lo.setSpacing(SPACING_SM)
-
         # Layer tabs
         self._layer_toggle = SegmentedToggle(
             ("Patterns", "patterns"),
@@ -1318,7 +1318,46 @@ class InsightsPanel(QWidget):
             accent="amber",
         )
         self._layer_toggle.mode_changed.connect(self._on_layer_changed)
-        right_lo.addWidget(self._layer_toggle)
+
+        # Layer toggle row: tabs + action buttons + re-run dropdown
+        layer_row = QHBoxLayout()
+        layer_row.setSpacing(SPACING_SM)
+        layer_row.addWidget(self._layer_toggle, 1)
+
+        self._resume_btn = QPushButton("▶  Resume")
+        self._resume_btn.clicked.connect(self._on_resume_run)
+        make_run_button(self._resume_btn)
+        self._resume_btn.setVisible(False)
+        layer_row.addWidget(self._resume_btn)
+
+        self._export_btn = QPushButton("Export")
+        self._export_btn.clicked.connect(self._on_export_chatbot)
+        make_secondary_button(self._export_btn)
+        self._export_btn.setVisible(False)
+        layer_row.addWidget(self._export_btn)
+
+        self._rerun_combo = CRTComboBox()
+        self._rerun_combo.addItems([
+            "Re-run...",
+            "Re-generate Themes",
+            "Re-generate Report",
+            "Re-generate All (themes + report)",
+        ])
+        self._rerun_combo.setFixedWidth(175)
+        self._rerun_combo.activated.connect(self._on_rerun_selected)
+        layer_row.addWidget(self._rerun_combo)
+
+        outer.addLayout(layer_row)
+
+        # Placeholder shown when no run is loaded
+        self._review_placeholder = QLabel(
+            "Select an assignment to view insights."
+        )
+        self._review_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._review_placeholder.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(13)}px;"
+            f" background: transparent; border: none;"
+        )
 
         # Layer content stack
         self._layer_stack = QStackedWidget()
@@ -1336,14 +1375,14 @@ class InsightsPanel(QWidget):
         self._layer_stack.addWidget(self._feedback_scroll)              # 5: feedback
         self._semester_scroll = self._build_scrollable_layer()
         self._layer_stack.addWidget(self._semester_scroll)              # 6: semester
-        right_lo.addWidget(self._layer_stack, 1)
 
-        splitter.addWidget(right)
-        splitter.setStretchFactor(0, 0)
-        splitter.setStretchFactor(1, 1)
-        splitter.setSizes([220, 700])
+        # Wrapper stack: placeholder vs layer content
+        self._review_content_stack = QStackedWidget()
+        self._review_content_stack.addWidget(self._review_placeholder)  # 0: placeholder
+        self._review_content_stack.addWidget(self._layer_stack)         # 1: layers
+        self._review_content_stack.setCurrentIndex(0)
 
-        outer.addWidget(splitter, 1)
+        outer.addWidget(self._review_content_stack, 1)
         return page
 
     def _build_patterns_layer(self) -> QScrollArea:
@@ -1361,7 +1400,7 @@ class InsightsPanel(QWidget):
         # Placeholder until results are loaded
         self._patterns_placeholder = QLabel("Select a completed run to view patterns.")
         self._patterns_placeholder.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 12px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(12)}px;"
             f" background: transparent; border: none; padding: 20px;"
         )
         self._patterns_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -1395,7 +1434,7 @@ class InsightsPanel(QWidget):
             f"{qa.assignment_name}  ·  {qa.stats.total_submissions} submissions"
         )
         header.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 14px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(14)}px; font-weight: bold;"
             f" background: transparent; border: none;"
         )
         self._patterns_lo.addWidget(header)
@@ -1452,7 +1491,7 @@ class InsightsPanel(QWidget):
         for line in lines:
             lbl = QLabel(line)
             lbl.setStyleSheet(
-                f"color: {PHOSPHOR_MID}; font-size: 12px;"
+                f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
                 f" background: transparent; border: none;"
             )
             lo.addWidget(lbl)
@@ -1466,31 +1505,88 @@ class InsightsPanel(QWidget):
         lo = QVBoxLayout(pane)
         lo.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
         lo.setSpacing(4)
-        lo.addWidget(make_section_label("Top Terms"))
+        lo.addWidget(make_section_label("What Students Are Talking About"))
+        lo.addWidget(_muted_label(
+            "Distinctive terms from across submissions, shown with context."
+        ))
 
+        # Build term → example context lookup from keyword_hits
+        import re as _re
+
+        def _term_in_text(term: str, text: str) -> bool:
+            """Word-boundary match to avoid 'race' matching 'embrace'."""
+            return bool(_re.search(
+                r'\b' + _re.escape(term.lower()) + r'\b', text.lower()
+            ))
+
+        term_contexts: Dict[str, List[str]] = {}
+        for hit_name, hit in qa.keyword_hits.items():
+            for ex in hit.examples[:3]:
+                for t in (qa.tfidf_terms or []):
+                    if _term_in_text(t.term, ex):
+                        term_contexts.setdefault(t.term, []).append(ex)
+                for t in (qa.top_terms or []):
+                    if _term_in_text(t.term, ex):
+                        term_contexts.setdefault(t.term, []).append(ex)
+
+        # TF-IDF terms with context
         if qa.tfidf_terms:
-            terms_str = ", ".join(
-                f"{t.term} ({t.score:.3f})" for t in qa.tfidf_terms[:15]
-            )
-            lbl = QLabel(f"TF-IDF:  {terms_str}")
-            lbl.setWordWrap(True)
-            lbl.setStyleSheet(
-                f"color: {PHOSPHOR_MID}; font-size: 12px;"
-                f" background: transparent; border: none;"
-            )
-            lo.addWidget(lbl)
+            lo.addWidget(_muted_label(
+                "Distinctive terms (what stands out in this class's writing):"
+            ))
+            for t in qa.tfidf_terms[:10]:
+                term_row = QVBoxLayout()
+                term_row.setSpacing(1)
 
+                term_lbl = QLabel(f"\u25b8  {t.term}  (score: {t.score:.3f})")
+                term_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_HOT}; font-size: {px(12)}px;"
+                    f" font-weight: bold; background: transparent; border: none;"
+                )
+                term_row.addWidget(term_lbl)
+
+                # Show example contexts
+                contexts = term_contexts.get(t.term, [])
+                for ctx in contexts[:2]:
+                    ctx_lbl = QLabel(f"    {ctx[:120]}")
+                    ctx_lbl.setWordWrap(True)
+                    ctx_lbl.setStyleSheet(
+                        f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+                        f" font-style: italic;"
+                        f" background: transparent; border: none;"
+                    )
+                    term_row.addWidget(ctx_lbl)
+
+                # Which clusters this term appears in
+                for cl in qa.clusters:
+                    if t.term in cl.top_terms:
+                        names = ", ".join(cl.student_names[:3])
+                        extra = f" + {cl.size - 3} more" if cl.size > 3 else ""
+                        cl_lbl = QLabel(
+                            f"    Cluster {cl.cluster_id + 1}: {names}{extra}"
+                        )
+                        cl_lbl.setStyleSheet(
+                            f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+                            f" background: transparent; border: none;"
+                        )
+                        term_row.addWidget(cl_lbl)
+                        break  # show first cluster only
+
+                lo.addLayout(term_row)
+
+        # Frequency terms (condensed)
         if qa.top_terms:
-            terms_str = ", ".join(
-                f"{t.term} ({t.count})" for t in qa.top_terms[:15]
+            lo.addWidget(_muted_label("Most frequent terms:"))
+            freq_terms = ", ".join(
+                f"{t.term} ({t.count})" for t in qa.top_terms[:12]
             )
-            lbl = QLabel(f"Frequency:  {terms_str}")
-            lbl.setWordWrap(True)
-            lbl.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+            freq_lbl = QLabel(freq_terms)
+            freq_lbl.setWordWrap(True)
+            freq_lbl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
                 f" background: transparent; border: none;"
             )
-            lo.addWidget(lbl)
+            lo.addWidget(freq_lbl)
 
         self._patterns_lo.addWidget(pane)
 
@@ -1509,7 +1605,7 @@ class InsightsPanel(QWidget):
         ]
         lbl = QLabel("  |  ".join(parts))
         lbl.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 12px;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
             f" background: transparent; border: none;"
         )
         lo.addWidget(lbl)
@@ -1530,18 +1626,43 @@ class InsightsPanel(QWidget):
             names = ", ".join(cl.student_names[:5])
             if len(cl.student_names) > 5:
                 names += f" + {len(cl.student_names) - 5} more"
-            terms = ", ".join(cl.top_terms[:5]) if cl.top_terms else "—"
-            text = (
-                f"Cluster {cl.cluster_id + 1}  ({cl.size} students):  "
-                f"top terms: {terms}\n    {names}"
+            terms = ", ".join(cl.top_terms[:5]) if cl.top_terms else "\u2014"
+
+            cl_lo = QVBoxLayout()
+            cl_lo.setSpacing(1)
+
+            header = QLabel(
+                f"Cluster {cl.cluster_id + 1}  ({cl.size} students)  "
+                f"\u00b7  {terms}"
             )
-            lbl = QLabel(text)
-            lbl.setWordWrap(True)
-            lbl.setStyleSheet(
-                f"color: {PHOSPHOR_MID}; font-size: 12px;"
-                f" background: transparent; border: none; padding: 2px 0;"
+            header.setStyleSheet(
+                f"color: {PHOSPHOR_HOT}; font-size: {px(12)}px;"
+                f" font-weight: bold; background: transparent; border: none;"
             )
-            lo.addWidget(lbl)
+            cl_lo.addWidget(header)
+
+            # Centroid text — representative excerpt
+            if cl.centroid_text:
+                centroid = QLabel(
+                    f"  \u201c{cl.centroid_text[:150]}"
+                    f"{'...' if len(cl.centroid_text) > 150 else ''}\u201d"
+                )
+                centroid.setWordWrap(True)
+                centroid.setStyleSheet(
+                    f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+                    f" font-style: italic;"
+                    f" background: transparent; border: none;"
+                )
+                cl_lo.addWidget(centroid)
+
+            names_lbl = QLabel(f"  {names}")
+            names_lbl.setWordWrap(True)
+            names_lbl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+                f" background: transparent; border: none; padding: 0 0 4px 0;"
+            )
+            cl_lo.addWidget(names_lbl)
+            lo.addLayout(cl_lo)
 
         if qa.embedding_outlier_ids:
             outlier_names = []
@@ -1557,7 +1678,7 @@ class InsightsPanel(QWidget):
             )
             lbl.setWordWrap(True)
             lbl.setStyleSheet(
-                f"color: {AMBER_BTN}; font-size: 12px;"
+                f"color: {AMBER_BTN}; font-size: {px(12)}px;"
                 f" background: transparent; border: none; padding: 2px 0;"
             )
             lo.addWidget(lbl)
@@ -1582,7 +1703,7 @@ class InsightsPanel(QWidget):
                 f"{display}:  {hit.count} hits across {n_students} submissions"
             )
             lbl.setStyleSheet(
-                f"color: {PHOSPHOR_MID}; font-size: 12px;"
+                f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
                 f" background: transparent; border: none;"
             )
             lo.addWidget(lbl)
@@ -1591,7 +1712,7 @@ class InsightsPanel(QWidget):
                     ex_lbl = QLabel(f"    {ex}")
                     ex_lbl.setWordWrap(True)
                     ex_lbl.setStyleSheet(
-                        f"color: {PHOSPHOR_DIM}; font-size: 11px; font-style: italic;"
+                        f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; font-style: italic;"
                         f" background: transparent; border: none;"
                     )
                     lo.addWidget(ex_lbl)
@@ -1631,7 +1752,7 @@ class InsightsPanel(QWidget):
 
             type_lbl = QLabel(f"⚠ {stype}  ({len(sigs)} submissions)")
             type_lbl.setStyleSheet(
-                f"color: {color}; font-size: 12px; font-weight: bold;"
+                f"color: {color}; font-size: {px(12)}px; font-weight: bold;"
                 f" background: transparent; border: none;"
             )
             lo.addWidget(type_lbl)
@@ -1642,7 +1763,7 @@ class InsightsPanel(QWidget):
                 )
                 detail.setWordWrap(True)
                 detail.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(11)}px;"
                     f" background: transparent; border: none;"
                 )
                 lo.addWidget(detail)
@@ -1657,14 +1778,56 @@ class InsightsPanel(QWidget):
         lo.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
         lo.setSpacing(4)
         lo.addWidget(make_section_label("Shared References"))
+        lo.addWidget(_muted_label(
+            "Texts, authors, and concepts mentioned by multiple students."
+        ))
+
+        # Build contradiction lookup for sentiment split
+        contradiction_map: Dict[str, tuple] = {}
+        for c in qa.contradictions:
+            contradiction_map[c.reference] = (
+                c.positive_students, c.negative_students
+            )
 
         for ref in qa.shared_references[:10]:
-            lbl = QLabel(f'"{ref.reference}": {ref.count} submissions')
-            lbl.setStyleSheet(
-                f"color: {PHOSPHOR_MID}; font-size: 12px;"
+            # Get student names
+            names = []
+            for sid in ref.student_ids[:5]:
+                sub = qa.per_submission.get(sid)
+                if sub:
+                    names.append(sub.student_name)
+            name_text = ", ".join(names)
+            if ref.count > 5:
+                name_text += f" + {ref.count - 5} more"
+
+            # Check for sentiment split
+            pos, neg = contradiction_map.get(ref.reference, ([], []))
+            if pos and neg:
+                sentiment_text = (
+                    f"  \u00b7  {len(pos)} positive, {len(neg)} negative"
+                )
+                color = STATUS_WARN
+            else:
+                sentiment_text = ""
+                color = PHOSPHOR_MID
+
+            ref_lbl = QLabel(
+                f'"{ref.reference}": {ref.count} submissions{sentiment_text}'
+            )
+            ref_lbl.setStyleSheet(
+                f"color: {color}; font-size: {px(12)}px;"
                 f" background: transparent; border: none;"
             )
-            lo.addWidget(lbl)
+            lo.addWidget(ref_lbl)
+
+            if names:
+                names_lbl = QLabel(f"    {name_text}")
+                names_lbl.setWordWrap(True)
+                names_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+                    f" background: transparent; border: none;"
+                )
+                lo.addWidget(names_lbl)
 
         self._patterns_lo.addWidget(pane)
 
@@ -1682,7 +1845,7 @@ class InsightsPanel(QWidget):
             lbl = QLabel(c.description)
             lbl.setWordWrap(True)
             lbl.setStyleSheet(
-                f"color: {AMBER_BTN}; font-size: 12px;"
+                f"color: {AMBER_BTN}; font-size: {px(12)}px;"
                 f" background: transparent; border: none; padding: 2px 0;"
             )
             lo.addWidget(lbl)
@@ -1704,7 +1867,7 @@ class InsightsPanel(QWidget):
         lo.setSpacing(SPACING_MD)
         placeholder = QLabel("Select a completed run to view results.")
         placeholder.setStyleSheet(
-            f"color: {PHOSPHOR_DIM}; font-size: 12px;"
+            f"color: {PHOSPHOR_DIM}; font-size: {px(12)}px;"
             f" background: transparent; border: none; padding: 20px;"
         )
         placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -1757,8 +1920,29 @@ class InsightsPanel(QWidget):
         lo.addWidget(make_section_label(f"Student Work  ({len(codings)} submissions)"))
         lo.addWidget(make_h_rule())
 
-        from gui.widgets.phosphor_chip import PhosphorChip
+        # ── Sort / filter bar ──
+        filter_row = QHBoxLayout()
+        filter_row.setSpacing(SPACING_SM)
 
+        sort_combo = CRTComboBox()
+        sort_combo.addItems(["Sort: Name A–Z", "Sort: Name Z–A",
+                             "Sort: Concerns first", "Sort: Word count ↓",
+                             "Sort: Register"])
+        sort_combo.setFixedWidth(170)
+        filter_row.addWidget(sort_combo)
+
+        filter_combo = CRTComboBox()
+        filter_combo.addItems(["Show: All students",
+                               "Show: Flagged concerns only",
+                               "Show: Has analysis only",
+                               "Show: Insufficient text"])
+        filter_combo.setFixedWidth(200)
+        filter_row.addWidget(filter_combo)
+        filter_row.addStretch()
+        lo.addLayout(filter_row)
+
+        # Parse all records for sorting/filtering
+        parsed_rows = []
         for row in codings:
             record = row.get("coding_record", {})
             if isinstance(record, str):
@@ -1766,192 +1950,344 @@ class InsightsPanel(QWidget):
                     record = json.loads(record)
                 except Exception:
                     record = {}
+            parsed_rows.append((row, record))
 
-            sid = row.get("student_id", "")
-            name = record.get("student_name", row.get("student_name", "Unknown"))
-            tags = list(record.get("theme_tags", []))
-            concerns = list(record.get("concerns", []))
-            register = record.get("emotional_register", "")
-            quotes = record.get("notable_quotes", [])
-            existing_note = row.get("teacher_notes", "") or ""
+        # Track container widget and layout for dynamic re-sorting
+        cards_container = QWidget()
+        cards_container.setStyleSheet("background: transparent;")
+        cards_lo = QVBoxLayout(cards_container)
+        cards_lo.setContentsMargins(0, 0, 0, 0)
+        cards_lo.setSpacing(SPACING_SM)
+        lo.addWidget(cards_container, 1)
 
-            pane = make_content_pane(f"coding_{sid}")
-            pane_lo = QVBoxLayout(pane)
-            pane_lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
-            pane_lo.setSpacing(4)
+        def _rebuild_cards():
+            # Clear existing cards
+            while cards_lo.count():
+                item = cards_lo.takeAt(0)
+                if item.widget():
+                    item.widget().deleteLater()
 
-            # Header row: name + register
-            header = QLabel(f"{name}  \u00b7  {register}")
-            header.setStyleSheet(
-                f"color: {PHOSPHOR_HOT}; font-size: 13px; font-weight: bold;"
+            sort_mode = sort_combo.currentText()
+            filter_mode = filter_combo.currentText()
+
+            # Filter
+            visible = []
+            for row_data, record in parsed_rows:
+                concerns = list(record.get("concerns", []))
+                tags = list(record.get("theme_tags", []))
+                _skip_tags = {
+                    "insufficient text for analysis",
+                    "file upload — text not extracted",
+                    "blank submission",
+                }
+                has_no_analysis = bool(_skip_tags & set(tags))
+
+                if filter_mode == "Show: Flagged concerns only" and not concerns:
+                    continue
+                if filter_mode == "Show: Has analysis only" and has_no_analysis:
+                    continue
+                if filter_mode == "Show: Insufficient text" and not has_no_analysis:
+                    continue
+                visible.append((row_data, record))
+
+            # Sort
+            def _sort_key(item):
+                _, rec = item
+                name = rec.get("student_name", "")
+                concerns = rec.get("concerns", [])
+                wc = rec.get("word_count", 0)
+                register = rec.get("emotional_register", "")
+                if sort_mode == "Sort: Concerns first":
+                    return (-len(concerns), name.lower())
+                elif sort_mode == "Sort: Word count ↓":
+                    return (-wc, name.lower())
+                elif sort_mode == "Sort: Register":
+                    return (register, name.lower())
+                return name.lower()
+
+            visible.sort(
+                key=_sort_key,
+                reverse=(sort_mode == "Sort: Name Z–A"),
+            )
+
+            for row_data, record in visible:
+                card = self._build_coding_card(
+                    run_id, row_data, record, all_tags,
+                )
+                cards_lo.addWidget(card)
+
+            cards_lo.addStretch()
+
+        sort_combo.currentIndexChanged.connect(lambda _: _rebuild_cards())
+        filter_combo.currentIndexChanged.connect(lambda _: _rebuild_cards())
+
+        # Initial build
+        _rebuild_cards()
+
+        lo.addStretch()
+        return
+
+    def _build_coding_card(
+        self, run_id: str, row: dict, record: dict, all_tags: set
+    ) -> QWidget:
+        """Build a single student coding card for the Student Work layer."""
+        from gui.widgets.phosphor_chip import PhosphorChip
+
+        sid = row.get("student_id", "")
+        name = record.get("student_name", row.get("student_name", "Unknown"))
+        tags = list(record.get("theme_tags", []))
+        concerns = list(record.get("concerns", []))
+        register = record.get("emotional_register", "")
+        quotes = record.get("notable_quotes", [])
+        wc = record.get("word_count", 0)
+        existing_note = row.get("teacher_notes", "") or ""
+        preprocessing = record.get("preprocessing") or {}
+        is_image_transcribed = preprocessing.get("was_image_transcribed", False)
+
+        pane = make_content_pane(f"coding_{sid}")
+        pane_lo = QVBoxLayout(pane)
+        pane_lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+        pane_lo.setSpacing(4)
+
+        # Header row: name + register + word count
+        reg_text = f"  \u00b7  {register}" if register else ""
+        wc_text = f"  \u00b7  {wc} words" if wc else ""
+        header = QLabel(f"{name}{reg_text}{wc_text}")
+        header.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: {px(13)}px; font-weight: bold;"
+            f" background: transparent; border: none;"
+        )
+        pane_lo.addWidget(header)
+
+        # ── Handwriting verification banner ──
+        if is_image_transcribed:
+            verify_frame = QFrame()
+            verify_frame.setStyleSheet(
+                f"QFrame {{ background: rgba(200,124,16,0.1);"
+                f" border: 1px solid {STATUS_WARN}; border-radius: 4px; }}"
+            )
+            vf_lo = QVBoxLayout(verify_frame)
+            vf_lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+            vf_lo.setSpacing(4)
+
+            warn_lbl = QLabel(
+                "\u270d  Transcribed from handwritten image — please verify"
+            )
+            warn_lbl.setStyleSheet(
+                f"color: {STATUS_WARN}; font-size: {px(11)}px; font-weight: bold;"
                 f" background: transparent; border: none;"
             )
-            pane_lo.addWidget(header)
+            vf_lo.addWidget(warn_lbl)
 
-            # ── Theme tags: chips with x-remove + add combo ──
-            tag_row = QHBoxLayout()
-            tag_row.setSpacing(4)
-            for tag in tags[:5]:
-                chip = PhosphorChip(tag, active=True, accent="amber")
-                # Rose "x" button to remove tag
-                x_btn = QPushButton("\u00d7")
-                x_btn.setFixedSize(18, 18)
-                x_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-                x_btn.setStyleSheet(
-                    f"QPushButton {{ background: transparent; color: {ROSE_ACCENT};"
-                    f" border: none; font-size: 13px; font-weight: bold; }}"
-                    f"QPushButton:hover {{ color: {BURN_RED}; }}"
-                )
-                x_btn.clicked.connect(
-                    lambda _=False, r=run_id, s=sid, t=tag:
-                    self._on_remove_tag(r, s, t)
-                )
-                tag_row.addWidget(chip)
-                tag_row.addWidget(x_btn)
-
-            # Add-tag combo
-            add_combo = QComboBox()
-            add_combo.addItem("+ tag")
-            for t in sorted(all_tags):
-                if t not in tags:
-                    add_combo.addItem(t)
-            add_combo.setStyleSheet(
-                f"QComboBox {{ background: {BG_INSET}; color: {PHOSPHOR_DIM};"
-                f" border: 1px solid {BORDER_DARK}; border-radius: 4px;"
-                f" padding: 2px 4px; font-size: 10px; }}"
+            warn_detail = QLabel(
+                "This text was read from a photo of handwritten notes "
+                "using AI vision. The transcription may contain errors. "
+                "Edit below to correct, then click Approve."
             )
-            add_combo.setFixedWidth(100)
-            add_combo.activated.connect(
-                lambda idx, cb=add_combo, r=run_id, s=sid:
-                self._on_add_tag(r, s, cb.currentText()) if idx > 0 else None
+            warn_detail.setWordWrap(True)
+            warn_detail.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+                f" background: transparent; border: none;"
             )
-            tag_row.addWidget(add_combo)
-            tag_row.addStretch()
-            pane_lo.addLayout(tag_row)
+            vf_lo.addWidget(warn_detail)
 
-            # ── Concern flags: individual Acknowledge/Dismiss buttons ──
-            for ci, c in enumerate(concerns):
-                passage = c.get("flagged_passage", "")[:100]
-                why = c.get("why_flagged", "")[:80]
-
-                concern_row = QHBoxLayout()
-                concern_row.setSpacing(4)
-                concern_lbl = QLabel(f"  \u26a0 {why}: \"{passage}...\"")
-                concern_lbl.setWordWrap(True)
-                concern_lbl.setStyleSheet(
-                    f"color: {ROSE_ACCENT}; font-size: 11px;"
-                    f" background: transparent; border: none;"
-                )
-                concern_row.addWidget(concern_lbl, 1)
-
-                ack_btn = QPushButton("Acknowledge")
-                ack_btn.setFixedHeight(20)
-                ack_btn.setStyleSheet(
-                    f"QPushButton {{ background: transparent; color: {TERM_GREEN};"
-                    f" border: 1px solid {TERM_GREEN}; border-radius: 3px;"
-                    f" font-size: 10px; padding: 1px 6px; }}"
-                    f"QPushButton:hover {{ background: rgba(114,184,90,0.15); }}"
-                )
-                ack_btn.clicked.connect(
-                    lambda _=False, r=run_id, s=sid, idx=ci:
-                    self._on_concern_action(r, s, idx, "acknowledge")
-                )
-                concern_row.addWidget(ack_btn)
-
-                dis_btn = QPushButton("Dismiss")
-                dis_btn.setFixedHeight(20)
-                dis_btn.setStyleSheet(
-                    f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
-                    f" border: 1px solid {PHOSPHOR_DIM}; border-radius: 3px;"
-                    f" font-size: 10px; padding: 1px 6px; }}"
-                    f"QPushButton:hover {{ background: rgba(90,60,8,0.15); }}"
-                )
-                dis_btn.clicked.connect(
-                    lambda _=False, r=run_id, s=sid, idx=ci:
-                    self._on_concern_action(r, s, idx, "dismiss")
-                )
-                concern_row.addWidget(dis_btn)
-                pane_lo.addLayout(concern_row)
-
-            # Notable quotes
-            for q in quotes[:2]:
-                text = q.get("text", "") if isinstance(q, dict) else ""
-                sig = q.get("significance", "") if isinstance(q, dict) else ""
-                if text:
-                    q_lbl = QLabel(f'  \u201c{text[:120]}...\u201d')
-                    q_lbl.setWordWrap(True)
-                    q_lbl.setStyleSheet(
-                        f"color: {PHOSPHOR_MID}; font-size: 11px; font-style: italic;"
-                        f" background: transparent; border: none;"
-                    )
-                    pane_lo.addWidget(q_lbl)
-                    if sig:
-                        s_lbl = QLabel(f"    {sig}")
-                        s_lbl.setStyleSheet(
-                            f"color: {PHOSPHOR_DIM}; font-size: 10px;"
-                            f" background: transparent; border: none;"
-                        )
-                        pane_lo.addWidget(s_lbl)
-
-            # ── Teacher note: collapsible text area ──
-            note_btn = QPushButton(
-                f"{'▾' if existing_note else '▸'} Teacher Note"
-            )
-            note_btn.setStyleSheet(
-                f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
-                f" border: none; text-align: left; font-size: 10px;"
-                f" padding: 2px 0; }}"
-                f"QPushButton:hover {{ color: {PHOSPHOR_HOT}; }}"
-            )
-            note_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            note_te = QTextEdit()
-            note_te.setPlaceholderText("Add a note about this student's work...")
-            note_te.setMaximumHeight(50)
-            note_te.setVisible(bool(existing_note))
-            note_te.setPlainText(existing_note)
-            note_te.setStyleSheet(
+            # Editable transcription text
+            verify_te = QTextEdit()
+            original_text = preprocessing.get("original_text", "")
+            verify_te.setPlainText(original_text or "(original transcription not stored)")
+            verify_te.setMaximumHeight(80)
+            verify_te.setStyleSheet(
                 f"QTextEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
-                f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: 11px;"
+                f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: {px(11)}px;"
                 f" font-family: 'Menlo', 'Consolas', monospace; padding: 4px; }}"
                 f"QTextEdit:focus {{ border-color: {BORDER_AMBER}; }}"
             )
+            vf_lo.addWidget(verify_te)
 
-            def _toggle_note(te=note_te, btn=note_btn):
-                v = not te.isVisible()
-                te.setVisible(v)
-                btn.setText(f"{'▾' if v else '▸'} Teacher Note")
+            approve_btn = QPushButton("\u2713  Approve Transcription")
+            approve_btn.setStyleSheet(
+                f"QPushButton {{ background: transparent; color: {TERM_GREEN};"
+                f" border: 1px solid {TERM_GREEN}; border-radius: 3px;"
+                f" font-size: {px(10)}px; padding: 3px 10px; }}"
+                f"QPushButton:hover {{ background: rgba(114,184,90,0.15); }}"
+            )
+            approve_btn.setCursor(Qt.CursorShape.PointingHandCursor)
 
-            note_btn.clicked.connect(_toggle_note)
+            def _on_approve(btn=approve_btn, te=verify_te, frame=verify_frame):
+                btn.setText("\u2713  Approved")
+                btn.setEnabled(False)
+                # Collapse the edit area
+                te.setVisible(False)
+                warn_detail.setVisible(False)
+                warn_lbl.setText("\u2713  Handwritten transcription verified by teacher")
+                warn_lbl.setStyleSheet(
+                    f"color: {TERM_GREEN}; font-size: {px(11)}px; font-weight: bold;"
+                    f" background: transparent; border: none;"
+                )
+                frame.setStyleSheet(
+                    f"QFrame {{ background: rgba(114,184,90,0.05);"
+                    f" border: 1px solid {TERM_GREEN}; border-radius: 4px; }}"
+                )
 
-            # Auto-save on focus-out
-            class _NoteSaver(QObject):
-                def __init__(self, store, rid, stid, te_widget):
-                    super().__init__(te_widget)
-                    self.store = store
-                    self.rid = rid
-                    self.stid = stid
-                    self.te = te_widget
-                    self.te.installEventFilter(self)
+            approve_btn.clicked.connect(_on_approve)
+            vf_lo.addWidget(approve_btn)
 
-                def eventFilter(self, obj, event):
-                    from PySide6.QtCore import QEvent
-                    if obj is self.te and event.type() == QEvent.Type.FocusOut:
-                        text = self.te.toPlainText().strip()
-                        if self.store:
-                            self.store.update_coding_note(
-                                self.rid, self.stid, text
-                            )
-                    return False
+            pane_lo.addWidget(verify_frame)
 
-            saver = _NoteSaver(self._store, run_id, sid, note_te)
-            note_te._saver = saver  # prevent GC
+        # ── Theme tags: chips with x-remove + add combo ──
+        tag_row = QHBoxLayout()
+        tag_row.setSpacing(4)
+        for tag in tags[:5]:
+            chip = PhosphorChip(tag, active=True, accent="amber")
+            x_btn = QPushButton("\u00d7")
+            x_btn.setFixedSize(18, 18)
+            x_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            x_btn.setStyleSheet(
+                f"QPushButton {{ background: transparent; color: {ROSE_ACCENT};"
+                f" border: none; font-size: {px(13)}px; font-weight: bold; }}"
+                f"QPushButton:hover {{ color: {BURN_RED}; }}"
+            )
+            x_btn.clicked.connect(
+                lambda _=False, r=run_id, s=sid, t=tag:
+                self._on_remove_tag(r, s, t)
+            )
+            tag_row.addWidget(chip)
+            tag_row.addWidget(x_btn)
 
-            pane_lo.addWidget(note_btn)
-            pane_lo.addWidget(note_te)
+        add_combo = CRTComboBox()
+        add_combo.addItem("+ tag")
+        for t in sorted(all_tags):
+            if t not in tags:
+                add_combo.addItem(t)
+        add_combo.setFixedWidth(100)
+        add_combo.activated.connect(
+            lambda idx, cb=add_combo, r=run_id, s=sid:
+            self._on_add_tag(r, s, cb.currentText()) if idx > 0 else None
+        )
+        tag_row.addWidget(add_combo)
+        tag_row.addStretch()
+        pane_lo.addLayout(tag_row)
 
-            lo.addWidget(pane)
+        # ── Concern flags ──
+        for ci, c in enumerate(concerns):
+            passage = c.get("flagged_passage", "")[:100]
+            why = c.get("why_flagged", "")[:80]
 
-        lo.addStretch()
+            concern_row = QHBoxLayout()
+            concern_row.setSpacing(4)
+            concern_lbl = QLabel(f"  \u26a0 {why}: \"{passage}...\"")
+            concern_lbl.setWordWrap(True)
+            concern_lbl.setStyleSheet(
+                f"color: {ROSE_ACCENT}; font-size: {px(11)}px;"
+                f" background: transparent; border: none;"
+            )
+            concern_row.addWidget(concern_lbl, 1)
+
+            ack_btn = QPushButton("Acknowledge")
+            ack_btn.setFixedHeight(20)
+            ack_btn.setStyleSheet(
+                f"QPushButton {{ background: transparent; color: {TERM_GREEN};"
+                f" border: 1px solid {TERM_GREEN}; border-radius: 3px;"
+                f" font-size: {px(10)}px; padding: 1px 6px; }}"
+                f"QPushButton:hover {{ background: rgba(114,184,90,0.15); }}"
+            )
+            ack_btn.clicked.connect(
+                lambda _=False, r=run_id, s=sid, idx=ci:
+                self._on_concern_action(r, s, idx, "acknowledge")
+            )
+            concern_row.addWidget(ack_btn)
+
+            dis_btn = QPushButton("Dismiss")
+            dis_btn.setFixedHeight(20)
+            dis_btn.setStyleSheet(
+                f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
+                f" border: 1px solid {PHOSPHOR_DIM}; border-radius: 3px;"
+                f" font-size: {px(10)}px; padding: 1px 6px; }}"
+                f"QPushButton:hover {{ background: rgba(90,60,8,0.15); }}"
+            )
+            dis_btn.clicked.connect(
+                lambda _=False, r=run_id, s=sid, idx=ci:
+                self._on_concern_action(r, s, idx, "dismiss")
+            )
+            concern_row.addWidget(dis_btn)
+            pane_lo.addLayout(concern_row)
+
+        # Notable quotes
+        for q in quotes[:2]:
+            text = q.get("text", "") if isinstance(q, dict) else ""
+            sig = q.get("significance", "") if isinstance(q, dict) else ""
+            if text:
+                q_lbl = QLabel(f'  \u201c{text[:120]}...\u201d')
+                q_lbl.setWordWrap(True)
+                q_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: {px(11)}px; font-style: italic;"
+                    f" background: transparent; border: none;"
+                )
+                pane_lo.addWidget(q_lbl)
+                if sig:
+                    s_lbl = QLabel(f"    {sig}")
+                    s_lbl.setStyleSheet(
+                        f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+                        f" background: transparent; border: none;"
+                    )
+                    pane_lo.addWidget(s_lbl)
+
+        # ── Teacher note: collapsible text area ──
+        note_btn = QPushButton(
+            f"{'▾' if existing_note else '▸'} Teacher Note"
+        )
+        note_btn.setStyleSheet(
+            f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
+            f" border: none; text-align: left; font-size: {px(10)}px;"
+            f" padding: 2px 0; }}"
+            f"QPushButton:hover {{ color: {PHOSPHOR_HOT}; }}"
+        )
+        note_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        note_te = QTextEdit()
+        note_te.setPlaceholderText("Add a note about this student's work...")
+        note_te.setMaximumHeight(50)
+        note_te.setVisible(bool(existing_note))
+        note_te.setPlainText(existing_note)
+        note_te.setStyleSheet(
+            f"QTextEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: {px(11)}px;"
+            f" font-family: 'Menlo', 'Consolas', monospace; padding: 4px; }}"
+            f"QTextEdit:focus {{ border-color: {BORDER_AMBER}; }}"
+        )
+
+        def _toggle_note(te=note_te, btn=note_btn):
+            v = not te.isVisible()
+            te.setVisible(v)
+            btn.setText(f"{'▾' if v else '▸'} Teacher Note")
+
+        note_btn.clicked.connect(_toggle_note)
+
+        class _NoteSaver(QObject):
+            def __init__(self, store, rid, stid, te_widget):
+                super().__init__(te_widget)
+                self.store = store
+                self.rid = rid
+                self.stid = stid
+                self.te = te_widget
+                self.te.installEventFilter(self)
+
+            def eventFilter(self, obj, event):
+                from PySide6.QtCore import QEvent
+                if obj is self.te and event.type() == QEvent.Type.FocusOut:
+                    text = self.te.toPlainText().strip()
+                    if self.store:
+                        self.store.update_coding_note(
+                            self.rid, self.stid, text
+                        )
+                return False
+
+        saver = _NoteSaver(self._store, run_id, sid, note_te)
+        note_te._saver = saver
+
+        pane_lo.addWidget(note_btn)
+        pane_lo.addWidget(note_te)
+
+        return pane
 
     # ------------------------------------------------------------------
     # Themes layer
@@ -2022,7 +2358,7 @@ class InsightsPanel(QWidget):
             name_edit = QLineEdit(t.get("name", "Unnamed"))
             name_edit.setStyleSheet(
                 f"QLineEdit {{ background: transparent; color: {PHOSPHOR_HOT};"
-                f" font-size: 13px; font-weight: bold; border: none;"
+                f" font-size: {px(13)}px; font-weight: bold; border: none;"
                 f" border-bottom: 1px solid transparent; }}"
                 f"QLineEdit:focus {{ background: {BG_INSET};"
                 f" border-bottom: 1px solid {BORDER_AMBER}; }}"
@@ -2036,7 +2372,7 @@ class InsightsPanel(QWidget):
 
             freq_lbl = QLabel(f"({freq} students)")
             freq_lbl.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
                 f" background: transparent; border: none;"
             )
             name_row.addWidget(freq_lbl)
@@ -2044,7 +2380,7 @@ class InsightsPanel(QWidget):
 
             conf_lbl = QLabel(f"Confidence: {conf:.0%}")
             conf_lbl.setStyleSheet(
-                f"color: {conf_color}; font-size: 10px;"
+                f"color: {conf_color}; font-size: {px(10)}px;"
                 f" background: transparent; border: none;"
             )
             pane_lo.addWidget(conf_lbl)
@@ -2054,7 +2390,7 @@ class InsightsPanel(QWidget):
                 d_lbl = QLabel(desc)
                 d_lbl.setWordWrap(True)
                 d_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 12px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
                     f" background: transparent; border: none;"
                 )
                 pane_lo.addWidget(d_lbl)
@@ -2065,7 +2401,7 @@ class InsightsPanel(QWidget):
                     q_lbl = QLabel(f'  \u201c{text[:150]}...\u201d')
                     q_lbl.setWordWrap(True)
                     q_lbl.setStyleSheet(
-                        f"color: {PHOSPHOR_MID}; font-size: 11px; font-style: italic;"
+                        f"color: {PHOSPHOR_MID}; font-size: {px(11)}px; font-style: italic;"
                         f" background: transparent; border: none;"
                     )
                     pane_lo.addWidget(q_lbl)
@@ -2086,7 +2422,7 @@ class InsightsPanel(QWidget):
             del_btn.setStyleSheet(
                 f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
                 f" border: 1px solid {PHOSPHOR_DIM}; border-radius: 3px;"
-                f" font-size: 10px; padding: 2px 8px; }}"
+                f" font-size: {px(10)}px; padding: 2px 8px; }}"
                 f"QPushButton:hover {{ color: {BURN_RED}; border-color: {BURN_RED}; }}"
             )
             del_btn.clicked.connect(
@@ -2130,7 +2466,7 @@ class InsightsPanel(QWidget):
                 desc_lbl = QLabel(c.get("description", ""))
                 desc_lbl.setWordWrap(True)
                 desc_lbl.setStyleSheet(
-                    f"color: {AMBER_BTN}; font-size: 12px; font-weight: bold;"
+                    f"color: {AMBER_BTN}; font-size: {px(12)}px; font-weight: bold;"
                     f" background: transparent; border: none;"
                 )
                 pane_lo.addWidget(desc_lbl)
@@ -2138,7 +2474,7 @@ class InsightsPanel(QWidget):
                 a_lbl = QLabel(f"  Side A: {c.get('side_a', '')} ({len(c.get('side_a_students', []))} students)")
                 a_lbl.setWordWrap(True)
                 a_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(11)}px;"
                     f" background: transparent; border: none;"
                 )
                 pane_lo.addWidget(a_lbl)
@@ -2146,7 +2482,7 @@ class InsightsPanel(QWidget):
                 b_lbl = QLabel(f"  Side B: {c.get('side_b', '')} ({len(c.get('side_b_students', []))} students)")
                 b_lbl.setWordWrap(True)
                 b_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(11)}px;"
                     f" background: transparent; border: none;"
                 )
                 pane_lo.addWidget(b_lbl)
@@ -2156,7 +2492,7 @@ class InsightsPanel(QWidget):
                     s_lbl = QLabel(f"  Significance: {sig}")
                     s_lbl.setWordWrap(True)
                     s_lbl.setStyleSheet(
-                        f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+                        f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
                         f" background: transparent; border: none;"
                     )
                     pane_lo.addWidget(s_lbl)
@@ -2223,7 +2559,7 @@ class InsightsPanel(QWidget):
 
             name_lbl = QLabel(o.get("student_name", "Unknown"))
             name_lbl.setStyleSheet(
-                f"color: {PHOSPHOR_HOT}; font-size: 13px; font-weight: bold;"
+                f"color: {PHOSPHOR_HOT}; font-size: {px(13)}px; font-weight: bold;"
                 f" background: transparent; border: none;"
             )
             pane_lo.addWidget(name_lbl)
@@ -2233,7 +2569,7 @@ class InsightsPanel(QWidget):
                 w_lbl = QLabel(why)
                 w_lbl.setWordWrap(True)
                 w_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 12px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
                     f" background: transparent; border: none;"
                 )
                 pane_lo.addWidget(w_lbl)
@@ -2243,7 +2579,7 @@ class InsightsPanel(QWidget):
                 r_lbl = QLabel(f"Relationship to themes: {rel}")
                 r_lbl.setWordWrap(True)
                 r_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_DIM}; font-size: 11px;"
+                    f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
                     f" background: transparent; border: none;"
                 )
                 pane_lo.addWidget(r_lbl)
@@ -2253,7 +2589,7 @@ class InsightsPanel(QWidget):
                 q_lbl = QLabel(f'  \u201c{quote["text"][:150]}...\u201d')
                 q_lbl.setWordWrap(True)
                 q_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 11px; font-style: italic;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(11)}px; font-style: italic;"
                     f" background: transparent; border: none;"
                 )
                 pane_lo.addWidget(q_lbl)
@@ -2262,7 +2598,7 @@ class InsightsPanel(QWidget):
             if rec:
                 rec_lbl = QLabel(f"Recommendation: {rec}")
                 rec_lbl.setStyleSheet(
-                    f"color: {AMBER_BTN}; font-size: 11px;"
+                    f"color: {AMBER_BTN}; font-size: {px(11)}px;"
                     f" background: transparent; border: none;"
                 )
                 pane_lo.addWidget(rec_lbl)
@@ -2271,15 +2607,10 @@ class InsightsPanel(QWidget):
             action_row = QHBoxLayout()
             action_row.addStretch()
 
-            add_combo = QComboBox()
+            add_combo = CRTComboBox()
             add_combo.addItem("Add to Theme...")
             for tn in theme_names:
                 add_combo.addItem(tn)
-            add_combo.setStyleSheet(
-                f"QComboBox {{ background: {BG_INSET}; color: {PHOSPHOR_DIM};"
-                f" border: 1px solid {BORDER_DARK}; border-radius: 4px;"
-                f" padding: 2px 4px; font-size: 10px; }}"
-            )
             add_combo.setFixedWidth(150)
             add_combo.activated.connect(
                 lambda idx, cb=add_combo, r=run_id, s=sid:
@@ -2344,7 +2675,7 @@ class InsightsPanel(QWidget):
 
         header = QLabel(f"SYNTHESIS REPORT  \u00b7  Confidence: {conf_text}")
         header.setStyleSheet(
-            f"color: {conf_color}; font-size: 14px; font-weight: bold;"
+            f"color: {conf_color}; font-size: {px(14)}px; font-weight: bold;"
             f" background: transparent; border: none;"
         )
         lo.addWidget(header)
@@ -2382,7 +2713,7 @@ class InsightsPanel(QWidget):
             reset_btn.setStyleSheet(
                 f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
                 f" border: 1px solid {PHOSPHOR_DIM}; border-radius: 3px;"
-                f" font-size: 10px; padding: 2px 6px; }}"
+                f" font-size: {px(10)}px; padding: 2px 6px; }}"
                 f"QPushButton:hover {{ color: {STATUS_WARN}; border-color: {STATUS_WARN}; }}"
             )
             reset_btn.setVisible(False)
@@ -2395,7 +2726,7 @@ class InsightsPanel(QWidget):
             te.setReadOnly(True)
             te.setStyleSheet(
                 f"QTextEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
-                f" border-radius: 4px; color: {PHOSPHOR_MID}; font-size: 12px;"
+                f" border-radius: 4px; color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
                 f" font-family: 'Menlo', 'Consolas', monospace; padding: 8px; }}"
                 f"QTextEdit:focus {{ border-color: {BORDER_AMBER}; }}"
             )
@@ -2540,7 +2871,7 @@ class InsightsPanel(QWidget):
 
         header = QLabel("DRAFT FEEDBACK")
         header.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 14px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(14)}px; font-weight: bold;"
             f" background: transparent; border: none; letter-spacing: 2px;"
         )
         lo.addWidget(header)
@@ -2550,7 +2881,7 @@ class InsightsPanel(QWidget):
 
         summary_lbl = QLabel(" \u00b7 ".join(summary_parts))
         summary_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: 12px;"
+            f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
             f" background: transparent; border: none; padding: 4px 0;"
         )
         lo.addWidget(summary_lbl)
@@ -2624,7 +2955,7 @@ class InsightsPanel(QWidget):
         hdr = QHBoxLayout()
         name_lbl = QLabel(name)
         name_lbl.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 13px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(13)}px; font-weight: bold;"
             f" background: transparent; border: none;"
         )
         hdr.addWidget(name_lbl)
@@ -2634,7 +2965,7 @@ class InsightsPanel(QWidget):
         )
         conf_lbl.setStyleSheet(
             f"color: {conf_color if status != 'posted' else PHOSPHOR_DIM};"
-            f" font-size: 10px; font-weight: bold;"
+            f" font-size: {px(10)}px; font-weight: bold;"
             f" background: transparent; border: none;"
         )
         hdr.addWidget(conf_lbl)
@@ -2645,7 +2976,7 @@ class InsightsPanel(QWidget):
             lbl = QLabel(row.get("approved_text") or draft)
             lbl.setWordWrap(True)
             lbl.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 12px;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(12)}px;"
                 f" background: transparent; border: none; font-style: italic;"
             )
             pane_lo.addWidget(lbl)
@@ -2671,7 +3002,7 @@ class InsightsPanel(QWidget):
         reason_lbl = QLabel(draft)
         reason_lbl.setWordWrap(True)
         reason_lbl.setStyleSheet(
-            f"color: {ROSE_ACCENT}; font-size: 12px;"
+            f"color: {ROSE_ACCENT}; font-size: {px(12)}px;"
             f" background: transparent; border: none;"
         )
         pane_lo.addWidget(reason_lbl)
@@ -2682,7 +3013,7 @@ class InsightsPanel(QWidget):
         te.setVisible(False)
         te.setStyleSheet(
             f"QTextEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
-            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: 12px;"
+            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: {px(12)}px;"
             f" padding: 4px; }}"
             f"QTextEdit:focus {{ border-color: {BORDER_AMBER}; }}"
         )
@@ -2704,7 +3035,7 @@ class InsightsPanel(QWidget):
         skip_btn.setStyleSheet(
             f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
             f" border: 1px solid {PHOSPHOR_DIM}; border-radius: 3px;"
-            f" font-size: 10px; padding: 2px 8px; }}"
+            f" font-size: {px(10)}px; padding: 2px 8px; }}"
             f"QPushButton:hover {{ color: {PHOSPHOR_MID};"
             f" border-color: {PHOSPHOR_MID}; }}"
         )
@@ -2755,7 +3086,7 @@ class InsightsPanel(QWidget):
         te.setMaximumHeight(120)
         te.setStyleSheet(
             f"QTextEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
-            f" border-radius: 4px; color: {PHOSPHOR_MID}; font-size: 12px;"
+            f" border-radius: 4px; color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
             f" padding: 6px; }}"
             f"QTextEdit:focus {{ border-color: {BORDER_AMBER}; }}"
         )
@@ -2773,7 +3104,7 @@ class InsightsPanel(QWidget):
         approve_btn.setStyleSheet(
             f"QPushButton {{ background: transparent; color: {TERM_GREEN};"
             f" border: 1px solid {TERM_GREEN}; border-radius: 4px;"
-            f" font-size: 11px; padding: 4px 12px; font-weight: bold; }}"
+            f" font-size: {px(11)}px; padding: 4px 12px; font-weight: bold; }}"
             f"QPushButton:hover {{ background: rgba(114,184,90,0.15); }}"
         )
         btn_row.addWidget(approve_btn)
@@ -2783,7 +3114,7 @@ class InsightsPanel(QWidget):
         reject_btn.setStyleSheet(
             f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
             f" border: 1px solid {PHOSPHOR_DIM}; border-radius: 3px;"
-            f" font-size: 10px; padding: 3px 10px; }}"
+            f" font-size: {px(10)}px; padding: 3px 10px; }}"
             f"QPushButton:hover {{ color: {BURN_RED}; border-color: {BURN_RED}; }}"
         )
         btn_row.addWidget(reject_btn)
@@ -2792,7 +3123,7 @@ class InsightsPanel(QWidget):
         preview_btn.setStyleSheet(
             f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
             f" border: 1px solid {PHOSPHOR_DIM}; border-radius: 3px;"
-            f" font-size: 10px; padding: 3px 10px; }}"
+            f" font-size: {px(10)}px; padding: 3px 10px; }}"
             f"QPushButton:hover {{ color: {PHOSPHOR_MID};"
             f" border-color: {PHOSPHOR_MID}; }}"
         )
@@ -2803,7 +3134,7 @@ class InsightsPanel(QWidget):
             te.setStyleSheet(
                 f"QTextEdit {{ background: {BG_INSET};"
                 f" border: 1px solid {PHOSPHOR_GLOW}; border-radius: 4px;"
-                f" color: {PHOSPHOR_DIM}; font-size: 12px; padding: 6px; }}"
+                f" color: {PHOSPHOR_DIM}; font-size: {px(12)}px; padding: 6px; }}"
             )
 
         # Wire edit toggle
@@ -2819,7 +3150,7 @@ class InsightsPanel(QWidget):
                 t.setStyleSheet(
                     f"QTextEdit {{ background: {BG_INSET};"
                     f" border: 1px solid {BORDER_AMBER}; border-radius: 4px;"
-                    f" color: {PHOSPHOR_HOT}; font-size: 12px; padding: 6px; }}"
+                    f" color: {PHOSPHOR_HOT}; font-size: {px(12)}px; padding: 6px; }}"
                 )
             else:
                 eb.setText("Edit")
@@ -2827,7 +3158,7 @@ class InsightsPanel(QWidget):
                 t.setStyleSheet(
                     f"QTextEdit {{ background: {BG_INSET};"
                     f" border: 1px solid {BORDER_DARK}; border-radius: 4px;"
-                    f" color: {PHOSPHOR_MID}; font-size: 12px; padding: 6px; }}"
+                    f" color: {PHOSPHOR_MID}; font-size: {px(12)}px; padding: 6px; }}"
                 )
                 if new_text != orig and self._store:
                     self._store.update_feedback_text(r, s, new_text)
@@ -2897,7 +3228,7 @@ class InsightsPanel(QWidget):
 
         hdr = QLabel("Teacher comment on your submission:")
         hdr.setStyleSheet(
-            "color: #333333; font-size: 13px; font-weight: bold;"
+            f"color: #333333; font-size: {px(13)}px; font-weight: bold;"
             " background: transparent; border: none;"
         )
         dlo.addWidget(hdr)
@@ -2905,7 +3236,7 @@ class InsightsPanel(QWidget):
         body = QLabel(text)
         body.setWordWrap(True)
         body.setStyleSheet(
-            "color: #2d3b45; font-size: 13px; line-height: 1.5;"
+            f"color: #2d3b45; font-size: {px(13)}px; line-height: 1.5;"
             " background: #f5f5f5; border: 1px solid #c7cdd1;"
             " border-radius: 4px; padding: 12px;"
             " font-family: 'Lato', 'Helvetica Neue', sans-serif;"
@@ -2917,7 +3248,7 @@ class InsightsPanel(QWidget):
             "no analytical labels, no concern flags."
         )
         note.setStyleSheet(
-            "color: #999999; font-size: 10px; background: transparent;"
+            f"color: #999999; font-size: {px(10)}px; background: transparent;"
             " border: none;"
         )
         dlo.addWidget(note)
@@ -3058,14 +3389,30 @@ class InsightsPanel(QWidget):
 
     def show_review(self, run_id: str) -> None:
         """Switch to review state and display the given run."""
-        self._refresh_run_sidebar()
-        self._state_stack.setCurrentIndex(2)
-        # Select the run in the sidebar
-        for i in range(self._run_list.count()):
-            item = self._run_list.item(i)
-            if item.data(Qt.ItemDataRole.UserRole) == run_id:
-                self._run_list.setCurrentRow(i)
-                break
+        self._switch_view(2)
+        self._load_run(run_id)
+
+    def load_assignment(self, course_id: str, assignment_id: str) -> None:
+        """Load most recent insights run for an assignment (called by shared ReviewSidebar)."""
+        if not self._store:
+            return
+        # Switch to review view
+        self._switch_view(2)
+        # Find the most recent run for this assignment
+        runs = self._store.get_runs(course_id=course_id)
+        for run in runs:
+            if str(run.get("assignment_id", "")) == str(assignment_id):
+                self._load_run(run.get("run_id", ""))
+                return
+        # No run found — show placeholder
+        self._current_run_id = None
+        self._resume_btn.setVisible(False)
+        self._export_btn.setVisible(False)
+        self._review_content_stack.setCurrentIndex(0)
+        self._review_placeholder.setText(
+            "No insights run found for this assignment.\n"
+            "Use New Analysis to generate one."
+        )
 
     # ------------------------------------------------------------------
     # Signal handlers
@@ -3260,7 +3607,7 @@ class InsightsPanel(QWidget):
         toast.setStyleSheet(
             f"QLabel {{ background: {BG_CARD}; color: {PHOSPHOR_HOT};"
             f" border: 1px solid {BORDER_AMBER}; border-radius: 6px;"
-            f" font-size: 12px; padding: 8px 16px; }}"
+            f" font-size: {px(12)}px; padding: 8px 16px; }}"
         )
         toast.adjustSize()
         toast.move(
@@ -3483,7 +3830,7 @@ class InsightsPanel(QWidget):
         te = QTextEdit()
         te.setStyleSheet(
             f"QTextEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
-            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: 12px;"
+            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: {px(12)}px;"
             f" font-family: 'Menlo', 'Consolas', monospace; padding: 4px; }}"
         )
         te.setMaximumHeight(100)
@@ -3591,7 +3938,7 @@ class InsightsPanel(QWidget):
         name_edit = QLineEdit(theme_names[0])
         name_edit.setStyleSheet(
             f"QLineEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
-            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: 12px;"
+            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: {px(12)}px;"
             f" padding: 4px; }}"
         )
         lo.addWidget(name_edit)
@@ -3708,7 +4055,7 @@ class InsightsPanel(QWidget):
         name_edit.setPlaceholderText("Theme name...")
         name_edit.setStyleSheet(
             f"QLineEdit {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
-            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: 12px;"
+            f" border-radius: 4px; color: {PHOSPHOR_HOT}; font-size: {px(12)}px;"
             f" padding: 4px; }}"
         )
         lo.addWidget(name_edit)
@@ -3857,9 +4204,8 @@ class InsightsPanel(QWidget):
             self._pending_counts = {}
 
     def _show_prior_insights(self) -> None:
-        """Switch to review view to see completed and partial runs."""
-        self._refresh_run_sidebar()
-        self._state_stack.setCurrentIndex(2)  # review view
+        """Switch to review view."""
+        self._switch_view(2)
 
     def _show_setup_assistant(self) -> None:
         """Show the Insights setup assistant dialog."""
@@ -3893,7 +4239,7 @@ class InsightsPanel(QWidget):
                 return
 
         # Switch to running state
-        self._state_stack.setCurrentIndex(1)
+        self._switch_view(1)
         self._progress_label.setText("Starting analysis...")
         self._progress_bar.setValue(0)
         self._log_output.clear()
@@ -4010,8 +4356,9 @@ class InsightsPanel(QWidget):
             s = load_settings()
         except Exception:
             s = {}
-        # Pass through the feedback toggle from setup UI
+        # Pass through toggles from setup UI
         s["insights_draft_feedback"] = self._feedback_toggle.isChecked()
+        s["insights_handwriting_enabled"] = self._handwriting_toggle.isChecked()
         return s
 
     def _on_progress(self, message: str) -> None:
@@ -4043,37 +4390,41 @@ class InsightsPanel(QWidget):
                 overall = int(run_base + sub_pct * run_slice)
                 self._progress_bar.setValue(min(overall, 99))
 
+        # Stage-level progress for non-submission stages
+        if not sub_match:
+            stage_keywords = {
+                "generating themes": 70,
+                "re-generating themes": 70,
+                "surfacing outlier": 80,
+                "generating synthesis": 90,
+                "re-generating synthesis": 90,
+                "drafting feedback": 95,
+                "analysis complete": 100,
+                "re-run complete": 100,
+                "batch complete": 100,
+            }
+            msg_lower = message.lower()
+            for keyword, pct in stage_keywords.items():
+                if keyword in msg_lower:
+                    self._progress_bar.setValue(pct)
+                    break
+
     def _on_analysis_complete(self, run_id: str) -> None:
-        self._current_run_id = run_id
         self._progress_label.setText("Analysis complete!")
         self._progress_bar.setValue(100)
         self._append_log("✓ Analysis complete! Switching to results...")
 
-        # Refresh sidebar and show results
-        self._refresh_run_sidebar()
-        self._state_stack.setCurrentIndex(2)
-
-        # Select the new run
-        for i in range(self._run_list.count()):
-            item = self._run_list.item(i)
-            if item.data(Qt.ItemDataRole.UserRole) == run_id:
-                self._run_list.setCurrentRow(i)
-                break
+        self._switch_view(2)
+        self._load_run(run_id)
 
     def _on_batch_complete(self, run_ids: list) -> None:
         """Handle batch insights completion."""
         n = len(run_ids)
         self._progress_label.setText(f"Batch complete! {n} run{'s' if n != 1 else ''}.")
         self._progress_detail.setText("Switching to review...")
-        self._refresh_run_sidebar()
-        self._state_stack.setCurrentIndex(2)
+        self._switch_view(2)
         if run_ids:
-            # Select the first completed run
-            for i in range(self._run_list.count()):
-                item = self._run_list.item(i)
-                if item.data(Qt.ItemDataRole.UserRole) == run_ids[0]:
-                    self._run_list.setCurrentRow(i)
-                    break
+            self._load_run(run_ids[0])
 
     def _on_analysis_error(self, message: str) -> None:
         self._progress_label.setText(f"Error: {message}")
@@ -4083,60 +4434,66 @@ class InsightsPanel(QWidget):
         if self._worker:
             self._worker.cancel()
             self._worker.wait(3000)  # wait up to 3 seconds for clean shutdown
-        self._state_stack.setCurrentIndex(0)
+        self._switch_view(0)
 
-    def cleanup(self) -> None:
-        """Clean shutdown — call from MainWindow.closeEvent."""
-        if self._worker and self._worker.isRunning():
-            self._worker.cancel()
-            self._worker.wait(5000)
+    def _on_rerun_selected(self, index: int) -> None:
+        """Handle re-run dropdown selection."""
+        if index == 0:
+            return  # "Re-run..." placeholder
+        self._rerun_combo.setCurrentIndex(0)  # reset to placeholder
 
-    def _refresh_run_sidebar(self) -> None:
-        """Populate the run sidebar — completed AND partial runs."""
-        self._run_list.clear()
-        if not self._store:
+        run_id = self._current_run_id
+        if not run_id or not self._store:
             return
 
-        # Show all runs (completed first, then partial)
-        all_runs = self._store.get_runs()
-        completed_ids = {
-            r["run_id"] for r in self._store.get_completed_runs()
+        stage_map = {
+            1: "themes",      # Re-generate Themes
+            2: "synthesis",   # Re-generate Report
+            3: "themes",      # Re-generate All
         }
-
-        for run in all_runs:
-            course = run.get("course_name", "")
-            assign = run.get("assignment_name", "")
-            n = run.get("total_submissions", 0)
-            rid = run["run_id"]
-            is_complete = rid in completed_ids
-
-            if is_complete:
-                text = f"{assign}\n{course}  \u00b7  {n} students"
-            else:
-                stages = run.get("stages_completed", [])
-                if isinstance(stages, str):
-                    try:
-                        stages = json.loads(stages)
-                    except Exception:
-                        stages = []
-                last_stage = stages[-1] if stages else "started"
-                text = f"{assign}  (partial)\n{course}  \u00b7  stopped at: {last_stage}"
-
-            item = QListWidgetItem(text)
-            item.setData(Qt.ItemDataRole.UserRole, rid)
-            if not is_complete:
-                from PySide6.QtGui import QColor
-                item.setForeground(QColor(PHOSPHOR_DIM))
-            self._run_list.addItem(item)
-
-    def _on_run_selected(self, row: int) -> None:
-        """Load and display results for the selected run."""
-        if row < 0:
+        start_stage = stage_map.get(index)
+        if not start_stage:
             return
-        item = self._run_list.item(row)
-        if not item:
+
+        # Switch to running view
+        self._switch_view(1)
+        self._progress_label.setText(f"Re-running from {start_stage}...")
+        self._progress_bar.setValue(0)
+        self._log_output.clear()
+        while self._live_lo.count():
+            item = self._live_lo.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        self._live_lo.addStretch()
+        self._append_log(f"Re-running analysis from {start_stage}...")
+
+        from gui.workers import RerunWorker
+        self._worker = RerunWorker(
+            self._store,
+            run_id=run_id,
+            start_stage=start_stage,
+            settings=self._get_settings(),
+        )
+        self._worker.progress_update.connect(self._on_progress)
+        self._worker.analysis_complete.connect(self._on_analysis_complete)
+        self._worker.error.connect(self._on_analysis_error)
+        self._worker.start()
+
+    def _on_export_chatbot(self) -> None:
+        """Open the chatbot export dialog for the current run."""
+        if not self._current_run_id or not self._store:
             return
-        run_id = item.data(Qt.ItemDataRole.UserRole)
+        from gui.dialogs.chatbot_export_dialog import ChatbotExportDialog
+        dlg = ChatbotExportDialog(
+            store=self._store,
+            run_id=self._current_run_id,
+            parent=self,
+        )
+        dlg.exec()
+
+    def _on_resume_run(self) -> None:
+        """Resume a partial run from where it stopped."""
+        run_id = self._current_run_id
         if not run_id or not self._store:
             return
 
@@ -4144,9 +4501,112 @@ class InsightsPanel(QWidget):
         if not run:
             return
 
+        stages = run.get("stages_completed", [])
+        if isinstance(stages, str):
+            try:
+                stages = json.loads(stages)
+            except Exception:
+                stages = []
+
+        # Determine next stage to run
+        all_stages = [
+            "data_fetch", "preprocessing", "quick_analysis",
+            "coding", "concerns", "themes", "outliers", "synthesis",
+        ]
+        completed_set = set(stages)
+
+        # Find first incomplete stage
+        next_stage = None
+        for s in all_stages:
+            if s not in completed_set:
+                next_stage = s
+                break
+
+        if next_stage is None:
+            return  # Already complete
+
+        # Clear live results feed
+        while self._live_lo.count():
+            item = self._live_lo.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        self._live_lo.addStretch()
+
+        # For stages after coding, use run_partial
+        if next_stage in ("themes", "outliers", "synthesis"):
+            self._switch_view(1)
+            self._progress_label.setText(f"Resuming from {next_stage}...")
+            self._progress_bar.setValue(0)
+            self._log_output.clear()
+            self._append_log(f"Resuming run from {next_stage}...")
+
+            from gui.workers import RerunWorker
+            self._worker = RerunWorker(
+                self._store,
+                run_id=run_id,
+                start_stage=next_stage,
+                settings=self._get_settings(),
+            )
+            self._worker.progress_update.connect(self._on_progress)
+            self._worker.analysis_complete.connect(self._on_analysis_complete)
+            self._worker.error.connect(self._on_analysis_error)
+            self._worker.start()
+        else:
+            # For earlier stages (coding, concerns), need full re-run
+            # with skip logic — use run_analysis with resume awareness
+            self._switch_view(1)
+            self._progress_label.setText(f"Resuming from {next_stage}...")
+            self._progress_bar.setValue(0)
+            self._log_output.clear()
+            self._append_log(
+                f"Resuming run — {len(stages)} stages complete, "
+                f"starting from {next_stage}..."
+            )
+
+            from gui.workers import ResumeInsightsWorker
+            self._worker = ResumeInsightsWorker(
+                self._api,
+                store=self._store,
+                run_id=run_id,
+                settings=self._get_settings(),
+            )
+            self._worker.progress_update.connect(self._on_progress)
+            self._worker.result_ready.connect(self._append_live_result)
+            self._worker.analysis_complete.connect(self._on_analysis_complete)
+            self._worker.error.connect(self._on_analysis_error)
+            self._worker.start()
+
+    def cleanup(self) -> None:
+        """Clean shutdown — call from MainWindow.closeEvent."""
+        if self._worker and self._worker.isRunning():
+            self._worker.cancel()
+            self._worker.wait(5000)
+
+    def _load_run(self, run_id: str) -> None:
+        """Load and display results for the given run."""
+        if not run_id or not self._store:
+            self._resume_btn.setVisible(False)
+            self._export_btn.setVisible(False)
+            return
+
+        run = self._store.get_run(run_id)
+        if not run:
+            self._resume_btn.setVisible(False)
+            self._export_btn.setVisible(False)
+            return
+
+        # Show resume button for partial runs, export for any run with codings
+        is_complete = run.get("completed_at") is not None
+        stages = run.get("stages_completed", [])
+        has_codings = "coding" in stages if isinstance(stages, list) else False
+        self._resume_btn.setVisible(not is_complete)
+        self._export_btn.setVisible(has_codings)
+
         self._current_run_id = run_id
-        # Track which layers have been loaded for this run
         self._loaded_layers = set()
+
+        # Show the layer content (not the placeholder)
+        self._review_content_stack.setCurrentIndex(1)
 
         # Always load patterns (default layer)
         qa_json = run.get("quick_analysis")
@@ -4229,7 +4689,7 @@ class InsightsPanel(QWidget):
             empty.setWordWrap(True)
             empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
             empty.setStyleSheet(
-                f"color: {PHOSPHOR_DIM}; font-size: 12px;"
+                f"color: {PHOSPHOR_DIM}; font-size: {px(12)}px;"
                 f" background: transparent; border: none; padding: 40px;"
             )
             lo.addWidget(empty)
@@ -4250,7 +4710,7 @@ class InsightsPanel(QWidget):
         )
         header.setWordWrap(True)
         header.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: 13px; font-weight: bold;"
+            f"color: {PHOSPHOR_HOT}; font-size: {px(13)}px; font-weight: bold;"
             f" background: transparent; border: none;"
         )
         s_lo.addWidget(header)
@@ -4281,7 +4741,7 @@ class InsightsPanel(QWidget):
                 bar_lbl = QLabel(blocks)
                 bar_lbl.setAlignment(Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter)
                 bar_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 14px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(14)}px;"
                     f" background: transparent; border: none;"
                 )
                 col.addWidget(bar_lbl)
@@ -4290,7 +4750,7 @@ class InsightsPanel(QWidget):
                 val_lbl = QLabel(f"{m.avg_words:.0f}")
                 val_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 val_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_DIM}; font-size: 9px;"
+                    f"color: {PHOSPHOR_DIM}; font-size: {px(9)}px;"
                     f" background: transparent; border: none;"
                 )
                 col.addWidget(val_lbl)
@@ -4299,7 +4759,7 @@ class InsightsPanel(QWidget):
                 name_lbl = QLabel(m.label[:12])
                 name_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 name_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_DIM}; font-size: 8px;"
+                    f"color: {PHOSPHOR_DIM}; font-size: {px(8)}px;"
                     f" background: transparent; border: none;"
                 )
                 col.addWidget(name_lbl)
@@ -4318,7 +4778,7 @@ class InsightsPanel(QWidget):
                 rate_lbl = QLabel(f"Submission rates: {rate_text}")
                 rate_lbl.setWordWrap(True)
                 rate_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_DIM}; font-size: 10px;"
+                    f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
                     f" background: transparent; border: none;"
                 )
                 e_lo.addWidget(rate_lbl)
@@ -4359,7 +4819,7 @@ class InsightsPanel(QWidget):
                 )
                 framing.setWordWrap(True)
                 framing.setStyleSheet(
-                    f"color: {framing_color}; font-size: 11px;"
+                    f"color: {framing_color}; font-size: {px(11)}px;"
                     f" background: transparent; border: none;"
                 )
                 x_lo.addWidget(framing)
@@ -4377,7 +4837,7 @@ class InsightsPanel(QWidget):
                         parts.append(f"{m.silence_count} missing")
                     row_lbl = QLabel(f"{m.label}:  {', '.join(parts)}")
                     row_lbl.setStyleSheet(
-                        f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                        f"color: {PHOSPHOR_MID}; font-size: {px(11)}px;"
                         f" background: transparent; border: none;"
                     )
                     x_lo.addWidget(row_lbl)
@@ -4400,7 +4860,7 @@ class InsightsPanel(QWidget):
                 types_str = f"  ({', '.join(m.concern_types)})" if m.concern_types else ""
                 row_lbl = QLabel(f"{m.label}:  {m.concern_count} flag(s){types_str}")
                 row_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(11)}px;"
                     f" background: transparent; border: none;"
                 )
                 c_lo.addWidget(row_lbl)
@@ -4432,7 +4892,7 @@ class InsightsPanel(QWidget):
                 }
                 grp_lbl = QLabel(status_labels.get(status, status).upper())
                 grp_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_DIM}; font-size: 9px; font-weight: bold;"
+                    f"color: {PHOSPHOR_DIM}; font-size: {px(9)}px; font-weight: bold;"
                     f" letter-spacing: 1px; background: transparent; border: none;"
                     f" padding-top: 4px;"
                 )
@@ -4472,7 +4932,7 @@ class InsightsPanel(QWidget):
                 )
                 ref_lbl.setWordWrap(True)
                 ref_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(11)}px;"
                     f" background: transparent; border: none;"
                 )
                 r_lo.addWidget(ref_lbl)
@@ -4512,7 +4972,7 @@ class InsightsPanel(QWidget):
                 name_lbl = QLabel(arc.student_name[:20])
                 name_lbl.setFixedWidth(140)
                 name_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                    f"color: {PHOSPHOR_MID}; font-size: {px(11)}px;"
                     f" background: transparent; border: none;"
                 )
                 arc_row.addWidget(name_lbl)
@@ -4541,7 +5001,7 @@ class InsightsPanel(QWidget):
                 dots_lbl = QLabel("  ".join(dots_parts))
                 dots_lbl.setTextFormat(Qt.TextFormat.RichText)
                 dots_lbl.setStyleSheet(
-                    f"font-size: 14px; background: transparent; border: none;"
+                    f"font-size: {px(14)}px; background: transparent; border: none;"
                 )
                 arc_row.addWidget(dots_lbl)
 
@@ -4563,7 +5023,7 @@ class InsightsPanel(QWidget):
                 )
                 trend_lbl.setStyleSheet(
                     f"color: {trend_colors.get(arc.trend, PHOSPHOR_DIM)};"
-                    f" font-size: 10px; background: transparent; border: none;"
+                    f" font-size: {px(10)}px; background: transparent; border: none;"
                 )
                 arc_row.addWidget(trend_lbl)
                 arc_row.addStretch()
@@ -4588,7 +5048,7 @@ class InsightsPanel(QWidget):
                 overall = confidence.get("overall", 0)
                 overall_lbl = QLabel(f"Overall: {overall:.0%}")
                 overall_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_HOT}; font-size: 13px; font-weight: bold;"
+                    f"color: {PHOSPHOR_HOT}; font-size: {px(13)}px; font-weight: bold;"
                     f" background: transparent; border: none;"
                 )
                 cv_lo.addWidget(overall_lbl)
@@ -4600,7 +5060,7 @@ class InsightsPanel(QWidget):
                             f"  {key.replace('_', ' ').title()}: {val:.0%}"
                         )
                         metric_lbl.setStyleSheet(
-                            f"color: {PHOSPHOR_MID}; font-size: 11px;"
+                            f"color: {PHOSPHOR_MID}; font-size: {px(11)}px;"
                             f" background: transparent; border: none;"
                         )
                         cv_lo.addWidget(metric_lbl)
@@ -4609,7 +5069,7 @@ class InsightsPanel(QWidget):
                     note_lbl = QLabel(f"\u26a0  {note}")
                     note_lbl.setWordWrap(True)
                     note_lbl.setStyleSheet(
-                        f"color: {ROSE_ACCENT}; font-size: 11px;"
+                        f"color: {ROSE_ACCENT}; font-size: {px(11)}px;"
                         f" background: transparent; border: none;"
                     )
                     cv_lo.addWidget(note_lbl)

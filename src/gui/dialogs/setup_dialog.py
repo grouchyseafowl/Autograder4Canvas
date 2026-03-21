@@ -11,6 +11,7 @@ from PySide6.QtCore import Qt, QObject, QEvent
 from PySide6.QtGui import QFont, QPainter, QPen, QColor, QPainterPath
 
 from gui.styles import (
+    px,
     SPACING_SM, SPACING_MD,
     BG_CARD, BG_PANEL, BG_INSET,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM, PHOSPHOR_GLOW,
@@ -20,6 +21,7 @@ from gui.styles import (
     STATUS_OK, STATUS_ERR,
     CARD_GRADIENT, PANEL_GRADIENT, MONO_FONT,
     make_secondary_button,
+    combo_qss,
 )
 
 _MONO     = MONO_FONT
@@ -116,7 +118,7 @@ class _TokenLineEdit(QLineEdit):
                 padding: 4px 2px 3px 2px;
                 color: {PHOSPHOR_HOT};
                 font-family: {_MONO};
-                font-size: 13px;
+                font-size: {px(13)}px;
                 selection-background-color: {PHOSPHOR_GLOW};
                 selection-color: {PHOSPHOR_HOT};
             }}
@@ -492,7 +494,7 @@ class SetupDialog(QDialog):
         inst_hdr = QLabel("INSTITUTION PROFILE")
         inst_hdr.setFont(ulf)
         inst_hdr.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; letter-spacing: 1.5px; font-weight: 600; font-size: 11px;"
+            f"color: {PHOSPHOR_HOT}; letter-spacing: 1.5px; font-weight: 600; font-size: {px(11)}px;"
         )
         lay.addWidget(inst_hdr)
 
@@ -511,7 +513,7 @@ class SetupDialog(QDialog):
         inst_type_row = QHBoxLayout()
         inst_type_lbl = QLabel("INSTITUTION TYPE")
         inst_type_lbl.setFont(ulf)
-        inst_type_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; letter-spacing: 1px; font-size: 11px;")
+        inst_type_lbl.setStyleSheet(f"color: {PHOSPHOR_DIM}; letter-spacing: 1px; font-size: {px(11)}px;")
         inst_type_row.addWidget(inst_type_lbl)
         inst_type_row.addSpacing(8)
 
@@ -522,23 +524,7 @@ class SetupDialog(QDialog):
         self._institution_combo.addItem("University / Research",    userData="university")
         self._institution_combo.addItem("Other",                    userData="other")
         self._institution_combo.setFixedWidth(200)
-        self._institution_combo.setStyleSheet(f"""
-            QComboBox {{
-                background: {BG_INSET};
-                color: {PHOSPHOR_HOT};
-                border: 1px solid {BORDER_AMBER};
-                border-radius: 3px;
-                padding: 4px 8px;
-                font-size: 11px;
-            }}
-            QComboBox::drop-down {{ border: none; }}
-            QComboBox QAbstractItemView {{
-                background: {BG_INSET};
-                color: {PHOSPHOR_HOT};
-                border: 1px solid {BORDER_AMBER};
-                selection-background-color: {PHOSPHOR_GLOW};
-            }}
-        """)
+        self._institution_combo.setStyleSheet(combo_qss())
         inst_type_row.addWidget(self._institution_combo)
         inst_type_row.addStretch()
         lay.addLayout(inst_type_row)
@@ -551,7 +537,7 @@ class SetupDialog(QDialog):
         ret_hdr = QLabel("DATA RETENTION")
         ret_hdr.setFont(ulf)
         ret_hdr.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; letter-spacing: 1.5px; font-weight: 600; font-size: 11px;"
+            f"color: {PHOSPHOR_HOT}; letter-spacing: 1.5px; font-weight: 600; font-size: {px(11)}px;"
         )
         lay.addWidget(ret_hdr)
 

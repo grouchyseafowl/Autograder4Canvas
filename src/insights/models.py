@@ -19,6 +19,7 @@ class PreprocessingMetadata(BaseModel):
     """Metadata about what preprocessing was applied to a submission."""
     was_translated: bool = False
     was_transcribed: bool = False
+    was_image_transcribed: bool = False
     original_language_name: Optional[str] = None
     original_text: Optional[str] = None
     teacher_comment: Optional[str] = None

@@ -17,6 +17,7 @@ from PySide6.QtCore import Signal, Qt, QSize, QRect
 from PySide6.QtGui import QFont, QColor, QPainter, QPen, QRadialGradient, QPainterPath
 
 from gui.styles import (
+    px,
     SPACING_SM,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM,
     SIDEBAR_SEL_BG, SIDEBAR_SEL_TEXT, SIDEBAR_HOVER,
@@ -39,9 +40,9 @@ _ROLE_FORMAT   = Qt.ItemDataRole.UserRole + 6   # effective modality: "online"|"
 _ROLE_NICKNAME = Qt.ItemDataRole.UserRole + 7   # user-set nickname (str or "")
 _ROLE_PUBLISHED = Qt.ItemDataRole.UserRole + 8  # bool: True = available/published
 
-_COURSE_ROW_H = 46  # px — tall enough for two text lines
-_PILL_SLOT_W  = 26  # fixed width for modality pill slot (matches bulk run)
-_PILL_GAP     = 6   # gap between pill and code text
+_COURSE_ROW_H = px(46)  # px — tall enough for two text lines
+_PILL_SLOT_W  = px(26)  # fixed width for modality pill slot (matches bulk run)
+_PILL_GAP     = px(6)   # gap between pill and code text
 
 # ---------------------------------------------------------------------------
 # Modality tag definitions  (label, pill-border-color)
@@ -294,7 +295,7 @@ class _CourseDelegate(QStyledItemDelegate):
         code_font  = _mono(11, bold=is_sel or bool(badge))
         title_font = _mono(9)
 
-        code_h, title_h, gap = 16, 13, 3
+        code_h, title_h, gap = px(16), px(13), px(3)
         block_h = code_h + gap + title_h
         y0 = opt.rect.y() + (opt.rect.height() - block_h) // 2
 
@@ -309,7 +310,7 @@ class _CourseDelegate(QStyledItemDelegate):
             tag_font = _mono(8)
             tag_color = QColor(tag_hex)
             pill_w  = _PILL_SLOT_W
-            pill_h  = 14
+            pill_h  = px(14)
             pill_y  = y0 + (code_h - pill_h) // 2
 
             painter.setFont(tag_font)
@@ -394,15 +395,6 @@ _TREE_QSS = f"""
     QTreeWidget::branch:hover:!selected {{
         background: transparent;
     }}
-    QMenu {{
-        background: #1A1200;
-        color: {PHOSPHOR_MID};
-        border: 1px solid {BORDER_AMBER};
-    }}
-    QMenu::item:selected {{
-        background: {SIDEBAR_SEL_BG};
-        color: {PHOSPHOR_HOT};
-    }}
 """
 
 _PANEL_QSS = f"""
@@ -422,7 +414,7 @@ _PANEL_QSS = f"""
 def _mono(size: int = 12, bold: bool = False) -> QFont:
     f = QFont("Menlo")
     f.setStyleHint(QFont.StyleHint.Monospace)
-    f.setPointSize(size)
+    f.setPixelSize(px(size))
     f.setBold(bold)
     return f
 
@@ -656,7 +648,9 @@ class CoursePanel(QFrame):
         nickname = item.data(0, _ROLE_NICKNAME) or ""
         fmt      = item.data(0, _ROLE_FORMAT)   or ""
 
+        from gui.styles import menu_qss
         menu = QMenu(self._tree)
+        menu.setStyleSheet(menu_qss())
 
         # ── Nickname ──────────────────────────────────────────────────────
         nick_act = menu.addAction("Set Nickname…")
@@ -785,7 +779,7 @@ class CoursePanel(QFrame):
                 border-radius: 4px;
                 padding: 6px 20px;
                 font-family: Menlo;
-                font-size: 11px;
+                font-size: {px(11)}px;
             }}
             QPushButton:hover {{ background: #2A1A00; color: {PHOSPHOR_HOT}; border-color: {BORDER_AMBER}; }}
             QPushButton#confirm {{ color: {PHOSPHOR_HOT}; border-color: {BORDER_AMBER}; }}

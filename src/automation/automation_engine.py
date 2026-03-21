@@ -8,6 +8,7 @@ import sys
 import logging
 import requests
 import importlib.util
+from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 import json
@@ -1463,21 +1464,59 @@ class AutomationEngine:
             self.logger.warning(f"      ⚠ AIC skipped — import failed: {e}")
             return []
 
-        # ── Fetch submissions with student user info ────────────────────────
-        url = (f"{self.base_url}/api/v1/courses/{course_id}"
-               f"/assignments/{assignment_id}/submissions")
-        try:
-            resp = requests.get(
-                url,
-                headers=self.headers,
-                params={"per_page": 100, "include[]": "user"},
-                timeout=30,
-            )
-            resp.raise_for_status()
-            submissions = resp.json()
-        except requests.RequestException as e:
-            self.logger.warning(f"      ⚠ AIC skipped — could not fetch submissions: {e}")
-            return []
+        # ── Fetch submissions — discussion entries if applicable ───────────
+        submissions = []
+        is_discussion = "discussion_topic" in assignment.get("submission_types", [])
+
+        if is_discussion:
+            topic_id = self._get_discussion_topic_id(assignment)
+            if topic_id:
+                entries = self._fetch_discussion_entries(course_id, topic_id)
+                if entries:
+                    # Build pseudo-submissions from discussion entries
+                    user_texts: Dict[str, List[str]] = defaultdict(list)
+                    user_names: Dict[str, str] = {}
+
+                    def _collect(entry):
+                        uid = str(entry.get("user_id", ""))
+                        msg = entry.get("message") or ""
+                        if uid and msg.strip():
+                            user_texts[uid].append(msg)
+                            if uid not in user_names:
+                                user_names[uid] = entry.get("user_name", f"Student {uid}")
+                        for reply in entry.get("replies", []):
+                            _collect(reply)
+
+                    for e in entries:
+                        _collect(e)
+
+                    for uid, texts in user_texts.items():
+                        submissions.append({
+                            "user_id": int(uid) if uid.isdigit() else uid,
+                            "user": {"name": user_names.get(uid, f"Student {uid}")},
+                            "body": "\n\n".join(texts),
+                            "workflow_state": "submitted",
+                            "submitted_at": None,
+                        })
+                    self.logger.info(
+                        f"      📝 Discussion: {len(submissions)} participants with text"
+                    )
+
+        if not submissions:
+            url = (f"{self.base_url}/api/v1/courses/{course_id}"
+                   f"/assignments/{assignment_id}/submissions")
+            try:
+                resp = requests.get(
+                    url,
+                    headers=self.headers,
+                    params={"per_page": 100, "include[]": "user"},
+                    timeout=30,
+                )
+                resp.raise_for_status()
+                submissions = resp.json()
+            except requests.RequestException as e:
+                self.logger.warning(f"      ⚠ AIC skipped — could not fetch submissions: {e}")
+                return []
 
         # ── Open RunStore ──────────────────────────────────────────────────
         try:
@@ -1557,6 +1596,7 @@ class AutomationEngine:
                     assignment_name=assignment_name,
                     submitted_at=submitted_at,
                     context_profile=context_profile,
+                    submission_body=body,
                 )
                 results.append(result)
             except Exception as e:
@@ -1576,6 +1616,12 @@ class AutomationEngine:
                 # Re-save results that were flagged as outliers
                 for r in results:
                     if r.is_outlier:
+                        # Find original body for this student
+                        _sub = next(
+                            (s for s in submissions
+                             if str(s.get("user_id")) == str(r.student_id)),
+                            {},
+                        )
                         store.save_result(
                             r,
                             course_id=str(course_id),
@@ -1584,6 +1630,7 @@ class AutomationEngine:
                             assignment_name=assignment_name,
                             submitted_at=submitted_at_by_student.get(str(r.student_id)),
                             context_profile=context_profile,
+                            submission_body=(_sub.get("body") or ""),
                         )
             except Exception as e:
                 self.logger.warning(f"      ⚠ Peer comparison skipped: {e}")

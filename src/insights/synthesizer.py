@@ -30,6 +30,9 @@ from insights.prompts import (
     SYNTHESIS_PROMPT_LIGHTWEIGHT,
     SYNTHESIS_PROMPT_MEDIUM,
     SYSTEM_PROMPT,
+    _SYNTH_PASS_1,
+    _SYNTH_PASS_2,
+    _SYNTH_PASS_3,
 )
 
 log = logging.getLogger(__name__)
@@ -169,7 +172,16 @@ def _synthesize_lightweight(
     assignment_name, course_name, total, context_text, interests_text,
     backend, profile_fragment="",
 ) -> SynthesisReport:
-    prompt = SYNTHESIS_PROMPT_LIGHTWEIGHT.format(
+    """3-pass synthesis for lightweight tier.
+
+    Small local models (8B) can't reliably produce 9 JSON sections in one
+    pass — they lose track of the structure and emit 3-4 sections.  Instead,
+    we make three passes of 3 sections each, then merge.  Each pass gets
+    the same context, so per-section quality is comparable to a single-pass
+    approach on a larger model.
+    """
+    # Build the shared context prefix (everything except section instructions)
+    context = SYNTHESIS_PROMPT_LIGHTWEIGHT.format(
         assignment_name=assignment_name,
         course_name=course_name,
         total_submissions=total,
@@ -180,9 +192,21 @@ def _synthesize_lightweight(
         quick_analysis_summary=_summarize_quick_analysis(quick_analysis),
         teacher_interests=interests_text,
         profile_fragment=profile_fragment,
-        _SYNTHESIS_SECTIONS="",
+        _SYNTHESIS_SECTIONS="{pass_sections}",
     )
-    return _run_synthesis(prompt, backend)
+
+    merged_sections: dict = {}
+    confidences: list = []
+
+    for i, pass_sections in enumerate((_SYNTH_PASS_1, _SYNTH_PASS_2, _SYNTH_PASS_3), 1):
+        prompt = context.format(pass_sections=pass_sections)
+        log.info("Synthesis pass %d/3...", i)
+        result = _run_synthesis(prompt, backend)
+        merged_sections.update(result.sections)
+        confidences.append(result.confidence)
+
+    avg_confidence = sum(confidences) / len(confidences) if confidences else 0.5
+    return SynthesisReport(sections=merged_sections, confidence=avg_confidence)
 
 
 def _synthesize_medium(
