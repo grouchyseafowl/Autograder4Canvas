@@ -172,7 +172,7 @@ class ExportReportsDialog(QDialog):
         _desc_css = (f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
                      f" background: transparent; border: none; margin-left: {px(43)}px;")
         for toggle, desc in [
-            (self._toggle_summary,     "Distribution table, concern level counts, smoking-gun list."),
+            (self._toggle_summary,     "Distribution table, conversation opportunity counts, smoking-gun list."),
             (self._toggle_per_student, "One section per flagged student with marker breakdown."),
             (self._toggle_trajectory,  "Submission history across all assignments for each student."),
         ]:
@@ -289,8 +289,8 @@ class ExportReportsDialog(QDialog):
         ws.title = "AIC Results"
         rows = self._get_cohort_rows()
         aic_headers = [
-            "Student ID", "Student Name", "Suspicious Score", "Authenticity Score",
-            "Concern Level", "Human Presence Confidence", "Smoking Gun",
+            "Student ID", "Student Name", "Engagement Depth", "Authenticity Score",
+            "Conversation Opportunity", "Personal Connection", "Smoking Gun",
             "Word Count", "Last Analyzed",
         ]
         aic_keys = [
@@ -306,8 +306,8 @@ class ExportReportsDialog(QDialog):
         ws2 = wb.create_sheet("Trajectory")
         ws2.append([
             "Student ID", "Student Name", "Assignment", "Submitted At",
-            "Word Count", "Suspicious Score", "Concern Level",
-            "Human Presence Confidence", "Smoking Gun",
+            "Word Count", "Engagement Depth", "Conversation Opportunity",
+            "Personal Connection", "Smoking Gun",
         ])
         for sid, sname in self._student_ids_and_names(rows):
             for t in self._store.get_trajectory(sid, self._course_id):
@@ -408,9 +408,9 @@ class ExportReportsDialog(QDialog):
 
         date_str = datetime.now().strftime("%B %d, %Y")
         flagged_section = (
-            f"<h2>Flagged Students</h2>"
-            f"<table><tr><th>Student</th><th>Concern</th>"
-            f"<th>Score</th><th>Smoking Gun</th></tr>{flagged_rows}</table>"
+            f"<h2>Conversation Opportunities</h2>"
+            f"<table><tr><th>Student</th><th>Opportunity</th>"
+            f"<th>Engagement</th><th>Smoking Gun</th></tr>{flagged_rows}</table>"
             if flagged_rows else ""
         )
         return (
@@ -418,7 +418,7 @@ class ExportReportsDialog(QDialog):
             f"<p class='meta'>Course: <b>{self._course_name}</b>"
             f" &nbsp;|&nbsp; Generated: {date_str}</p>"
             f"<h2>Distribution</h2>"
-            f"<table><tr><th>Concern Level</th><th>Count</th><th>%</th></tr>"
+            f"<table><tr><th>Conversation Opportunity</th><th>Count</th><th>%</th></tr>"
             f"{dist_rows}</table>"
             f"<p>Smoking-gun submissions: <b>{sg_count}</b></p>"
             f"{flagged_section}"
@@ -449,9 +449,9 @@ class ExportReportsDialog(QDialog):
                 f"{sep}"
                 f"<h1>{r.get('student_name', 'Unknown Student')}</h1>"
                 f"<p class='meta'>"
-                f"Concern: <b>{r.get('concern_level', '—')}</b>"
-                f" &nbsp;|&nbsp; Suspicion Score: {r.get('suspicious_score', '—')}"
-                f" &nbsp;|&nbsp; Human Presence: {r.get('human_presence_confidence', '—')}"
+                f"Conversation: <b>{r.get('concern_level', '—')}</b>"
+                f" &nbsp;|&nbsp; Engagement Depth: {r.get('suspicious_score', '—')}"
+                f" &nbsp;|&nbsp; Personal Connection: {r.get('human_presence_confidence', '—')}"
                 + (" &nbsp;|&nbsp; <span class='flag'>⚑ Smoking Gun</span>"
                    if r.get("smoking_gun") else "")
                 + f"</p>{marker_table}"

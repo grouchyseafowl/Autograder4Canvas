@@ -51,25 +51,29 @@ Early versions of this spec claimed 6 structural signals were "stable across AI 
 | Register consistency | NOT MEASURED | Would require implementing register analysis. OBS-AIC-10 identified the concept but no detector exists. |
 | Transition distribution | NOT MEASURED | Only counted as binary pattern presence, not distributional analysis. |
 
-**Newly identified signals (promising, need validation with larger corpus):**
+**Newly identified signals — validated as convergence contributors (2026-03-22):**
 
-Testing identified three unmeasured signals with very large effect sizes (d > 1.8), though n=4 for AI means these are hypotheses, not confirmed:
+Testing identified three signals with large effect sizes. Initial measurement (n=4 AI, n=295 human) showed d > 1.8 for all three. Claude Sonnet validation (n=5 additional AI essays across naive, personal, formal, lab, and adversarial prompts) refined the picture:
 
-| Signal | AI (n=4) | Human (n=295) | d | Stability basis | Bias risk |
-|---|---|---|---|---|---|
-| **Sentence-starter diversity** | 1.000 (all perfect — no repeated first words) | 0.759 mean (13.6% also perfect) | 2.13 | HIGH — transformer repetition penalties are architectural, not model-version-specific | LOW — humans across all populations repeat starters naturally |
-| **Comma density** (per 100 words) | 5.69 | 2.80 | 1.85 | MODERATE — AI constructs complex sentences with subordinate clauses, but varies by prompt | MEDIUM — formal academic ESL writing may also have high comma density |
-| **Average word length** | 5.13 chars | 4.28 chars | 2.17 | MODERATE — continuous version of "inflated vocab," but decreases with casual-style prompts | MEDIUM — correlates with education level and reading exposure |
+| Signal | ChatGPT/Gemini | Claude Sonnet | Human (n=295) | Convergence role |
+|---|---|---|---|---|
+| **Sentence-starter diversity** | 1.000 (all 4 essays, all prompts) | 1.000 naive, 0.938 formal, 0.786 personal, 0.714 lab, 0.643 adversarial | 0.759 mean (13.6% also perfect) | **Strong for ChatGPT/Gemini, moderate for Claude.** Fires reliably on generic prompts; Claude evades on personal/casual text. Threshold ≥0.95 correctly separates. |
+| **Comma density** (per 100 words) | 4.83–6.81 (all above human range) | 2.16–2.49 casual (human range!), 3.79 formal, 4.56 lab | 2.80 mean | **Strong for ChatGPT/Gemini, weak for Claude.** Claude's casual output is indistinguishable from human comma patterns. Threshold ≥4.5 catches only formal Claude + all ChatGPT/Gemini. |
+| **Average word length** | 4.53–5.65 | 4.11–4.29 casual (human range), 4.80–5.88 formal/lab | 4.28 mean | **Model- and prompt-dependent.** Claude matches human range on casual text; formal/lab elevated. Threshold ≥4.8 avoids casual false positives. |
 
-Starter diversity has the strongest theoretical stability claim because it stems from transformer architecture (repetition penalties, attention mechanisms) rather than training data or prompt style. If validated on a larger corpus (20+ AI essays across models), it would be a strong convergence channel. Comma density and average word length serve as **corroboration signals** that can be downplayed in population settings where they risk false positives (e.g., ESL populations with naturally higher formal comma usage).
+**Design principle: convergence, not standalone detection.** No single signal reliably identifies all AI output across all models and prompt styles. That is expected and acceptable. These signals are valuable as **convergence channels** — when starter diversity + comma density + sentence uniformity + organizational patterns all co-occur, the cumulative picture is meaningful even if any individual signal is ambiguous. The system's Phase 2 convergence architecture (multiplier at 3+ channels) is designed exactly for this.
 
-**Validation path**: Multiple approaches available:
-- **Claude Code subagents** — can generate Anthropic model responses directly (no API key needed, fastest path for Claude-generated test essays)
-- **OpenRouter API** (available in `GitHub/Reframe` project directory) — route prompts to multiple providers (GPT-4o, Gemini, Llama, Mistral). Preference for free tier where available.
-- **Direct model access** — Gemini Pro and Claude Sonnet/Opus available directly.
-- **Target**: 20+ essays across 5+ models, in both discussion (200 word) and essay (500-1000 word) formats, with naive/roleplay/adversarial prompt variants.
+A signal that catches ChatGPT/Gemini 80% of the time and Claude 40% of the time is doing real work in the pipeline. It doesn't need to catch everything — no single signal does. Under the engagement frame, these signals contribute to cohort-relative baselines (Mechanism 1): a class where most students write with natural starter repetition and moderate comma density will surface the submission with perfect diversity on all three as a statistical outlier *relative to that class*.
 
-**Key finding**: Structural signals are **model-dependent for rhythm** (sentence uniformity) but potentially **model-stable for repetition avoidance** (starter diversity). ChatGPT tends rhythmic; Gemini Pro and Claude produce human-like rhythm but MAY still show the starter diversity and comma density patterns. Expanded testing is the next priority — need to confirm these patterns before building detectors around them.
+**Bias protections — who bears the cost of false signals (#ALGORITHMIC_JUSTICE):**
+
+These signals carry differential risk across populations:
+
+- **Comma density**: Formal academic ESL writing may produce elevated comma density through subordinate clause patterns learned in grammar-focused instruction. When ESL error patterns are detected, comma density scoring is zeroed — the signal is silenced rather than reduced, because formal comma usage in ESL writing is a *linguistic asset* (#COMMUNITY_CULTURAL_WEALTH), not an indicator of disengagement.
+- **Avg word length**: Correlates with education level and reading exposure. Students from under-resourced schools may use shorter words not because they're disengaged but because they haven't had access to the vocabulary (#ETHNIC_STUDIES — the "word gap" is a resource gap, not a capacity gap). Cohort-relative measurement (Mechanism 1) mitigates this by comparing within-class, not against absolute thresholds.
+- **Starter diversity**: Lowest bias risk. Humans across all populations naturally repeat sentence starters. The signal measures an architectural property of transformer models, not a cultural or educational pattern. However: students writing in a second language may produce high starter diversity through careful construction rather than AI use (#LANGUAGE_JUSTICE). The ESL context should moderate this signal too.
+
+**Validation status**: 13 AI essays across 4 models (ChatGPT, Gemini Pro, Gemini Thinking, Claude Sonnet) + 200 DAIGT human essays. Signals implemented in `organizational_analyzer.py`, wired into convergence in `Academic_Dishonesty_Check_v2.py`. Calibration snapshot: `data/calibration_snapshots/claude_validation.json`. Further validation needed via OpenRouter (GPT-4o, Llama, Mistral) to characterize model-dependency more broadly.
 
 **Reoriented signals** (not excluded — reframed from detection to engagement interpretation):
 
@@ -161,11 +165,11 @@ This signal is ambiguous by design: it COULD indicate AI use, or it COULD indica
 
 The engagement frame is better than the detection frame, but it has its own blind spots. Naming these is essential (#FEMINIST_TECHNOSCIENCE — no view is neutral):
 
-1. **Text-only visibility**: The system measures text-based engagement. Students who engage through oral contribution, visual work, physical practice, or collaborative activity outside the submission are invisible. The system should never be the SOLE measure of engagement — it's one input to the teacher's judgment. (#COMMUNITY_CULTURAL_WEALTH — oral traditions, embodied knowledge, relational learning are assets this system cannot measure.)
+1. **Submission-based visibility**: The system analyzes what students submit — including audio (transcribed via whisper.cpp) and non-English text (translated via Ollama). It does NOT exclude oral submissions. But engagement happening OUTSIDE submissions — classroom discussion, group work, embodied practice — is not captured. The system should never be the SOLE measure of engagement; it's one input to the teacher's judgment. (#COMMUNITY_CULTURAL_WEALTH — embodied knowledge and relational learning that don't become submissions are assets this system cannot measure.)
 
-2. **Individual authorship assumption**: The HPD categories (authentic voice, personal investment, cognitive struggle) privilege individualistic expression. Community-oriented students may express engagement through collective reference ("our community believes"), relational language ("my grandmother taught me"), and cultural knowledge that the system may score lower on "personal voice" precisely because the voice is communal, not individual. This observation needs deeper analysis — the specific manifestations of communal voice vary significantly across cultural contexts (Indigenous knowledge sharing, Black church rhetorical traditions, Latinx familismo, Asian collectivist framing, etc.) and the system's ability to recognize each is untested. Cohort calibration partially addresses this (the system learns what engagement looks like in each specific class) but the HPD's pattern library may need expansion to recognize communal engagement markers alongside individual ones. (#INTERDEPENDENCE — this is an active design challenge, not a solved problem.)
+2. **Communal voice — partially addressed, not fully**: The HPD already includes communal expression markers at high weights: "in my culture" (0.9), "my family/ancestors/elders/community believe/teach/say/told me" (0.9), "our community" (0.6), "in my/our neighborhood/community/town" (0.9). So the system does NOT simply privilege individualistic expression — communal voice IS recognized and weighted heavily. However, the specific manifestations of communal voice vary across cultural contexts (Indigenous knowledge sharing, Black church rhetorical traditions, Latinx familismo, Asian collectivist framing) and the pattern library's coverage of each is untested. Cohort calibration will further adapt to specific class populations. The remaining gap: communal voice expressed through RELATIONAL structures that don't match the current pattern templates may still be missed. (#INTERDEPENDENCE — the foundation is in place; coverage depth needs real-world validation.)
 
-3. **English-language analysis**: Every signal in the system operates on English text. Translanguaging, code-switching, and non-English expression are partially recognized (HPD has translanguaging markers) but the system's analytical power drops sharply outside monolingual English. This is a structural limit, not a bug to fix. (#LANGUAGE_JUSTICE)
+3. **English-centric analysis**: The preprocessing pipeline can translate non-English submissions (Ollama chunked translation) and transcribe audio (whisper.cpp), so non-English and oral submissions ARE supported. The HPD also has translanguaging markers ("I don't know the English word for", "This is hard to translate"). However, the engagement signals themselves (pattern matching, sentence structure analysis) operate on the English output of translation — nuance, register, and cultural expression that don't survive translation are lost. This is a structural limit of working through translation, not of the system's design intent. (#LANGUAGE_JUSTICE)
 
 4. **Temporal snapshot**: Each analysis captures a single assignment. A student processing ideas slowly (#CRIP_TIME) may show low engagement on one assignment but deep engagement over a semester. Without longitudinal data, the system penalizes different processing speeds.
 
@@ -322,7 +326,7 @@ The DAIGT test corpus gives us formal competition essays from strong writers. It
 
 - **Plagiarism checker** — Turnitin's job
 - **Perplexity/burstiness** — requires running an LLM, marginal benefit given engagement framing
-- **Individual-pair similarity flagging** — equity risks too high; class-level only
+- **Individual-pair similarity flagging at moderate thresholds** — equity risks too high; moderate similarity (30-80%) stays class-level only, since similar language can reflect community cultural wealth, collaborative learning, or shared cultural knowledge. **Exception**: near-duplicate pairs (>90% cosine similarity) ARE surfaced as informational observations ("these submissions share identical passages"), never as verdicts. Verbatim duplication is factual information teachers need.
 - **Automated penalty/grading** — teacher is ALWAYS the decision-maker
 - **Student-facing scores** — students see engagement TRAJECTORY (growth), never suspicion levels
 

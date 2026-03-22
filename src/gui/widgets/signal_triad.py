@@ -1,13 +1,13 @@
 """
-SignalTriad — Verdict-first authorship signal display.
+SignalTriad — Verdict-first engagement signal display.
 
 Replaces three separate equal-weight bars with:
-  • A concern-level badge + human-presence % on a single header row
-  • One "Authorship Spectrum" bar: fill = human presence (0 → AI, 100 → human)
+  • A conversation-opportunity badge + personal-connection % on a single header row
+  • One "Engagement Spectrum" bar: fill = personal connection (0 → limited, 100 → strong)
     with a gradient (rose → amber → teal) so the fill edge immediately shows
     where the submission sits on the spectrum
   • A midpoint equilibrium marker at 50%
-  • A compact support row: suspicion score · authenticity score · HP%
+  • A compact support row: engagement depth · authenticity score · connection%
 
 This makes the big picture obvious (single bar = one conclusion) while
 preserving the three underlying metrics for teachers who want the detail.
@@ -48,7 +48,7 @@ _TEAL  = (88,  200, 184)  # high HP: human
 
 
 def _hp_color(hp_frac: float) -> QColor:
-    """Colour at a given human-presence fraction (0 = AI/rose, 1 = human/teal)."""
+    """Colour at a given personal-connection fraction (0 = limited/rose, 1 = strong/teal)."""
     if hp_frac <= 0.5:
         return _lerp_color(_ROSE, _AMBER, hp_frac / 0.5)
     return _lerp_color(_AMBER, _TEAL, (hp_frac - 0.5) / 0.5)
@@ -133,7 +133,7 @@ class SignalTriad(QWidget):
         trk_c = QColor(BG_INSET)
         bdr_c = QColor(BORDER_DARK)
 
-        # ── Row 1: header — "AUTHORSHIP SPECTRUM"  HP%  [CONCERN] ───────────
+        # ── Row 1: header — "ENGAGEMENT SPECTRUM"  conn%  [OPPORTUNITY] ─────
         y = self._PAD
         row_h = px(13)
 
@@ -142,7 +142,7 @@ class SignalTriad(QWidget):
         p.drawText(
             QRectF(pd, y, w * 0.45, row_h),
             Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
-            "AUTHORSHIP SPECTRUM",
+            "ENGAGEMENT SPECTRUM",
         )
 
         # Concern badge — measure first so HP text can avoid it
@@ -164,7 +164,7 @@ class SignalTriad(QWidget):
             p.drawText(
                 QRectF(hp_left, y, max(hp_avail, 0), row_h),
                 Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight,
-                hp_str + " human",
+                hp_str + " connected",
             )
 
         badge_rect = QRectF(bx, by, bw, bh)
@@ -194,12 +194,12 @@ class SignalTriad(QWidget):
         p.drawText(
             QRectF(bar_x, y, bar_w * 0.5, leg_h + 2),
             Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
-            "← AI signals",
+            "← limited engagement",
         )
         p.drawText(
             QRectF(bar_x, y, bar_w, leg_h + 2),
             Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight,
-            "human →",
+            "strong engagement →",
         )
 
         y += leg_h + 4
@@ -283,9 +283,9 @@ class SignalTriad(QWidget):
 
         # ── Row 5: support metrics ─────────────────────────────────────────────
         sup_h   = px(10)
-        sus_lbl = f"suspicion {self._suspicion:.2f}"
+        sus_lbl = f"depth {self._suspicion:.2f}"
         aut_lbl = f"auth {self._authenticity:.2f}"
-        hp_lbl  = f"{hp_str} human"
+        hp_lbl  = f"{hp_str} connection"
         support = f"{sus_lbl}  ·  {aut_lbl}  ·  {hp_lbl}"
 
         p.setFont(sup_font)

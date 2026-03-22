@@ -389,7 +389,7 @@ class CohortScatterWidget(QWidget):
         p.translate(10, pr.top() + pr.height() // 2)
         p.rotate(-90)
         p.drawText(QRect(-pr.height() // 2, 0, pr.height(), 14),
-                   Qt.AlignmentFlag.AlignCenter, "SUSPICION")
+                   Qt.AlignmentFlag.AlignCenter, "ENGAGEMENT DEPTH")
         p.restore()
 
         # Y-axis hint labels inside the plot (top and bottom)
@@ -398,10 +398,10 @@ class CohortScatterWidget(QWidget):
         p.setFont(hint_font)
         p.setPen(QColor(204, 82, 130, 155))
         p.drawText(QRect(pr.left() + 4, pr.top() + 3, pr.width() - 8, 12),
-                   Qt.AlignmentFlag.AlignLeft, "\u2191 more suspicious")
+                   Qt.AlignmentFlag.AlignLeft, "\u2191 conversation needed")
         p.setPen(QColor(88, 200, 176, 155))
         p.drawText(QRect(pr.left() + 4, pr.bottom() - 14, pr.width() - 8, 12),
-                   Qt.AlignmentFlag.AlignLeft, "\u2193 less suspicious")
+                   Qt.AlignmentFlag.AlignLeft, "\u2193 strong engagement")
 
         # ── X axis: label ─────────────────────────────────────────────────
         x_label_font = QFont()
@@ -416,11 +416,11 @@ class CohortScatterWidget(QWidget):
         p.setFont(hint_font)
         p.setPen(QColor(204, 82, 130, 130))
         p.drawText(QRect(pr.left(), pr.bottom() + 32, pr.width() // 2, 12),
-                   Qt.AlignmentFlag.AlignLeft, "\u2190 AI signals")
+                   Qt.AlignmentFlag.AlignLeft, "\u2190 less authentic")
         p.setPen(QColor(88, 200, 176, 130))
         p.drawText(QRect(pr.left() + pr.width() // 2, pr.bottom() + 32,
                          pr.width() // 2, 12),
-                   Qt.AlignmentFlag.AlignRight, "human \u2192")
+                   Qt.AlignmentFlag.AlignRight, "more authentic \u2192")
 
         # ── Dots with CRT bloom ───────────────────────────────────────────
         show_names = len(self._rows) <= 20
@@ -500,7 +500,7 @@ class CohortScatterWidget(QWidget):
             concern = _CONCERN_LABEL.get(row.get("concern_level", "none"), "")
             auth = self._auth_value(row)
             susp = self._susp_value(row)
-            tip = f"{name}  \u00b7  {concern}  \u00b7  auth {auth:.1f}  \u00b7  susp {susp:.1f}"
+            tip = f"{name}  \u00b7  {concern}  \u00b7  auth {auth:.1f}  \u00b7  depth {susp:.1f}"
             tip_font = QFont()
             tip_font.setPixelSize(px(11))
             p.setFont(tip_font)
@@ -1357,20 +1357,20 @@ class StudentTrajectoryView(QFrame):
 
         labels = [r.get("assignment_name", "?")[:12] for r in self._rows]
 
-        # Suspicion sparkline
+        # Engagement depth sparkline
         sus_data = [(labels[i], r.get("adjusted_suspicious_score") or r.get("suspicious_score"))
                     for i, r in enumerate(self._rows)]
-        sus_spark = SparklineWidget("Suspicion Score", BURN_RED)
+        sus_spark = SparklineWidget("Engagement Depth", BURN_RED)
         sus_spark.set_data(sus_data)
-        self._spark_layout.addWidget(_section_label("Suspicion Score Over Semester"))
+        self._spark_layout.addWidget(_section_label("Engagement Depth Over Semester"))
         self._spark_layout.addWidget(sus_spark)
 
-        # Human presence sparkline
+        # Personal connection sparkline
         hp_data = [(labels[i], r.get("human_presence_confidence"))
                    for i, r in enumerate(self._rows)]
-        hp_spark = SparklineWidget("Human Presence %", TERM_GREEN)
+        hp_spark = SparklineWidget("Personal Connection %", TERM_GREEN)
         hp_spark.set_data(hp_data)
-        self._spark_layout.addWidget(_section_label("Human Presence Confidence"))
+        self._spark_layout.addWidget(_section_label("Personal Connection"))
         self._spark_layout.addWidget(hp_spark)
 
         # Word count sparkline — check for burnout signal
@@ -1939,12 +1939,12 @@ class StudentDetailView(QFrame):
             cols = QHBoxLayout()
             sus_col  = QVBoxLayout()
             auth_col = QVBoxLayout()
-            sus_col_hdr = QLabel("Suspicion Markers")
+            sus_col_hdr = QLabel("Structural Indicators")
             sus_col_hdr.setStyleSheet(
                 f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
                 f" background: transparent; border: none;")
             sus_col.addWidget(sus_col_hdr)
-            auth_col_hdr = QLabel("Authenticity Markers")
+            auth_col_hdr = QLabel("Engagement Markers")
             auth_col_hdr.setStyleSheet(
                 f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px; font-weight: bold;"
                 f" background: transparent; border: none;")

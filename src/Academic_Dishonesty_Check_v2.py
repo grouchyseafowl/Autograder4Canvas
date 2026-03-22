@@ -80,6 +80,20 @@ except ImportError:
     HAS_ASSIGNMENT_CONFIG = False
     print("⚠ Warning: assignment_config not available - Using default settings")
 
+# Import gibberish gate for pre-analysis filtering
+try:
+    from insights.gibberish_gate import check_gibberish, GibberishResult
+    HAS_GIBBERISH_GATE = True
+except ImportError:
+    HAS_GIBBERISH_GATE = False
+
+# Import citation checker for engagement signal
+try:
+    from insights.citation_checker import extract_citations
+    HAS_CITATION_CHECKER = True
+except ImportError:
+    HAS_CITATION_CHECKER = False
+
 # Version info
 VERSION = "2.0.0"
 VERSION_DATE = "2025-12-26"
@@ -151,6 +165,68 @@ def get_output_base_dir() -> Path:
         documents = Path.home() / "Documents"
     
     return documents / "Autograder Rationales"
+
+
+# =============================================================================
+# UNICODE NORMALIZATION
+# =============================================================================
+
+# Zero-width and invisible characters that could be used for text manipulation
+_ZERO_WIDTH_CHARS = re.compile(
+    '[\u200b\u200c\u200d\u200e\u200f'   # zero-width space/joiner/non-joiner/marks
+    '\u2060\u2061\u2062\u2063\u2064'     # word joiner, invisible operators
+    '\ufeff'                              # byte order mark
+    '\u00ad'                              # soft hyphen
+    '\u034f'                              # combining grapheme joiner
+    '\u061c'                              # Arabic letter mark
+    '\u115f\u1160'                        # Hangul fillers
+    '\u17b4\u17b5'                        # Khmer invisible
+    '\u180e'                              # Mongolian vowel separator
+    '\uffa0'                              # halfwidth Hangul filler
+    ']'
+)
+
+
+def _detect_unicode_manipulation(text: str) -> Tuple[int, List[str]]:
+    """Detect zero-width / invisible characters BEFORE stripping them.
+
+    This is a Tier 1 integrity signal — invisible-character insertion is
+    active gaming behavior (circumvention, not ambiguity).
+
+    Returns:
+        (count_found, detail_strings) — count of invisible chars and
+        human-readable descriptions of what was found.
+    """
+    matches = _ZERO_WIDTH_CHARS.findall(text)
+    if not matches:
+        return 0, []
+
+    import unicodedata
+    char_names = {}
+    for ch in matches:
+        name = unicodedata.name(ch, f'U+{ord(ch):04X}')
+        char_names[name] = char_names.get(name, 0) + 1
+
+    details = [f"{count}x {name}" for name, count in char_names.items()]
+    return len(matches), details
+
+
+def _normalize_unicode(text: str) -> str:
+    """Strip zero-width characters and normalize whitespace.
+
+    Catches invisible-character insertion (a gaming technique where students
+    embed zero-width characters to break pattern detection or inflate word
+    count).  Detection is handled separately by _detect_unicode_manipulation();
+    this function normalizes so the actual text can be analyzed accurately.
+    """
+    import unicodedata
+    # NFC normalization first (canonical composition)
+    text = unicodedata.normalize('NFC', text)
+    # Strip zero-width / invisible characters
+    text = _ZERO_WIDTH_CHARS.sub('', text)
+    # Normalize whitespace (multiple spaces → single, strip leading/trailing)
+    text = re.sub(r'[ \t]+', ' ', text)
+    return text.strip()
 
 
 # =============================================================================
@@ -372,6 +448,24 @@ class AnalysisResult:
     smoking_gun: bool = False
     smoking_gun_details: List[str] = field(default_factory=list)
 
+    # Tier 1 integrity signals (engagement reframe)
+    # These are binary, non-negotiable flags — no cultural bias risk.
+    unicode_manipulation: bool = False
+    unicode_manipulation_details: List[str] = field(default_factory=list)
+    gibberish_detected: bool = False
+    gibberish_reason: str = ""
+    gibberish_detail: str = ""
+
+    # Citation analysis (engagement signal)
+    citation_count: int = 0
+    specific_citation_count: int = 0
+    generic_reading_ref_count: int = 0
+    citations: List[Any] = field(default_factory=list)
+
+    # Engagement reframe signals (Phase A)
+    # These measure HOW the student engaged, not WHETHER they cheated.
+    engagement_signals: Optional[Dict[str, Any]] = None
+
     # Guidance
     conversation_starters: List[str] = field(default_factory=list)
     revision_guidance: List[str] = field(default_factory=list)
@@ -528,10 +622,50 @@ class DishonestyAnalyzer:
         smoking_gun, smoking_gun_details, artifact_counts = \
             self._detect_raw_ai_artifacts(text)
 
+        # Tier 1 integrity signal: detect unicode manipulation BEFORE stripping
+        unicode_manipulation_count, unicode_manipulation_details = \
+            _detect_unicode_manipulation(text)
+
+        # Strip zero-width characters and normalize unicode before analysis
+        text = _normalize_unicode(text)
+
         # Clean text
         text = self._clean_text(text)
         word_count = len(text.split())
-        
+
+        # Tier 1 integrity signal: gibberish gate (incoherence check)
+        # Catches keyboard mash, Lorem Ipsum, repetition spam BEFORE
+        # expensive analysis runs. Conservative — only flags obvious cases.
+        gibberish_result = None
+        if HAS_GIBBERISH_GATE:
+            try:
+                gibberish_result = check_gibberish(text)
+            except Exception:
+                pass
+
+        # Engagement signal: citation extraction
+        # Distinguishes specific citations (author-year, URL, DOI, quoted title)
+        # from generic references ("the reading says...").
+        # Source depth is a Tier 3 engagement signal per spec.
+        citations = []
+        specific_citation_count = 0
+        generic_reading_ref_count = 0
+        if HAS_CITATION_CHECKER:
+            try:
+                citations = extract_citations(
+                    text, student_id=student_id, student_name=student_name
+                )
+                specific_citation_count = sum(
+                    1 for c in citations
+                    if c.citation_type != 'reading_reference'
+                )
+                generic_reading_ref_count = sum(
+                    1 for c in citations
+                    if c.citation_type == 'reading_reference'
+                )
+            except Exception:
+                pass
+
         # Analyze with built-in patterns
         suspicious_score, authenticity_score, marker_counts, markers_found, \
             cognitive_protection_multiplier = self._analyze_with_builtin_patterns(text)
@@ -656,6 +790,30 @@ class DishonestyAnalyzer:
                     # AI models don't make these mistakes
                     esl_adjustment = 0.6  # 40% reduction in suspicious score
                     authenticity_score += 2.0  # Boost authenticity
+
+                    # Zero bias-carrying signals for ESL students:
+                    # Comma density: formal ESL writing uses subordinate clauses
+                    #   learned in grammar instruction — a linguistic ASSET, not
+                    #   a disengagement signal (#COMMUNITY_CULTURAL_WEALTH)
+                    # Avg word length: correlates with education resources, not
+                    #   engagement (#ETHNIC_STUDIES — word gap = resource gap)
+                    # Starter diversity: careful L2 construction may produce high
+                    #   diversity without AI (#LANGUAGE_JUSTICE)
+                    if org_analysis:
+                        sent = org_analysis.details.get('sentence_analysis', {})
+                        esl_zeroed = (
+                            sent.get('comma_density_score', 0) +
+                            sent.get('avg_word_length_score', 0) +
+                            sent.get('starter_diversity_score', 0)
+                        )
+                        if esl_zeroed > 0:
+                            ai_org_weight = self._marker_weights.get('ai_specific_org', 1.0)
+                            suspicious_score -= esl_zeroed * ai_org_weight
+                            suspicious_score = max(suspicious_score, 0.0)
+                            context_adjustments.append(
+                                f"ESL: zeroed structural signals "
+                                f"(-{esl_zeroed * ai_org_weight:.2f})"
+                            )
             except Exception as e:
                 # Don't let ESL detection failure break analysis
                 print(f"  ⚠ ESL detection skipped: {e}")
@@ -738,11 +896,31 @@ class DishonestyAnalyzer:
             convergence_channels.append('authenticity_deficit')
         # Sentence uniformity from org analysis (gradient zone: < 0.35)
         if org_analysis:
-            sent_vc = org_analysis.details.get('sentence_analysis', {}).get(
-                'variance_coefficient', 1.0)
+            sent_analysis = org_analysis.details.get('sentence_analysis', {})
+            sent_vc = sent_analysis.get('variance_coefficient', 1.0)
             if sent_vc < 0.35:
                 converging += 1
                 convergence_channels.append('uniformity')
+            # Starter diversity: use SCORED value (requires 8+ sentences
+            # to avoid small-sample false positives — short ESL texts with
+            # 5 formal sentences achieve 1.0 by chance)
+            # (#LANGUAGE_JUSTICE, #ALGORITHMIC_JUSTICE)
+            starter_div_score = sent_analysis.get('starter_diversity_score', 0.0)
+            if starter_div_score > 0:
+                converging += 1
+                convergence_channels.append('starter_diversity')
+            # Comma density + avg word length: CORROBORATION ONLY.
+            # Skip entirely when ESL detected — these signals carry
+            # population-dependent bias risk (#LANGUAGE_JUSTICE).
+            if not esl_detected:
+                comma_d_score = sent_analysis.get('comma_density_score', 0.0)
+                if comma_d_score > 0:
+                    converging += 1
+                    convergence_channels.append('comma_density')
+                awl_score = sent_analysis.get('avg_word_length_score', 0.0)
+                if awl_score > 0:
+                    converging += 1
+                    convergence_channels.append('avg_word_length')
 
         if converging >= 3 and suspicious_score > 0:
             convergence_multiplier = 1.0 + 0.2 * (converging - 2)
@@ -814,6 +992,36 @@ class DishonestyAnalyzer:
                 f"AI-specific organizational patterns detected (NOT subject to cognitive protection): {'; '.join(org_details)}"
             )
 
+        # Tier 1 integrity signal: gibberish / incoherence gate
+        gibberish_detected = False
+        gibberish_reason = ""
+        gibberish_detail = ""
+        if gibberish_result and gibberish_result.is_gibberish:
+            gibberish_detected = True
+            gibberish_reason = gibberish_result.reason
+            gibberish_detail = gibberish_result.detail
+            marker_counts['gibberish'] = 1
+            markers_found['gibberish'] = [
+                f"Incoherence detected ({gibberish_result.reason}): "
+                f"{gibberish_result.detail}"
+            ]
+            context_applied.append(
+                f"⚠ INTEGRITY: Submission flagged as incoherent — "
+                f"{gibberish_result.reason}: {gibberish_result.detail}"
+            )
+
+        # Tier 1 integrity signal: unicode manipulation
+        unicode_manipulation = unicode_manipulation_count > 0
+        if unicode_manipulation:
+            marker_counts['unicode_manipulation'] = unicode_manipulation_count
+            markers_found['unicode_manipulation'] = [
+                f"Text manipulation detected: {'; '.join(unicode_manipulation_details)}"
+            ]
+            context_applied.append(
+                f"⚠ INTEGRITY: {unicode_manipulation_count} invisible/zero-width "
+                f"characters detected and stripped before analysis"
+            )
+
         # Smoking gun overrides concern level — chatbot paste artifacts are definitive
         if smoking_gun:
             concern_level = 'high'
@@ -824,6 +1032,17 @@ class DishonestyAnalyzer:
             context_applied.append(
                 "⚠ SMOKING GUN: Raw chatbot artifact(s) detected — concern level forced to HIGH"
             )
+
+        # ── Engagement reframe: compute engagement signals ──────────────
+        # Maps existing HPD categories to the engagement frame from the spec.
+        # These measure HOW the student engaged, not WHETHER they cheated.
+        engagement_signals = self._compute_engagement_signals(
+            human_presence_result=human_presence_result,
+            org_analysis=org_analysis,
+            specific_citation_count=specific_citation_count,
+            generic_reading_ref_count=generic_reading_ref_count,
+            word_count=word_count,
+        )
 
         return AnalysisResult(
             student_id=student_id,
@@ -846,6 +1065,16 @@ class DishonestyAnalyzer:
             student_context=student_context,
             student_context_applied=student_context_applied,
             student_context_adjustments=student_context_adjustments,
+            unicode_manipulation=unicode_manipulation,
+            unicode_manipulation_details=unicode_manipulation_details,
+            gibberish_detected=gibberish_detected,
+            gibberish_reason=gibberish_reason,
+            gibberish_detail=gibberish_detail,
+            citation_count=len(citations),
+            specific_citation_count=specific_citation_count,
+            generic_reading_ref_count=generic_reading_ref_count,
+            citations=citations,
+            engagement_signals=engagement_signals,
             conversation_starters=conversation_starters,
             revision_guidance=revision_guidance,
             verification_questions=verification_questions,
@@ -861,6 +1090,126 @@ class DishonestyAnalyzer:
             ),
         )
     
+    def _compute_engagement_signals(
+        self,
+        human_presence_result,
+        org_analysis,
+        specific_citation_count: int,
+        generic_reading_ref_count: int,
+        word_count: int,
+    ) -> Dict[str, Any]:
+        """Compute engagement signals from HPD categories and structural analysis.
+
+        Maps existing analysis to the engagement frame from the spec:
+          - Personal connection  ← HPD authentic_voice (15%)
+          - Intellectual work    ← HPD cognitive_struggle (20%)
+          - Course engagement    ← HPD contextual_grounding (35%) + citations
+          - Personal investment  ← HPD emotional_stakes (20%)
+          - Real-time thinking   ← HPD productive_messiness (10%)
+          - Source depth         ← citation checker (specific vs generic)
+
+        Returns a dict with per-dimension scores and an overall engagement depth.
+        """
+        signals: Dict[str, Any] = {}
+
+        # Extract HPD category scores if available
+        if human_presence_result is not None:
+            hp = human_presence_result
+
+            def _dim(cat_score, label: str) -> Dict[str, Any]:
+                """Build one engagement dimension from an HPD CategoryScore."""
+                raw = cat_score.raw_score
+                weighted = cat_score.weighted_score
+                markers = cat_score.marker_count
+                # Normalize to 0-10 scale for display
+                # HPD raw_score varies by category; use weighted for consistency
+                # weighted is already relative to category weight (0-1 weight × raw)
+                return {
+                    'label': label,
+                    'score': round(weighted, 2),
+                    'marker_count': markers,
+                    'markers': cat_score.markers_found[:5],  # top 5 for brevity
+                }
+
+            signals['personal_connection'] = _dim(
+                hp.authentic_voice, 'Personal connection'
+            )
+            signals['intellectual_work'] = _dim(
+                hp.cognitive_struggle, 'Intellectual work'
+            )
+            signals['course_engagement'] = _dim(
+                hp.contextual_grounding, 'Course engagement'
+            )
+            signals['personal_investment'] = _dim(
+                hp.emotional_stakes, 'Personal investment'
+            )
+            signals['real_time_thinking'] = _dim(
+                hp.productive_messiness, 'Real-time thinking'
+            )
+
+            # Overall engagement depth based on total HP confidence
+            hp_pct = hp.confidence_percentage
+            if hp_pct >= 30.0:
+                depth = 'strong'
+            elif hp_pct >= 15.0:
+                depth = 'moderate'
+            elif hp_pct >= 5.0:
+                depth = 'limited'
+            else:
+                depth = 'minimal'
+            signals['engagement_depth'] = depth
+            signals['engagement_confidence'] = round(hp_pct, 1)
+        else:
+            signals['engagement_depth'] = 'unavailable'
+            signals['engagement_confidence'] = None
+
+        # Source depth: specific citations vs generic reading references
+        signals['source_depth'] = {
+            'specific_citations': specific_citation_count,
+            'generic_references': generic_reading_ref_count,
+            'total': specific_citation_count + generic_reading_ref_count,
+            'interpretation': (
+                'Strong source engagement'
+                if specific_citation_count >= 2
+                else 'Some source engagement'
+                if specific_citation_count >= 1 or generic_reading_ref_count >= 1
+                else 'No source references detected'
+            ),
+        }
+
+        # Structural note from org analysis (supplementary context, NOT verdict)
+        if org_analysis:
+            sent = org_analysis.details.get('sentence_analysis', {})
+            structural_notes = []
+            vc = sent.get('variance_coefficient', 1.0)
+            if vc < 0.35:
+                structural_notes.append(
+                    f"Uniform sentence rhythm (VC={vc:.2f}) — common in "
+                    f"ChatGPT output but also appears in careful human writers"
+                )
+            sd = sent.get('starter_diversity', 0.0)
+            if sd >= 0.95:
+                structural_notes.append(
+                    f"Perfect sentence-starter diversity ({sd:.2f}) — "
+                    f"AI avoids repeated first words due to architectural constraints"
+                )
+            cd = sent.get('comma_density', 0.0)
+            if cd >= 4.5:
+                structural_notes.append(
+                    f"High comma density ({cd:.1f}/100 words) — "
+                    f"may indicate complex AI-style subordinate clauses"
+                )
+            signals['structural_notes'] = structural_notes
+
+        # Conversation opportunity: if engagement is limited/minimal,
+        # suggest a conversation starter based on which dimensions are lowest
+        if signals.get('engagement_depth') in ('limited', 'minimal'):
+            signals['conversation_opportunity'] = True
+        else:
+            signals['conversation_opportunity'] = False
+
+        return signals
+
     def _detect_raw_ai_artifacts(self, raw_text: str) -> tuple:
         """
         Detect copy-paste artifacts from chatbot output before HTML cleaning destroys them.
@@ -1122,20 +1471,41 @@ class DishonestyAnalyzer:
     ) -> str:
         """Determine concern level based on scores.
 
+        Authenticity thresholds are mode-sensitive: when the assignment mode
+        suppresses personal voice (e.g. essay, lab, outline), the expected
+        authenticity baseline is lower and thresholds shift accordingly.
+        Without this adjustment, formal assignment modes produce false
+        positives because students writing well-structured essays don't
+        use personal anecdotes — which is correct behavior, not a signal
+        of disengagement.
+
         If *word_count* is provided and below
         ``MIN_WORDS_FOR_RELIABLE_ANALYSIS``, the result is capped at ``'low'``
         because very short submissions lack enough text for authenticity
         markers to register reliably.
         """
-        # --- score-based determination (unchanged logic) ---
+        # Mode-sensitive authenticity thresholds:
+        # weight_personal_voice < 0.8 means the mode expects less personal voice,
+        # so lower the authenticity thresholds proportionally.
+        wpv = 1.0
+        if self._aic_config is not None:
+            wpv = self._aic_config.get('weight_personal_voice', 1.0)
+        # Scale: wpv=1.0 → no shift; wpv=0.5 → thresholds halved
+        auth_scale = max(0.3, min(1.0, wpv))
+
+        auth_high = 2.0 * auth_scale       # default 2.0, essay mode ~1.0
+        auth_elevated = 1.5 * auth_scale    # default 1.5, essay mode ~0.75
+        auth_moderate = 3.0 * auth_scale    # default 3.0, essay mode ~1.5
+
+        # --- score-based determination (mode-adaptive) ---
         # High: High suspicious AND low authenticity
-        if suspicious > 5.0 and authenticity < 2.0:
+        if suspicious > 5.0 and authenticity < auth_high:
             level = 'high'
         # Elevated: Moderate suspicious OR very low authenticity
-        elif suspicious > 4.0 or authenticity < 1.5:
+        elif suspicious > 4.0 or authenticity < auth_elevated:
             level = 'elevated'
         # Moderate: Some concerning patterns
-        elif suspicious > 2.5 or authenticity < 3.0:
+        elif suspicious > 2.5 or authenticity < auth_moderate:
             level = 'moderate'
         # Low: Minor issues
         elif suspicious > 1.5:

@@ -31,6 +31,7 @@ from insights.models import (
     ContradictionSignal,
     EmbeddingCluster,
     KeywordHit,
+    PairwiseSimilarityStats,
     PerSubmissionSummary,
     QuickAnalysisResult,
     SharedReference,
@@ -208,7 +209,12 @@ class QuickAnalyzer:
         result.sentiments, result.sentiment_distribution = self._vader_sentiment(texts, meta)
 
         self._progress("Clustering submissions...")
-        result.clusters, result.embedding_outlier_ids = self._embedding_clusters(texts, meta)
+        result.clusters, result.embedding_outlier_ids, _embeddings, _embed_sids = (
+            self._embedding_clusters(texts, meta)
+        )
+
+        self._progress("Computing pairwise similarity...")
+        result.pairwise_similarity = self._pairwise_similarity(_embeddings, _embed_sids)
 
         self._progress("Detecting shared references...")
         result.shared_references = self._shared_references(texts)
@@ -561,20 +567,33 @@ class QuickAnalyzer:
 
     def _embedding_clusters(
         self, texts: Dict[str, str], meta: Dict[str, Dict]
-    ) -> Tuple[List[EmbeddingCluster], List[str]]:
+    ) -> Tuple[List[EmbeddingCluster], List[str], Optional[Any], Optional[List[str]]]:
+        """Run K-means clustering on sentence embeddings.
+
+        Returns
+        -------
+        clusters : List[EmbeddingCluster]
+        outlier_ids : List[str]
+        embeddings : numpy ndarray or None
+            Raw embedding matrix (n_submissions x embedding_dim).
+            Returned so callers can pass it to _pairwise_similarity()
+            without a second encode pass.
+        embed_sids : List[str] or None
+            Student IDs in the same row order as `embeddings`.
+        """
         try:
             from sentence_transformers import SentenceTransformer
             from sklearn.cluster import KMeans
             import numpy as np
         except ImportError:
             log.info("sentence-transformers/sklearn not available — skipping clustering")
-            return [], []
+            return [], [], None, None
 
         sids = list(texts.keys())
         docs = [texts[sid] for sid in sids]
 
         if len(docs) < 4:
-            return [], []
+            return [], [], None, None
 
         try:
             model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -632,11 +651,107 @@ class QuickAnalyzer:
                     if std_d > 0 and dist > mean_d + 2 * std_d:
                         outlier_ids.append(sids[idx])
 
-            return clusters, outlier_ids
+            return clusters, outlier_ids, embeddings, sids
 
         except Exception as e:
             log.warning("Embedding clustering failed: %s", e)
-            return [], []
+            return [], [], None, None
+
+    # ------------------------------------------------------------------
+    # 7b. Pairwise cosine similarity (class-level aggregate)
+    # ------------------------------------------------------------------
+
+    def _pairwise_similarity(
+        self,
+        embeddings: Optional[Any],
+        sids: Optional[List[str]],
+    ) -> Optional[PairwiseSimilarityStats]:
+        """Compute class-level pairwise cosine similarity statistics.
+
+        Takes the embeddings already produced by _embedding_clusters() —
+        no second encode pass.
+
+        Returns aggregate statistics only.  Individual pair identities are
+        intentionally NOT recorded.  High similarity can indicate community,
+        shared cultural knowledge, or collaborative learning just as easily
+        as it can indicate copying.  The first question for the teacher is
+        always: "Is the assignment designed to produce diverse responses?"
+        """
+        if embeddings is None or sids is None or len(sids) < 2:
+            return None
+
+        try:
+            from sklearn.metrics.pairwise import cosine_similarity
+            import numpy as np
+        except ImportError:
+            log.info("scikit-learn not available — skipping pairwise similarity")
+            return None
+
+        try:
+            n = len(sids)
+            sim_matrix = cosine_similarity(embeddings)  # (n, n) symmetric
+
+            # Collect upper-triangle values (exclude self-similarity on diagonal)
+            upper = [
+                float(sim_matrix[i, j])
+                for i in range(n)
+                for j in range(i + 1, n)
+            ]
+
+            if not upper:
+                return None
+
+            total_pairs = len(upper)
+            mean_sim = float(np.mean(upper))
+            max_sim = float(np.max(upper))
+            pairs_085 = int(sum(1 for v in upper if v >= 0.85))
+            pairs_070 = int(sum(1 for v in upper if v >= 0.70))
+
+            # Build a class-level observation note — no student names or pair IDs
+            if mean_sim >= 0.80:
+                level = "very high"
+            elif mean_sim >= 0.65:
+                level = "high"
+            elif mean_sim >= 0.50:
+                level = "moderate"
+            else:
+                level = "low"
+
+            parts = [
+                f"This assignment had {level} submission similarity "
+                f"(mean={mean_sim:.2f}, max={max_sim:.2f}, "
+                f"{total_pairs} pairs total)."
+            ]
+            if pairs_085 > 0:
+                parts.append(
+                    f"{pairs_085} pair{'s' if pairs_085 != 1 else ''} "
+                    f"above 0.85 (high similarity)."
+                )
+            if pairs_070 > 0:
+                parts.append(
+                    f"{pairs_070} pair{'s' if pairs_070 != 1 else ''} "
+                    f"above 0.70 (moderate similarity)."
+                )
+            parts.append(
+                "Consider first: is the assignment designed to produce diverse "
+                "responses? Similarity can reflect community, shared cultural "
+                "knowledge, or collaborative learning — not only copying."
+            )
+
+            observation = " ".join(parts)
+
+            return PairwiseSimilarityStats(
+                mean_similarity=round(mean_sim, 4),
+                max_similarity=round(max_sim, 4),
+                pairs_above_085=pairs_085,
+                pairs_above_070=pairs_070,
+                total_pairs=total_pairs,
+                observation=observation,
+            )
+
+        except Exception as e:
+            log.warning("Pairwise similarity computation failed: %s", e)
+            return None
 
     # ------------------------------------------------------------------
     # 8. Shared reference detection

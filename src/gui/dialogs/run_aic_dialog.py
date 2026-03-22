@@ -141,7 +141,7 @@ class RunAICDialog(QDialog):
         self._assignments: List[Dict] = [] # flat list of {id, name}
         self._worker: Optional[_AICWorker] = None
 
-        self.setWindowTitle("Run Academic Integrity Check")
+        self.setWindowTitle("Run Engagement Analysis")
         self.setMinimumSize(580, 520)
         self.resize(620, 580)
         self._build_ui()
@@ -306,7 +306,7 @@ class RunAICDialog(QDialog):
         self._close_btn.clicked.connect(self.reject)
         fl.addWidget(self._close_btn)
 
-        self._run_btn = QPushButton("Run Academic Integrity Check")
+        self._run_btn = QPushButton("Run Engagement Analysis")
         make_run_button(self._run_btn)
         self._run_btn.setEnabled(False)
         self._run_btn.clicked.connect(self._start_run)
@@ -420,7 +420,7 @@ class RunAICDialog(QDialog):
 
         self._log.clear()
         self._log.append(
-            f"Running Academic Integrity Check\n"
+            f"Running Engagement Analysis\n"
             f"Course:      {course_name}\n"
             f"Assignment:  {assignment_name}\n"
             f"Institution: {education_level}\n"

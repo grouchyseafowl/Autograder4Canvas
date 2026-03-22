@@ -35,6 +35,7 @@ from assignment_templates import aic_config_from_mode
 # ── Data paths ──────────────────────────────────────────────────────────────
 
 AI_ESSAYS_PATH = PROJECT_ROOT / "data" / "demo_source" / "ai_essay_aic_results.json"
+CLAUDE_ESSAYS_PATH = PROJECT_ROOT / "data" / "demo_source" / "claude_test_essays.json"
 DAIGT_PATH = PROJECT_ROOT / "data" / "demo_source" / "daigt_filtered.json"
 SNAPSHOTS_DIR = PROJECT_ROOT / "data" / "calibration_snapshots"
 
@@ -51,9 +52,11 @@ def git_commit_hash() -> str:
         return "unknown"
 
 
-def load_ai_essays() -> list[dict]:
-    """Load AI essay texts and metadata."""
-    with open(AI_ESSAYS_PATH) as f:
+def _load_essays_from(path: Path) -> list[dict]:
+    """Load AI essay texts from a JSON file."""
+    if not path.exists():
+        return []
+    with open(path) as f:
         data = json.load(f)
     essays = data.get("essays", data) if isinstance(data, dict) else data
     result = []
@@ -67,6 +70,13 @@ def load_ai_essays() -> list[dict]:
             "text": text,
             "group": "ai",
         })
+    return result
+
+
+def load_ai_essays() -> list[dict]:
+    """Load AI essay texts from all sources."""
+    result = _load_essays_from(AI_ESSAYS_PATH)
+    result += _load_essays_from(CLAUDE_ESSAYS_PATH)
     return result
 
 
@@ -114,7 +124,10 @@ def run_aic(essays: list[dict], mode: str) -> list[dict]:
                 student_id=essay["id"],
                 student_name=essay["id"],
             )
-            results.append({
+            # Extract structural signals from organizational analysis
+            org = result.organizational_analysis or {}
+            sent = org.get("sentence_analysis", {})
+            entry = {
                 "id": essay["id"],
                 "source": essay["source"],
                 "group": essay["group"],
@@ -130,7 +143,13 @@ def run_aic(essays: list[dict], mode: str) -> list[dict]:
                 "marker_counts": result.marker_counts,
                 "word_count": result.word_count,
                 "context_adjustments": result.context_adjustments_applied,
-            })
+                # Structural engagement signals
+                "sentence_vc": sent.get("variance_coefficient"),
+                "starter_diversity": sent.get("starter_diversity"),
+                "comma_density": sent.get("comma_density"),
+                "avg_word_length": sent.get("avg_word_length"),
+            }
+            results.append(entry)
         except Exception as e:
             print(f"  Error on {essay['id']}: {e}")
             continue
@@ -238,6 +257,18 @@ def print_report(all_results: list[dict], ai_essays: list[dict]):
                   f"hp={r['human_presence_confidence'] or 0:.1f}%, "
                   f"org={r['ai_organizational_score']:.2f}, "
                   f"concern={r['concern_level']}")
+            # Structural signals
+            vc = r.get("sentence_vc")
+            sd = r.get("starter_diversity")
+            cd = r.get("comma_density")
+            awl = r.get("avg_word_length")
+            parts = []
+            if vc is not None: parts.append(f"sent_vc={vc:.3f}")
+            if sd is not None: parts.append(f"starter_div={sd:.3f}")
+            if cd is not None: parts.append(f"comma_den={cd:.2f}")
+            if awl is not None: parts.append(f"avg_wl={awl:.2f}")
+            if parts:
+                print(f"      signals: {', '.join(parts)}")
             # Show convergence or hp_absence if present
             ctx = [a for a in r.get("context_adjustments", [])
                    if "convergence" in a.lower() or "hp_absence" in a.lower()

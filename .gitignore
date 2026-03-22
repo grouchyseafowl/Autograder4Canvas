@@ -99,6 +99,9 @@ Autograder4CanvasInstallers.zip
 *.sqlite
 *.db
 
+# External dev tools
+.reframe*
+
 # Testing and debugging
 debug_wrapper.sh
 test_*.sh

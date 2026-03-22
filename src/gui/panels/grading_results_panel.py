@@ -1440,10 +1440,10 @@ class _StudentDetail(QFrame):
             ac_layout.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
             ac_layout.setSpacing(4)
 
-            # Header + concern level
+            # Header + conversation opportunity
             concern_color = CONCERN_COLOR.get(aic_concern, PHOSPHOR_DIM)
             concern_label = CONCERN_LABEL.get(aic_concern, aic_concern)
-            ac_header = QLabel(f"AIC — {concern_label}")
+            ac_header = QLabel(f"Engagement — {concern_label}")
             ac_header.setStyleSheet(
                 f"color: {concern_color}; font-size: {px(11)}px; font-weight: bold;"
                 f" background: transparent;"

@@ -749,7 +749,7 @@ class MainWindow(QMainWindow):
             "<b>Autograder4Canvas</b><br>"
             "A desktop GUI for Canvas autograding tools.<br><br>"
             "Grades Canvas discussions and complete/incomplete assignments,<br>"
-            "with an Academic Integrity Checker.",
+            "with an Engagement Analysis tool.",
         )
 
     def closeEvent(self, event) -> None:

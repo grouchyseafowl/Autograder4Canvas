@@ -188,6 +188,22 @@ class PerSubmissionSummary(BaseModel):
     gibberish_detail: str = ""
 
 
+class PairwiseSimilarityStats(BaseModel):
+    """Class-level pairwise cosine similarity statistics.
+
+    Surfaces ONLY aggregate patterns — never individual pair identities.
+    High similarity can indicate community, collaboration, or shared cultural
+    knowledge, not only copying.  The first interpretive question is always:
+    "Is the assignment designed to produce diverse responses?"
+    """
+    mean_similarity: float = 0.0
+    max_similarity: float = 0.0
+    pairs_above_085: int = 0   # high-similarity pairs (threshold 0.85)
+    pairs_above_070: int = 0   # moderate-similarity pairs (threshold 0.70)
+    total_pairs: int = 0
+    observation: str = ""      # human-readable class-level note for the teacher
+
+
 class QuickAnalysisResult(BaseModel):
     """Complete output of the non-LLM analysis pass.
 
@@ -221,6 +237,9 @@ class QuickAnalysisResult(BaseModel):
     # Embedding clusters
     clusters: List[EmbeddingCluster] = []
     embedding_outlier_ids: List[str] = []
+
+    # Pairwise cosine similarity (class-level aggregate — no individual flags)
+    pairwise_similarity: Optional[PairwiseSimilarityStats] = None
 
     # Cross-submission patterns
     shared_references: List[SharedReference] = []

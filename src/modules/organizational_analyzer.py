@@ -29,8 +29,23 @@ class OrganizationalAnalysis:
     uniform_sentences: bool
     uniform_sentences_score: float
 
-    total_ai_organizational_score: float
-    details: Dict[str, any]
+    # Engagement reframe signals (Phase A)
+    # Sentence-starter diversity: AI=1.0, Human=0.759 (d=2.13)
+    # Strongest theoretical stability — transformer repetition penalties are architectural
+    starter_diversity_score: float = 0.0
+
+    # Comma density per 100 words: AI=5.69, Human=2.80 (d=1.85)
+    # AI constructs complex sentences with subordinate clauses
+    # Bias note: formal academic ESL writing may also have high comma density
+    comma_density_score: float = 0.0
+
+    # Average word length: AI=5.13, Human=4.28 (d=2.17)
+    # Continuous version of "inflated vocab"
+    # Bias note: correlates with education level and reading exposure
+    avg_word_length_score: float = 0.0
+
+    total_ai_organizational_score: float = 0.0
+    details: Dict[str, any] = None
 
 
 class OrganizationalAnalyzer:
@@ -67,16 +82,23 @@ class OrganizationalAnalyzer:
         # Analyze paragraph uniformity
         paragraph_analysis = self._analyze_paragraph_uniformity(text)
 
-        # Analyze sentence uniformity
+        # Analyze sentence uniformity (also computes starter diversity,
+        # comma density, and avg word length signals)
         sentence_analysis = self._analyze_sentence_uniformity(text)
 
-        # Calculate total score
+        # Calculate total score — includes starter diversity but NOT
+        # comma_density or avg_word_length, which are corroboration-only
+        # signals that participate through convergence, not standalone scoring.
+        # (#LANGUAGE_JUSTICE: comma density risks false positives on ESL formal
+        # writing; avg word length correlates with education level. These
+        # signals should only amplify when multiple independent channels agree.)
         total_score = (
             header_analysis.get('excessive_score', 0) +
             header_analysis.get('hierarchical_score', 0) +
             section_analysis.get('balance_score', 0) +
             paragraph_analysis.get('uniformity_score', 0) +
-            sentence_analysis.get('uniformity_score', 0)
+            sentence_analysis.get('uniformity_score', 0) +
+            sentence_analysis.get('starter_diversity_score', 0)
         )
 
         return OrganizationalAnalysis(
@@ -90,6 +112,9 @@ class OrganizationalAnalyzer:
             uniform_paragraphs_score=paragraph_analysis.get('uniformity_score', 0),
             uniform_sentences=sentence_analysis.get('uniform', False),
             uniform_sentences_score=sentence_analysis.get('uniformity_score', 0),
+            starter_diversity_score=sentence_analysis.get('starter_diversity_score', 0),
+            comma_density_score=sentence_analysis.get('comma_density_score', 0),
+            avg_word_length_score=sentence_analysis.get('avg_word_length_score', 0),
             total_ai_organizational_score=round(total_score, 2),
             details={
                 'header_analysis': header_analysis,
@@ -271,7 +296,15 @@ class OrganizationalAnalyzer:
         sentences = [s.strip() for s in sentences if s.strip() and len(s.split()) > 2]
 
         if len(sentences) < 5:
-            return {'uniform': False, 'uniformity_score': 0.0}
+            return {
+                'uniform': False, 'uniformity_score': 0.0,
+                'sentence_count': len(sentences),
+                'mean_length': 0, 'variance_coefficient': 0,
+                'interpretation': 'Too few sentences for analysis',
+                'starter_diversity': 0.0, 'starter_diversity_score': 0.0,
+                'comma_density': 0.0, 'comma_density_score': 0.0,
+                'avg_word_length': 0.0, 'avg_word_length_score': 0.0,
+            }
 
         # Calculate sentence lengths
         sent_lengths = [len(s.split()) for s in sentences]
@@ -280,17 +313,99 @@ class OrganizationalAnalyzer:
         std_length = np.std(sent_lengths)
         variance_coef = std_length / mean_length if mean_length > 0 else 0
 
-        # AI signature: variance coefficient < 0.25
-        uniform = variance_coef < 0.25
-        uniformity_score = 0.8 if uniform else 0.0
+        # Gradient scoring: 0.15-0.40 range based on calibration data
+        # (AI mean VC=0.336, Human mean VC=0.458, d=0.99)
+        # Below 0.15: maximum score (extremely rhythmic)
+        # 0.15-0.40: linear gradient
+        # Above 0.40: zero (human-typical variation)
+        if variance_coef < 0.15:
+            uniformity_score = 0.8
+        elif variance_coef < 0.40:
+            uniformity_score = 0.8 * (0.40 - variance_coef) / (0.40 - 0.15)
+        else:
+            uniformity_score = 0.0
+
+        uniform = uniformity_score > 0.4  # For backward compat boolean
+
+        if uniformity_score > 0.5:
+            interpretation = 'Low variation (rhythmic pattern)'
+        elif uniformity_score > 0.1:
+            interpretation = 'Moderate uniformity'
+        else:
+            interpretation = 'Typical variation'
+
+        # Sentence-starter diversity: unique first words / total sentences
+        # AI tends toward perfect diversity (d=2.13) due to transformer
+        # repetition penalties; humans naturally repeat starters.
+        starters = [s.split()[0].lower() for s in sentences if s.split()]
+        starter_diversity = len(set(starters)) / len(starters) if starters else 0
+
+        # Gradient scoring for starter diversity:
+        # 1.0 = perfect (all unique) → max score 0.6
+        # 0.95-1.0 = very high → gradient
+        # Below 0.85 = human-typical → zero
+        # Note: 13.6% of humans also achieve 1.0, so this is corroborative
+        #
+        # MINIMUM SAMPLE: Requires 8+ sentences. With fewer, random chance
+        # produces high diversity (5 sentences → 5/5=1.0 is common for humans).
+        # The d=2.13 effect size was measured on texts with sufficient length.
+        if len(sentences) >= 8 and starter_diversity >= 1.0:
+            starter_diversity_score = 0.6
+        elif len(sentences) >= 8 and starter_diversity >= 0.85:
+            starter_diversity_score = 0.6 * (starter_diversity - 0.85) / (1.0 - 0.85)
+        else:
+            starter_diversity_score = 0.0
+
+        # Comma density: commas per 100 words
+        # AI mean 5.69, Human mean 2.80 (d=1.85) — AI constructs
+        # complex sentences with subordinate clauses.
+        words = text.split()
+        comma_count = text.count(',')
+        comma_density = (comma_count / len(words) * 100) if words else 0
+
+        # Gradient scoring for comma density:
+        # Above 5.0 per 100 words → max score 0.4
+        # 3.5-5.0 → gradient
+        # Below 3.5 → zero (human-typical range)
+        # Bias caveat: ESL formal writing may produce high comma density —
+        # this signal should be downweighted when ESL context is detected
+        if comma_density >= 5.0:
+            comma_density_score = 0.4
+        elif comma_density >= 3.5:
+            comma_density_score = 0.4 * (comma_density - 3.5) / (5.0 - 3.5)
+        else:
+            comma_density_score = 0.0
+
+        # Average word length: continuous version of "inflated vocab"
+        # AI mean 5.13 chars, Human mean 4.28 chars (d=2.17)
+        all_words = re.findall(r'[a-zA-Z]+', text)
+        avg_word_length = (sum(len(w) for w in all_words) / len(all_words)) if all_words else 0
+
+        # Gradient scoring for avg word length:
+        # Above 5.0 chars → max score 0.4
+        # 4.5-5.0 → gradient
+        # Below 4.5 → zero (human-typical range)
+        # Bias caveat: correlates with education level and reading exposure
+        if avg_word_length >= 5.0:
+            avg_word_length_score = 0.4
+        elif avg_word_length >= 4.5:
+            avg_word_length_score = 0.4 * (avg_word_length - 4.5) / (5.0 - 4.5)
+        else:
+            avg_word_length_score = 0.0
 
         return {
             'sentence_count': len(sentences),
             'mean_length': round(mean_length, 1),
             'variance_coefficient': round(variance_coef, 3),
             'uniform': uniform,
-            'uniformity_score': uniformity_score,
-            'interpretation': 'AI signature (rhythmic)' if uniform else 'Human variation'
+            'uniformity_score': round(uniformity_score, 3),
+            'interpretation': interpretation,
+            'starter_diversity': round(starter_diversity, 3),
+            'starter_diversity_score': round(starter_diversity_score, 3),
+            'comma_density': round(comma_density, 2),
+            'comma_density_score': round(comma_density_score, 3),
+            'avg_word_length': round(avg_word_length, 2),
+            'avg_word_length_score': round(avg_word_length_score, 3),
         }
 
     def verify_circular_references(self, text: str) -> Dict[str, any]:

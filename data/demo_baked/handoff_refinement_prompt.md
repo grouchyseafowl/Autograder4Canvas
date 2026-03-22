@@ -6,6 +6,15 @@ An Ethnic Studies professor is building a tool (Autograder4Canvas) to help teach
 ## System Philosophy
 This part of the system (insights generation) is NOT a grading tool or an AI detector. It is an **engagement analysis system** that helps teachers understand what their class is thinking, who needs support, and what to teach next. Every output is a "conversation starter, not a verdict." Read `src/docs/ADC_README.md` for full philosophy.
 
+**Engagement reframe context**: The system recently pivoted from an AI-detection frame to an engagement-analysis frame (see `docs/engagement_reframe_spec.md`). This is a **both/and** reorientation, not a total replacement:
+- **Primary product**: Engagement signals — personal connection, intellectual work, course engagement, real-time processing
+- **Retained detection**: Integrity signals (smoking gun paste artifacts, unicode manipulation, teacher-test patterns, incoherence) stay as explicit flags for clear gaming behavior
+- **Structural indicators**: Sentence uniformity, starter diversity, etc. surface as supplementary context ("unusually uniform structure"), not as "AI detected"
+- **The privileged disengaged student**: Zero engagement across all dimensions is detectable and surfaceable without needing to determine whether AI was involved. A student phoning it in on an Ethnic Studies assignment for political reasons shows up as absence across every engagement dimension — the system catches that.
+- **Key shift**: From "Did the student cheat?" to "How did the student engage with the material?" — but the system still surfaces clear gaming, near-identical submissions, and total disengagement. Teachers make the final call.
+
+Read `docs/engagement_reframe_spec.md` and `docs/engagement_reframe_learning.md` for the full spec.
+
 ## Methodological Caveats (READ BEFORE ANALYZING)
 
 **Caveat 1 — Incomplete pipeline run.** The synthesis stage partially failed (3/9 sections populated due to JSON parse errors in the 8B model output). Before attributing gaps to the pipeline's design, check whether missing data is simply an artifact of that incomplete run. We could rerun the remaining stages to get a more complete baseline — but we want to use what we have first to illuminate what revisions we can, and to assess the proof of concept. **Seriously — is an 8B model worth pursuing for this pipeline? If not, for which components? Account for methodological artifacts when answering this.**
@@ -44,6 +53,22 @@ The Opus baseline immediately identified that **19 of 29 students submitted essa
 
 **BUT**: Before treating this as a pipeline gap, investigate whether this is a testing data artifact. The demo corpus was assembled from prefab data. Check `scripts/assemble_demo_corpus.py` and the raw submissions to determine: did we construct the data in a way that created this mismatch? If so, this finding tells us about our methodology, not the pipeline. If the data is genuinely off-topic by design (simulating students who submitted the wrong assignment), then the pipeline should catch it and this IS a real gap.
 
+## Architectural Model: Distributed Intelligence (Mycorrhizal Network)
+
+The pipeline uses a **distributed intelligence model** — multiple networked 8B LLM calls with careful orchestration, aiming to approach the analytical depth of a single large-model pass (Opus). The architectural inspiration comes from the Reframe project's mycorrhizal network implementation, where intelligence emerges from networked lightweight calls rather than single powerful ones.
+
+**Key principles from the mycorrhizal architecture:**
+
+1. **Scoped call history** — each pipeline stage should reference previous stages' outputs. Currently the pipeline's biggest structural flaw is that stages operate in sequence but don't share information well. Quick Analysis identifies clusters but coding ignores them. Coding flags concerns but feedback ignores the flags. Fix this and quality improves more than any single-stage improvement.
+
+2. **Anti-flattening** — the synthesis stage must preserve tensions and contradictions, not smooth them into consensus. When Connor Walsh's colorblindness contradicts Destiny Williams's structural analysis, that tension is the pedagogy. The Reframe engine uses tension injection to prevent this; the Insights pipeline needs an equivalent mechanism.
+
+3. **Coalition without assimilation** — theme generation should preserve distinct analytical stances. The current 30-theme output with 5+ near-identical driving themes is assimilation (everything averaged together). The target is: distinct theme clusters that maintain their specificity, with cross-cluster tensions preserved.
+
+4. **Iterative deepening** — each successive stage should build on accumulated intelligence from previous stages, not start fresh. The feedback drafter receiving concern flags from the concern detector is a mycorrhizal link that's currently broken.
+
+**What this means concretely for the refinement plan**: Many of the pipeline's gaps (feedback-concern contradiction, synthesis weighting by majority, theme deduplication failure) trace to the same root cause — broken information flow between stages. The refinement plan should prioritize inter-stage data flow as a structural fix, not just patch individual stages.
+
 ## Key Files to Read
 
 ### START HERE — Comparison Outputs
@@ -68,20 +93,25 @@ The Opus baseline immediately identified that **19 of 29 students submitted essa
 15. `src/insights/llm_backend.py` — Backend dispatch with JSON cleanup
 16. `src/insights/engine.py` — Pipeline orchestration
 
+### Engagement Reframe & Design Docs
+17. `docs/engagement_reframe_spec.md` — **The engagement reframe specification** (signal taxonomy, UI framing, both/and model, system limits). Read this to understand what the pipeline should be producing.
+18. `docs/engagement_reframe_learning.md` — **Adaptive calibration system** (6 mechanisms: cohort calibration, assignment context awareness, teacher feedback loop, voice fingerprinting, class culture modeling, predictive engagement). The assignment context awareness mechanism (Mechanism 2) is directly relevant to the topic-mismatch gap.
+
 ### Testing Documentation
-17. `docs/testing_observations.md` — Prior AIC gaps and cheating coverage audit
-18. `data/demo_baked/original_analysis_prompt.md` — Teacher's original manual analysis prompt (what this pipeline automates)
+19. `docs/testing_observations.md` — Prior AIC gaps and cheating coverage audit
+20. `data/demo_baked/original_analysis_prompt.md` — Teacher's original manual analysis prompt (what this pipeline automates)
 
 ### Memory Files (architectural context)
-19. `~/.claude/projects/-Users-june-Documents-GitHub-Autograder4Canvas/memory/project_engagement_reframe.md` — Strategic pivot from AI detection to engagement analysis
-20. `~/.claude/projects/-Users-june-Documents-GitHub-Autograder4Canvas/memory/project_equity_attention.md` — Equity attention framework
-21. `~/.claude/projects/-Users-june-Documents-GitHub-Autograder4Canvas/memory/project_insights_testing_findings.md` — Prior testing results
-22. `~/.claude/projects/-Users-june-Documents-GitHub-Autograder4Canvas/memory/feedback_anti_spotlighting.md` — Anti-spotlighting principle
-23. `~/.claude/projects/-Users-june-Documents-GitHub-Autograder4Canvas/memory/feedback_complete_incomplete_pedagogy.md` — C/I grading philosophy
-24. `~/.claude/projects/-Users-june-Documents-GitHub-Autograder4Canvas/memory/user_context.md` — User context (HS teacher, K-12 principal pitch)
+21. `~/.claude/projects/-Users-june-Documents-GitHub-Autograder4Canvas/memory/project_engagement_reframe.md` — Strategic pivot from AI detection to engagement analysis
+22. `~/.claude/projects/-Users-june-Documents-GitHub-Autograder4Canvas/memory/project_equity_attention.md` — Equity attention framework
+23. `~/.claude/projects/-Users-june-Documents-GitHub-Autograder4Canvas/memory/project_insights_testing_findings.md` — Prior testing results
+24. `~/.claude/projects/-Users-june-Documents-GitHub-Autograder4Canvas/memory/feedback_anti_spotlighting.md` — Anti-spotlighting principle
+25. `~/.claude/projects/-Users-june-Documents-GitHub-Autograder4Canvas/memory/feedback_complete_incomplete_pedagogy.md` — C/I grading philosophy
+26. `~/.claude/projects/-Users-june-Documents-GitHub-Autograder4Canvas/memory/user_context.md` — User context (HS teacher, K-12 principal pitch)
+27. `~/.claude/projects/-Users-june-Documents-GitHub-Autograder4Canvas/memory/research_distributed_llm_analysis.md` — Research report on distributed LLM analysis for educational analytics (8B feasibility, nuance preservation, DeTAILS prior art, mitigation strategies)
 
 ### Chatbot Export Comparison
-25. `data/demo_baked/chatbot_export_ethnic_studies_full.md` — The system-generated prompt+submissions package for pasting into institutional chatbots. Compare this against the original manual prompt (#18) to see what the pipeline's own export captures vs. misses — this reveals what the system thinks is important to send to a large model.
+28. `data/demo_baked/chatbot_export_ethnic_studies_full.md` — The system-generated prompt+submissions package for pasting into institutional chatbots. Compare this against the original manual prompt (#20) to see what the pipeline's own export captures vs. misses — this reveals what the system thinks is important to send to a large model.
 
 ## Your Task
 
@@ -105,7 +135,7 @@ Before any comparison analysis, critically examine how the testing apparatus sha
 
 ### Phase 1: Three-Way Comparison Analysis (continues in `docs/comparison_analysis.md`)
 
-Compare pipeline vs Opus. LLMs are stochastic — don't expect identical outputs. Focus on **structural** differences in detection capability.
+Compare pipeline vs Opus. LLMs are stochastic — don't expect identical outputs. Focus on **structural** differences in analytical capability — what patterns does each surface, miss, or mischaracterize?
 
 **Important**: Verify every claim below against the actual data before accepting it. The previous session's analysis was done with full context — you have fresh eyes. Double-check characterizations against the raw submissions in `data/demo_corpus/ethnic_studies.json`. **Filter all findings through your Phase 0 methodology assessment** — if the "off-topic" issue is a data artifact, the comparison looks very different.
 
@@ -122,11 +152,13 @@ Compare pipeline vs Opus. LLMs are stochastic — don't expect identical outputs
 ### Phase 2: Root Cause Analysis (add to comparison doc)
 
 For each gap, trace to architectural cause:
-- **Prompt problem?** → Fix template in `prompts.py`
+- **Prompt problem?** → Fix template in `prompts.py`. Check whether prompts use engagement-frame language or detection-frame language — the 8B model's output quality is heavily shaped by prompt framing. A prompt that says "surface what the teacher needs to see about this student's engagement" produces different output than one that says "identify concerns."
 - **Pipeline structure problem?** → Missing stage, wrong stage order, missing data flow
-- **8B model limitation?** → Too small to detect nuance; consider what can be done non-LLM
-- **Data flow problem?** → E.g., concern signals not passed to feedback drafter
+- **Broken mycorrhizal link?** → Stage N produces valuable signal but Stage N+1 doesn't receive it. The feedback-concern contradiction is the clearest example: concerns correctly flag colorblindness, but feedback (running later, without concern data) validates it. Map ALL inter-stage data flows and identify which links are broken.
+- **8B model limitation?** → Too small to surface nuance in engagement patterns; consider what can be done non-LLM or through multi-pass strategies
+- **Data flow problem?** → E.g., Quick Analysis clusters not passed to coding; concern signals not passed to feedback drafter
 - **Methodology problem?** → Test data construction, incomplete pipeline run, stochastic variation
+- **Framing problem?** → The engagement reframe is a both/and: engagement signals as primary product, detection capabilities retained for clear gaming. If a pipeline output uses pure detection language where engagement language would be more useful to the teacher, that's a framing fix.
 
 **You have explicit permission to conclude that 8B is insufficient** — either for the whole pipeline or for specific components. If specific stages need a larger model, say so. If the distributed multi-call architecture can compensate, explain how. If there are hard limits, name them. The professor wants realistic assessment, not optimism.
 
@@ -140,10 +172,11 @@ Prioritized list of concrete changes. For each:
 - **Priority**: P0 = blocks demo, P1 = significant quality gap, P2 = nice to have
 
 **Likely P0 items** (based on what we already know):
-1. Topic-mismatch detection — the pipeline MUST flag when submissions don't match the assignment
-2. Feedback-concern consistency — feedback drafter must receive concern signals
-3. Cross-student similarity detection — 19 students with overlapping stats/phrases
-4. Hallucination guard — don't inject concepts the student never mentioned
+1. Assignment engagement detection — the pipeline must surface when students' work doesn't connect to the assignment's expected content area. This is the single most useful engagement signal the pipeline currently misses. (Non-LLM approach: TF-IDF overlap between submission and assignment prompt, wired into the Assignment Context Awareness mechanism described in `docs/engagement_reframe_learning.md`)
+2. Feedback-concern consistency (broken mycorrhizal link) — the feedback drafter must receive concern signals from the concern detector. Currently these stages don't share data, so feedback validates the exact behavior concerns flagged. This is the pipeline's most damaging contradiction.
+3. Cross-student similarity — surface both class-level patterns (embedding clusters already detected by QuickAnalyzer) AND near-duplicate pairs (>90% cosine similarity, e.g. Ethan Liu / Nadia Petrov verbatim match). Class-level surfaced as "this assignment had unusually high similarity — is the prompt eliciting diverse thinking?" Individual pairs surfaced only at very high thresholds, framed as factual observation, never verdict. Equity note: moderate similarity can reflect community cultural wealth, collaborative learning, or shared cultural knowledge — only surface individual pairs when the match is unmistakably copy/paste level.
+4. Coding fidelity — don't attribute concepts the student never mentioned. When the pipeline codes David Park's phones-and-driving essay with "intersectionality in practice" at 0.8 confidence, that's a hallucination that misrepresents the student's engagement. Post-validate concepts_applied against actual submission text.
+5. Inter-stage data flow (architectural) — wire Quick Analysis outputs (clusters, keyword hits, embedding position, sentiment) into coding prompts. Wire concern flags into feedback drafting. Wire cluster structure into theme generation. This is the mycorrhizal fix — the single structural change that addresses multiple quality gaps simultaneously.
 
 ### Phase 4: Update Documentation
 - Update `docs/testing_observations.md` with comparison findings
@@ -171,11 +204,14 @@ Prioritized list of concrete changes. For each:
 3. Connor and Aiden are resisting the framework (concern signals)
 4. Brittany is misreading intersectionality as diversity-celebration (pedagogical gap)
 5. Jordan Kim may be struggling (check-in signal)
-6. Some submissions may be AI-generated or shared (cross-student similarity)
+6. Multiple students produced near-identical or low-engagement responses (class-level similarity + individual near-duplicate surfacing for very high matches)
+7. Some submissions show zero personal connection and generic academic register — disengaged regardless of whether AI was involved (Tyler Nguyen, Jaylen Carter, Alex Hernandez)
 
-If the 8B pipeline catches these 6 things — even without Opus's eloquent prose — it's done its job. That's the optimization target.
+If the 8B pipeline catches these 7 things — even without Opus's eloquent prose — it's done its job. That's the optimization target.
 
-**The experimental dimension**: This project is exploring whether a distributed intelligence model — multiple networked 8B calls with careful orchestration — can approach the analytical depth of a single large model pass. We're genuinely curious to what extent we can close the gap. When you identify limitations, think creatively about whether architectural solutions (multi-pass, chain-of-thought, non-LLM pre-processing, embedding-based augmentation) could compensate. But if there are hard technical limits, be realistic and name them. The professor would rather know the truth than hear optimism.
+**Both/and on detection**: The engagement frame is the primary lens, but detection capabilities are retained for clear gaming: smoking gun paste artifacts, near-identical submissions (pairwise at >90% similarity), and total disengagement across all dimensions. The student who pastes ChatGPT output into an Ethnic Studies discussion because they don't want to engage with the material should show up in the analysis — not because the system detected AI, but because the system detected zero engagement. If the smoking gun is also present (HTML tags, markdown formatting), flag that too. Teachers need both kinds of information.
+
+**The experimental dimension**: This project is exploring whether a distributed intelligence model — a mycorrhizal network of networked 8B calls with careful orchestration — can approach the analytical depth of a single large model pass. The biological metaphor: fungi connect trees through underground networks, transferring nutrients and signals; each hyphal thread does small, local work, but the network produces forest-scale intelligence that no single organism possesses. The pipeline's per-student coding calls are the hyphal threads; the theme generation and synthesis are the emergent network intelligence. We're genuinely curious to what extent we can close the gap with Opus. When you identify limitations, think creatively about whether architectural solutions (inter-stage data flow, multi-pass strategies, chain-of-thought, non-LLM pre-processing, embedding-based augmentation) could compensate — especially the inter-stage data flow, which is the most direct mycorrhizal fix. But if there are hard technical limits, be realistic and name them. The professor would rather know the truth than hear optimism.
 
 ## Pipeline Timing Reference
 

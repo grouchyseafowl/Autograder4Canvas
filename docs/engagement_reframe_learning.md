@@ -220,7 +220,7 @@ n=4 AI essays with text is too small for confident claims. Need:
 
 - **Plagiarism checker** — Turnitin's job
 - **Perplexity/burstiness** — requires running an LLM, marginal benefit given engagement framing
-- **Individual-pair similarity flagging** — equity risks too high; class-level only
+- **Individual-pair similarity flagging at moderate thresholds** — equity risks too high; moderate similarity stays class-level only. Near-duplicate pairs (>90% cosine) ARE surfaced as factual observation, never verdict.
 - **Automated penalty/grading** — teacher is ALWAYS the decision-maker
 - **Student-facing scores** — students see engagement TRAJECTORY (growth), never suspicion levels
 

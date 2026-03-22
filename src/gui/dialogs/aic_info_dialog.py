@@ -33,11 +33,12 @@ _SECTIONS = [
         "heading": "What this tool does — and what it doesn't",
         "accent": PHOSPHOR_HOT,
         "body": (
-            "The Academic Integrity Check (AIC) analyzes text submissions for "
-            "patterns statistically associated with AI-generated writing. It does "
-            "NOT prove cheating. It produces a suspicion score, an authenticity "
-            "score, and a concern level — all of which are starting points for "
-            "a conversation with the student, not verdicts.\n\n"
+            "The Engagement Analysis examines text submissions for engagement "
+            "signals — personal connection, intellectual work, course-specific "
+            "references, and structural patterns. It does NOT prove cheating.\n\n"
+            "It produces an engagement depth score, an authenticity score, "
+            "and conversation opportunities — all starting points for talking "
+            "with students about their engagement, not verdicts.\n\n"
             "Every flag should be reviewed by the instructor before any action "
             "is taken. Context always matters more than scores."
         ),
@@ -55,16 +56,16 @@ _SECTIONS = [
             "detected (article errors, tense mixing) because AI models don't make "
             "those mistakes. Use the population profile selectors in the Prior Runs "
             "panel to recalibrate displayed scores for individual students.\n\n"
-            "A high suspicion score means: have a curious conversation. It never "
+            "A low engagement score means: have a curious conversation. It never "
             "means: take disciplinary action without further investigation."
         ),
     },
     {
-        "heading": "Suspicion markers (raises score)",
+        "heading": "Structural indicators (supplementary context)",
         "accent": WARN_PINK,
         "body": (
             "These patterns appear more often in AI-generated text than in authentic "
-            "student writing. Each match contributes to the suspicion score.\n\n"
+            "student writing. Each match is noted as supplementary context.\n\n"
             "  INFLATED VOCABULARY\n"
             "    Words and phrases that are technically correct but uncommon in spoken "
             "    academic discourse — 'furthermore', 'it is worth noting', 'in the "
@@ -85,11 +86,11 @@ _SECTIONS = [
         ),
     },
     {
-        "heading": "Authenticity markers (lowers suspicion)",
+        "heading": "Engagement markers (personal connection)",
         "accent": TERM_GREEN,
         "body": (
-            "These patterns are strong signals of human authorship. Each match "
-            "reduces or offsets the suspicion score.\n\n"
+            "These patterns are strong signals of personal engagement. Each match "
+            "strengthens the engagement depth score.\n\n"
             "  PERSONAL VOICE\n"
             "    First-person references to specific lived experience, named people, "
             "    or places — 'My grandmother told me', 'When I worked at'.\n\n"
@@ -134,22 +135,22 @@ _SECTIONS = [
             "     ChatGPT and similar tools often respond in Markdown. If the student "
             "     pastes that directly into Canvas, **bold** syntax, ## headers, and "
             "     - bullet lists appear as literal characters in the submission.\n\n"
-            "A smoking gun forces the concern level to HIGH regardless of other "
-            "scores. It is shown with a distinct rose-glow border in the Prior Runs "
-            "panel — separate from 'high concern' submissions that only have elevated "
-            "pattern scores."
+            "A smoking gun forces the conversation opportunity to 'needed' "
+            "regardless of other scores. It is shown with a distinct rose-glow border "
+            "in the Prior Runs panel — separate from submissions that only have "
+            "limited engagement signals."
         ),
     },
     {
         "heading": "Peer comparison and outlier detection",
         "accent": PHOSPHOR_MID,
         "body": (
-            "After analyzing all submissions in a run, the AIC computes cohort "
-            "statistics and identifies statistical outliers. A student who scores at "
-            "the 95th percentile or above within their own class is flagged as an "
-            "outlier — even if their absolute suspicious score is low.\n\n"
-            "This is intentional: a class where everyone writes authentically may "
-            "still have one student who stands out. Peer comparison catches that "
+            "After analyzing all submissions in a run, the system computes cohort "
+            "statistics and identifies statistical outliers. A student whose engagement "
+            "pattern differs significantly from their classmates is noted as an "
+            "outlier — even if their absolute engagement depth is normal.\n\n"
+            "This is intentional: engagement is relative to context. Peer comparison "
+            "surfaces students whose patterns stand out within their own class, "
             "without setting arbitrary global thresholds that disadvantage students "
             "at schools where authentic writing is the norm."
         ),

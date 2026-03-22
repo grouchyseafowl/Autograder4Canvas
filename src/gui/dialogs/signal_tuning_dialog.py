@@ -444,8 +444,8 @@ class MarkerList(QWidget):
 # -- Dialog --------------------------------------------------------------------
 
 _SUBTITLES = {
-    "suspicious":   "Patterns that suggest AI \u2014 more pips = flag this signal more",
-    "authenticity": "Patterns that suggest human \u2014 more pips = give more credit",
+    "suspicious":   "Structural indicators \u2014 more pips = weight this signal more",
+    "authenticity": "Engagement signals \u2014 more pips = give more credit",
 }
 
 
@@ -454,7 +454,7 @@ class SignalTuningDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Academic Integrity \u2014 Signal Tuning")
+        self.setWindowTitle("Engagement Analysis \u2014 Signal Tuning")
         self.setMinimumSize(420, 460)
         self.resize(460, 540)
 
@@ -514,8 +514,8 @@ class SignalTuningDialog(QDialog):
 
         # Toggle -- left-justified, inside the pane
         self._toggle = SegmentedToggle(
-            ("Suspicious Signals", "suspicious"),
-            ("Authenticity Signals", "authenticity"),
+            ("Structural Indicators", "suspicious"),
+            ("Engagement Signals", "authenticity"),
             accent="amber",
         )
         self._toggle.setFixedHeight(22)
