@@ -179,6 +179,21 @@ _BUILTIN_PATTERNS: Dict[str, List[Tuple[str, bool, float]]] = {
         (r"I never (thought about|considered)", True, 0.8),
         (r"This (changed|shifted) (how|the way) I think about", True, 0.8),
         (r"Now I (see|understand|realize)", True, 0.7),
+        # Metacognitive reflection (real-time processing — human mind at work)
+        # These overlap with AIC's cognitive_diversity markers but were missing here.
+        ("now that I think about it", False, 0.6),
+        (r"I'm realizing (as I write|as I think)", True, 0.7),
+        ("I just realized", False, 0.5),
+        ("thinking about it now", False, 0.5),
+        (r"my (thought process|brain keeps going to)", True, 0.6),
+        ("as I'm thinking through this", False, 0.6),
+        # Associative connections (mind making links in real time)
+        (r"this reminds me of", False, 0.5),
+        ("I see a pattern", False, 0.5),
+        # Authentic struggle articulation
+        ("this is harder to explain than I thought", False, 0.7),
+        (r"I'm having trouble (explaining|putting)", True, 0.7),
+        ("trying to make this make sense", False, 0.6),
     ],
     'emotional_stakes': [
         # Personal connection

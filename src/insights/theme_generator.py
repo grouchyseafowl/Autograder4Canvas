@@ -48,6 +48,20 @@ _GROUP_SIZES = {
 # we fall back to a non-LLM result so the pipeline doesn't stall.
 _LLM_CALL_TIMEOUT = 300  # 5 minutes
 
+# Max tokens per stage — tight limits prevent MLX from running away.
+# These are well above what a correct response needs; they guard against
+# the model looping or generating until context exhaustion.
+_MAX_TOKENS_THEME = {
+    "lightweight":   1200,  # JSON theme set for 5 students: ~600–900 tokens
+    "medium":        2000,
+    "deep_thinking": 3000,
+}
+_MAX_TOKENS_META = {
+    "lightweight":   1500,  # Merge 8 theme groups: ~900–1200 tokens
+    "medium":        2500,
+    "deep_thinking": 4096,
+}
+
 
 def _fallback_theme_set_from_records(
     records: List["SubmissionCodingRecord"],
@@ -247,7 +261,7 @@ def generate_themes(
     if len(coding_records) <= group_size:
         return _generate_single(
             coding_records, assignment_name, interests_text, lens_fragment,
-            backend, profile_fragment,
+            backend, profile_fragment, tier=tier,
         )
 
     # Hierarchical: group -> theme sets -> meta-synthesis
@@ -260,7 +274,7 @@ def generate_themes(
         log.info("  Generating themes for group %d/%d (%d records)", i + 1, len(groups), len(group))
         ts = _generate_single(
             group, assignment_name, interests_text, lens_fragment,
-            backend, profile_fragment,
+            backend, profile_fragment, tier=tier,
         )
         group_theme_sets.append(ts)
 
@@ -270,7 +284,7 @@ def generate_themes(
     # Meta-synthesis: merge group theme sets
     return _meta_synthesize(
         group_theme_sets, assignment_name, interests_text, backend,
-        profile_fragment,
+        profile_fragment, tier=tier,
     )
 
 
@@ -281,6 +295,7 @@ def _generate_single(
     lens_fragment: str,
     backend: BackendConfig,
     profile_fragment: str = "",
+    tier: str = "lightweight",
 ) -> ThemeSet:
     """Generate themes from a single group of records.
 
@@ -288,6 +303,8 @@ def _generate_single(
     seconds, returns a fallback ThemeSet built from tag frequencies so the
     pipeline doesn't stall on slow 8B models.
     """
+    _max_tok = _MAX_TOKENS_THEME.get(tier, 1200)
+
     def _inner() -> ThemeSet:
         prompt = THEME_GENERATION_PROMPT.format(
             n_records=len(records),
@@ -298,7 +315,7 @@ def _generate_single(
             profile_fragment=profile_fragment,
         )
 
-        raw = send_text(backend, prompt, SYSTEM_PROMPT)
+        raw = send_text(backend, prompt, SYSTEM_PROMPT, max_tokens=_max_tok)
         parsed = parse_json_response(raw)
 
         if "_parse_error" in parsed:
@@ -308,7 +325,7 @@ def _generate_single(
                 raw_response=raw[:2000],
                 expected_format='{"themes": [...], "contradictions": [...]}',
             )
-            raw2 = send_text(backend, repair, SYSTEM_PROMPT)
+            raw2 = send_text(backend, repair, SYSTEM_PROMPT, max_tokens=_max_tok)
             parsed2 = parse_json_response(raw2)
             return _parse_theme_set(parsed2)
 
@@ -344,12 +361,15 @@ def _meta_synthesize(
     interests_text: str,
     backend: BackendConfig,
     profile_fragment: str = "",
+    tier: str = "lightweight",
 ) -> ThemeSet:
     """Merge multiple ThemeSets into one via meta-synthesis LLM call.
 
     Wrapped with a timeout — falls back to _manual_merge if the LLM
     exceeds _LLM_CALL_TIMEOUT seconds.
     """
+    _max_tok = _MAX_TOKENS_META.get(tier, 1500)
+
     def _inner() -> ThemeSet:
         sets_json = []
         for i, ts in enumerate(theme_sets):
@@ -389,7 +409,7 @@ def _meta_synthesize(
             profile_fragment=profile_fragment,
         )
 
-        raw = send_text(backend, prompt, SYSTEM_PROMPT)
+        raw = send_text(backend, prompt, SYSTEM_PROMPT, max_tokens=_max_tok)
         parsed = parse_json_response(raw)
 
         if "_parse_error" in parsed:

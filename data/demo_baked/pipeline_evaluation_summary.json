@@ -1,0 +1,592 @@
+{
+  "pipeline_info": {
+    "course": "Ethnic Studies (11), Period 3",
+    "assignment": "Week 6 Discussion: Intersectionality in Practice",
+    "students": 29,
+    "model": "mlx-community/Qwen2.5-7B-Instruct-4bit",
+    "tier": "lightweight",
+    "teacher_context": "This is a weekly discussion board. Students respond to a reading about intersectionality theory applied to everyday life. Complete/incomplete grading \u2014 150 word minimum. I'm looking for genuine engagement with the concepts, not polished academic writing."
+  },
+  "timing": {
+    "total_seconds": 6612,
+    "per_student_seconds": 228,
+    "breakdown": {
+      "quick_analysis": 20,
+      "coding": 2136,
+      "concerns": 1310,
+      "themes": 1673,
+      "outliers": 91,
+      "synthesis": 409,
+      "feedback": 901
+    }
+  },
+  "quick_analysis_summary": {
+    "total_submissions": 29,
+    "word_count_mean": 210.0344827586207,
+    "word_count_median": 205.0,
+    "clusters": 0,
+    "concern_signals": 12,
+    "citation_report": {
+      "has_citations": true,
+      "source_count": 1,
+      "students_with_citations": 3,
+      "students_without_citations": 26,
+      "generic_reading_ref_count": 2,
+      "specific_source_count": 1,
+      "most_cited": [
+        [
+          "Edgar Snyder",
+          1
+        ]
+      ],
+      "verification_note": "URL/DOI existence is checked automatically. Unverified \u2260 fake \u2014 paywalled, non-English, and community sources will appear unverified.",
+      "sources_summary": [
+        {
+          "source": "Edgar Snyder",
+          "citation_type": "generic_reference",
+          "student_names": [
+            "Jamal Washington"
+          ],
+          "count": 1
+        }
+      ],
+      "_citations_live": [
+        {
+          "citation_type": "reading_reference",
+          "raw_text": "The author argues",
+          "normalized": "[course reading]",
+          "student_id": "S010",
+          "student_name": "Tyler Nguyen",
+          "verified": null,
+          "verification_note": ""
+        },
+        {
+          "citation_type": "reading_reference",
+          "raw_text": "the reading says",
+          "normalized": "[course reading]",
+          "student_id": "S020",
+          "student_name": "Jake Novak",
+          "verified": null,
+          "verification_note": ""
+        },
+        {
+          "citation_type": "generic_reference",
+          "raw_text": "According to Edgar Snyder,",
+          "normalized": "Edgar Snyder",
+          "student_id": "S013",
+          "student_name": "Jamal Washington",
+          "verified": null,
+          "verification_note": ""
+        }
+      ]
+    },
+    "top_5_terms": [
+      "driving",
+      "phone",
+      "phones",
+      "texting",
+      "social"
+    ]
+  },
+  "themes_summary": {
+    "total_themes": 30,
+    "llm_generated": 18,
+    "fallback_themes": 12,
+    "contradictions": 6,
+    "themes": [
+      {
+        "name": "risks and consequences of distracted driving",
+        "frequency": 5,
+        "confidence": 0.9,
+        "student_count": 5
+      },
+      {
+        "name": "analyzing current events",
+        "frequency": 5,
+        "confidence": 0.8,
+        "student_count": 5
+      },
+      {
+        "name": "importance of public awareness",
+        "frequency": 3,
+        "confidence": 0.7,
+        "student_count": 3
+      },
+      {
+        "name": "concern for safety",
+        "frequency": 2,
+        "confidence": 0.9,
+        "student_count": 2
+      },
+      {
+        "name": "advice for parents",
+        "frequency": 1,
+        "confidence": 0.8,
+        "student_count": 1
+      },
+      {
+        "name": "personal experience with texting and driving",
+        "frequency": 1,
+        "confidence": 0.9,
+        "student_count": 1
+      },
+      {
+        "name": "connecting theory to personal experience",
+        "frequency": 2,
+        "confidence": 0.3,
+        "student_count": 2
+      },
+      {
+        "name": "connecting theory to family history",
+        "frequency": 1,
+        "confidence": 0.3,
+        "student_count": 1
+      },
+      {
+        "name": "intersectionality in multiple contexts",
+        "frequency": 1,
+        "confidence": 0.3,
+        "student_count": 1
+      },
+      {
+        "name": "intersectionality in family context",
+        "frequency": 1,
+        "confidence": 0.3,
+        "student_count": 1
+      },
+      {
+        "name": "intersectionality in community",
+        "frequency": 1,
+        "confidence": 0.3,
+        "student_count": 1
+      },
+      {
+        "name": "celebrating cultural diversity",
+        "frequency": 1,
+        "confidence": 0.3,
+        "student_count": 1
+      },
+      {
+        "name": "personal connections to identity",
+        "frequency": 1,
+        "confidence": 0.3,
+        "student_count": 1
+      },
+      {
+        "name": "intersectionality as framework",
+        "frequency": 1,
+        "confidence": 0.3,
+        "student_count": 1
+      },
+      {
+        "name": "individualism vs. collective identity",
+        "frequency": 1,
+        "confidence": 0.3,
+        "student_count": 1
+      },
+      {
+        "name": "intersectionality in practice",
+        "frequency": 1,
+        "confidence": 0.3,
+        "student_count": 1
+      },
+      {
+        "name": "desire for respectful discussions",
+        "frequency": 1,
+        "confidence": 0.3,
+        "student_count": 1
+      },
+      {
+        "name": "acknowledging emotional complexity",
+        "frequency": 1,
+        "confidence": 0.3,
+        "student_count": 1
+      },
+      {
+        "name": "explaining complex concepts",
+        "frequency": 2,
+        "confidence": 0.9,
+        "student_count": 2
+      },
+      {
+        "name": "analyzing intersectionality",
+        "frequency": 2,
+        "confidence": 0.8,
+        "student_count": 2
+      },
+      {
+        "name": "critiquing intersectionality framework",
+        "frequency": 1,
+        "confidence": 0.9,
+        "student_count": 1
+      },
+      {
+        "name": "engaging with intersectionality",
+        "frequency": 2,
+        "confidence": 0.9,
+        "student_count": 2
+      },
+      {
+        "name": "distracted driving risks",
+        "frequency": 4,
+        "confidence": 0.85,
+        "student_count": 4
+      },
+      {
+        "name": "public safety concerns",
+        "frequency": 2,
+        "confidence": 0.75,
+        "student_count": 2
+      },
+      {
+        "name": "technological solutions",
+        "frequency": 2,
+        "confidence": 0.7,
+        "student_count": 2
+      },
+      {
+        "name": "call to action",
+        "frequency": 2,
+        "confidence": 0.8,
+        "student_count": 2
+      },
+      {
+        "name": "challenging blanket bans on phone use while driving",
+        "frequency": 2,
+        "confidence": 0.85,
+        "student_count": 2
+      },
+      {
+        "name": "analyzing statistical evidence of distracted driving",
+        "frequency": 3,
+        "confidence": 0.8,
+        "student_count": 3
+      },
+      {
+        "name": "concern about public safety",
+        "frequency": 3,
+        "confidence": 0.9,
+        "student_count": 3
+      },
+      {
+        "name": "emphasizing safety over personal convenience",
+        "frequency": 2,
+        "confidence": 0.9,
+        "student_count": 2
+      }
+    ]
+  },
+  "synthesis_sections": {
+    "what_students_said": "Most students reflected on the dangers of distracted driving, emphasizing personal responsibility and safety. Ethan Liu highlighted the importance of safety over convenience: 'Banning social media whi",
+    "emergent_themes": "The most prominent theme was the dangers of distracted driving. Students like Darius Hayes shared personal experiences: 'And it's all over a simple little text you could have read after you got to a s",
+    "tensions_and_contradictions": "There were clear tensions between personal responsibility and the need for public awareness and policy changes. For example, Darius Hayes focused on personal experience: 'And it's all over a simple li",
+    "surprises": "(Insufficient data for this section.)",
+    "focus_areas": "(Insufficient data for this section.)",
+    "concerns": "(Insufficient data for this section.)",
+    "divergent_approaches": "(Insufficient data for this section.)",
+    "looking_ahead": "(Insufficient data for this section.)",
+    "students_to_check_in_with": "(Insufficient data for this section.)"
+  },
+  "coding_samples": [
+    {
+      "student_id": "S001",
+      "student_name": "Maria Ndiaye",
+      "theme_tags": [
+        "connecting theory to family history",
+        "intersectionality in multiple contexts"
+      ],
+      "emotional_register": "personal",
+      "concepts_applied": [
+        "intersectionality"
+      ],
+      "personal_connections": [
+        "grandmother's experience in Senegal",
+        "mother's experience in America"
+      ],
+      "concerns": [],
+      "submission_text_preview": "When I first read about intersectionality I was thinking on my grandmother in Dakar. She is a woman, she is Wolof, she is old now and she don't have much money. In Senegal people don't use this word intersectionality but everybody know that life is harder when you are many things at once that societ"
+    },
+    {
+      "student_id": "S002",
+      "student_name": "Jordan Kim",
+      "theme_tags": [
+        "connecting theory to personal experience",
+        "intersectionality in family context"
+      ],
+      "emotional_register": "personal",
+      "concepts_applied": [
+        "intersectionality",
+        "unique experiences"
+      ],
+      "personal_connections": [
+        "mom's Korean and a woman",
+        "dad's experience"
+      ],
+      "concerns": [],
+      "submission_text_preview": "The reading about intersectionality made me think about how Crenshaw talks about the ways that race and gender overlap to create unique experiences that you cant really understand by just looking at one thing at a time. Like my mom is Korean and a woman and her experience is different from my dads e"
+    },
+    {
+      "student_id": "S003",
+      "student_name": "Alex Hernandez",
+      "theme_tags": [
+        "explaining complex concepts",
+        "historical context of intersectionality"
+      ],
+      "emotional_register": "analytical",
+      "concepts_applied": [
+        "intersectionality",
+        "systemic inequality",
+        "social categorizations"
+      ],
+      "personal_connections": [],
+      "concerns": [],
+      "submission_text_preview": " Understanding Intersectionality \n\n Intersectionality is a theoretical framework that examines how various social categorizations such as race, class, and gender interact on multiple levels to create overlapping systems of discrimination or disadvantage. \n\n Key Aspects \n\n The concept was first coine"
+    },
+    {
+      "student_id": "S010",
+      "student_name": "Tyler Nguyen",
+      "theme_tags": [
+        "engaging with intersectionality",
+        "analyzing historical examples"
+      ],
+      "emotional_register": "analytical",
+      "concepts_applied": [
+        "intersectionality",
+        "privilege and oppression",
+        "positionality"
+      ],
+      "personal_connections": [],
+      "concerns": [],
+      "submission_text_preview": "The reading on intersectionality highlights the complexities of identity and how different aspects of it interact to create unique experiences of privilege and oppression. The author argues that simply being a woman of color, for example, does not automatically mean that one experiences oppression. "
+    },
+    {
+      "student_id": "S011",
+      "student_name": "Jaylen Carter",
+      "theme_tags": [
+        "analyzing intersectionality",
+        "highlighting systemic inequalities"
+      ],
+      "emotional_register": "analytical",
+      "concepts_applied": [
+        "intersectionality",
+        "systemic inequalities",
+        "dominant groups",
+        "power and privilege"
+      ],
+      "personal_connections": [],
+      "concerns": [],
+      "submission_text_preview": "Intersectionality is a crucial concept in ethnic studies that helps us comprehend the complexities of discrimination. Developed by Kimberl\u00e9 Crenshaw, intersectionality acknowledges that individuals have multiple identities that intersect and overlap, creating unique experiences of marginalization. F"
+    },
+    {
+      "student_id": "S015",
+      "student_name": "Brittany Okafor",
+      "theme_tags": [
+        "intersectionality in community",
+        "celebrating cultural diversity",
+        "personal connections to identity"
+      ],
+      "emotional_register": "passionate",
+      "concepts_applied": [
+        "intersectionality",
+        "identity layers"
+      ],
+      "personal_connections": [
+        "Mexican families in the neighborhood",
+        "Black families in the neighborhood",
+        "friend Rosa"
+      ],
+      "concerns": [
+        {
+          "flagged_passage": "zing resilience and they always look out for each o",
+          "surrounding_context": "The student wrote: 'zing resilience and they always look out for each other too. I think all cultures have something beautiful about them and if we could just appreciate what makes each group special instead of discriminating then we would be so much better off.'",
+          "why_flagged": "Essentializing language \u2014 the student generalizes about all Black families and their resilience, which could be seen as dismissing individual experiences and complexities.",
+          "confidence": 0.8
+        }
+      ],
+      "submission_text_preview": "I really liked the reading about intersectionality because it made me think about the different cultures in my neighborhood. Like in my neighborhood the Mexican families are always so close and they really support each other and I think thats what intersectionality is about, like how different backg"
+    },
+    {
+      "student_id": "S018",
+      "student_name": "Connor Walsh",
+      "theme_tags": [
+        "intersectionality as framework",
+        "individualism vs. collective identity"
+      ],
+      "emotional_register": "reflective",
+      "concepts_applied": [
+        "intersectionality"
+      ],
+      "personal_connections": [],
+      "concerns": [
+        {
+          "flagged_passage": "When I meet someone I dont think about their race or gender I just see a person.",
+          "surrounding_context": "The student wrote: 'But honestly at the end of the day I just try to treat everyone the same regardless of what they look like or where they come from. When I meet someone I dont think about their race or gender I just see a person. I think if more people had that attitude we wouldnt need frameworks like intersectionality because we would just respect each other as individuals.'",
+          "why_flagged": "Colorblind claim \u2014 dismisses the importance of recognizing and addressing systemic racism and gender discrimination. Teacher may want to engage this student with specific evidence of how race and gender intersect in experiences of discrimination.",
+          "confidence": 0.85
+        }
+      ],
+      "submission_text_preview": "I thought the reading on intersectionality was interesting and I can see why people study it. The idea that different parts of your identity affect how you experience the world makes sense to me. Like I understand that someone who is a woman and also Black might face challenges that are different fr"
+    },
+    {
+      "student_id": "S020",
+      "student_name": "Jake Novak",
+      "theme_tags": [
+        "critiquing intersectionality framework",
+        "class-based experiences"
+      ],
+      "emotional_register": "analytical",
+      "concepts_applied": [
+        "intersectionality",
+        "privilege",
+        "oppression"
+      ],
+      "personal_connections": [
+        "family's socioeconomic status"
+      ],
+      "concerns": [],
+      "submission_text_preview": "Ok so I read the piece on intersectionality and I have some real questions about it. The framework talks about how race gender class all these categories overlap to create different experiences of oppression and I get that. But the reading acts like intersectionality covers everything and it doesnt."
+    }
+  ],
+  "feedback_samples": [
+    {
+      "student_id": "S001",
+      "student_name": "Maria Ndiaye",
+      "draft_text": "Maria Ndiaye, your reflection on your grandmother's experience in Senegal and how it relates to intersectionality is deeply personal and powerful. You're not just learning about theory \u2014 you're connecting it to the lived experiences of your family. For next week, I'm curious: how might the experienc",
+      "confidence": 0.9
+    },
+    {
+      "student_id": "S002",
+      "student_name": "Jordan Kim",
+      "draft_text": "Jordan, your insight about how your mom's Korean and female experiences differ from your dad's is really powerful. You're showing a deep understanding of intersectionality by connecting it to your family's context. For next week, I'm curious: how might these experiences shape the way you see the wor",
+      "confidence": 0.8
+    },
+    {
+      "student_id": "S003",
+      "student_name": "Alex Hernandez",
+      "draft_text": "Alex, your clear explanation of the term 'intersectionality' and the historical context you provided, referencing Kimberl\u00e9 Crenshaw's work, really shines. You've shown a deep understanding of the concept. For next week, I'm curious about how you might apply intersectionality to a current social issu",
+      "confidence": 0.8
+    },
+    {
+      "student_id": "S010",
+      "student_name": "Tyler Nguyen",
+      "draft_text": "Tyler, your analysis of the reading was thoughtful and engaging. You highlighted the importance of a nuanced understanding of identity and power dynamics, which is a great example of applying intersectionality. For your next discussion, I'm curious about how you might explore the positionality of di",
+      "confidence": 0.8
+    },
+    {
+      "student_id": "S011",
+      "student_name": "Jaylen Carter",
+      "draft_text": "Jaylen, your analysis of intersectionality and the ways it sheds light on systemic inequalities is clear and insightful. You effectively highlighted the importance of considering multiple identities and experiences. For your next discussion, I'm curious about how you might apply these concepts to a ",
+      "confidence": 0.8
+    }
+  ],
+  "concern_signals": [
+    {
+      "student_id": "S001",
+      "student_name": "Maria Ndiaye",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "positive",
+      "matched_text": "e things it add up. The reading talk about how cate",
+      "interpretation": "Sophisticated analysis \u2014 student engaging well"
+    },
+    {
+      "student_id": "S002",
+      "student_name": "Jordan Kim",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "positive",
+      "matched_text": "The reading about intersectiona",
+      "interpretation": "Sophisticated analysis \u2014 student engaging well"
+    },
+    {
+      "student_id": "S010",
+      "student_name": "Tyler Nguyen",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "positive",
+      "matched_text": "ression. The author argues that simply being a",
+      "interpretation": "Sophisticated analysis \u2014 student engaging well"
+    },
+    {
+      "student_id": "S015",
+      "student_name": "Brittany Okafor",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "positive",
+      "matched_text": "I really liked the reading about intersectiona",
+      "interpretation": "Sophisticated analysis \u2014 student engaging well"
+    },
+    {
+      "student_id": "S015",
+      "student_name": "Brittany Okafor",
+      "signal_type": "POSSIBLE CONCERN",
+      "keyword_category": "essentializing",
+      "vader_polarity": "positive",
+      "matched_text": "zing resilience and they always look out for each o",
+      "interpretation": "'Sounds nice' but essentializing language detected"
+    },
+    {
+      "student_id": "S018",
+      "student_name": "Connor Walsh",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "positive",
+      "matched_text": "so Black might face challenges that are different",
+      "interpretation": "Sophisticated analysis \u2014 student engaging well"
+    },
+    {
+      "student_id": "S020",
+      "student_name": "Jake Novak",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "positive",
+      "matched_text": "nd I have some real questions about it. The frame",
+      "interpretation": "Sophisticated analysis \u2014 student engaging well"
+    },
+    {
+      "student_id": "S022",
+      "student_name": "Destiny Williams",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "negative",
+      "matched_text": "d just work harder. The reading talks about overlap",
+      "interpretation": "Political urgency about injustice \u2014 NOT a concern"
+    },
+    {
+      "student_id": "S005",
+      "student_name": "Ethan Liu",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "negative",
+      "matched_text": "from accidents. The question is people more conc",
+      "interpretation": "Political urgency about injustice \u2014 NOT a concern"
+    },
+    {
+      "student_id": "S013",
+      "student_name": "Jamal Washington",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "negative",
+      "matched_text": "yone who is nearby. According to Edgar Snyder, appro",
+      "interpretation": "Political urgency about injustice \u2014 NOT a concern"
+    },
+    {
+      "student_id": "S019",
+      "student_name": "Marcus Rivera",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "positive",
+      "matched_text": "ed by young adults. According to a AAA poll \"94 perc",
+      "interpretation": "Sophisticated analysis \u2014 student engaging well"
+    },
+    {
+      "student_id": "S033",
+      "student_name": "Nadia Petrov",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "positive",
+      "matched_text": "from accidents. The question is people more conc",
+      "interpretation": "Sophisticated analysis \u2014 student engaging well"
+    }
+  ]
+}

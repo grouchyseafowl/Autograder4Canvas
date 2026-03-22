@@ -1,0 +1,755 @@
+{
+  "assignment_id": "test-001",
+  "assignment_name": "Test Analysis",
+  "course_id": "test-course",
+  "course_name": "Test Course",
+  "analyzed_at": "2026-03-21T02:21:21.510331",
+  "stats": {
+    "total_submissions": 30,
+    "total_enrollment": 0,
+    "word_count_mean": 272.0,
+    "word_count_median": 279.5,
+    "word_count_min": 173,
+    "word_count_max": 346,
+    "word_counts": [
+      178,
+      212,
+      332,
+      209,
+      336,
+      257,
+      272,
+      267,
+      221,
+      202,
+      321,
+      201,
+      335,
+      341,
+      323,
+      255,
+      278,
+      293,
+      327,
+      284,
+      346,
+      232,
+      330,
+      313,
+      204,
+      292,
+      239,
+      306,
+      173,
+      281
+    ],
+    "format_breakdown": {
+      "online_text_entry": 30
+    },
+    "timing": {
+      "on_time": 30
+    }
+  },
+  "top_terms": [
+    {
+      "term": "driving",
+      "count": 193
+    },
+    {
+      "term": "phone",
+      "count": 129
+    },
+    {
+      "term": "phones",
+      "count": 101
+    },
+    {
+      "term": "cell",
+      "count": 81
+    },
+    {
+      "term": "drivers",
+      "count": 56
+    },
+    {
+      "term": "texting",
+      "count": 50
+    },
+    {
+      "term": "car",
+      "count": 43
+    },
+    {
+      "term": "road",
+      "count": 40
+    },
+    {
+      "term": "accidents",
+      "count": 34
+    },
+    {
+      "term": "text",
+      "count": 32
+    },
+    {
+      "term": "cause",
+      "count": 28
+    },
+    {
+      "term": "vehicle",
+      "count": 25
+    },
+    {
+      "term": "accident",
+      "count": 24
+    },
+    {
+      "term": "dangerous",
+      "count": 22
+    },
+    {
+      "term": "driver",
+      "count": 21
+    },
+    {
+      "term": "drive",
+      "count": 20
+    },
+    {
+      "term": "risk",
+      "count": 18
+    },
+    {
+      "term": "distracted",
+      "count": 17
+    },
+    {
+      "term": "caused",
+      "count": 17
+    },
+    {
+      "term": "device",
+      "count": 17
+    },
+    {
+      "term": "law",
+      "count": 17
+    },
+    {
+      "term": "crashes",
+      "count": 16
+    },
+    {
+      "term": "laws",
+      "count": 16
+    },
+    {
+      "term": "deaths",
+      "count": 14
+    },
+    {
+      "term": "likely",
+      "count": 14
+    },
+    {
+      "term": "distraction",
+      "count": 14
+    },
+    {
+      "term": "teens",
+      "count": 13
+    },
+    {
+      "term": "problem",
+      "count": 13
+    },
+    {
+      "term": "attention",
+      "count": 13
+    },
+    {
+      "term": "operating",
+      "count": 12
+    }
+  ],
+  "tfidf_terms": [],
+  "named_entities": {},
+  "keyword_hits": {
+    "conceptual_connection": {
+      "pattern_name": "conceptual_connection",
+      "count": 11,
+      "student_ids": [
+        "daigt_00000",
+        "daigt_00001",
+        "daigt_00002",
+        "daigt_00003",
+        "daigt_00013",
+        "daigt_00018",
+        "daigt_00022",
+        "daigt_00029"
+      ],
+      "examples": [
+        "…caused in distracted driving related accidents, that doesn't neces…",
+        "…lready been about 3,000 phone related car accident deaths since 201…",
+        "…Driving\n\nThe ability to stay connected to people we know despite dis…",
+        "…se die. The number of crashes related to a phone and texting have m…",
+        "…annual driver and cell phone related instances that have happened…"
+      ]
+    },
+    "current_events": {
+      "pattern_name": "current_events",
+      "count": 11,
+      "student_ids": [
+        "daigt_00000",
+        "daigt_00002",
+        "daigt_00013",
+        "daigt_00017",
+        "daigt_00020",
+        "daigt_00022",
+        "daigt_00023"
+      ],
+      "examples": [
+        "…the use of cellular devices\n\nToday, most of the society is thoug…",
+        "…e invention of the telephone. Today, a telephone is in the hand o…",
+        "…Phones and Driving\n\nIn today's current society almost ever…",
+        "…Today, there are many controversial…",
+        "…Today in society cell phones play a…"
+      ]
+    },
+    "evidence_use": {
+      "pattern_name": "evidence_use",
+      "count": 7,
+      "student_ids": [
+        "daigt_00001",
+        "daigt_00008",
+        "daigt_00014",
+        "daigt_00027"
+      ],
+      "examples": [
+        "…ccident that could be fatal.\n\nAccording to an article by the Edgar Snyde…",
+        "…es while operating a vehicle. According to the article \"Cellphone Use Wh…",
+        "…Phone & Driving\n\nAccording to the National Safety Council r…",
+        "…f they weren't using a phone. According to statistics in 2018 9 deaths a…"
+      ]
+    },
+    "critical_analysis": {
+      "pattern_name": "critical_analysis",
+      "count": 2,
+      "student_ids": [
+        "daigt_00004",
+        "daigt_00011"
+      ],
+      "examples": [
+        "…e driving? My opinion to that question would be no for many reasons.…",
+        "…distance from accidents. The question is people more concerned more…"
+      ]
+    },
+    "essentializing": {
+      "pattern_name": "essentializing",
+      "count": 1,
+      "student_ids": [
+        "daigt_00013"
+      ],
+      "examples": [
+        "…ear were on their phones. And those people would still be alive had they…"
+      ]
+    },
+    "personal_reflection": {
+      "pattern_name": "personal_reflection",
+      "count": 1,
+      "student_ids": [
+        "daigt_00023"
+      ],
+      "examples": [
+        "…can't hear the outside world. Personally I don't like how people do th…"
+      ]
+    },
+    "distress_markers": {
+      "pattern_name": "distress_markers",
+      "count": 2,
+      "student_ids": [
+        "daigt_00025",
+        "daigt_00026"
+      ],
+      "examples": [
+        "…socially accepted and nearly unsafe.\n\nTexting and driving puts al…",
+        "…f the road which is extremely unsafe this should be reason enough…"
+      ]
+    }
+  },
+  "sentiments": {},
+  "sentiment_distribution": {},
+  "clusters": [],
+  "embedding_outlier_ids": [],
+  "shared_references": [
+    {
+      "reference": "Phones & Driving\n\nDrivers",
+      "student_ids": [
+        "daigt_00001",
+        "daigt_00019",
+        "daigt_00025"
+      ],
+      "count": 3
+    }
+  ],
+  "contradictions": [],
+  "concern_signals": [
+    {
+      "student_id": "daigt_00001",
+      "student_name": "DAIGT-daigt_00001",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "neutral",
+      "matched_text": "at could be fatal.\n\nAccording to an article by the E",
+      "interpretation": "Measured critical analysis"
+    },
+    {
+      "student_id": "daigt_00004",
+      "student_name": "DAIGT-daigt_00004",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "neutral",
+      "matched_text": "My opinion to that question would be no for man",
+      "interpretation": "Measured critical analysis"
+    },
+    {
+      "student_id": "daigt_00008",
+      "student_name": "DAIGT-daigt_00008",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "neutral",
+      "matched_text": "perating a vehicle. According to the article \"Cellph",
+      "interpretation": "Measured critical analysis"
+    },
+    {
+      "student_id": "daigt_00011",
+      "student_name": "DAIGT-daigt_00011",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "neutral",
+      "matched_text": "from accidents. The question is people more conc",
+      "interpretation": "Measured critical analysis"
+    },
+    {
+      "student_id": "daigt_00013",
+      "student_name": "DAIGT-daigt_00013",
+      "signal_type": "CONCERN",
+      "keyword_category": "essentializing",
+      "vader_polarity": "neutral",
+      "matched_text": "n their phones. And those people would still be aliv",
+      "interpretation": "Normalized prejudice — potentially insidious, flag for review"
+    },
+    {
+      "student_id": "daigt_00014",
+      "student_name": "DAIGT-daigt_00014",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "neutral",
+      "matched_text": "Phone & Driving\n\nAccording to the National Safety",
+      "interpretation": "Measured critical analysis"
+    },
+    {
+      "student_id": "daigt_00025",
+      "student_name": "DAIGT-daigt_00025",
+      "signal_type": "CHECK IN",
+      "keyword_category": "distress",
+      "vader_polarity": "neutral",
+      "matched_text": "accepted and nearly unsafe.\n\nTexting and drivi",
+      "interpretation": "Understated distress — check carefully"
+    },
+    {
+      "student_id": "daigt_00026",
+      "student_name": "DAIGT-daigt_00026",
+      "signal_type": "CHECK IN",
+      "keyword_category": "distress",
+      "vader_polarity": "neutral",
+      "matched_text": "which is extremely unsafe this should be reas",
+      "interpretation": "Understated distress — check carefully"
+    },
+    {
+      "student_id": "daigt_00027",
+      "student_name": "DAIGT-daigt_00027",
+      "signal_type": "APPROPRIATE",
+      "keyword_category": "critical",
+      "vader_polarity": "neutral",
+      "matched_text": "en't using a phone. According to statistics in 2018",
+      "interpretation": "Measured critical analysis"
+    }
+  ],
+  "per_submission": {
+    "daigt_00000": {
+      "student_id": "daigt_00000",
+      "student_name": "DAIGT-daigt_00000",
+      "word_count": 178,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "conceptual_connection": 1,
+        "current_events": 1
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00001": {
+      "student_id": "daigt_00001",
+      "student_name": "DAIGT-daigt_00001",
+      "word_count": 212,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "conceptual_connection": 1,
+        "evidence_use": 3
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00002": {
+      "student_id": "daigt_00002",
+      "student_name": "DAIGT-daigt_00002",
+      "word_count": 332,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "conceptual_connection": 3,
+        "current_events": 2
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00003": {
+      "student_id": "daigt_00003",
+      "student_name": "DAIGT-daigt_00003",
+      "word_count": 209,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "conceptual_connection": 1
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00004": {
+      "student_id": "daigt_00004",
+      "student_name": "DAIGT-daigt_00004",
+      "word_count": 336,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "critical_analysis": 1
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00005": {
+      "student_id": "daigt_00005",
+      "student_name": "DAIGT-daigt_00005",
+      "word_count": 257,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {},
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00006": {
+      "student_id": "daigt_00006",
+      "student_name": "DAIGT-daigt_00006",
+      "word_count": 272,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {},
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00007": {
+      "student_id": "daigt_00007",
+      "student_name": "DAIGT-daigt_00007",
+      "word_count": 267,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {},
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00008": {
+      "student_id": "daigt_00008",
+      "student_name": "DAIGT-daigt_00008",
+      "word_count": 221,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "evidence_use": 2
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00009": {
+      "student_id": "daigt_00009",
+      "student_name": "DAIGT-daigt_00009",
+      "word_count": 202,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {},
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00010": {
+      "student_id": "daigt_00010",
+      "student_name": "DAIGT-daigt_00010",
+      "word_count": 321,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {},
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00011": {
+      "student_id": "daigt_00011",
+      "student_name": "DAIGT-daigt_00011",
+      "word_count": 201,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "critical_analysis": 1
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00012": {
+      "student_id": "daigt_00012",
+      "student_name": "DAIGT-daigt_00012",
+      "word_count": 335,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {},
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00013": {
+      "student_id": "daigt_00013",
+      "student_name": "DAIGT-daigt_00013",
+      "word_count": 341,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "conceptual_connection": 2,
+        "current_events": 3,
+        "essentializing": 1
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00014": {
+      "student_id": "daigt_00014",
+      "student_name": "DAIGT-daigt_00014",
+      "word_count": 323,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "evidence_use": 1
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00015": {
+      "student_id": "daigt_00015",
+      "student_name": "DAIGT-daigt_00015",
+      "word_count": 255,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {},
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00016": {
+      "student_id": "daigt_00016",
+      "student_name": "DAIGT-daigt_00016",
+      "word_count": 278,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {},
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00017": {
+      "student_id": "daigt_00017",
+      "student_name": "DAIGT-daigt_00017",
+      "word_count": 293,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "current_events": 1
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00018": {
+      "student_id": "daigt_00018",
+      "student_name": "DAIGT-daigt_00018",
+      "word_count": 327,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "conceptual_connection": 1
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00019": {
+      "student_id": "daigt_00019",
+      "student_name": "DAIGT-daigt_00019",
+      "word_count": 284,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {},
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00020": {
+      "student_id": "daigt_00020",
+      "student_name": "DAIGT-daigt_00020",
+      "word_count": 346,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "current_events": 1
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00021": {
+      "student_id": "daigt_00021",
+      "student_name": "DAIGT-daigt_00021",
+      "word_count": 232,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {},
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00022": {
+      "student_id": "daigt_00022",
+      "student_name": "DAIGT-daigt_00022",
+      "word_count": 330,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "conceptual_connection": 1,
+        "current_events": 2
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00023": {
+      "student_id": "daigt_00023",
+      "student_name": "DAIGT-daigt_00023",
+      "word_count": 313,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "personal_reflection": 1,
+        "current_events": 1
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00024": {
+      "student_id": "daigt_00024",
+      "student_name": "DAIGT-daigt_00024",
+      "word_count": 204,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {},
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00025": {
+      "student_id": "daigt_00025",
+      "student_name": "DAIGT-daigt_00025",
+      "word_count": 292,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "distress_markers": 1
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00026": {
+      "student_id": "daigt_00026",
+      "student_name": "DAIGT-daigt_00026",
+      "word_count": 239,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "distress_markers": 1
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00027": {
+      "student_id": "daigt_00027",
+      "student_name": "DAIGT-daigt_00027",
+      "word_count": 306,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "evidence_use": 1
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00028": {
+      "student_id": "daigt_00028",
+      "student_name": "DAIGT-daigt_00028",
+      "word_count": 173,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {},
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    },
+    "daigt_00029": {
+      "student_id": "daigt_00029",
+      "student_name": "DAIGT-daigt_00029",
+      "word_count": 281,
+      "submission_type": "online_text_entry",
+      "vader_compound": 0.0,
+      "keyword_hits": {
+        "conceptual_connection": 1
+      },
+      "cluster_id": null,
+      "was_translated": false,
+      "was_transcribed": false
+    }
+  },
+  "analysis_notes": []
+}

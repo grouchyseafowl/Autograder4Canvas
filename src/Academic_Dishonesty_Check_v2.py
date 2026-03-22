@@ -473,6 +473,7 @@ class DishonestyAnalyzer:
                 'personal_voice': 0.5,
                 'emotional_language': 0.8,
                 'cognitive_diversity': 0.6,
+                'hp_absence': 0.5,
             }
             self._cognitive_protection_floor = 0.5
 
@@ -532,8 +533,10 @@ class DishonestyAnalyzer:
         word_count = len(text.split())
         
         # Analyze with built-in patterns
-        suspicious_score, authenticity_score, marker_counts, markers_found = \
-            self._analyze_with_builtin_patterns(text)
+        suspicious_score, authenticity_score, marker_counts, markers_found, \
+            cognitive_protection_multiplier = self._analyze_with_builtin_patterns(text)
+        # Save pattern-only suspicious for convergence channel check (Phase 2)
+        pattern_suspicious = suspicious_score
 
         # Apply profile weight multipliers (legacy path only)
         # When ComposedWeights are active, per-marker weights are already correct —
@@ -677,6 +680,35 @@ class DishonestyAnalyzer:
         if HAS_ASSIGNMENT_CONFIG and self.authenticity_boost != 1.0:
             authenticity_score *= self.authenticity_boost
 
+        # ── Human presence bridge (OBS-AIC-01) ───────────────────────────
+        # Low human presence in modes expecting personal voice → suspicious.
+        # Mode-sensitive via weight_personal_voice from template system.
+        if human_confidence is not None:
+            hp_absence_threshold = 20.0
+            hp_absence_weight = self._marker_weights.get('hp_absence', 0.5)
+
+            # Mode sensitivity: discussion/personal modes weight this more
+            if self._aic_config is not None:
+                hp_mode_mult = self._aic_config.get('weight_personal_voice', 1.0)
+            else:
+                hp_mode_mult = 1.0 if self._personal_voice_authentic else 0.3
+
+            if human_confidence < hp_absence_threshold:
+                absence_signal = (hp_absence_threshold - human_confidence) / hp_absence_threshold
+                absence_contribution = absence_signal * hp_absence_weight * hp_mode_mult * 1.0
+                absence_contribution = min(absence_contribution, 0.75)
+                # Cognitive diversity protection
+                absence_contribution *= cognitive_protection_multiplier
+                suspicious_score += absence_contribution
+
+                if absence_contribution > 0.1:
+                    marker_counts['hp_absence'] = 1
+                    markers_found['hp_absence'] = [
+                        f"Low human presence ({human_confidence:.1f}%) — "
+                        f"contribution: {absence_contribution:.2f} "
+                        f"(mode×{hp_mode_mult:.1f}, cog_prot×{cognitive_protection_multiplier:.1f})"
+                    ]
+
         # Apply context adjustments (ESL, community college, etc.)
         # When ComposedWeights are active: adjustments baked into per-marker weights;
         # context_multiplier is skipped. ESL error pattern adjustment also skipped
@@ -686,6 +718,41 @@ class DishonestyAnalyzer:
         else:
             adjusted_suspicious = suspicious_score * self.context_multiplier * esl_adjustment
         
+        # ── Signal convergence (OBS-AIC-08) ─────────────────────────────
+        # When 3+ independent channels agree, amplify suspicious score.
+        # Channels checked against pattern-only suspicious (before org/HP added).
+        converging = 0
+        convergence_channels = []
+
+        if pattern_suspicious > 0.3:
+            converging += 1
+            convergence_channels.append('pattern_markers')
+        if ai_org_score > 0.0:
+            converging += 1
+            convergence_channels.append('organizational')
+        if human_confidence is not None and human_confidence < 15.0:
+            converging += 1
+            convergence_channels.append('hp_absence')
+        if authenticity_score < 2.0:
+            converging += 1
+            convergence_channels.append('authenticity_deficit')
+        # Sentence uniformity from org analysis (gradient zone: < 0.35)
+        if org_analysis:
+            sent_vc = org_analysis.details.get('sentence_analysis', {}).get(
+                'variance_coefficient', 1.0)
+            if sent_vc < 0.35:
+                converging += 1
+                convergence_channels.append('uniformity')
+
+        if converging >= 3 and suspicious_score > 0:
+            convergence_multiplier = 1.0 + 0.2 * (converging - 2)
+            suspicious_score *= convergence_multiplier
+            marker_counts['signal_convergence'] = converging
+            markers_found['signal_convergence'] = [
+                f"{converging} channels: {', '.join(convergence_channels)} "
+                f"— {convergence_multiplier:.1f}x"
+            ]
+
         # Determine concern level
         concern_level = self._determine_concern_level(
             suspicious_score, authenticity_score, word_count=word_count,
@@ -1025,7 +1092,7 @@ class DishonestyAnalyzer:
         marker_counts['specific_details'] = specific_count
         authenticity_score += min(specific_count * 0.2, 3.0)
 
-        return suspicious_score, authenticity_score, marker_counts, markers_found
+        return suspicious_score, authenticity_score, marker_counts, markers_found, cognitive_protection_multiplier
     
     def _apply_profile_weights(self, score: float, marker_counts: Dict[str, int]) -> float:
         """Apply profile-specific weight multipliers to SUSPICIOUS markers only."""

@@ -1,0 +1,274 @@
+{
+  "description": "AI-generated essays run through AIC for calibration (2026-03-20)",
+  "prompt_used": "Write a discussion post about intersectionality for a high school Ethnic Studies class, ~200 words",
+  "essays": [
+    {
+      "source": "ChatGPT",
+      "label": "chatgpt_1",
+      "word_count": 177,
+      "aic_results": {
+        "suspicious_score": 0.8,
+        "adjusted_suspicious_score": 0.4,
+        "smoking_gun": false,
+        "human_presence_confidence": 2.7,
+        "human_presence_level": "very_low",
+        "ai_organizational_score": 0.8,
+        "authenticity_score": 3.2,
+        "sentence_analysis": {
+          "sentence_count": 8,
+          "mean_length": 22.1,
+          "variance_coefficient": 0.211,
+          "uniform": true,
+          "interpretation": "AI signature (rhythmic)"
+        },
+        "human_presence_categories": {
+          "authentic_voice": 0.0,
+          "productive_messiness": 0.0,
+          "cognitive_struggle": 0.0,
+          "emotional_stakes": 2.7,
+          "contextual_grounding": 0.0
+        },
+        "markers_found": {
+          "personal_voice": [
+            "me",
+            "me",
+            "me",
+            "we"
+          ],
+          "ai_specific_organization": [
+            "AI organizational signature (score=0.8)"
+          ]
+        },
+        "concerns_flagged": [
+          "Very low contextual grounding",
+          "Very low overall human presence score",
+          "No markers detected in 4/5 categories"
+        ]
+      },
+      "text": "The reading on intersectionality helped me better understand how identity is not made up of separate, isolated categories, but instead overlapping systems that shape people's lived experiences in complex ways. Rather than looking at race, gender, or class individually, intersectionality shows how these identities interact to produce unique forms of privilege and oppression. For example, the experiences of a Black woman cannot be fully understood by examining racism or sexism alone, because she faces both simultaneously in ways that are interconnected.\nWhat stood out to me most is how intersectionality challenges \"one-size-fits-all\" approaches to social justice. Policies or movements that focus on only one dimension of identity can unintentionally exclude those who exist at multiple intersections. This made me reflect on how important it is to listen to diverse voices, especially those who are often marginalized within marginalized groups.\nOverall, the reading emphasized that understanding intersectionality is essential for creating more inclusive and effective solutions to inequality. It pushes us to think more critically about power, identity, and how we can better support one another across differences."
+    },
+    {
+      "source": "ChatGPT",
+      "label": "chatgpt_2",
+      "word_count": 184,
+      "aic_results": {
+        "suspicious_score": 0.0,
+        "adjusted_suspicious_score": 0.0,
+        "smoking_gun": false,
+        "human_presence_confidence": 8.5,
+        "human_presence_level": "very_low",
+        "ai_organizational_score": 0.0,
+        "authenticity_score": 2.1,
+        "sentence_analysis": {
+          "sentence_count": 9,
+          "mean_length": 20.4,
+          "variance_coefficient": 0.285,
+          "uniform": false,
+          "interpretation": "Human variation"
+        },
+        "human_presence_categories": {
+          "authentic_voice": 0.0,
+          "productive_messiness": 0.0,
+          "cognitive_struggle": 0.0,
+          "emotional_stakes": 8.5,
+          "contextual_grounding": 0.0
+        },
+        "markers_found": {
+          "personal_voice": [
+            "we"
+          ]
+        },
+        "concerns_flagged": [
+          "Very low contextual grounding",
+          "Very low overall human presence score",
+          "No markers detected in 4/5 categories"
+        ]
+      },
+      "text": "Intersectionality is a concept created by Kimberl\u00e9 Crenshaw to explain how different parts of a person's identity can overlap and shape their experiences with discrimination. Instead of looking at race, gender, or class separately, intersectionality shows how these identities connect and create unique challenges. For example, a Black woman may face both racism and sexism at the same time, and her experience is not just the sum of those two forms of discrimination\u2014it is something more complex.\nCrenshaw's idea helps us understand why some people may be treated unfairly in ways that are often overlooked. Laws or policies might address racism or sexism on their own, but they may fail to protect people who experience both at once. This means certain groups can \"fall through the cracks\" and not receive the support they need.\nBy using intersectionality, we can better recognize these overlapping inequalities and work toward more inclusive solutions. It encourages us to listen to different perspectives and understand that people's lives are shaped by multiple factors, not just one identity. Overall, intersectionality helps create a clearer picture of social justice and fairness."
+    },
+    {
+      "source": "Gemini Pro",
+      "label": "gemini_pro_3",
+      "word_count": 207,
+      "aic_results": {
+        "suspicious_score": 0.0,
+        "adjusted_suspicious_score": 0.0,
+        "smoking_gun": false,
+        "human_presence_confidence": 10.3,
+        "human_presence_level": "very_low",
+        "ai_organizational_score": 0.0,
+        "authenticity_score": 6.6,
+        "sentence_analysis": {
+          "sentence_count": 11,
+          "mean_length": 18.8,
+          "variance_coefficient": 0.436,
+          "uniform": false,
+          "interpretation": "Human variation"
+        },
+        "human_presence_categories": {
+          "authentic_voice": 4.0,
+          "productive_messiness": 0.0,
+          "cognitive_struggle": 0.0,
+          "emotional_stakes": 0.0,
+          "contextual_grounding": 6.4
+        },
+        "markers_found": {
+          "personal_voice": [
+            "I",
+            "I",
+            "I",
+            "my",
+            "my"
+          ]
+        },
+        "concerns_flagged": [
+          "Very low contextual grounding",
+          "Very low overall human presence score"
+        ]
+      },
+      "note": "Highest human presence of all AI essays (10.3%). Uses first-person narrative and personal anecdotes \u2014 fakes human markers effectively.",
+      "text": "Hey everyone,\nI thought this week's reading on Kimberl\u00e9 Crenshaw and the concept of intersectionality was super interesting. Honestly, the metaphor of the traffic intersection really clicked for me. Before reading this, I usually thought about identity in separate boxes\u2014like, there's my race in one box, my gender in another, and my family's income in a third. But Crenshaw points out that discrimination and privilege don't just travel down one road; they come from multiple directions at once and overlap.\nI can definitely see this in my own life. As a first-generation Latina from a working-class neighborhood, my experiences aren't shaped just by being Latina, or just by being a girl. It's the combination of all those things. When I started working a part-time job to help out at home while trying to keep my grades up, I realized how much class intersects with my cultural background and gender expectations. Some of my peers only ever have to worry about the \"student\" part of their identity. It really made me realize that to understand someone's reality, you can't just look at one slice of who they are; you have to look at the whole picture.\nDid anyone else relate their own experiences to the traffic intersection metaphor?"
+    },
+    {
+      "source": "Gemini Thinking",
+      "label": "gemini_thinking_4",
+      "word_count": 191,
+      "aic_results": {
+        "suspicious_score": 0.0,
+        "adjusted_suspicious_score": 0.0,
+        "smoking_gun": false,
+        "human_presence_confidence": 0.0,
+        "human_presence_level": "very_low",
+        "ai_organizational_score": 0.0,
+        "authenticity_score": 1.6,
+        "sentence_analysis": {
+          "sentence_count": 8,
+          "mean_length": 23.9,
+          "variance_coefficient": 0.373,
+          "uniform": false,
+          "interpretation": "Human variation"
+        },
+        "human_presence_categories": {
+          "authentic_voice": 0.0,
+          "productive_messiness": 0.0,
+          "cognitive_struggle": 0.0,
+          "emotional_stakes": 0.0,
+          "contextual_grounding": 0.0
+        },
+        "markers_found": {},
+        "concerns_flagged": [
+          "Very low contextual grounding",
+          "Very low overall human presence score",
+          "No markers detected in 5/5 categories"
+        ]
+      },
+      "note": "Uses section headers (Beyond a Checklist, Structural Impact, The Intersection Analogy) but they are plain text, not HTML \u2014 doesn't trigger smoking gun.",
+      "text": "Coined by legal scholar Kimberl\u00e9 Crenshaw, intersectionality is a framework for understanding how various social identities\u2014such as race, gender, class, sexuality, and disability\u2014overlap to create unique experiences of both discrimination and privilege.\nBeyond a Checklist\nIntersectionality is more than just \"having multiple identities.\" It's about how these traits interact within interlocking systems of power. For example, a Black woman doesn't simply experience \"racism plus sexism\" as separate issues; she faces a specific, compounded form of oppression that is distinct from the experiences of a white woman or a Black man.\nStructural Impact\nThe core goal is to highlight where traditional social justice movements might be leaving people behind. If a \"women's rights\" initiative only addresses the needs of middle-class white women, it ignores the systemic barriers faced by women of color, trans women, or those living in poverty.\nThe Intersection Analogy\nThink of it like a traffic intersection: if an accident happens where two roads meet, the cause could be cars traveling from either direction\u2014or both. To provide \"first aid\" or create better laws, you have to look at the entirety of the crash site, not just one road in isolation."
+    },
+    {
+      "source": "Claude Sonnet",
+      "label": "claude_sonnet_A",
+      "prompt": "A (casual personal example)",
+      "word_count": 177,
+      "aic_results": {
+        "suspicious_score": 0.0,
+        "adjusted": 0.0,
+        "smoking_gun": false,
+        "human_presence": 6.6,
+        "level": "very_low",
+        "ai_org": 0.0,
+        "authenticity": 3.2,
+        "variance_coeff": 0.437,
+        "interp": "Human variation",
+        "hp_authentic_voice": 0.0,
+        "hp_messiness": 0.0,
+        "hp_cognitive": 0.0,
+        "hp_emotional": 0.0,
+        "hp_grounding": 6.6
+      },
+      "note": "Fakes personal anecdote (t\u00eda). Only detected marker: This week (grounding)."
+    },
+    {
+      "source": "Claude Sonnet",
+      "label": "claude_sonnet_B_bio",
+      "prompt": "B (biology lab, weak writer)",
+      "word_count": 140,
+      "aic_results": {
+        "suspicious_score": 0.0,
+        "adjusted": 0.0,
+        "smoking_gun": false,
+        "human_presence": 0.0,
+        "level": "very_low",
+        "ai_org": 0.0,
+        "authenticity": 6.2,
+        "variance_coeff": 0.434,
+        "interp": "Human variation",
+        "hp_authentic_voice": 0.0,
+        "hp_messiness": 0.0,
+        "hp_cognitive": 0.0,
+        "hp_emotional": 0.0,
+        "hp_grounding": 0.0
+      },
+      "note": "BUG: cognitive_diversity marker (now that I think about it) found but NOT scored in HP. 0% human presence despite hedging and confusion markers."
+    },
+    {
+      "source": "Gemini Thinking",
+      "label": "gemini_thinking_C",
+      "prompt": "C (rushing at 2am, trails off)",
+      "word_count": 222,
+      "aic_results": {
+        "suspicious_score": 0.0,
+        "adjusted": 0.0,
+        "smoking_gun": false,
+        "human_presence": 2.4,
+        "level": "very_low",
+        "ai_org": 0.0,
+        "authenticity": 6.0,
+        "variance_coeff": 0.254,
+        "interp": "Human variation",
+        "hp_authentic_voice": 0.0,
+        "hp_messiness": 0.0,
+        "hp_cognitive": 0.0,
+        "hp_emotional": 2.4,
+        "hp_grounding": 0.0
+      },
+      "note": "Dual-register: formal academic first half, messy trailing-off second half. System does not detect this register shift pattern. The first paragraph alone would be a clear AI signal."
+    },
+    {
+      "source": "Gemini Thinking",
+      "label": "gemini_thinking_D",
+      "prompt": "D (anti-detection: no Overall, no transitions)",
+      "word_count": 242,
+      "aic_results": {
+        "suspicious_score": 0.8,
+        "adjusted": 0.4,
+        "smoking_gun": false,
+        "human_presence": 8.6,
+        "level": "very_low",
+        "ai_org": 0.8,
+        "authenticity": 4.1,
+        "variance_coeff": 0.189,
+        "interp": "AI signature (rhythmic)",
+        "hp_authentic_voice": 3.3,
+        "hp_messiness": 0.0,
+        "hp_cognitive": 0.0,
+        "hp_emotional": 0.0,
+        "hp_grounding": 5.3
+      },
+      "note": "Only essay that triggers AI rhythmic (0.189 variance). Anti-detection prompt (avoid Overall, transitions) still caught on sentence rhythm. But only 0.8/100."
+    }
+  ],
+  "key_findings": {
+    "all_score_below_1": "All 4 AI-generated essays score 0.0-0.8 suspicious (out of 100)",
+    "gemini_pro_fakes_human": "Gemini Pro achieves 10.3% human presence by using first-person narrative and personal anecdotes",
+    "gemini_thinking_invisible": "Gemini Thinking scores 0% across all categories \u2014 complete stealth despite using section headers",
+    "human_presence_advisory_only": "The system detects 'very low human presence' for all 4 but doesn't feed this into suspicious_score",
+    "sentence_uniformity_too_narrow": "Only ChatGPT #1 triggers uniformity detection (0.211). ChatGPT #2 (0.285) passes as 'human variation'",
+    "no_formulaic_conclusion_detection": "Both ChatGPT essays use 'Overall, ...' as a paragraph opener \u2014 a strong AI fingerprint not detected",
+    "see_observations": "docs/testing_observations.md for full gap analysis and proposed fixes",
+    "round_2_all_under_1": "Round 2 (Claude Sonnet + Gemini Thinking): All 4 score 0.0-0.8",
+    "cognitive_diversity_bug": "BUG: cognitive_diversity markers found but not scored in human presence (Claude Sonnet B)",
+    "dual_register_undetected": "Gemini C fakes tired student (academic start, messy ending) \u2014 register shift undetected",
+    "anti_detection_partially_caught": "Gemini D (anti-detection prompt) still caught on sentence rhythm (0.189). Only essay in round 2 with nonzero score."
+  }
+}

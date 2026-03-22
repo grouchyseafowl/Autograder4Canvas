@@ -1,0 +1,2559 @@
+[
+  {
+    "source_id": "daigt_00000",
+    "word_count": 178,
+    "suspicious_score": 0.0,
+    "authenticity_score": 1.6,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 1.7,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 2,
+      "emotional_language": 0,
+      "specific_details": 3
+    }
+  },
+  {
+    "source_id": "daigt_00001",
+    "word_count": 212,
+    "suspicious_score": 1.1,
+    "authenticity_score": 2.6,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion"
+      ],
+      "ai_specific_organization": [
+        "AI organizational signature (score=0.8): "
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 13,
+      "ai_specific_organization": 1
+    }
+  },
+  {
+    "source_id": "daigt_00002",
+    "word_count": 332,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.1,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 8
+    }
+  },
+  {
+    "source_id": "daigt_00003",
+    "word_count": 209,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.0,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 10
+    }
+  },
+  {
+    "source_id": "daigt_00004",
+    "word_count": 336,
+    "suspicious_score": 0.3,
+    "authenticity_score": 2.8,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "generic_phrases": [
+        "in many ways"
+      ],
+      "personal_voice": [
+        "My",
+        "my"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 1,
+      "inflated_vocabulary": 0,
+      "personal_voice": 2,
+      "emotional_language": 0,
+      "specific_details": 9
+    }
+  },
+  {
+    "source_id": "daigt_00005",
+    "word_count": 257,
+    "suspicious_score": 0.0,
+    "authenticity_score": 4.3,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "i",
+        "we",
+        "We",
+        "we",
+        "our"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 5,
+      "emotional_language": 0,
+      "specific_details": 9
+    }
+  },
+  {
+    "source_id": "daigt_00006",
+    "word_count": 272,
+    "suspicious_score": 0.9,
+    "authenticity_score": 2.4,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion",
+        "secondly",
+        "lastly"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 3,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 12
+    }
+  },
+  {
+    "source_id": "daigt_00007",
+    "word_count": 267,
+    "suspicious_score": 0.0,
+    "authenticity_score": 1.8,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 2,
+      "emotional_language": 0,
+      "specific_details": 4
+    }
+  },
+  {
+    "source_id": "daigt_00008",
+    "word_count": 221,
+    "suspicious_score": 0.3,
+    "authenticity_score": 3.4,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "inflated_vocabulary": [
+        "implement"
+      ],
+      "personal_voice": [
+        "I",
+        "I believe"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 1,
+      "personal_voice": 2,
+      "emotional_language": 0,
+      "specific_details": 12
+    }
+  },
+  {
+    "source_id": "daigt_00009",
+    "word_count": 202,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.8,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I",
+        "I",
+        "my"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 4,
+      "emotional_language": 0,
+      "specific_details": 4
+    }
+  },
+  {
+    "source_id": "daigt_00010",
+    "word_count": 321,
+    "suspicious_score": 0.0,
+    "authenticity_score": 6.0,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 15.4,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I",
+        "we",
+        "We",
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 22,
+      "emotional_language": 0,
+      "specific_details": 5
+    }
+  },
+  {
+    "source_id": "daigt_00011",
+    "word_count": 201,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.2,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I think"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 2,
+      "emotional_language": 0,
+      "specific_details": 6
+    }
+  },
+  {
+    "source_id": "daigt_00012",
+    "word_count": 335,
+    "suspicious_score": 0.0,
+    "authenticity_score": 7.2,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 5.5,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "my",
+        "we",
+        "we",
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 11,
+      "emotional_language": 0,
+      "specific_details": 11
+    }
+  },
+  {
+    "source_id": "daigt_00013",
+    "word_count": 341,
+    "suspicious_score": 0.0,
+    "authenticity_score": 3.0,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 25
+    }
+  },
+  {
+    "source_id": "daigt_00014",
+    "word_count": 323,
+    "suspicious_score": 0.0,
+    "authenticity_score": 3.0,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 15
+    }
+  },
+  {
+    "source_id": "daigt_00015",
+    "word_count": 255,
+    "suspicious_score": 0.0,
+    "authenticity_score": 1.8,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 9
+    }
+  },
+  {
+    "source_id": "daigt_00016",
+    "word_count": 278,
+    "suspicious_score": 0.3,
+    "authenticity_score": 3.6,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "lastly"
+      ],
+      "personal_voice": [
+        "my",
+        "my"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 2,
+      "emotional_language": 0,
+      "specific_details": 13
+    }
+  },
+  {
+    "source_id": "daigt_00017",
+    "word_count": 293,
+    "suspicious_score": 0.0,
+    "authenticity_score": 5.5,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "i",
+        "I",
+        "I believe",
+        "i believe"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 7,
+      "emotional_language": 0,
+      "specific_details": 10
+    }
+  },
+  {
+    "source_id": "daigt_00018",
+    "word_count": 327,
+    "suspicious_score": 0.3,
+    "authenticity_score": 3.5,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 1.9,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion"
+      ],
+      "personal_voice": [
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 16
+    }
+  },
+  {
+    "source_id": "daigt_00019",
+    "word_count": 284,
+    "suspicious_score": 0.0,
+    "authenticity_score": 1.2,
+    "concern_level": "elevated",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 6
+    }
+  },
+  {
+    "source_id": "daigt_00020",
+    "word_count": 346,
+    "suspicious_score": 0.3,
+    "authenticity_score": 1.0,
+    "concern_level": "elevated",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "generic_phrases": [
+        "studies show"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 1,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 5
+    }
+  },
+  {
+    "source_id": "daigt_00021",
+    "word_count": 232,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.2,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 11
+    }
+  },
+  {
+    "source_id": "daigt_00022",
+    "word_count": 330,
+    "suspicious_score": 0.0,
+    "authenticity_score": 3.5,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 2.6,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 15
+    }
+  },
+  {
+    "source_id": "daigt_00023",
+    "word_count": 313,
+    "suspicious_score": 0.0,
+    "authenticity_score": 6.4,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 4.1,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I",
+        "I",
+        "my",
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 13,
+      "emotional_language": 0,
+      "specific_details": 7
+    }
+  },
+  {
+    "source_id": "daigt_00024",
+    "word_count": 204,
+    "suspicious_score": 0.0,
+    "authenticity_score": 5.8,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I",
+        "i",
+        "We",
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 11,
+      "emotional_language": 0,
+      "specific_details": 4
+    }
+  },
+  {
+    "source_id": "daigt_00025",
+    "word_count": 292,
+    "suspicious_score": 0.3,
+    "authenticity_score": 4.0,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "lastly"
+      ],
+      "personal_voice": [
+        "our",
+        "our"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 2,
+      "emotional_language": 0,
+      "specific_details": 21
+    }
+  },
+  {
+    "source_id": "daigt_00026",
+    "word_count": 239,
+    "suspicious_score": 0.3,
+    "authenticity_score": 3.7,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion"
+      ],
+      "personal_voice": [
+        "I",
+        "I",
+        "I",
+        "I believe",
+        "I think"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 5,
+      "emotional_language": 0,
+      "specific_details": 6
+    }
+  },
+  {
+    "source_id": "daigt_00027",
+    "word_count": 306,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.4,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 12
+    }
+  },
+  {
+    "source_id": "daigt_00028",
+    "word_count": 173,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.2,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 11
+    }
+  },
+  {
+    "source_id": "daigt_00029",
+    "word_count": 281,
+    "suspicious_score": 0.0,
+    "authenticity_score": 5.5,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 1.8,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I",
+        "I",
+        "my",
+        "I think"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 7,
+      "emotional_language": 0,
+      "specific_details": 10
+    }
+  },
+  {
+    "source_id": "daigt_00030",
+    "word_count": 303,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.9,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "my"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 12
+    }
+  },
+  {
+    "source_id": "daigt_00031",
+    "word_count": 330,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.9,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 12
+    }
+  },
+  {
+    "source_id": "daigt_00032",
+    "word_count": 283,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.3,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 4.9,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "We"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 9
+    }
+  },
+  {
+    "source_id": "daigt_00033",
+    "word_count": 212,
+    "suspicious_score": 0.3,
+    "authenticity_score": 1.6,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 8
+    }
+  },
+  {
+    "source_id": "daigt_00034",
+    "word_count": 274,
+    "suspicious_score": 1.4,
+    "authenticity_score": 2.3,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion"
+      ],
+      "generic_phrases": [
+        "studies show"
+      ],
+      "personal_voice": [
+        "My"
+      ],
+      "ai_specific_organization": [
+        "AI organizational signature (score=0.8): "
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 1,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 9,
+      "ai_specific_organization": 1
+    }
+  },
+  {
+    "source_id": "daigt_00035",
+    "word_count": 249,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.4,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "my",
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 2,
+      "emotional_language": 0,
+      "specific_details": 7
+    }
+  },
+  {
+    "source_id": "daigt_00036",
+    "word_count": 282,
+    "suspicious_score": 0.3,
+    "authenticity_score": 5.0,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion"
+      ],
+      "personal_voice": [
+        "I",
+        "I",
+        "i",
+        "I believe"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 4,
+      "emotional_language": 0,
+      "specific_details": 19
+    }
+  },
+  {
+    "source_id": "daigt_00037",
+    "word_count": 289,
+    "suspicious_score": 0.0,
+    "authenticity_score": 3.0,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 28
+    }
+  },
+  {
+    "source_id": "daigt_00038",
+    "word_count": 291,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.5,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "my"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 10
+    }
+  },
+  {
+    "source_id": "daigt_00039",
+    "word_count": 328,
+    "suspicious_score": 0.3,
+    "authenticity_score": 3.0,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 2.7,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "generic_phrases": [
+        "when it comes to"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 1,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 17
+    }
+  },
+  {
+    "source_id": "daigt_00040",
+    "word_count": 274,
+    "suspicious_score": 0.0,
+    "authenticity_score": 7.4,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 1.9,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "we",
+        "We",
+        "we",
+        "our",
+        "our"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 20,
+      "emotional_language": 0,
+      "specific_details": 12
+    }
+  },
+  {
+    "source_id": "daigt_00041",
+    "word_count": 286,
+    "suspicious_score": 0.3,
+    "authenticity_score": 7.4,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "generic_phrases": [
+        "when it comes to"
+      ],
+      "personal_voice": [
+        "I",
+        "I",
+        "I",
+        "me",
+        "our"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 1,
+      "inflated_vocabulary": 0,
+      "personal_voice": 12,
+      "emotional_language": 0,
+      "specific_details": 12
+    }
+  },
+  {
+    "source_id": "daigt_00042",
+    "word_count": 227,
+    "suspicious_score": 0.3,
+    "authenticity_score": 2.2,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 4.8,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "generic_phrases": [
+        "studies show"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 1,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 11
+    }
+  },
+  {
+    "source_id": "daigt_00043",
+    "word_count": 266,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.0,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 10
+    }
+  },
+  {
+    "source_id": "daigt_00044",
+    "word_count": 240,
+    "suspicious_score": 0.3,
+    "authenticity_score": 2.7,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "lastly"
+      ],
+      "personal_voice": [
+        "I"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 11
+    }
+  },
+  {
+    "source_id": "daigt_00045",
+    "word_count": 251,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.8,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I",
+        "I think",
+        "I think"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 4,
+      "emotional_language": 0,
+      "specific_details": 4
+    }
+  },
+  {
+    "source_id": "daigt_00046",
+    "word_count": 289,
+    "suspicious_score": 0.0,
+    "authenticity_score": 6.4,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 5.5,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "i",
+        "I",
+        "we",
+        "I believe"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 13,
+      "emotional_language": 0,
+      "specific_details": 7
+    }
+  },
+  {
+    "source_id": "daigt_00047",
+    "word_count": 249,
+    "suspicious_score": 0.0,
+    "authenticity_score": 5.2,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 4.3,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I",
+        "I",
+        "we",
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 8,
+      "emotional_language": 0,
+      "specific_details": 6
+    }
+  },
+  {
+    "source_id": "daigt_00048",
+    "word_count": 276,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.0,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 10
+    }
+  },
+  {
+    "source_id": "daigt_00049",
+    "word_count": 335,
+    "suspicious_score": 0.3,
+    "authenticity_score": 2.8,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 4.2,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 14
+    }
+  },
+  {
+    "source_id": "daigt_00050",
+    "word_count": 334,
+    "suspicious_score": 0.3,
+    "authenticity_score": 3.0,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "generic_phrases": [
+        "on the other hand"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 1,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 23
+    }
+  },
+  {
+    "source_id": "daigt_00051",
+    "word_count": 307,
+    "suspicious_score": 1.4,
+    "authenticity_score": 5.3,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion",
+        "lastly"
+      ],
+      "personal_voice": [
+        "I",
+        "I",
+        "I",
+        "my",
+        "our"
+      ],
+      "ai_specific_organization": [
+        "AI organizational signature (score=0.8): "
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 2,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 7,
+      "emotional_language": 0,
+      "specific_details": 9,
+      "ai_specific_organization": 1
+    }
+  },
+  {
+    "source_id": "daigt_00052",
+    "word_count": 276,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.2,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 3.2,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 11
+    }
+  },
+  {
+    "source_id": "daigt_00053",
+    "word_count": 341,
+    "suspicious_score": 0.3,
+    "authenticity_score": 6.8,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "generic_phrases": [
+        "when it comes to"
+      ],
+      "personal_voice": [
+        "I",
+        "I",
+        "I",
+        "My",
+        "My"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 1,
+      "inflated_vocabulary": 0,
+      "personal_voice": 15,
+      "emotional_language": 0,
+      "specific_details": 9
+    }
+  },
+  {
+    "source_id": "daigt_00054",
+    "word_count": 301,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.6,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 13
+    }
+  },
+  {
+    "source_id": "daigt_00055",
+    "word_count": 297,
+    "suspicious_score": 0.3,
+    "authenticity_score": 3.0,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 19
+    }
+  },
+  {
+    "source_id": "daigt_00056",
+    "word_count": 335,
+    "suspicious_score": 0.3,
+    "authenticity_score": 3.8,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion"
+      ],
+      "emotional_language": [
+        "it hurt"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 1,
+      "specific_details": 16
+    }
+  },
+  {
+    "source_id": "daigt_00057",
+    "word_count": 269,
+    "suspicious_score": 0.3,
+    "authenticity_score": 2.2,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 11
+    }
+  },
+  {
+    "source_id": "daigt_00058",
+    "word_count": 185,
+    "suspicious_score": 0.3,
+    "authenticity_score": 1.2,
+    "concern_level": "elevated",
+    "smoking_gun": false,
+    "human_presence_confidence": 3.4,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "generic_phrases": [
+        "many things"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 1,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 6
+    }
+  },
+  {
+    "source_id": "daigt_00059",
+    "word_count": 246,
+    "suspicious_score": 0.9,
+    "authenticity_score": 3.1,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "generic_phrases": [
+        "in today's society",
+        "in many ways",
+        "when it comes to"
+      ],
+      "personal_voice": [
+        "I"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 3,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 13
+    }
+  },
+  {
+    "source_id": "daigt_00060",
+    "word_count": 282,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.7,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "our"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 11
+    }
+  },
+  {
+    "source_id": "daigt_00061",
+    "word_count": 250,
+    "suspicious_score": 0.3,
+    "authenticity_score": 1.6,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "generic_phrases": [
+        "when it comes to"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 1,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 8
+    }
+  },
+  {
+    "source_id": "daigt_00062",
+    "word_count": 228,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.4,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 2,
+      "emotional_language": 0,
+      "specific_details": 7
+    }
+  },
+  {
+    "source_id": "daigt_00063",
+    "word_count": 281,
+    "suspicious_score": 0.0,
+    "authenticity_score": 4.8,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "our",
+        "our",
+        "I believe"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 4,
+      "emotional_language": 0,
+      "specific_details": 14
+    }
+  },
+  {
+    "source_id": "daigt_00064",
+    "word_count": 346,
+    "suspicious_score": 0.0,
+    "authenticity_score": 3.8,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I think"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 2,
+      "emotional_language": 0,
+      "specific_details": 14
+    }
+  },
+  {
+    "source_id": "daigt_00065",
+    "word_count": 310,
+    "suspicious_score": 0.0,
+    "authenticity_score": 8.0,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I",
+        "I",
+        "my",
+        "me"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 12,
+      "emotional_language": 0,
+      "specific_details": 16
+    }
+  },
+  {
+    "source_id": "daigt_00066",
+    "word_count": 273,
+    "suspicious_score": 0.0,
+    "authenticity_score": 3.3,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 1.9,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "me",
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 3,
+      "emotional_language": 0,
+      "specific_details": 9
+    }
+  },
+  {
+    "source_id": "daigt_00067",
+    "word_count": 290,
+    "suspicious_score": 0.6,
+    "authenticity_score": 1.6,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "furthermore",
+        "in conclusion"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 2,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 8
+    }
+  },
+  {
+    "source_id": "daigt_00068",
+    "word_count": 240,
+    "suspicious_score": 0.8,
+    "authenticity_score": 2.7,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "our"
+      ],
+      "ai_specific_organization": [
+        "AI organizational signature (score=0.8): "
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 11,
+      "ai_specific_organization": 1
+    }
+  },
+  {
+    "source_id": "daigt_00069",
+    "word_count": 289,
+    "suspicious_score": 1.1,
+    "authenticity_score": 3.8,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 4.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "generic_phrases": [
+        "on the other hand"
+      ],
+      "personal_voice": [
+        "i",
+        "we",
+        "we",
+        "our"
+      ],
+      "ai_specific_organization": [
+        "AI organizational signature (score=0.8): "
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 1,
+      "inflated_vocabulary": 0,
+      "personal_voice": 4,
+      "emotional_language": 0,
+      "specific_details": 9,
+      "ai_specific_organization": 1
+    }
+  },
+  {
+    "source_id": "daigt_00070",
+    "word_count": 217,
+    "suspicious_score": 0.6,
+    "authenticity_score": 3.4,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "furthermore",
+        "lastly"
+      ],
+      "personal_voice": [
+        "I",
+        "my"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 2,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 2,
+      "emotional_language": 0,
+      "specific_details": 12
+    }
+  },
+  {
+    "source_id": "daigt_00071",
+    "word_count": 234,
+    "suspicious_score": 0.6,
+    "authenticity_score": 2.8,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in addition",
+        "in conclusion"
+      ],
+      "personal_voice": [
+        "my",
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 2,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 2,
+      "emotional_language": 0,
+      "specific_details": 9
+    }
+  },
+  {
+    "source_id": "daigt_00072",
+    "word_count": 281,
+    "suspicious_score": 0.0,
+    "authenticity_score": 4.6,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I",
+        "I believe",
+        "I think"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 4,
+      "emotional_language": 0,
+      "specific_details": 13
+    }
+  },
+  {
+    "source_id": "daigt_00073",
+    "word_count": 294,
+    "suspicious_score": 0.3,
+    "authenticity_score": 4.3,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion"
+      ],
+      "personal_voice": [
+        "We",
+        "we",
+        "our"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 3,
+      "emotional_language": 0,
+      "specific_details": 14
+    }
+  },
+  {
+    "source_id": "daigt_00074",
+    "word_count": 312,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.3,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 9
+    }
+  },
+  {
+    "source_id": "daigt_00075",
+    "word_count": 201,
+    "suspicious_score": 0.0,
+    "authenticity_score": 3.5,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 4.5,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 16
+    }
+  },
+  {
+    "source_id": "daigt_00076",
+    "word_count": 200,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.5,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "our"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 10
+    }
+  },
+  {
+    "source_id": "daigt_00077",
+    "word_count": 313,
+    "suspicious_score": 0.3,
+    "authenticity_score": 1.6,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 8
+    }
+  },
+  {
+    "source_id": "daigt_00078",
+    "word_count": 293,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.0,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 10
+    }
+  },
+  {
+    "source_id": "daigt_00079",
+    "word_count": 217,
+    "suspicious_score": 0.0,
+    "authenticity_score": 5.0,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 5.7,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I",
+        "we",
+        "we",
+        "our"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 6,
+      "emotional_language": 0,
+      "specific_details": 10
+    }
+  },
+  {
+    "source_id": "daigt_00080",
+    "word_count": 304,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.8,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 14
+    }
+  },
+  {
+    "source_id": "daigt_00081",
+    "word_count": 249,
+    "suspicious_score": 0.3,
+    "authenticity_score": 4.1,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion"
+      ],
+      "personal_voice": [
+        "i",
+        "i",
+        "i",
+        "my"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 5,
+      "emotional_language": 0,
+      "specific_details": 8
+    }
+  },
+  {
+    "source_id": "daigt_00082",
+    "word_count": 346,
+    "suspicious_score": 0.3,
+    "authenticity_score": 2.9,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 1.5,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "generic_phrases": [
+        "on the other hand"
+      ],
+      "personal_voice": [
+        "I"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 1,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 12
+    }
+  },
+  {
+    "source_id": "daigt_00083",
+    "word_count": 263,
+    "suspicious_score": 0.3,
+    "authenticity_score": 3.8,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "generic_phrases": [
+        "in many ways"
+      ],
+      "personal_voice": [
+        "I",
+        "I",
+        "I believe",
+        "I think"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 1,
+      "inflated_vocabulary": 0,
+      "personal_voice": 4,
+      "emotional_language": 0,
+      "specific_details": 9
+    }
+  },
+  {
+    "source_id": "daigt_00084",
+    "word_count": 343,
+    "suspicious_score": 0.0,
+    "authenticity_score": 3.5,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 16
+    }
+  },
+  {
+    "source_id": "daigt_00085",
+    "word_count": 214,
+    "suspicious_score": 0.0,
+    "authenticity_score": 3.7,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "we",
+        "we",
+        "our"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 3,
+      "emotional_language": 0,
+      "specific_details": 11
+    }
+  },
+  {
+    "source_id": "daigt_00086",
+    "word_count": 330,
+    "suspicious_score": 0.6,
+    "authenticity_score": 3.5,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "generic_phrases": [
+        "in today's society",
+        "in today's society"
+      ],
+      "personal_voice": [
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 2,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 18
+    }
+  },
+  {
+    "source_id": "daigt_00087",
+    "word_count": 320,
+    "suspicious_score": 0.0,
+    "authenticity_score": 3.0,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 2.7,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 42
+    }
+  },
+  {
+    "source_id": "daigt_00088",
+    "word_count": 318,
+    "suspicious_score": 0.0,
+    "authenticity_score": 5.8,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "i",
+        "i",
+        "my",
+        "me"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 8,
+      "emotional_language": 0,
+      "specific_details": 9
+    }
+  },
+  {
+    "source_id": "daigt_00089",
+    "word_count": 315,
+    "suspicious_score": 0.0,
+    "authenticity_score": 3.7,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 1.6,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "we",
+        "I believe"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 3,
+      "emotional_language": 0,
+      "specific_details": 11
+    }
+  },
+  {
+    "source_id": "daigt_00090",
+    "word_count": 334,
+    "suspicious_score": 0.0,
+    "authenticity_score": 5.2,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I",
+        "I",
+        "me",
+        "I think"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 10,
+      "emotional_language": 0,
+      "specific_details": 1
+    }
+  },
+  {
+    "source_id": "daigt_00091",
+    "word_count": 266,
+    "suspicious_score": 0.6,
+    "authenticity_score": 7.0,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 2.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "moreover"
+      ],
+      "generic_phrases": [
+        "studies show"
+      ],
+      "personal_voice": [
+        "we",
+        "we",
+        "we",
+        "our",
+        "our"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 1,
+      "inflated_vocabulary": 0,
+      "personal_voice": 13,
+      "emotional_language": 0,
+      "specific_details": 10
+    }
+  },
+  {
+    "source_id": "daigt_00092",
+    "word_count": 314,
+    "suspicious_score": 0.0,
+    "authenticity_score": 1.4,
+    "concern_level": "elevated",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 7
+    }
+  },
+  {
+    "source_id": "daigt_00093",
+    "word_count": 266,
+    "suspicious_score": 0.0,
+    "authenticity_score": 2.0,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 10
+    }
+  },
+  {
+    "source_id": "daigt_00094",
+    "word_count": 230,
+    "suspicious_score": 0.0,
+    "authenticity_score": 4.1,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 8.1,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "my",
+        "my",
+        "we",
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 5,
+      "emotional_language": 0,
+      "specific_details": 8
+    }
+  },
+  {
+    "source_id": "daigt_00095",
+    "word_count": 172,
+    "suspicious_score": 0.0,
+    "authenticity_score": 1.8,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 9
+    }
+  },
+  {
+    "source_id": "daigt_00096",
+    "word_count": 296,
+    "suspicious_score": 0.3,
+    "authenticity_score": 3.5,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "ai_transitions": [
+        "in conclusion"
+      ],
+      "personal_voice": [
+        "we"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 1,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 26
+    }
+  },
+  {
+    "source_id": "daigt_00097",
+    "word_count": 293,
+    "suspicious_score": 0.0,
+    "authenticity_score": 4.8,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "personal_voice": [
+        "I",
+        "I",
+        "my",
+        "me"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 4,
+      "emotional_language": 0,
+      "specific_details": 14
+    }
+  },
+  {
+    "source_id": "daigt_00098",
+    "word_count": 296,
+    "suspicious_score": 0.3,
+    "authenticity_score": 4.3,
+    "concern_level": "none",
+    "smoking_gun": false,
+    "human_presence_confidence": 1.8,
+    "human_presence_level": "very_low",
+    "markers_found": {
+      "generic_phrases": [
+        "a number of"
+      ],
+      "personal_voice": [
+        "We"
+      ]
+    },
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 1,
+      "inflated_vocabulary": 0,
+      "personal_voice": 1,
+      "emotional_language": 0,
+      "specific_details": 9
+    }
+  },
+  {
+    "source_id": "daigt_00099",
+    "word_count": 186,
+    "suspicious_score": 0.0,
+    "authenticity_score": 1.8,
+    "concern_level": "moderate",
+    "smoking_gun": false,
+    "human_presence_confidence": 0.0,
+    "human_presence_level": "very_low",
+    "markers_found": {},
+    "marker_counts": {
+      "cognitive_diversity": 0,
+      "ai_transitions": 0,
+      "generic_phrases": 0,
+      "inflated_vocabulary": 0,
+      "personal_voice": 0,
+      "emotional_language": 0,
+      "specific_details": 9
+    }
+  }
+]

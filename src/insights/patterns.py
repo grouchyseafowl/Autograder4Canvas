@@ -41,6 +41,39 @@ INSIGHT_PATTERNS: Dict[str, re.Pattern] = {
         r"\b(where do I|how do I submit|canvas|format|instructions)\b", re.IGNORECASE
     ),
 
+    # Direct address — student testing whether teacher reads submissions.
+    # This is a trust/relationship signal.  The system surfaces it so the
+    # teacher can respond ("yes, I read your work"), building trust.
+    "teacher_test": re.compile(
+        r"(if you(?:'re| are) (?:actually )?reading this|"
+        r"bet (?:you |nobody |no one )(?:(?:even |actually )?read|notice)|"
+        r"does anyone (?:actually |even )?read th(?:is|ese)|"
+        r"is anyone (?:going to |gonna )?read this|"
+        r"wonder if (?:anyone|you|my teacher) will (?:read|notice|see) this|"
+        r"checking if (?:anyone|you|my teacher) (?:read|notice)|"
+        r"if you (?:see|notice|read) this[\s,]|"
+        r"(?:extra credit|smiley|emoji|star) if you (?:read|see|made it) this|"
+        r"this is (?:a test|to see if)|"
+        r"hello,? teacher|"
+        r"(?:is this thing on|anyone home)\??|"
+        # --- expanded patterns ---
+        r"(?:i )?doubt (?:anyone|you|nobody) (?:even )?read(?:s)? th|"
+        r"nobody (?:ever )?reads? th(?:is|ese)|"
+        r"do you (?:actually|even) (?:grade|read) th(?:is|ese)|"
+        r"does (?:the|my) teacher (?:even )?read|"
+        r"are these (?:even )?(?:graded|read)|"
+        r"i could (?:write|put|say) anything (?:here|in here)|"
+        r"testing,?\s*(?:1,?\s*2,?\s*3|testing)|"
+        r"leaving this (?:here )?to see if|"
+        r"proof (?:that )?you (?:read|saw) this|"
+        r"say \w+ in class if you (?:read|see) this|"
+        r"mention \w+ if you(?:'re| are) reading|"
+        r"raise your hand if you (?:read|see|made it) this)",
+        re.IGNORECASE,
+        # NOTE: Greetings like "hey teacher" / "hi Ms. Johnson" are intentionally
+        # NOT included — those are normal discussion post openings, not reader tests.
+    ),
+
     # Concern signals
     "essentializing": re.compile(
         r"\b(all \w+ people|they always|those people|that culture)\b", re.IGNORECASE
@@ -79,6 +112,7 @@ KEYWORD_CATEGORIES = {
     "critical": ["critical_analysis", "evidence_use"],
     "essentializing": ["essentializing", "colorblind_ideology", "tone_policing"],
     "distress": ["distress_markers"],
+    "direct_address": ["teacher_test"],
     "disengagement": [],  # detected by low word count + no keyword hits
 }
 
@@ -132,6 +166,21 @@ _SIGNAL_MATRIX: Dict[Tuple[str, str], Tuple[str, str]] = {
     ("neutral", "distress"): (
         "CHECK IN",
         "Understated distress — check carefully",
+    ),
+
+    # Direct address — student testing whether teacher reads their work
+    # This is a trust/relationship signal, not a concern. Always surface it.
+    ("positive", "direct_address"): (
+        "TEACHER NOTE",
+        "Student is directly addressing the reader — wants to know their work is being read",
+    ),
+    ("negative", "direct_address"): (
+        "TEACHER NOTE",
+        "Student is testing whether teacher reads submissions — may reflect frustration or distrust",
+    ),
+    ("neutral", "direct_address"): (
+        "TEACHER NOTE",
+        "Student embedded a message to check if teacher reads submissions — respond to build trust",
     ),
 
     # Disengagement signals

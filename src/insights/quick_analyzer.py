@@ -38,6 +38,8 @@ from insights.models import (
     TermFrequency,
     TermScore,
 )
+from insights.citation_checker import analyze_class_citations, verify_citations_async
+from insights.gibberish_gate import check_gibberish
 from insights.patterns import (
     INSIGHT_PATTERNS,
     KEYWORD_CATEGORIES,
@@ -173,6 +175,20 @@ class QuickAnalyzer:
             texts[sid] = body
             meta[sid] = sub
 
+        # Pre-analysis gate: flag gibberish before any expensive analysis
+        self._progress("Running gibberish gate...")
+        gibberish_results: Dict[str, Any] = {}  # sid → GibberishResult
+        for sid, body in texts.items():
+            was_translated = meta.get(sid, {}).get("was_translated", False)
+            gib = check_gibberish(body, was_translated=was_translated)
+            gibberish_results[sid] = gib
+            if gib.is_gibberish:
+                result.gibberish_ids.append(sid)
+                name = meta.get(sid, {}).get("student_name", f"Student {sid}")
+                result.analysis_notes.append(
+                    f"Gibberish gate flagged {name}: {gib.detail}"
+                )
+
         self._progress("Computing submission statistics...")
         result.stats = self._compute_stats(texts, meta)
 
@@ -201,10 +217,63 @@ class QuickAnalyzer:
         median_wc = result.stats.word_count_median
         result.concern_signals = self._signal_matrix(texts, meta, result.sentiments, median_wc)
 
+        # Semantic reader-test detection — catches natural variations the regex
+        # can't anticipate ("has anyone actually looked at these?" etc.)
+        # Runs only when sentence-transformers is available (already loaded for clustering).
+        semantic_signals = self._semantic_teacher_test(texts, meta)
+        result.concern_signals.extend(semantic_signals)
+
         self._progress("Detecting contradictions...")
         result.contradictions = self._detect_contradictions(
             texts, meta, result.sentiments, result.shared_references
         )
+
+        # Citation analysis — only produces output when citations exist.
+        # URL/DOI verification runs async in the background (non-blocking).
+        # Equity note: unverified ≠ fake — paywalled, non-English, non-indexed,
+        # and community sources will appear unverified even when real.
+        self._progress("Extracting citations...")
+        try:
+            cite_report = analyze_class_citations(texts, meta)
+            if cite_report.has_citations:
+                # Start async verification — updates citations in place as
+                # each HEAD request completes.  The result dict below captures
+                # a reference to cite_report.citations so it reflects updates.
+                _verify_thread = verify_citations_async(cite_report.citations)
+
+                result.citation_report = {
+                    "has_citations": True,
+                    "source_count": cite_report.source_count,
+                    "students_with_citations": cite_report.students_with_citations,
+                    "students_without_citations": cite_report.students_without_citations,
+                    "generic_reading_ref_count": cite_report.generic_reading_ref_count,
+                    "specific_source_count": cite_report.specific_source_count,
+                    "most_cited": cite_report.most_cited,
+                    "verification_note": (
+                        "URL/DOI existence is checked automatically. "
+                        "Unverified ≠ fake — paywalled, non-English, and "
+                        "community sources will appear unverified."
+                    ),
+                    "sources_summary": [
+                        {
+                            "source": s.source,
+                            "citation_type": s.citation_type,
+                            "student_names": s.student_names,
+                            "count": s.count,
+                        }
+                        for s in cite_report.sources_summary
+                    ],
+                    # Live reference — verification status fills in as
+                    # background thread completes.
+                    "_citations_live": cite_report.citations,
+                }
+                result.analysis_notes.append(
+                    f"Citations found: {cite_report.source_count} unique sources "
+                    f"across {cite_report.students_with_citations} students "
+                    f"(URL/DOI verification running in background)"
+                )
+        except Exception as e:
+            log.warning("Citation analysis failed: %s", e)
 
         # Build per-submission summaries
         for sid, body in texts.items():
@@ -217,6 +286,9 @@ class QuickAnalyzer:
                     break
             vader_compound = result.sentiments.get(sid, {}).get("compound", 0.0)
             kw_hits = match_all_patterns(body)
+            # Reuse gibberish result from the early gate pass
+            gib = gibberish_results.get(sid)
+
             result.per_submission[sid] = PerSubmissionSummary(
                 student_id=sid,
                 student_name=sub_meta.get("student_name", f"Student {sid}"),
@@ -227,6 +299,9 @@ class QuickAnalyzer:
                 cluster_id=cluster_id,
                 was_translated=sub_meta.get("was_translated", False),
                 was_transcribed=sub_meta.get("was_transcribed", False),
+                is_gibberish=gib.is_gibberish if gib else False,
+                gibberish_reason=gib.reason if gib else "",
+                gibberish_detail=gib.detail if gib else "",
             )
 
         return result
@@ -709,4 +784,97 @@ class QuickAnalyzer:
                     matched_text=matched,
                     interpretation=interpretation,
                 ))
+        return signals
+
+    # Reference phrases for semantic reader-test detection.
+    # Covers the semantic space of "student checking if teacher reads their work."
+    _READER_TEST_REFERENCES = [
+        "are you actually reading this?",
+        "does anyone read these submissions?",
+        "I wonder if my teacher will see this",
+        "I bet you don't even read these",
+        "does the teacher actually grade these",
+        "is anyone going to read this?",
+        "nobody reads these anyway",
+        "testing to see if you read this",
+        "I could write anything here and no one would notice",
+        "has anyone actually looked at these?",
+    ]
+    _READER_TEST_THRESHOLD = 0.68  # cosine similarity — empirically tuned
+
+    def _semantic_teacher_test(
+        self,
+        texts: Dict[str, str],
+        meta: Dict[str, Dict],
+    ) -> List[ConcernSignal]:
+        """Semantic reader-test detection using sentence embeddings.
+
+        Catches natural variations the regex can't anticipate
+        ("has anyone actually looked at these?", etc.).
+        Only runs when sentence-transformers is available.
+        Complements, does not replace, the regex teacher_test pattern —
+        regex hits are skipped to avoid duplicate signals.
+
+        #LANGUAGE_JUSTICE: works across phrasings and registers, not just
+        standard English formulations of "are you reading this?"
+        """
+        try:
+            from sentence_transformers import SentenceTransformer
+            import numpy as np
+        except ImportError:
+            return []
+
+        try:
+            model = SentenceTransformer("all-MiniLM-L6-v2")
+            ref_embeddings = model.encode(
+                self._READER_TEST_REFERENCES, show_progress_bar=False,
+                normalize_embeddings=True,
+            )
+        except Exception as e:
+            log.debug("Semantic teacher-test init failed: %s", e)
+            return []
+
+        signals = []
+        teacher_test_pat = INSIGHT_PATTERNS.get("teacher_test")
+
+        for sid, body in texts.items():
+            # Split into sentences — rough but sufficient
+            sentences = [s.strip() for s in re.split(r"[.!?]+", body)
+                         if len(s.strip()) > 15]
+            if not sentences:
+                continue
+
+            try:
+                sent_embeddings = model.encode(
+                    sentences, show_progress_bar=False,
+                    normalize_embeddings=True,
+                )
+            except Exception:
+                continue
+
+            # Cosine similarity: dot product of normalized vectors
+            sim_matrix = sent_embeddings @ ref_embeddings.T  # (n_sents, n_refs)
+            max_sims = sim_matrix.max(axis=1)
+
+            for sentence, sim in zip(sentences, max_sims):
+                if sim < self._READER_TEST_THRESHOLD:
+                    continue
+                # Skip if the regex already caught this sentence — no duplicates
+                if teacher_test_pat and teacher_test_pat.search(sentence):
+                    continue
+                name = meta.get(sid, {}).get("student_name", f"Student {sid}")
+                signals.append(ConcernSignal(
+                    student_id=sid,
+                    student_name=name,
+                    signal_type="TEACHER NOTE",
+                    keyword_category="semantic_direct_address",
+                    vader_polarity="neutral",
+                    matched_text=sentence[:120],
+                    interpretation=(
+                        f"Semantically similar to a reader-test phrase "
+                        f"(similarity {sim:.2f}) — student may be checking "
+                        f"if teacher reads submissions. Respond to build trust."
+                    ),
+                ))
+
         return signals

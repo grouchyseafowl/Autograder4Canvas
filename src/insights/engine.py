@@ -402,6 +402,29 @@ class InsightsEngine:
                     emit_result("coding", preview_data)
                     continue
 
+                # Guard: skip LLM coding for gibberish submissions
+                if quick_sub and quick_sub.is_gibberish:
+                    progress(f"  Skipping {name}: gibberish ({quick_sub.gibberish_reason})")
+                    record = SubmissionCodingRecord(
+                        student_id=sid,
+                        student_name=name,
+                        theme_tags=["non-analyzable text"],
+                        theme_confidence={"non-analyzable text": 1.0},
+                        emotional_register="",
+                        emotional_notes=f"Gibberish gate: {quick_sub.gibberish_detail}",
+                        notable_quotes=[],
+                        word_count=wc,
+                    )
+                    coding_records.append(record)
+                    self._store.save_coding(
+                        run_id, sid, name, record.model_dump_json(),
+                        submission_text=body,
+                    )
+                    preview_data = record.model_dump()
+                    preview_data["_original_text"] = body[:300]
+                    emit_result("coding", preview_data)
+                    continue
+
                 record = code_submission(
                     submission_text=body,
                     student_id=sid,
@@ -455,8 +478,9 @@ class InsightsEngine:
 
                 progress(f"Concern check {i + 1}/{total}: {record.student_name}...")
 
-                # Guard: skip LLM concern detection for very short submissions
-                if wc < 15:
+                # Guard: skip LLM concern detection for very short or gibberish submissions
+                quick_sub_concern = qa_result.per_submission.get(sid)
+                if wc < 15 or (quick_sub_concern and quick_sub_concern.is_gibberish):
                     record.concerns = []
                     self._store.save_coding(
                         run_id, sid, record.student_name, record.model_dump_json()

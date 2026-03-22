@@ -182,6 +182,10 @@ class PerSubmissionSummary(BaseModel):
     cluster_id: Optional[int] = None
     was_translated: bool = False
     was_transcribed: bool = False
+    # Gibberish gate result
+    is_gibberish: bool = False
+    gibberish_reason: str = ""
+    gibberish_detail: str = ""
 
 
 class QuickAnalysisResult(BaseModel):
@@ -227,6 +231,12 @@ class QuickAnalysisResult(BaseModel):
 
     # Per-submission summaries
     per_submission: Dict[str, PerSubmissionSummary] = {}
+
+    # Citation analysis (only populated when citations are found)
+    citation_report: Optional[Dict] = None  # CitationReport serialized
+
+    # Gibberish gate results (student_ids flagged as non-analyzable)
+    gibberish_ids: List[str] = []
 
     # Analysis notes (what components ran, what was skipped)
     analysis_notes: List[str] = []

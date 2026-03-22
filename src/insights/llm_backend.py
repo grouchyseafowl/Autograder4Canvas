@@ -16,6 +16,7 @@ All backends implement: send_text(backend, prompt, system_prompt) -> str
 import json
 import logging
 import subprocess
+import threading
 import time
 from dataclasses import dataclass, field
 from typing import Optional
@@ -184,19 +185,33 @@ def reset_ollama_cache() -> None:
 # MLX availability
 # ---------------------------------------------------------------------------
 
+# MLX serialization lock — MLX's Metal kernel does not support concurrent calls
+# from multiple threads sharing the same loaded model.  All MLX generate() calls
+# must be serialized.  Orphaned threads from timed-out calls will block here until
+# the previous call completes before the next one starts.
+_mlx_lock = threading.Lock()
+
 _mlx_available: Optional[bool] = None
 
 
 def check_mlx() -> bool:
-    """Check if MLX text inference is available."""
+    """Check if MLX text inference is available.
+
+    Tries mlx_lm (text-only) first, then mlx_vlm (vision+language).
+    Either package suffices for text generation.
+    """
     global _mlx_available
     if _mlx_available is not None:
         return _mlx_available
     try:
-        from mlx_vlm import load, generate  # noqa: F401
+        from mlx_lm import load, generate  # noqa: F401
         _mlx_available = True
     except ImportError:
-        _mlx_available = False
+        try:
+            from mlx_vlm import load, generate  # noqa: F401
+            _mlx_available = True
+        except ImportError:
+            _mlx_available = False
     return _mlx_available
 
 
@@ -215,8 +230,10 @@ def auto_detect_backend(
     s = settings or {}
 
     # Check for user-configured cloud API first (for medium/deep tiers)
-    cloud_url = s.get("insights_cloud_api_url", "")
-    cloud_key = s.get("insights_cloud_api_key", "")
+    # Support both key names: GUI saves insights_cloud_url/key,
+    # legacy code used insights_cloud_api_url/key
+    cloud_url = s.get("insights_cloud_url", "") or s.get("insights_cloud_api_url", "")
+    cloud_key = s.get("insights_cloud_key", "") or s.get("insights_cloud_api_key", "")
     cloud_model = s.get("insights_cloud_model", "")
 
     if tier == "deep_thinking" and cloud_url and cloud_key:
@@ -289,19 +306,33 @@ def send_text(
     backend: BackendConfig,
     prompt: str,
     system_prompt: str = "",
+    max_tokens: Optional[int] = None,
 ) -> str:
     """Send a text prompt to the configured backend. Returns response text.
 
+    Parameters
+    ----------
+    max_tokens : int, optional
+        Override backend.max_tokens for this call only.  Use this to set
+        tighter limits for stages that don't need long responses (e.g.,
+        theme generation: 1500 tokens, vs. coding: 4096).
+
     Raises RuntimeError if the backend is unavailable or fails.
     """
-    if backend.name == "ollama":
-        return _ollama_text(backend, prompt, system_prompt)
-    elif backend.name == "mlx":
-        return _mlx_text(backend, prompt, system_prompt)
-    elif backend.name == "cloud":
-        return _cloud_text(backend, prompt, system_prompt)
+    # Apply per-call max_tokens override without mutating the shared config
+    effective = backend
+    if max_tokens is not None and max_tokens != backend.max_tokens:
+        from dataclasses import replace
+        effective = replace(backend, max_tokens=max_tokens)
+
+    if effective.name == "ollama":
+        return _ollama_text(effective, prompt, system_prompt)
+    elif effective.name == "mlx":
+        return _mlx_text(effective, prompt, system_prompt)
+    elif effective.name == "cloud":
+        return _cloud_text(effective, prompt, system_prompt)
     else:
-        raise ValueError(f"Unknown backend: {backend.name}")
+        raise ValueError(f"Unknown backend: {effective.name}")
 
 
 # ---------------------------------------------------------------------------
@@ -348,27 +379,62 @@ _ollama_text = _with_retry(_ollama_text_impl)
 def _mlx_text_impl(
     backend: BackendConfig, prompt: str, system_prompt: str
 ) -> str:
-    from mlx_vlm import load, generate
-    from mlx_vlm.prompt_utils import apply_chat_template
-    from mlx_vlm.utils import load_config
+    # Serialize all MLX calls — Metal kernel doesn't support concurrent access
+    # from multiple threads on the same loaded model.
+    with _mlx_lock:
+        return _mlx_text_inner(backend, prompt, system_prompt)
 
-    model_name = backend.model or "mlx-community/Qwen2.5-VL-3B-Instruct-4bit"
 
-    # Module-level cache
-    if not hasattr(_mlx_text_impl, "_cache"):
-        _mlx_text_impl._cache = {}
+def _mlx_text_inner(
+    backend: BackendConfig, prompt: str, system_prompt: str
+) -> str:
+    # Try mlx_lm first (text-only, simpler API), fall back to mlx_vlm
+    try:
+        from mlx_lm import load as mlx_load, generate as mlx_generate
+        _use_vlm = False
+    except ImportError:
+        from mlx_vlm import load as mlx_load, generate as mlx_generate  # type: ignore[no-redef]
+        _use_vlm = True
 
-    if model_name not in _mlx_text_impl._cache:
-        model, processor = load(model_name)
-        config = load_config(model_name)
-        _mlx_text_impl._cache[model_name] = (model, processor, config)
+    model_name = backend.model or "mlx-community/Qwen2.5-7B-Instruct-4bit"
 
-    model, processor, config = _mlx_text_impl._cache[model_name]
+    # Module-level cache (attached to the inner function, not the dispatcher)
+    if not hasattr(_mlx_text_inner, "_cache"):
+        _mlx_text_inner._cache = {}
 
+    if model_name not in _mlx_text_inner._cache:
+        model, tokenizer = mlx_load(model_name)
+        _mlx_text_inner._cache[model_name] = (model, tokenizer)
+
+    model, tokenizer = _mlx_text_inner._cache[model_name]
+
+    # Build chat-formatted prompt
     full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
-    formatted = apply_chat_template(processor, config, full_prompt, num_images=0)
-    result = generate(model, processor, formatted, max_tokens=backend.max_tokens, verbose=False)
-    return result.text if hasattr(result, "text") else str(result)
+
+    if _use_vlm:
+        # mlx_vlm path (vision-language models)
+        from mlx_vlm.prompt_utils import apply_chat_template  # type: ignore[import]
+        from mlx_vlm.utils import load_config  # type: ignore[import]
+        config = load_config(model_name)
+        formatted = apply_chat_template(tokenizer, config, full_prompt, num_images=0)
+        result = mlx_generate(model, tokenizer, formatted, max_tokens=backend.max_tokens, verbose=False)
+        return result.text if hasattr(result, "text") else str(result)
+    else:
+        # mlx_lm path — apply chat template via tokenizer if available
+        if hasattr(tokenizer, "apply_chat_template"):
+            messages = []
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
+            messages.append({"role": "user", "content": prompt})
+            formatted = tokenizer.apply_chat_template(
+                messages, add_generation_prompt=True, tokenize=False
+            )
+        else:
+            formatted = full_prompt
+        return mlx_generate(
+            model, tokenizer, prompt=formatted,
+            max_tokens=backend.max_tokens, verbose=False,
+        )
 
 
 _mlx_text = _mlx_text_impl  # no retry needed for local
@@ -433,8 +499,39 @@ _cloud_text = _with_retry(_cloud_text_impl)
 # JSON parsing utility
 # ---------------------------------------------------------------------------
 
+def _clean_llm_json(text: str) -> str:
+    """Pre-process LLM output to fix common JSON generation artifacts.
+
+    Handles two predictable 8B model failure modes:
+
+    1. Double-brace artifact: model outputs {{ }} instead of { }
+       (Python f-string template confusion from training data).
+       In JSON, {{ is never valid, so collapsing is always safe.
+
+    2. Invalid escape sequences: model writes \\s, \\c, \\d etc. inside
+       string values.  Only \\", \\\\, \\/, \\b, \\f, \\n, \\r, \\t,
+       and \\uNNNN are valid JSON escapes.  Stray backslashes are doubled
+       so they parse as literal backslashes in the string value.
+    """
+    import re
+
+    # 1. Collapse Python-style double braces to single JSON braces
+    #    Do this before escape-fixing so {{ doesn't confuse the regex.
+    text = text.replace("{{", "{").replace("}}", "}")
+
+    # 2. Fix invalid escape sequences inside JSON string values.
+    #    Replace \X where X is not a valid JSON escape character with \\X.
+    #    Valid single-char escapes: " \ / b f n r t
+    #    Valid unicode escape: u followed by 4 hex digits (lookahead keeps 'u')
+    text = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', text)
+
+    return text
+
+
 def parse_json_response(text: str) -> dict:
-    """Parse JSON from an LLM response, handling markdown code fences."""
+    """Parse JSON from an LLM response, handling markdown code fences
+    and common 8B model generation artifacts (double-braces, bad escapes).
+    """
     text = text.strip()
     if text.startswith("```json"):
         text = text[7:]
@@ -475,8 +572,16 @@ def parse_json_response(text: str) -> dict:
                     text = text[: i + 1]
                     break
 
+    # First attempt: parse as-is
     try:
         return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    # Second attempt: apply artifact cleanup and retry before logging failure
+    cleaned = _clean_llm_json(text)
+    try:
+        return json.loads(cleaned)
     except json.JSONDecodeError as e:
         log.warning("JSON parse error: %s — raw: %.200s", e, text)
         return {"_parse_error": str(e), "_raw": text[:1000]}
