@@ -589,7 +589,7 @@ class SetupDialog(QDialog):
         cats_row.addWidget(self._retention_grading_cb)
 
         cats_row.addSpacing(12)
-        self._retention_aic_cb = QCheckBox("Academic Integrity (AIC) data")
+        self._retention_aic_cb = QCheckBox("Engagement Analysis (AIC) data")
         self._retention_aic_cb.setFont(_f11)
         self._retention_aic_cb.setStyleSheet(f"color: {PHOSPHOR_MID};")
         self._retention_aic_cb.setChecked(True)

@@ -111,14 +111,14 @@ _SECTIONS = [
             "    Article errors ('I go to university'), tense mixing, or non-native "
             "    preposition use. AI models virtually never produce these. Their "
             "    presence is strong evidence of human authorship and triggers an "
-            "    automatic 40% reduction in the suspicion score."
+            "    automatic 40% reduction in the engagement depth score."
         ),
     },
     {
         "heading": "Smoking gun — chatbot paste artifacts",
         "accent": ROSE_ACCENT,
         "body": (
-            "A 'smoking gun' is different from a high suspicion score. It means "
+            "A 'smoking gun' is different from a low engagement score. It means "
             "physical evidence of a chatbot copy-paste was found in the raw submission "
             "before HTML cleaning.\n\n"
             "THREE SCENARIOS ARE DETECTED:\n\n"
@@ -191,7 +191,7 @@ _SECTIONS = [
             "    Submissions timestamped after midnight, clustered near deadlines. "
             "    Students working multiple jobs submit when they can. The trajectory "
             "    panel labels these as 'submission timing' data, not a red flag.\n\n"
-            "If you see a student's suspicion score rise while their word count "
+            "If you see a student's engagement depth rise while their word count "
             "drops and their submissions shift to late-night, that pattern as a "
             "whole is more consistent with stress-driven AI use than calculated "
             "academic dishonesty. The conversation that follows should reflect that."
@@ -226,7 +226,7 @@ class AICInfoDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("How the Academic Integrity Check Works")
+        self.setWindowTitle("How the Engagement Analysis Works")
         self.setMinimumSize(680, 560)
         self.resize(740, 700)
         self._build_ui()

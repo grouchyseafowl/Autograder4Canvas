@@ -845,7 +845,7 @@ class ClassHeatmapWidget(QWidget):
             Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft,
             "Class Avg",
         )
-        _CONCERN_LABELS = {0: "—", 1: "Low", 2: "Mod", 3: "Elev", 4: "High"}
+        _CONCERN_LABELS = {0: "—", 1: "OK", 2: "Talk", 3: "Talk+", 4: "Talk!"}
         for j, (aid, _) in enumerate(self._assignments):
             cx = gx + j * (cw + self._CELL_GAP)
             avg = self._class_avg.get(aid, 0.0)
@@ -978,8 +978,8 @@ class ClassHeatmapWidget(QWidget):
                 # Build tooltip
                 s = self._students[row_idx]
                 max_c = s.get("max_concern", 0)
-                _cnames = {0: "No concern", 1: "Low", 2: "Moderate", 3: "Elevated", 4: "High"}
-                tip = f"{s['name']}  ·  max concern: {_cnames.get(max_c, '?')}"
+                _cnames = {0: "Strong engagement", 1: "Adequate", 2: "Conversation suggested", 3: "Conversation recommended", 4: "Conversation needed"}
+                tip = f"{s['name']}  ·  engagement: {_cnames.get(max_c, '?')}"
                 self.setToolTip(tip)
         else:
             if self._hover_row != -1:

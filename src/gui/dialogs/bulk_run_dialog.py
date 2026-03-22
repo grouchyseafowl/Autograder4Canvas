@@ -742,7 +742,7 @@ class BulkRunPage(QWidget):
         lo.addWidget(self._opt_preserve)
 
         lo.addWidget(self._hsep())
-        lo.addWidget(make_section_label("Academic Integrity Check"))
+        lo.addWidget(make_section_label("Engagement Analysis"))
         lo.addSpacing(4)
 
         self._opt_run_aic = SegmentedToggle(

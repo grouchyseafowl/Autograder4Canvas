@@ -236,7 +236,7 @@ class SettingsPanel(QWidget):
         lo.addWidget(self._test_status)
 
         lo.addWidget(make_h_rule())
-        lo.addWidget(make_section_label("Academic Integrity — Per-Profile Calibration"))
+        lo.addWidget(make_section_label("Engagement Analysis — Per-Profile Calibration"))
         aic_note = QLabel(
             "These settings travel with the institution profile. "
             "Weights adjust to your school's specific student population."

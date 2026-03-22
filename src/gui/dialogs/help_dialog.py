@@ -67,7 +67,7 @@ and spreadsheets it creates.</p>
 <ul>
   <li>Spreadsheets (.xlsx) with student scores</li>
   <li>Reports (.csv) for uploading to Canvas</li>
-  <li>Academic Integrity reports (if you run that check)</li>
+  <li>Engagement Analysis reports (if you run that check)</li>
 </ul>
 <p>By default, these files are saved in:</p>
 <pre>Documents/Autograder Rationales/</pre>
@@ -97,9 +97,9 @@ grades based on rules you've set up.</p>
   <li>Checks if student submitted something</li>
   <li>Awards full credit if they turned it in</li>
 </ul>
-<h4>3. Academic Integrity Checker</h4>
+<h4>3. Engagement Analysis</h4>
 <ul>
-  <li>Scans student work for potential AI usage or copying</li>
+  <li>Analyzes student work for engagement depth and personal connection</li>
   <li>Creates a report for YOU to review</li>
   <li>Does <b>not</b> automatically fail students</li>
   <li>You make the final decision on each case</li>

@@ -778,6 +778,7 @@ class DishonestyAnalyzer:
         # Detect ESL patterns (strong indicator of human authorship)
         esl_detected = False
         esl_adjustment = 1.0
+        esl_notes = []  # accumulated here, merged into context_applied later
         if HAS_CONTEXT_ANALYZER:
             try:
                 context_analyzer = ContextAnalyzer()
@@ -810,7 +811,7 @@ class DishonestyAnalyzer:
                             ai_org_weight = self._marker_weights.get('ai_specific_org', 1.0)
                             suspicious_score -= esl_zeroed * ai_org_weight
                             suspicious_score = max(suspicious_score, 0.0)
-                            context_adjustments.append(
+                            esl_notes.append(
                                 f"ESL: zeroed structural signals "
                                 f"(-{esl_zeroed * ai_org_weight:.2f})"
                             )
@@ -960,6 +961,7 @@ class DishonestyAnalyzer:
         if esl_detected:
             context_applied.append("ESL error patterns detected - strong indicator of human authorship")
             context_applied.append("Note: AI models don't make article errors or tense mixing")
+            context_applied.extend(esl_notes)
         if student_context_applied:
             context_applied.extend(student_context_adjustments)
 

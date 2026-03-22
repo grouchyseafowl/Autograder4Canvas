@@ -325,15 +325,21 @@ class ExportReportsDialog(QDialog):
 
     def _export_csv(self, out: str) -> None:
         rows = self._get_cohort_rows()
-        headers = [
+        keys = [
             "student_id", "student_name", "suspicious_score", "authenticity_score",
             "concern_level", "human_presence_confidence", "smoking_gun",
             "word_count", "last_analyzed_at",
         ]
+        display = [
+            "Student ID", "Student Name", "Engagement Depth", "Authenticity Score",
+            "Conversation Opportunity", "Personal Connection", "Smoking Gun",
+            "Word Count", "Last Analyzed",
+        ]
         with open(out, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=headers, extrasaction="ignore")
-            writer.writeheader()
-            writer.writerows(rows)
+            writer = csv.writer(f)
+            writer.writerow(display)
+            for r in rows:
+                writer.writerow([r.get(k) for k in keys])
 
     # ── Export: PDF ───────────────────────────────────────────────────────────
 
@@ -388,8 +394,13 @@ class ExportReportsDialog(QDialog):
         sg_count = sum(1 for r in rows if r.get("smoking_gun"))
         pct = lambda n: f"{n / total * 100:.0f}%" if total else "—"
 
+        _dist_label = {
+            "high": "Conversation needed", "elevated": "Conversation recommended",
+            "moderate": "Conversation suggested", "low": "Adequate engagement",
+            "none": "Strong engagement",
+        }
         dist_rows = "".join(
-            f"<tr><td>{lvl.title()}</td><td>{counts.get(lvl, 0)}</td>"
+            f"<tr><td>{_dist_label.get(lvl, lvl.title())}</td><td>{counts.get(lvl, 0)}</td>"
             f"<td>{pct(counts.get(lvl, 0))}</td></tr>"
             for lvl in ("high", "moderate", "low", "none")
         )
@@ -487,7 +498,7 @@ class ExportReportsDialog(QDialog):
             sections.append(
                 f"{sep}<h1>Trajectory: {sname}</h1>"
                 f"<table><tr><th>Assignment</th><th>Submitted</th>"
-                f"<th>Score</th><th>Concern</th><th>SG</th></tr>"
+                f"<th>Engagement</th><th>Conversation</th><th>SG</th></tr>"
                 f"{traj_rows}</table></div>"
             )
 

@@ -1310,9 +1310,9 @@ class RunWorker(CancellableWorker):
         global_aic  = settings.get("aic_config")
         global_mode = (global_aic or {}).get("aic_mode") or settings.get("aic_mode", "auto")
 
-        self.surface.emit("stage", {"text": "Academic Integrity Check"})
+        self.surface.emit("stage", {"text": "Engagement Analysis"})
         print(f"\n{'=' * 60}")
-        print("Academic Integrity Check")
+        print("Engagement Analysis")
         print(f"{'=' * 60}")
         if global_mode and global_mode != "auto":
             print(f"   Assignment mode: {global_mode}")

@@ -50,7 +50,7 @@ class CleanupDialog(QDialog):
         self._sw_grading.toggled.connect(self._update_preview)
         pane_lo.addWidget(self._sw_grading)
 
-        self._sw_aic = SwitchToggle("Academic Integrity Check results", wrap_width=300)
+        self._sw_aic = SwitchToggle("Engagement Analysis results", wrap_width=300)
         self._sw_aic.setChecked(True)
         self._sw_aic.toggled.connect(self._update_preview)
         pane_lo.addWidget(self._sw_aic)

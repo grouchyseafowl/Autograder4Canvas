@@ -82,7 +82,7 @@ class ReviewPanel(QWidget):
                 parent=self,
                 segments=[
                     ("Grading Review",     "grading"),
-                    ("Academic Integrity", "aic"),
+                    ("Engagement Analysis", "aic"),
                     ("Insights",           "insights"),
                 ],
                 segment_colors=["amber", "blue", "rose"],
@@ -91,7 +91,7 @@ class ReviewPanel(QWidget):
             self._toggle = ViewToggle(
                 parent=self,
                 left_label="Grading Review",
-                right_label="Academic Integrity",
+                right_label="Engagement Analysis",
                 left_mode="grading",
                 right_mode="aic",
                 segment_colors=["amber", "blue"],
