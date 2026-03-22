@@ -268,6 +268,23 @@ class InsightsEngine:
             # ----------------------------------------------------------
             # Stage 3: Quick Analysis (non-LLM)
             # ----------------------------------------------------------
+
+            # Fetch assignment description for vocabulary overlap check
+            # (foundation for Mechanism 2: Assignment Context Awareness).
+            assignment_description = ""
+            try:
+                if self._api:
+                    _desc_fetcher = DataFetcher(self._api)
+                    assign_info = _desc_fetcher.fetch_assignment_info(
+                        course_id, assignment_id
+                    )
+                    if assign_info:
+                        raw_desc = assign_info.get("description", "")
+                        if raw_desc:
+                            assignment_description = _strip_html(raw_desc)
+            except Exception as e:
+                log.debug("Could not fetch assignment description: %s", e)
+
             progress("Running Quick Analysis...")
             analyzer = QuickAnalyzer(
                 progress_callback=progress,
@@ -276,6 +293,7 @@ class InsightsEngine:
                 submissions,
                 assignment_id=str(assignment_id),
                 assignment_name=assignment_name,
+                assignment_description=assignment_description,
                 course_id=str(course_id),
                 course_name=course_name,
             )
@@ -316,8 +334,14 @@ class InsightsEngine:
                 texts[sid] = _strip_html(body)
                 meta[sid] = sub
 
-            # Build assignment prompt from available info
-            assignment_prompt = f"Assignment: {assignment_name}"
+            # Build assignment prompt (assignment_description already
+            # fetched before Quick Analysis).
+            assignment_prompt = (
+                f"Assignment: {assignment_name}\n"
+                f"Description: {assignment_description[:500]}"
+                if assignment_description
+                else f"Assignment: {assignment_name}"
+            )
 
             # GPU throttle delay
             throttle = float(self._settings.get("insights_throttle_delay", 2.0))
@@ -425,11 +449,31 @@ class InsightsEngine:
                     emit_result("coding", preview_data)
                     continue
 
+                # Inject assignment connection note when vocabulary
+                # overlap is low — prevents the 8B from hallucinating
+                # assignment concepts onto unrelated content.
+                coding_prompt = assignment_prompt
+                if quick_sub and quick_sub.assignment_connection:
+                    ac = quick_sub.assignment_connection
+                    if ac.vocabulary_overlap < 0.3:
+                        coding_prompt = (
+                            f"{assignment_prompt}\n\n"
+                            f"NOTE: This submission's vocabulary has "
+                            f"low overlap ({ac.vocabulary_overlap:.0%}) "
+                            f"with the assignment keywords. Code what "
+                            f"the student ACTUALLY wrote about, not "
+                            f"what the assignment asked for. If the "
+                            f"student is engaging with the material "
+                            f"through personal experience rather than "
+                            f"academic vocabulary, that engagement is "
+                            f"valid — capture it."
+                        )
+
                 record = code_submission(
                     submission_text=body,
                     student_id=sid,
                     student_name=name,
-                    assignment_prompt=assignment_prompt,
+                    assignment_prompt=coding_prompt,
                     quick_summary=quick_sub,
                     signal_matrix_results=sig_results,
                     tier=model_tier,
@@ -890,28 +934,251 @@ class InsightsEngine:
                 )
                 coded_sids.add(row.get("student_id", ""))
 
+            # Build texts dict from stored submission_text column
+            # (available for any student already coded)
+            texts: Dict[str, str] = {}
+            for row in existing_codings:
+                sid = row.get("student_id", "")
+                sub_text = row.get("submission_text", "")
+                if sub_text:
+                    texts[sid] = sub_text
+
             total = run.get("total_submissions", 0)
 
-            # If coding is not complete, we need submission texts
+            # ----------------------------------------------------------
+            # If coding is not complete, re-fetch and code remaining
+            # ----------------------------------------------------------
             if "coding" not in completed_set:
-                # Can't resume coding without original submissions
-                # (they aren't stored in the DB)
+                if not self._api:
+                    progress(
+                        "Cannot resume mid-coding — Canvas API not available. "
+                        "Re-open with Canvas connection to resume."
+                    )
+                    self._stop_sleep_prevention()
+                    return None
+
+                course_id = run.get("course_id")
+                assignment_id = run.get("assignment_id")
                 progress(
-                    "Cannot resume from coding stage — "
-                    "original submissions not stored. "
-                    "Start a new analysis instead."
+                    f"Re-fetching submissions to resume coding "
+                    f"({len(coded_sids)} already done)..."
                 )
-                self._stop_sleep_prevention()
-                return None
 
-            # If concerns not complete, re-run concerns for all students
+                fetcher = DataFetcher(self._api)
+                raw_submissions = fetcher.fetch_submissions(course_id, assignment_id)
+                if not raw_submissions:
+                    # Try as discussion topic
+                    assign_info = fetcher.fetch_assignment_info(course_id, assignment_id)
+                    topic_id = None
+                    if assign_info:
+                        topic_id = assign_info.get("discussion_topic", {}).get("id")
+                    if topic_id:
+                        raw_submissions = fetcher.fetch_discussion_entries(
+                            course_id, topic_id
+                        )
+                if not raw_submissions:
+                    progress(
+                        "Could not re-fetch submissions from Canvas. "
+                        "Check your connection and try again."
+                    )
+                    self._stop_sleep_prevention()
+                    return None
+
+                # Build meta map; supplement texts for any newly-fetched sids
+                meta_map: Dict[str, Dict] = {}
+                for sub in raw_submissions:
+                    sid = str(sub.get("student_id", sub.get("user_id", "")))
+                    meta_map[sid] = sub
+                    if sid not in texts:
+                        body = sub.get("body") or sub.get("text") or ""
+                        texts[sid] = _strip_html(body)
+
+                total = len(texts)
+                uncoded_items = [
+                    (sid, texts[sid]) for sid in texts if sid not in coded_sids
+                ]
+                progress(
+                    f"Resuming coding: {len(coded_sids)} done, "
+                    f"{len(uncoded_items)} remaining of {total}..."
+                )
+                emit_result("stage", {"stage": "RESUMING — LISTENING TO STUDENT WORK"})
+
+                from insights.submission_coder import code_submission
+
+                for i, (sid, body) in enumerate(uncoded_items):
+                    if self._cancelled:
+                        self._stop_sleep_prevention()
+                        return None
+
+                    sub_meta = meta_map.get(sid, {})
+                    name = sub_meta.get("student_name", f"Student {sid}")
+                    quick_sub = qa_result.per_submission.get(sid) if qa_result else None
+                    vader_compound = (
+                        qa_result.sentiments.get(sid, {}).get("compound", 0.0)
+                        if qa_result else 0.0
+                    )
+                    wc = len(body.split())
+                    median_wc = qa_result.stats.word_count_median if qa_result else 0
+                    sig_results = signal_matrix_classify(
+                        body, vader_compound, wc, median_wc
+                    )
+
+                    overall_idx = len(coded_sids) + i + 1
+                    progress(f"Reading student work ({overall_idx}/{total}): {name}...")
+                    emit_result("reading", {
+                        "student_name": name,
+                        "text": body[:500],
+                        "word_count": wc,
+                    })
+
+                    if wc < 15:
+                        sub_type = sub_meta.get("submission_type", "")
+                        attachments = sub_meta.get("attachments", [])
+                        if wc == 0 and sub_type == "online_upload" and attachments:
+                            filenames = [a.get("filename", "?") for a in attachments[:3]]
+                            reason = (
+                                f"file upload ({', '.join(filenames)}) — "
+                                f"text extraction failed or unsupported format"
+                            )
+                            tag = "file upload — text not extracted"
+                        elif wc == 0 and not body.strip():
+                            reason = "blank submission (no text entered)"
+                            tag = "blank submission"
+                        else:
+                            reason = f"only {wc} words"
+                            tag = "insufficient text for analysis"
+                        progress(f"  Skipping {name}: {reason}")
+                        record = SubmissionCodingRecord(
+                            student_id=sid, student_name=name,
+                            theme_tags=[tag], theme_confidence={tag: 1.0},
+                            emotional_register="", emotional_notes=reason,
+                            notable_quotes=[], word_count=wc,
+                        )
+                    elif quick_sub and quick_sub.is_gibberish:
+                        progress(
+                            f"  Skipping {name}: gibberish ({quick_sub.gibberish_reason})"
+                        )
+                        record = SubmissionCodingRecord(
+                            student_id=sid, student_name=name,
+                            theme_tags=["non-analyzable text"],
+                            theme_confidence={"non-analyzable text": 1.0},
+                            emotional_register="",
+                            emotional_notes=f"Gibberish gate: {quick_sub.gibberish_detail}",
+                            notable_quotes=[], word_count=wc,
+                        )
+                    else:
+                        record = code_submission(
+                            submission_text=body,
+                            student_id=sid, student_name=name,
+                            assignment_prompt=assignment_prompt,
+                            quick_summary=quick_sub,
+                            signal_matrix_results=sig_results,
+                            tier=model_tier, backend=backend,
+                            analysis_lens=analysis_lens,
+                            teacher_interests=teacher_interests,
+                            profile_fragment=profile_fragment,
+                        )
+
+                    coding_records.append(record)
+                    coded_sids.add(sid)
+                    self._store.save_coding(
+                        run_id, sid, name, record.model_dump_json(),
+                        submission_text=body,
+                    )
+                    preview_data = record.model_dump()
+                    preview_data["_original_text"] = body[:300]
+                    emit_result("coding", preview_data)
+
+                    if throttle > 0 and i < len(uncoded_items) - 1:
+                        time.sleep(throttle)
+
+                self._store.complete_stage(run_id, "coding")
+                progress("Coding complete.")
+
+                if self._cancelled:
+                    self._stop_sleep_prevention()
+                    return None
+
+            # ----------------------------------------------------------
+            # If concerns not complete, run concern detection
+            # Submission texts come from stored column or the re-fetch above
+            # ----------------------------------------------------------
             if "concerns" not in completed_set:
-                progress("Concerns stage incomplete — skipping to themes...")
-                # Mark concerns as done (codings have inline concerns from
-                # the coding pass)
-                self._store.complete_stage(run_id, "concerns")
+                if not texts:
+                    # Fallback: load texts from stored submission_text column
+                    for row in existing_codings:
+                        sid = row.get("student_id", "")
+                        sub_text = row.get("submission_text", "")
+                        if sub_text:
+                            texts[sid] = sub_text
 
-            # Determine the right start_stage based on what's already done
+                if texts and coding_records:
+                    from insights.concern_detector import detect_concerns
+                    progress("Running concern detection...")
+                    for i, record in enumerate(coding_records):
+                        if self._cancelled:
+                            self._stop_sleep_prevention()
+                            return None
+
+                        sid = record.student_id
+                        body = texts.get(sid, "")
+                        wc = len(body.split())
+                        progress(
+                            f"Concern check {i + 1}/{len(coding_records)}: "
+                            f"{record.student_name}..."
+                        )
+
+                        quick_sub_c = qa_result.per_submission.get(sid) if qa_result else None
+                        if wc < 15 or (quick_sub_c and quick_sub_c.is_gibberish):
+                            record.concerns = []
+                            self._store.save_coding(
+                                run_id, sid, record.student_name, record.model_dump_json()
+                            )
+                            continue
+
+                        vader_compound = (
+                            qa_result.sentiments.get(sid, {}).get("compound", 0.0)
+                            if qa_result else 0.0
+                        )
+                        median_wc = qa_result.stats.word_count_median if qa_result else 0
+                        sig_results = signal_matrix_classify(
+                            body, vader_compound, wc, median_wc
+                        )
+                        student_signals = [
+                            s for s in (qa_result.concern_signals if qa_result else [])
+                            if s.student_id == sid
+                        ]
+                        concerns = detect_concerns(
+                            submission_text=body,
+                            student_name=record.student_name,
+                            student_id=sid,
+                            assignment_prompt=assignment_prompt,
+                            signal_matrix_results=sig_results,
+                            concern_signals=student_signals,
+                            tier=model_tier, backend=backend,
+                            profile_fragment=profile_fragment,
+                        )
+                        record.concerns = concerns
+                        self._store.save_coding(
+                            run_id, sid, record.student_name, record.model_dump_json()
+                        )
+
+                        if throttle > 0 and i < len(coding_records) - 1:
+                            time.sleep(throttle)
+
+                    self._store.complete_stage(run_id, "concerns")
+                    progress("Concern detection complete.")
+                else:
+                    progress("Concern detection skipped — submission texts not available.")
+                    self._store.complete_stage(run_id, "concerns")
+
+                if self._cancelled:
+                    self._stop_sleep_prevention()
+                    return None
+
+            # ----------------------------------------------------------
+            # Determine which downstream stage to resume from
+            # ----------------------------------------------------------
             if "themes" not in completed_set:
                 start = "themes"
             elif "outliers" not in completed_set:

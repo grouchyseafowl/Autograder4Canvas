@@ -6,9 +6,12 @@ Structured data between stages (never free text) is the primary mitigation
 against map-reduce information loss.
 """
 
+import logging
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+_log = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -186,13 +189,58 @@ class PerSubmissionSummary(BaseModel):
     is_gibberish: bool = False
     gibberish_reason: str = ""
     gibberish_detail: str = ""
+    # Assignment connection (vocabulary overlap with assignment description)
+    assignment_connection: Optional["AssignmentConnectionScore"] = None
+
+
+class AssignmentConnectionScore(BaseModel):
+    """Non-LLM assessment of vocabulary overlap between a submission
+    and the assignment description.
+
+    This measures VOCABULARY OVERLAP only — it cannot assess whether
+    a student is engaging with the material through lived experience,
+    personal narrative, or non-standard approaches.
+
+    Personal narratives about structural conditions ARE engagement with
+    the material, even without academic vocabulary match.  A student
+    discussing their grandmother's experience with intersecting oppressions
+    is deeply on-topic regardless of whether they use the word
+    "intersectionality."
+
+    When submissions are translated, vocabulary overlap is measured against
+    translated text and may not reflect engagement in the original language.
+    """
+    vocabulary_overlap: float = 0.0      # 0.0-1.0 cosine similarity
+    keyword_overlap_count: int = 0       # how many assignment keywords found
+    keyword_overlap_ratio: float = 0.0   # found / expected
+    observation: str = ""                # human-readable note for the teacher
+
+
+class HighSimilarityPair(BaseModel):
+    """Individual pair with very high cosine similarity (>=0.90).
+
+    Surfaced ONLY at extreme thresholds.  Below this, similarity can
+    reflect community cultural wealth, collaborative learning, or
+    shared cultural knowledge.
+
+    Even at this threshold, the observation is factual — the system
+    does not determine cause.  Collaborative learning, shared source
+    material, or copy/paste are all possible interpretations.
+    """
+    student_id_a: str
+    student_name_a: str
+    student_id_b: str
+    student_name_b: str
+    cosine_similarity: float
+    observation: str = ""
 
 
 class PairwiseSimilarityStats(BaseModel):
     """Class-level pairwise cosine similarity statistics.
 
-    Surfaces ONLY aggregate patterns — never individual pair identities.
-    High similarity can indicate community, collaboration, or shared cultural
+    Surfaces aggregate patterns.  Individual pairs are surfaced ONLY at
+    extreme thresholds (>=0.90) — see ``HighSimilarityPair``.  High
+    similarity can indicate community, collaboration, or shared cultural
     knowledge, not only copying.  The first interpretive question is always:
     "Is the assignment designed to produce diverse responses?"
     """
@@ -202,6 +250,7 @@ class PairwiseSimilarityStats(BaseModel):
     pairs_above_070: int = 0   # moderate-similarity pairs (threshold 0.70)
     total_pairs: int = 0
     observation: str = ""      # human-readable class-level note for the teacher
+    high_similarity_pairs: List[HighSimilarityPair] = []  # pairs >= 0.90 only
 
 
 class QuickAnalysisResult(BaseModel):
@@ -238,8 +287,12 @@ class QuickAnalysisResult(BaseModel):
     clusters: List[EmbeddingCluster] = []
     embedding_outlier_ids: List[str] = []
 
-    # Pairwise cosine similarity (class-level aggregate — no individual flags)
+    # Pairwise cosine similarity (class-level + individual pairs at >= 0.90)
     pairwise_similarity: Optional[PairwiseSimilarityStats] = None
+
+    # Assignment connection (vocabulary overlap between submissions and assignment)
+    assignment_description: str = ""
+    assignment_connection_observation: str = ""
 
     # Cross-submission patterns
     shared_references: List[SharedReference] = []
@@ -315,6 +368,26 @@ class SynthesisReport(BaseModel):
     """Final analytical report with named sections."""
     sections: Dict[str, str] = {}  # section_name → markdown text
     confidence: float = 0.0
+
+    @field_validator("sections", mode="before")
+    @classmethod
+    def _coerce_section_values(cls, v: object) -> object:
+        """8B models occasionally place numeric values (e.g. confidence scores)
+        inside the sections dict.  Filter them out rather than crashing."""
+        if not isinstance(v, dict):
+            return v
+        clean = {}
+        for k, val in v.items():
+            if isinstance(val, str):
+                clean[k] = val
+            elif isinstance(val, (int, float)):
+                # Model wrote e.g. "confidence": 0.8 inside sections — skip it
+                _log.warning(
+                    "SynthesisReport.sections[%r] has numeric value %r — skipping", k, val
+                )
+            else:
+                clean[k] = str(val)
+        return clean
 
 
 # ---------------------------------------------------------------------------

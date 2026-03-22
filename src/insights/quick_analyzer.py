@@ -27,9 +27,11 @@ from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from insights.models import (
+    AssignmentConnectionScore,
     ConcernSignal,
     ContradictionSignal,
     EmbeddingCluster,
+    HighSimilarityPair,
     KeywordHit,
     PairwiseSimilarityStats,
     PerSubmissionSummary,
@@ -141,6 +143,7 @@ class QuickAnalyzer:
         *,
         assignment_id: str,
         assignment_name: str = "",
+        assignment_description: str = "",
         course_id: str = "",
         course_name: str = "",
     ) -> QuickAnalysisResult:
@@ -214,7 +217,39 @@ class QuickAnalyzer:
         )
 
         self._progress("Computing pairwise similarity...")
-        result.pairwise_similarity = self._pairwise_similarity(_embeddings, _embed_sids)
+        result.pairwise_similarity = self._pairwise_similarity(
+            _embeddings, _embed_sids, meta
+        )
+
+        # Assignment connection (vocabulary overlap with assignment description)
+        _connection_scores: Dict[str, "AssignmentConnectionScore"] = {}
+        if assignment_description.strip():
+            self._progress("Computing assignment connection...")
+            _connection_scores = self._assignment_connection(
+                texts, meta, assignment_description
+            )
+            result.assignment_description = assignment_description
+            # Class-level observation
+            low_count = sum(
+                1 for s in _connection_scores.values()
+                if s.vocabulary_overlap < 0.1
+            )
+            total = len(_connection_scores)
+            if total > 0 and low_count / total > 0.3:
+                result.assignment_connection_observation = (
+                    f"An unusually high proportion of submissions "
+                    f"({low_count} of {total}) have low vocabulary "
+                    f"connection to the assignment keywords. Possible "
+                    f"interpretations: submission portal issue, "
+                    f"assignment prompt may need clearer framing, or "
+                    f"students are approaching the material through "
+                    f"different entry points."
+                )
+            elif total > 0 and low_count / total > 0.1:
+                result.assignment_connection_observation = (
+                    f"Some submissions ({low_count} of {total}) have "
+                    f"low vocabulary connection to the assignment keywords."
+                )
 
         self._progress("Detecting shared references...")
         result.shared_references = self._shared_references(texts)
@@ -308,6 +343,7 @@ class QuickAnalyzer:
                 is_gibberish=gib.is_gibberish if gib else False,
                 gibberish_reason=gib.reason if gib else "",
                 gibberish_detail=gib.detail if gib else "",
+                assignment_connection=_connection_scores.get(sid),
             )
 
         return result
@@ -665,17 +701,20 @@ class QuickAnalyzer:
         self,
         embeddings: Optional[Any],
         sids: Optional[List[str]],
+        meta: Optional[Dict[str, Dict]] = None,
     ) -> Optional[PairwiseSimilarityStats]:
         """Compute class-level pairwise cosine similarity statistics.
 
         Takes the embeddings already produced by _embedding_clusters() —
         no second encode pass.
 
-        Returns aggregate statistics only.  Individual pair identities are
-        intentionally NOT recorded.  High similarity can indicate community,
-        shared cultural knowledge, or collaborative learning just as easily
-        as it can indicate copying.  The first question for the teacher is
-        always: "Is the assignment designed to produce diverse responses?"
+        Returns aggregate statistics plus individual pairs at extreme
+        thresholds (>=0.90).  At this level the match is near-verbatim.
+        Even so, the observation is factual — the system does not
+        determine cause.  Below 0.90, high similarity can indicate
+        community, shared cultural knowledge, or collaborative learning.
+        The first question for the teacher is always: "Is the assignment
+        designed to produce diverse responses?"
         """
         if embeddings is None or sids is None or len(sids) < 2:
             return None
@@ -740,6 +779,38 @@ class QuickAnalyzer:
 
             observation = " ".join(parts)
 
+            # Individual pairs at extreme threshold (>= 0.90)
+            high_pairs: List[HighSimilarityPair] = []
+            INDIVIDUAL_THRESHOLD = 0.90
+            if meta is not None:
+                for i in range(n):
+                    for j in range(i + 1, n):
+                        sim = float(sim_matrix[i, j])
+                        if sim >= INDIVIDUAL_THRESHOLD:
+                            name_a = meta.get(
+                                sids[i], {}
+                            ).get("student_name", f"Student {sids[i]}")
+                            name_b = meta.get(
+                                sids[j], {}
+                            ).get("student_name", f"Student {sids[j]}")
+                            high_pairs.append(HighSimilarityPair(
+                                student_id_a=sids[i],
+                                student_name_a=name_a,
+                                student_id_b=sids[j],
+                                student_name_b=name_b,
+                                cosine_similarity=round(sim, 4),
+                                observation=(
+                                    f"These two submissions share "
+                                    f"{sim:.0%} vocabulary overlap. "
+                                    f"This is a factual observation — "
+                                    f"the system does not determine "
+                                    f"cause. Possible interpretations "
+                                    f"include shared source material, "
+                                    f"collaborative learning, or "
+                                    f"identical content."
+                                ),
+                            ))
+
             return PairwiseSimilarityStats(
                 mean_similarity=round(mean_sim, 4),
                 max_similarity=round(max_sim, 4),
@@ -747,11 +818,118 @@ class QuickAnalyzer:
                 pairs_above_070=pairs_070,
                 total_pairs=total_pairs,
                 observation=observation,
+                high_similarity_pairs=high_pairs,
             )
 
         except Exception as e:
             log.warning("Pairwise similarity computation failed: %s", e)
             return None
+
+    # ------------------------------------------------------------------
+    # 7c. Assignment connection (vocabulary overlap)
+    # ------------------------------------------------------------------
+
+    def _assignment_connection(
+        self,
+        texts: Dict[str, str],
+        meta: Dict[str, Dict],
+        assignment_description: str,
+    ) -> Dict[str, AssignmentConnectionScore]:
+        """Compute vocabulary overlap between each submission and the
+        assignment description using TF-IDF cosine similarity.
+
+        This measures VOCABULARY OVERLAP only — it cannot assess whether
+        a student is engaging with the material through lived experience,
+        personal narrative, or non-standard approaches.
+        """
+        if not assignment_description.strip():
+            return {}
+
+        try:
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            from sklearn.metrics.pairwise import cosine_similarity as cos_sim
+        except ImportError:
+            log.info("scikit-learn not available — skipping assignment connection")
+            return {}
+
+        sids = list(texts.keys())
+        if not sids:
+            return {}
+
+        # Vectorize assignment description alongside all submissions.
+        # The assignment description is document 0; submissions follow.
+        all_docs = [assignment_description] + [texts[s] for s in sids]
+
+        try:
+            vectorizer = TfidfVectorizer(
+                stop_words="english",
+                max_features=5000,
+                min_df=1,
+            )
+            tfidf_matrix = vectorizer.fit_transform(all_docs)
+        except ValueError:
+            # Empty vocabulary (all stopwords, etc.)
+            return {}
+
+        # Cosine similarity of each submission against the assignment desc
+        assignment_vec = tfidf_matrix[0:1]
+        submission_vecs = tfidf_matrix[1:]
+        similarities = cos_sim(assignment_vec, submission_vecs).flatten()
+
+        # Extract top content terms from the assignment description
+        feature_names = vectorizer.get_feature_names_out()
+        assignment_tfidf = tfidf_matrix[0].toarray().flatten()
+        top_indices = assignment_tfidf.argsort()[-20:][::-1]
+        assignment_keywords = [
+            feature_names[i] for i in top_indices
+            if assignment_tfidf[i] > 0
+        ]
+
+        scores: Dict[str, AssignmentConnectionScore] = {}
+        for idx, sid in enumerate(sids):
+            overlap = float(similarities[idx])
+            was_translated = meta.get(sid, {}).get("was_translated", False)
+
+            # Count keyword overlap
+            sub_lower = texts[sid].lower()
+            kw_found = sum(1 for kw in assignment_keywords if kw in sub_lower)
+            kw_ratio = kw_found / max(len(assignment_keywords), 1)
+
+            # Build observation
+            obs_parts: List[str] = []
+            if overlap < 0.1:
+                obs_parts.append(
+                    "This submission's vocabulary does not closely match "
+                    "the assignment keywords. Consider: the student may "
+                    "have submitted work for a different assignment, may "
+                    "need support connecting their ideas to the prompt, "
+                    "or may be engaging with the material in ways this "
+                    "vocabulary check cannot capture."
+                )
+            elif overlap < 0.3:
+                obs_parts.append(
+                    "This submission's vocabulary partially overlaps the "
+                    "assignment keywords. The student may be approaching "
+                    "the material through personal experience or a "
+                    "different entry point."
+                )
+            # >= 0.3: no observation needed
+
+            if was_translated and obs_parts:
+                obs_parts.append(
+                    "Vocabulary overlap is measured against translated "
+                    "text; engagement in the original language may not "
+                    "be fully reflected."
+                )
+
+            scores[sid] = AssignmentConnectionScore(
+                vocabulary_overlap=round(overlap, 4),
+                keyword_overlap_count=kw_found,
+                keyword_overlap_ratio=round(kw_ratio, 4),
+                observation=" ".join(obs_parts),
+            )
+
+        return scores
 
     # ------------------------------------------------------------------
     # 8. Shared reference detection

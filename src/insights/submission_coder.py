@@ -91,6 +91,64 @@ def _safe_quotes(quotes_data: list) -> list:
     return result
 
 
+def _validate_concepts(concepts: list, submission_text: str) -> list:
+    """Post-validate concepts_applied against actual submission text.
+
+    Removes concepts the student never mentioned.  An 8B model sometimes
+    attributes course concepts to a submission based on the assignment
+    prompt rather than the actual text.  Misrepresenting a student's
+    engagement is a form of harm — it could lead a teacher to assume
+    understanding that isn't there.
+
+    Uses simple token overlap (not embedding similarity) to keep it
+    fast and deterministic.
+    """
+    import re as _re
+
+    if not concepts:
+        return []
+
+    sub_lower = submission_text.lower()
+    sub_tokens = set(_re.findall(r"[a-z]{3,}", sub_lower))
+
+    validated = []
+    for concept in concepts:
+        concept_lower = concept.lower()
+        concept_tokens = set(_re.findall(r"[a-z]{3,}", concept_lower))
+
+        if not concept_tokens:
+            validated.append(concept)
+            continue
+
+        # Check 1: Direct substring match (handles multi-word concepts)
+        if concept_lower in sub_lower:
+            validated.append(concept)
+            continue
+
+        # Check 2: Token overlap — at least half the concept's content
+        # words appear in the submission
+        overlap = len(concept_tokens & sub_tokens)
+        if overlap / len(concept_tokens) >= 0.5:
+            validated.append(concept)
+            continue
+
+        # Check 3: Stem overlap — catches partial references like
+        # "intersectional" for the concept "intersectionality"
+        stems = {t[:6] for t in concept_tokens if len(t) > 3}
+        sub_stems = {t[:6] for t in sub_tokens if len(t) > 3}
+        if stems & sub_stems:
+            validated.append(concept)
+            continue
+
+        log.debug(
+            "Hallucination guard removed concept '%s' — "
+            "no vocabulary support in submission text",
+            concept,
+        )
+
+    return validated
+
+
 def code_submission(
     *,
     submission_text: str,
@@ -230,6 +288,11 @@ def _code_lightweight(
         raw_interp = send_text(backend, repair, SYSTEM_PROMPT)
         interp = _parse_response(raw_interp, student_name, student_id)
 
+    # Validate concepts against submission text (hallucination guard)
+    validated_concepts = _validate_concepts(
+        comp.get("concepts_applied", []), submission_text,
+    )
+
     # Merge comprehension + interpretation into a single record
     return SubmissionCodingRecord(
         student_id=student_id,
@@ -237,7 +300,7 @@ def _code_lightweight(
         # From comprehension
         notable_quotes=_safe_quotes(comp.get("notable_quotes", [])),
         readings_referenced=comp.get("readings_referenced", []),
-        concepts_applied=comp.get("concepts_applied", []),
+        concepts_applied=validated_concepts,
         personal_connections=comp.get("personal_connections", []),
         current_events_referenced=comp.get("current_events_referenced", []),
         # From interpretation
@@ -297,6 +360,11 @@ def _code_full(
     if analysis_lens and parsed.get("lens_observations"):
         lens_obs = parsed["lens_observations"]
 
+    # Validate concepts against submission text (hallucination guard)
+    validated_concepts = _validate_concepts(
+        parsed.get("concepts_applied", []), submission_text,
+    )
+
     return SubmissionCodingRecord(
         student_id=student_id,
         student_name=student_name,
@@ -306,7 +374,7 @@ def _code_full(
         emotional_register=parsed.get("emotional_register", ""),
         emotional_notes=parsed.get("emotional_notes", ""),
         readings_referenced=parsed.get("readings_referenced", []),
-        concepts_applied=parsed.get("concepts_applied", []),
+        concepts_applied=validated_concepts,
         personal_connections=parsed.get("personal_connections", []),
         current_events_referenced=parsed.get("current_events_referenced", []),
         lens_observations=lens_obs,

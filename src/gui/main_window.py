@@ -9,8 +9,8 @@ from PySide6.QtWidgets import (
     QStatusBar, QLabel, QMenuBar, QMessageBox, QHBoxLayout, QVBoxLayout,
     QPushButton, QButtonGroup, QFrame,
 )
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QAction, QKeySequence, QColor
+from PySide6.QtCore import Qt, QSize, QRect
+from PySide6.QtGui import QAction, QKeySequence, QColor, QFont, QPainter
 
 from gui.styles import (
     px,
@@ -18,12 +18,60 @@ from gui.styles import (
     LEFT_PANEL_MIN, LEFT_PANEL_PREF,
     BG_VOID, BG_PANEL, BORDER_DARK, BORDER_AMBER,
     PHOSPHOR_HOT, PHOSPHOR_MID, PHOSPHOR_DIM,
-    ROSE_ACCENT, GripSplitter,
+    ROSE_ACCENT, STATUS_WARN, GripSplitter,
 )
 from gui.panels.course_panel import CoursePanel
 from gui.panels.assignment_panel import AssignmentPanel
 from gui.panels.settings_panel import SettingsPanel
 from gui.panels.automation_panel import AutomationPanel
+
+
+# ---------------------------------------------------------------------------
+# Badge nav button
+# ---------------------------------------------------------------------------
+
+class _BadgeNavButton(QPushButton):
+    """Nav button with an optional count badge drawn in the top-right corner.
+
+    Call set_badge(n) to show/hide the badge. n=0 hides it.
+    """
+
+    def __init__(self, label: str, parent=None):
+        super().__init__(label, parent)
+        self._badge_count = 0
+
+    def set_badge(self, count: int) -> None:
+        if self._badge_count != count:
+            self._badge_count = max(0, count)
+            self.update()
+
+    def paintEvent(self, event) -> None:  # noqa: N802
+        super().paintEvent(event)
+        if self._badge_count <= 0:
+            return
+
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        d = 16          # badge diameter
+        margin = 5
+        x = self.width() - d - margin
+        y = margin
+
+        # Amber filled circle
+        p.setBrush(QColor(STATUS_WARN))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.drawEllipse(x, y, d, d)
+
+        # Count label (dark text on amber)
+        font = QFont("Menlo")
+        font.setPixelSize(9)
+        font.setBold(True)
+        p.setFont(font)
+        p.setPen(QColor(BG_VOID))
+        text = str(self._badge_count) if self._badge_count < 10 else "9+"
+        p.drawText(QRect(x, y, d, d), Qt.AlignmentFlag.AlignCenter, text)
+        p.end()
 
 
 # ---------------------------------------------------------------------------
@@ -262,7 +310,10 @@ class MainWindow(QMainWindow):
         h.addWidget(self._btn_bulk)
 
         # Review → page 3 (Grading + AIC + Insights)
-        self._btn_prior = _nav_btn("Review")
+        self._btn_prior = _BadgeNavButton("Review")
+        self._btn_prior.setCheckable(True)
+        self._btn_prior.setFont(_mono)
+        self._btn_prior.setStyleSheet(_NAV_BTN_QSS)
         self._btn_prior.clicked.connect(self._show_review_page)
         self._nav_group.addButton(self._btn_prior)
         h.addWidget(self._btn_prior)
@@ -374,6 +425,7 @@ class MainWindow(QMainWindow):
         self._insights_panel = InsightsPanel(
             api=self._api, store=self._insights_store, demo_mode=self._demo_mode
         )
+        self._insights_panel.paused_count_changed.connect(self._btn_prior.set_badge)
 
         # ── Page 3: Review (Grading Results + AIC + Insights) ─────────────
         from gui.panels.review_panel import ReviewPanel

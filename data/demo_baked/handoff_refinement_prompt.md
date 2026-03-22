@@ -73,7 +73,7 @@ The pipeline uses a **distributed intelligence model** — multiple networked 8B
 
 ### START HERE — Comparison Outputs
 1. `data/demo_baked/baseline_claudcode_opus.md` — **Opus one-shot analysis** (the quality bar)
-2. `docs/pipeline_evaluation.md` — **Refinement agent's evaluation** (7 dimensions, 16 recommendations)
+2. `docs/pipeline_evaluation.md` — **Prior refinement agent's evaluation** (7 dimensions, 16 recommendations). **Read with caution**: this was produced *before* the methodology audit. It was done with full session context but without examining the test apparatus, without applying the engagement reframe lens, and before the incomplete synthesis was properly accounted for. Some findings are solid regardless of methodology (feedback-concern contradiction, hallucinated concepts_applied, ESL treatment of Maria Ndiaye). Others are conditional on whether the "off-topic" issue is a real gap or a data artifact. **Do not treat this as a conclusion — treat it as input material to Phase 0**, to be situated and filtered before you analyze anything.
 3. `data/demo_baked/pipeline_evaluation_summary.json` — Compact pipeline output summary
 
 ### Raw Data & Test Apparatus
@@ -119,6 +119,10 @@ The pipeline uses a **distributed intelligence model** — multiple networked 8B
 
 Before any comparison analysis, critically examine how the testing apparatus shaped the data. The goal is to ensure we are refining the pipeline based on real gaps, not methodological artifacts.
 
+0. **Situate the prior evaluation** (`docs/pipeline_evaluation.md`) — Before auditing the test apparatus, read the prior evaluation and identify which of its findings are likely to survive methodology scrutiny and which are at risk. This is a quick read for structure and claims, not deep verification yet — save that for steps 1–6. The goal is to understand what you're filtering *before* you filter it.
+
+   The prior evaluation was produced from a particular vantage point: full session context, but no examination of the test apparatus, no engagement reframe lens applied (it uses detection language throughout), and without properly accounting for the incomplete synthesis run. This doesn't make it wrong — it makes it *situated*. Apply #FEMINIST_TECHNOSCIENCE here: situated knowledge is still knowledge. Don't discard it; name its conditions of production so you can use it accurately.
+
 1. **Read `scripts/assemble_demo_corpus.py`** — How was the demo corpus constructed? Were submissions written for this assignment, or adapted from other sources? What transformations were applied?
 2. **Read `data/demo_corpus/ethnic_studies.json`** — Read the actual 29 submissions. For the 19 about phones/driving: is there ANY connection to intersectionality in the text, or are they purely off-topic?
 3. **Check the assignment prompt in the corpus** — Does the assignment description match what students were actually responding to? Is "Intersectionality in Practice" the prompt they were given, or was it retrofitted onto existing data?
@@ -131,7 +135,7 @@ Before any comparison analysis, critically examine how the testing apparatus sha
 - ⚠️ Potentially affected by methodology and need reinterpretation
 - ❌ Likely artifacts of test data construction or incomplete pipeline run
 
-**This assessment gates everything else.** Phase 1's comparison analysis should be filtered through these findings. Don't analyze gaps that are actually methodology artifacts.
+**This assessment gates everything else.** Phase 1's comparison analysis should be filtered through these findings. Don't re-analyze gaps that are actually methodology artifacts — but do document what you found and why, so the professor can follow your reasoning. #CRITICAL_PEDAGOGY demands transparency in analytical process, not just conclusions.
 
 ### Phase 1: Three-Way Comparison Analysis (continues in `docs/comparison_analysis.md`)
 

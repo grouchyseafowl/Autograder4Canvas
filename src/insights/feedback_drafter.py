@@ -108,7 +108,18 @@ def _build_preprocessing_fragment(meta: Optional[dict]) -> str:
 
 
 def _build_concern_context(record: dict) -> str:
-    """Build concern-aware tone guidance WITHOUT revealing flags to student."""
+    """Build concern-aware drafting guidance.
+
+    The feedback drafter needs to know WHAT was flagged so it can avoid
+    validating that behavior.  The student never sees this context — it
+    shapes the draft, not the output.
+
+    Previous version only provided tone guidance ("write with warmth")
+    without content awareness, allowing feedback to validate the exact
+    behavior that concerns flagged (e.g., Connor Walsh's colorblind
+    framing).  This version passes concern content so the LLM can steer
+    away from validating the flagged behavior.
+    """
     concerns = record.get("concerns", [])
     register = record.get("emotional_register", "")
 
@@ -117,11 +128,34 @@ def _build_concern_context(record: dict) -> str:
 
     lines = []
     if concerns:
-        # Guide tone without revealing concerns
         lines.append(
-            "TONE GUIDANCE: This student has been flagged for teacher "
-            "attention. Write with extra warmth and care. Do NOT reference "
-            "any concerns in the feedback — they are for the teacher only."
+            "CONCERN-AWARE DRAFTING: This student has been flagged for "
+            "teacher attention. Do NOT reference any concerns in the "
+            "feedback — they are for the teacher only. However, you "
+            "MUST avoid praising or validating the specific behavior "
+            "that was flagged. Write with warmth while steering toward "
+            "growth in the flagged area."
+        )
+        # Pass content summaries so the LLM knows WHAT to avoid
+        for c in concerns:
+            if isinstance(c, dict):
+                why = c.get("why_flagged", "")
+                passage = c.get("flagged_passage", "")
+            else:
+                why = getattr(c, "why_flagged", "")
+                passage = getattr(c, "flagged_passage", "")
+            if why:
+                lines.append(f"  AVOID VALIDATING: {why[:200]}")
+                if passage:
+                    lines.append(
+                        f"  (Flagged passage: \"{passage[:120]}...\")"
+                    )
+        lines.append(
+            "Find a DIFFERENT strength in the student's work to "
+            "highlight. If the concern involves dismissing others' "
+            "experiences, the growth area could invite the student to "
+            "consider additional perspectives — frame as an invitation, "
+            "not a correction."
         )
     if register == "disengaged":
         lines.append(

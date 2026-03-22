@@ -399,6 +399,7 @@ class InsightsPanel(QWidget):
     """
 
     analysis_started = Signal()
+    paused_count_changed = Signal(int)   # emitted when incomplete-run count changes
 
     def __init__(self, api=None, store=None, demo_mode: bool = False, parent=None):
         super().__init__(parent)
@@ -458,6 +459,8 @@ class InsightsPanel(QWidget):
         self._state_stack.setCurrentIndex(idx)
         mode = {0: "setup", 1: "running", 2: "review"}.get(idx, "setup")
         self._view_toggle.set_mode(mode)
+        if idx == 0:
+            self._refresh_incomplete_notice()
 
     # ── Setup view ─────────────────────────────────────────────────────
 
@@ -488,6 +491,30 @@ class InsightsPanel(QWidget):
         outer.addWidget(title)
         outer.addWidget(sub)
         outer.addWidget(make_h_rule())
+
+        # Incomplete-run notice (hidden until store has paused runs)
+        self._incomplete_notice = QFrame()
+        self._incomplete_notice.setStyleSheet(
+            f"background: {BG_CARD}; border: 1px solid {BORDER_AMBER}; "
+            f"border-radius: 4px;"
+        )
+        _notice_lo = QHBoxLayout(self._incomplete_notice)
+        _notice_lo.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
+        _notice_lo.setSpacing(SPACING_MD)
+        self._incomplete_count_label = QLabel("")
+        self._incomplete_count_label.setStyleSheet(
+            f"color: {STATUS_WARN}; font-size: {px(11)}px; "
+            f"background: transparent; border: none;"
+        )
+        _notice_lo.addWidget(self._incomplete_count_label, 1)
+        _resume_notice_btn = QPushButton("View")
+        make_secondary_button(_resume_notice_btn)
+        _resume_notice_btn.setFixedWidth(60)
+        _resume_notice_btn.clicked.connect(self._on_show_incomplete_run)
+        _notice_lo.addWidget(_resume_notice_btn)
+        self._incomplete_notice.setVisible(False)
+        outer.addWidget(self._incomplete_notice)
+        self._refresh_incomplete_notice()
 
         # Two-column: left = assignment selection, right = options
         splitter = GripSplitter.create(Qt.Orientation.Horizontal)
@@ -4413,6 +4440,7 @@ class InsightsPanel(QWidget):
         self._progress_label.setText("Analysis complete!")
         self._progress_bar.setValue(100)
         self._append_log("✓ Analysis complete! Switching to results...")
+        self._refresh_incomplete_notice()
 
         self._switch_view(2)
         self._load_run(run_id)
@@ -4490,6 +4518,46 @@ class InsightsPanel(QWidget):
             parent=self,
         )
         dlg.exec()
+
+    def _refresh_incomplete_notice(self) -> None:
+        """Update the paused-run banner in the setup view."""
+        if not hasattr(self, "_incomplete_notice") or not self._store:
+            return
+        try:
+            runs = self._store.get_runs()
+        except Exception:
+            return
+        incomplete = [r for r in runs if r.get("completed_at") is None]
+        n = len(incomplete)
+        self.paused_count_changed.emit(n)
+        if incomplete:
+            most_recent = incomplete[0]
+            name = most_recent.get("assignment_name", "analysis")
+            if n == 1:
+                self._incomplete_count_label.setText(
+                    f"Analysis paused mid-run: {name}"
+                )
+            else:
+                self._incomplete_count_label.setText(
+                    f"{n} analyses paused — most recent: {name}"
+                )
+            self._incomplete_notice.setVisible(True)
+        else:
+            self._incomplete_notice.setVisible(False)
+
+    def _on_show_incomplete_run(self) -> None:
+        """Navigate to the most recent incomplete run in the review view."""
+        if not self._store:
+            return
+        try:
+            runs = self._store.get_runs()
+        except Exception:
+            return
+        for run in runs:
+            if run.get("completed_at") is None:
+                self._switch_view(2)
+                self._load_run(run.get("run_id", ""))
+                return
 
     def _on_resume_run(self) -> None:
         """Resume a partial run from where it stopped."""
