@@ -753,6 +753,59 @@ non-storage of protected-category corrections mitigates one path but doesn't clo
 the gap: the system's outputs (student coding records, synthesis reports) are
 themselves observable by administrators.
 
+### Observation 12: Linguistic features as authenticity signals
+
+The linguistic features built to protect students from biased sentiment scoring
+are simultaneously the strongest indicators that this is a human being writing
+from their actual life.
+
+No current LLM produces habitual be, remote past BIN, copula deletion, or
+negative concord — RLHF training systematically eliminates non-standard English
+because the reward model treats standard register as "correct." Tense mixing from
+L1 transfer, communal voice, narrative structure, hedging patterns that reflect
+Japanese academic norms — these are all things AI text systematically does not
+produce because AI text is trained on the normate register.
+
+This means the equity-protection pipeline and the academic integrity pipeline
+converge on the same signal: **the students whose writing the system was built
+to protect are the same students whose writing is most legibly human.** A student
+writing in AAVE is provably not an LLM in the current generation of models. A
+student mixing Tagalog and English mid-sentence is provably human. A student
+engaging through communal voice or testimonio structure is provably human.
+
+The asset chip isn't just saying "this is a valid way to write." It's saying
+"this is a human way to write." The features that biased sentiment tools penalize
+are the same features that no language model reproduces. Protection and
+authentication are the same operation.
+
+**Caveat:** This convergence holds for the current generation of language models.
+Future models trained on more diverse data, or specifically fine-tuned to produce
+non-standard registers, could break this correlation. The system should not rely
+on linguistic diversity as an authenticity signal in its AIC pipeline — but the
+observation that the two signals currently overlap is worth documenting.
+
+**#AFROFUTURISM connection:** If AAVE features become something AI can produce
+convincingly, the very markers that currently protect Black students from biased
+scoring would become markers that AI can mimic. The students would lose both their
+protection (the suppression layer would fire on AI text too) and their
+authenticity signal. Designing for this future means ensuring the suppression
+layer is grounded in linguistic JUSTICE (the score is biased, period) not in
+authenticity detection (the score is biased because humans write this way and
+machines don't — yet).
+
+**#COMMUNITY_CULTURAL_WEALTH:** The asset that institutions ignore — non-standard
+linguistic practice — turns out to be the asset that most clearly distinguishes
+human intellectual engagement from machine text production. The students
+institutions have spent the most effort "correcting" are the students whose
+writing is most irreducibly their own.
+
+**Design implication:** The guided insights (expandable chip notes) now serve a
+third function beyond equity protection and asset surfacing: they contextualize
+authenticity. When the chip says "Habitual be — comparable to Irish English
+habitual aspect, Celtic substrate origin," it's simultaneously protecting the
+score, naming the asset, and implicitly signaling: this is a person writing from
+a living grammatical tradition.
+
 ### New Files
 
 - Linguistic features module: `src/modules/linguistic_features.py`

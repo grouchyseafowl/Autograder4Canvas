@@ -192,7 +192,7 @@ _LEARN_NOTES = {
         "Copula deletion ('she tired' for 'she is tired'). Same grammatical "
         "pattern as Russian, Arabic, Hebrew, and Hungarian — languages that "
         "also drop 'is/are' in present tense. In AAVE, copula deletion follows "
-        "precise rules: it occurs where standard English would contract "
+        "precise rules: it occurs where Standard English would contract "
         "('she's tired' → 'she tired') but not where it wouldn't "
         "('I know who she is' — never deleted). Described by Labov (1969), "
         "Rickford (1999)."
