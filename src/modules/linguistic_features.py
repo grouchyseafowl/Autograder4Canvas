@@ -171,122 +171,173 @@ _AAVE_AIC_ADJUSTMENTS = {"grammatical_perfection": 0.5}
 _AAVE_ASSET = "AAVE linguistic features — authentic voice"
 
 # ---------------------------------------------------------------------------
-# Learn notes — expandable explanations for teacher learning
-# Reference notes — available when teacher expands the chip.  Framed as
-# reference material, NOT as education directed at a presumed-ignorant
-# audience.  The teacher may already know everything here — and may know
-# more than the algorithm does.  These are context for the *detection*,
-# not instruction for the *teacher*.
+# Guided insights — expandable context on each chip.
+#
+# Design principle: every note provides a COMPARATIVE or CONTEXTUAL insight
+# that has value regardless of what the teacher already knows.  A teacher
+# who lives this feature learns where it connects across languages.  A
+# teacher encountering it for the first time gets grounded reference.
+# Neither is talked down to because the note is about the PATTERN, not
+# about the teacher.
 # ---------------------------------------------------------------------------
 _LEARN_NOTES = {
     "aave_lexical": (
-        "Detected: vocabulary features of African American Vernacular English "
-        "(AAVE). AAVE is a complete linguistic system with its own grammar "
-        "(Rickford, 1999). Features like 'finna,' 'ain't,' 'no cap' are part "
-        "of a rich linguistic tradition. Sentiment tools trained on standard "
-        "English often misread AAVE affect — this score has been adjusted."
+        "AAVE vocabulary features detected. AAVE is a complete grammatical "
+        "system (Rickford, 1999) — these markers ('finna,' 'ain't,' 'no cap') "
+        "parallel modal verbs and intensifiers in standard English but carry "
+        "different social indexing. Sentiment tools trained on standard English "
+        "systematically misread AAVE affect, so this score has been adjusted."
     ),
     "zero_copula": (
-        "Detected: copula deletion ('she tired' for 'she is tired'). This is "
-        "a systematic grammatical rule in AAVE described by Rickford (1999), "
-        "not a missing word. The same pattern occurs in Russian, Arabic, and "
-        "many other languages."
+        "Copula deletion ('she tired' for 'she is tired'). Same grammatical "
+        "pattern as Russian, Arabic, Hebrew, and Hungarian — languages that "
+        "also drop 'is/are' in present tense. In AAVE, copula deletion follows "
+        "precise rules: it occurs where standard English would contract "
+        "('she's tired' → 'she tired') but not where it wouldn't "
+        "('I know who she is' — never deleted). Described by Labov (1969), "
+        "Rickford (1999)."
     ),
     "zero_copula_pos": (
-        "Detected via part-of-speech analysis: copula deletion. Same pattern "
-        "as zero_copula — AAVE grammatical rule for copula omission."
+        "Copula deletion confirmed via part-of-speech analysis. Same cross-"
+        "linguistic pattern as Russian and Arabic (see zero_copula note). "
+        "Higher-confidence detection than regex alone."
     ),
     "zero_copula_dep": (
-        "Detected via dependency parsing: copula deletion. Same pattern "
-        "as zero_copula — confirmed with higher-accuracy syntactic analysis."
+        "Copula deletion confirmed via dependency parsing — highest-confidence "
+        "detection method. Same cross-linguistic pattern as Russian, Arabic, "
+        "Hebrew (see zero_copula note)."
     ),
     "negative_concord": (
-        "Detected: double negation ('didn't nobody tell me'). Negative concord "
-        "is an AAVE grammatical feature that intensifies negation. Standard in "
-        "many world languages (Spanish, French, Russian). Was also standard in "
-        "English until 18th-century prescriptive grammarians stigmatized it."
+        "Double negation ('didn't nobody tell me'). Negative concord — where "
+        "multiple negatives intensify rather than cancel — is standard grammar "
+        "in Spanish, French, Russian, Portuguese, Greek, and most world "
+        "languages. It was standard in English too (Chaucer used it routinely) "
+        "until 18th-century prescriptive grammarians imposed the mathematical "
+        "logic of 'two negatives make a positive.' The AAVE pattern preserves "
+        "the older English rule."
     ),
     "remote_past_bin": (
-        "Detected: remote past 'been' ('I been knew that'). An AAVE tense "
-        "marker with no direct standard English equivalent — marks that the "
-        "action started long ago and the speaker finds it obvious. A precise "
-        "temporal distinction standard English lacks."
+        "Remote past 'been' / BIN ('I been knew that'). An AAVE tense-aspect "
+        "marker with no single-word equivalent in standard English — it marks "
+        "that the action started long ago and the speaker considers it obvious "
+        "or established. Comparable to the pluperfect in Romance languages "
+        "but with an additional evidential meaning (speaker certainty). One of "
+        "AAVE's most precise grammatical innovations (Green, 2002)."
     ),
     "existential_its": (
-        "Detected: existential 'it's' ('it's a lot of' for 'there are many'). "
-        "An AAVE existential construction — a grammatical pattern, not a "
-        "confusion between 'it's' and 'there are.'"
+        "Existential 'it's' ('it's a lot of people here' for 'there are many "
+        "people here'). An AAVE construction that parallels French 'il y a' "
+        "(literally 'it has there') and Spanish 'hay.' English uses 'there' "
+        "as a dummy subject; AAVE uses 'it' — different pronoun, same "
+        "grammatical function."
     ),
     "habitual_be": (
-        "Detected: uninflected 'be' marking habitual action ('she be working'). "
-        "An AAVE aspect marker meaning something happens regularly, not just "
-        "right now. Standard English has no single-word equivalent for this "
-        "distinction."
+        "Uninflected 'be' marking habitual action ('she be working' = she "
+        "works regularly / habitually). Standard English must use adverbs "
+        "('she usually works') or auxiliary constructions to express this — "
+        "AAVE does it with a single morpheme. Comparable to the habitual "
+        "aspect in Irish English ('she does be working'), which has the same "
+        "Celtic substrate origin. Not interchangeable with copula 'is' — "
+        "'she be tired' (habitually) vs. 'she tired' (right now) is a "
+        "meaningful distinction."
     ),
     "was_translated": (
-        "This submission was translated from another language. Sentiment scores "
-        "on translated text are unreliable — translation changes affect markers. "
-        "The student is engaging with course material across languages."
+        "Translated submission. Sentiment models score the English translation, "
+        "not the student's original expression — translation flattens affect "
+        "markers, shifts register, and introduces artifacts that sentiment "
+        "tools misread. Comparable to how back-translation in NLP research "
+        "systematically alters semantic content (Bapna & Firat, 2019)."
     ),
     "tense_mixing": (
-        "Detected: tense patterns suggesting L1 transfer — the student's home "
-        "language may handle tense differently than English. Transfer patterns "
-        "are evidence of active navigation between two grammatical systems."
+        "Tense patterns suggesting L1 transfer. Many languages structure time "
+        "differently: Mandarin uses aspect particles rather than verb "
+        "conjugation; Vietnamese marks tense with separate time words; Arabic "
+        "has a two-tense system (perfect/imperfect) vs. English's twelve-tense "
+        "system. Transfer patterns reflect the student navigating between "
+        "these systems — active bilingual processing, not error."
     ),
     "article_error": (
-        "Detected: article usage reflecting L1 transfer ('the homework,' "
-        "'a research'). Many languages handle articles differently or have "
-        "none at all (Mandarin, Russian, Korean, Arabic)."
+        "Article usage reflecting L1 transfer. English's article system "
+        "(a/an/the/∅) is cross-linguistically unusual — most of the world's "
+        "languages either lack articles entirely (Mandarin, Japanese, Russian, "
+        "Korean, Hindi, Turkish) or use them differently (Arabic has 'al-' but "
+        "no indefinite article; French/Spanish gender articles). L2 English "
+        "articles are among the last features acquired, even at advanced "
+        "proficiency (Master, 1997)."
     ),
     "preposition_transfer": (
-        "Detected: preposition patterns reflecting L1 transfer ('depend of,' "
-        "'interested for'). Each language maps spatial and abstract "
-        "relationships differently — transfer patterns are evidence of active "
-        "bilingual processing."
+        "Preposition patterns reflecting L1 transfer ('depend of,' 'interested "
+        "for'). Prepositions are one of the least systematic parts of any "
+        "language — English 'interested IN' is arbitrary (Spanish: 'interesado "
+        "EN,' French: 'intéressé PAR,' German: 'interessiert AN'). Transfer "
+        "from the L1 preposition system is natural and persistent even at "
+        "high proficiency."
     ),
     "code_mixing": (
-        "Detected: language mixing within the submission. Code-mixing is a "
-        "communicative strategy — bilingual speakers use it to access precise "
-        "concepts, maintain cultural identity, or express ideas that work "
-        "better in one language."
+        "Language mixing within the submission. Code-mixing and code-switching "
+        "are associated with high bilingual proficiency, not confusion — "
+        "speakers switch at syntactically precise points (Poplack, 1980). "
+        "Bilingual speakers often have concepts that are more accessible or "
+        "precise in one language. In academic writing, switching may signal "
+        "reaching for an idea that lives in the home language."
     ),
     "code_mixing_langdetect": (
-        "Detected: multiple languages across sentences. Code-mixing between "
-        "languages is associated with multilingual fluency."
+        "Multiple languages detected across sentences. Cross-linguistic "
+        "writing is associated with multilingual fluency. Bilingual writers "
+        "may use different languages for different rhetorical functions — "
+        "narrative in one, analysis in another (Canagarajah, 2011)."
     ),
     "communal_voice": (
-        "Detected: communal pronouns ('we/our/us') used more than individual "
-        "pronouns ('I/my/me'). Many cultural and intellectual traditions "
-        "center collective experience. This is a mode of academic engagement, "
-        "not a lack of individual voice."
+        "Communal pronouns ('we/our/us') more frequent than individual "
+        "pronouns ('I/my/me'). Communal voice is a primary mode of academic "
+        "engagement in many intellectual traditions — Indigenous scholarship, "
+        "African philosophy (ubuntu), Latin American testimonio, Pacific "
+        "Islander collective storytelling. The expectation of individual 'I' "
+        "statements as evidence of critical thinking is itself culturally "
+        "specific to post-Enlightenment Western academic tradition."
     ),
     "narrative_structure": (
-        "Detected: engagement through storytelling, dialogue, or sequential "
-        "narration rather than thesis-evidence-conclusion structure. Narrative "
-        "is a knowledge-making tradition in its own right."
+        "Engagement through storytelling, dialogue, or sequential narration "
+        "rather than thesis-evidence-conclusion. Narrative is a knowledge-"
+        "making tradition across cultures — oral histories, testimonios, "
+        "Indigenous storywork (Archibald, 2008). The thesis-driven essay is "
+        "one academic form, not the academic form. Narrative analysis often "
+        "carries theoretical complexity within the story structure rather than "
+        "extracting it into separate 'analysis' sections."
     ),
     "flat_affect_engaged": (
-        "Detected: neutral emotional tone with substantive concept engagement. "
-        "Some writers engage deeply through understated expression — flat tone "
-        "does not indicate flat thinking."
+        "Neutral emotional tone with substantive concept engagement. Flat "
+        "affect in writing correlates with multiple causes: some writers "
+        "engage deeply through understatement; some neurodivergent writers "
+        "express engagement through precision rather than emotional language; "
+        "some cultural communication norms favor restraint. Japanese academic "
+        "writing, for instance, often demonstrates engagement through careful "
+        "qualification rather than overt enthusiasm."
     ),
     "hedging_density": (
-        "Detected: frequent hedging language ('maybe,' 'I think,' 'it seems'). "
-        "May reflect cultural communication norms, second-language caution, "
-        "or careful thinking style. High hedging can signal intellectual "
-        "humility rather than low confidence."
+        "Frequent hedging ('maybe,' 'I think,' 'it seems'). Hedging density "
+        "varies significantly by language background — Japanese, Korean, and "
+        "many East Asian academic traditions value epistemic caution as a sign "
+        "of intellectual maturity. In L2 English writing, hedging often "
+        "increases as proficiency increases (Hyland, 1998) because the writer "
+        "gains access to more nuanced qualification. High hedging can signal "
+        "sophistication, not uncertainty."
     ),
     "complex_emotional_engagement": (
-        "Detected: co-occurring emotions (e.g., grief AND admiration, anger "
-        "AND caring). Emotional complexity in response to difficult course "
-        "material suggests the student is holding multiple reactions at once "
-        "rather than simplifying."
+        "Co-occurring emotions detected (e.g., grief AND admiration, anger "
+        "AND caring). Holding multiple emotional responses simultaneously — "
+        "rather than reducing to a single reaction — is characteristic of "
+        "deep engagement with difficult material. Comparable to what Lugones "
+        "(1987) calls 'world-travelling': the capacity to inhabit multiple "
+        "emotional stances toward the same subject."
     ),
     "formulaic_structure": (
-        "Detected: taught essay format ('In this essay I will...' / 'In "
-        "conclusion...'). This structure was likely explicitly taught — the "
-        "student is following learned conventions, which differs from "
-        "AI-generated text that may use similar patterns."
+        "Taught essay format detected ('In this essay I will...' / 'In "
+        "conclusion...'). This structure was likely explicitly taught and is "
+        "the student following learned conventions. The five-paragraph essay "
+        "is a pedagogical scaffold, not a natural writing form — its presence "
+        "distinguishes taught human writing from AI-generated text, which "
+        "uses similar structures for different reasons."
     ),
 }
 
