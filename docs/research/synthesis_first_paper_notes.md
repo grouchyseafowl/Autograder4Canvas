@@ -315,37 +315,45 @@ and downstream harm.
 
 ### Observation 5: Back-door bias paths survive direct suppression
 
-During QC, we discovered that suppressing the sentiment score alone was insufficient.
-The signal matrix — which classifies submissions into categories like "POSSIBLE CONCERN"
-or "LOW ENGAGEMENT" — was computed from the **same biased compound score** before the
-suppression layer ran. So a student writing in AAVE might have their sentiment score
-suppressed, but the signal matrix context still told the LLM "LOW ENGAGEMENT: perfunctory
-response."
+During QC, we identified an architectural flaw: suppressing the sentiment score alone
+would have been insufficient. The signal matrix — which classifies submissions into
+categories like "POSSIBLE CONCERN" or "LOW ENGAGEMENT" — was computed from the **same
+biased compound score** before the suppression layer ran. So a student writing in AAVE
+could have their sentiment score suppressed while the signal matrix context still told
+the LLM "LOW ENGAGEMENT: perfunctory response."
 
-This is a concrete example of how bias leaks through indirect channels even after the
-direct channel is blocked. The fix: when suppression fires, the signal matrix context
-is also caveated with a reliability note. But the broader finding is methodological:
-**auditing for bias requires tracing all downstream consumers of a biased signal, not
-just the primary display path.**
+**Caveat:** We caught this during code review, not in production testing. We have not
+measured whether the unsuppressed signal matrix actually produced worse LLM outputs.
+The architectural risk was clear enough to fix preemptively, but the empirical harm
+is hypothesized, not observed.
 
-**Framework connection (#ALGORITHMIC_JUSTICE):** This is exactly what Virginia Eubanks
-describes in *Automating Inequality* — the harm doesn't come from any single decision
-point but from the system of interlocking automated judgments. Fixing one node (sentiment
-display) while leaving another node (signal matrix) consuming the same biased input
-reproduces the harm through a different path.
+The fix: when suppression fires, the signal matrix context is also caveated with a
+reliability note. The broader principle is methodological: **auditing for bias requires
+tracing all downstream consumers of a biased signal, not just the primary display path.**
+
+**Framework connection (#ALGORITHMIC_JUSTICE):** This pattern — harm reproduced through
+indirect channels after the direct channel is blocked — resonates with Eubanks'
+description of interlocking automated systems in *Automating Inequality*. But this is
+an analogy, not a direct application of her framework: Eubanks analyzes public benefits
+systems, not educational analytics. The structural pattern (multiple nodes consuming
+the same biased input) is similar; the domain and stakes are different.
 
 ### Observation 6: The teacher correction problem
 
 Standard ML practice would treat teacher corrections as ground truth for active learning:
-teacher dismisses a false positive → system learns → fewer false positives. We built this
-mechanism, then removed it.
+teacher dismisses a false positive → system learns → fewer false positives. We built
+storage infrastructure for teacher corrections (`save_feature_correction`,
+`get_feature_corrections`) and designed a parameter for feeding them back into detection
+(`prior_corrections`), then decided against implementing the feedback loop and removed
+the parameter.
 
-**Why:** A teacher who unconsciously reads AAVE writing as less serious will dismiss AAVE
-asset chips. If the system learns from those dismissals, it learns the teacher's bias. The
-system becomes *less* protective for the students who most need protection, because of
-the teacher who most needs the system's intervention. The sensitivity floor for protected
-categories (AAVE, ESL, communal voice) would be eroded by the very biases the system
-exists to counteract.
+**Why:** The reasoning (not yet empirically validated) is that a teacher who unconsciously
+reads AAVE writing as less serious would dismiss AAVE asset chips. If the system learned
+from those dismissals, it would learn the teacher's bias. The system would become *less*
+protective for the students who most need protection, because of the teacher who most
+needs the system's intervention. This risk is grounded in research on teacher bias
+toward non-standard English (e.g., Godley & Escher, 2012; Baker-Bell, 2020) but has
+not been observed in our system specifically.
 
 **The alternative:** Detection sensitivity is driven by **cohort-relative baselines** —
 computed from the class's own linguistic profile via exponential moving average across
@@ -394,16 +402,19 @@ The current system uses detection for:
 
 **The tension:** Even with asset framing, the system is categorizing students' linguistic
 practices. A student using habitual be may not identify as an AAVE speaker. The regex
-creates the category it claims to detect — "AAVE features" is a linguistic classification
-imposed on text, not a self-identification by the writer. The asset label ("authentic
-voice") is the system's framing, not the student's.
+operationalizes categories described by sociolinguists (Rickford, 1999; Green, 2002) —
+it does not invent them — but operationalizing a scholarly classification and applying it
+to individual students' text is an act of categorization, not neutral observation. The
+asset label ("authentic voice") is the system's framing, not the student's.
 
-**Framework connection (#FEMINIST_TECHNOSCIENCE):** Haraway's "view from nowhere" applies
-here. The detection module claims to observe linguistic features objectively, but the
-features it looks for (zero copula, habitual be, negative concord) are categories defined
-by sociolinguistic research — they are themselves situated knowledge. The module encodes
-a particular scholarly tradition's way of categorizing Black language, then applies that
-categorization to student text. This is a situated view presented as detection.
+**Framework connection (#FEMINIST_TECHNOSCIENCE):** Haraway's situated knowledges applies
+here. The detection module's docstring says "Features are linguistic OBSERVATIONS, not
+demographic classifications" — and it is more careful than a demographic classifier —
+but the features it detects (zero copula, habitual be, negative concord) are still
+categories defined by a specific scholarly tradition. The module encodes sociolinguistic
+research's way of parsing Black language, then applies that parsing to student text.
+This is situated knowledge doing useful work, not a "view from nowhere" — but it should
+be understood as situated rather than treated as transparent detection.
 
 **What partially mitigates this:** The feature-based (not population-based) architecture.
 The system detects *features*, not *demographics*. A student with one AAVE feature and
@@ -418,24 +429,48 @@ grief, anger, caring, etc.) vs. VADER's 4 (positive, negative, neutral, compound
 paper notes asked whether the richer signal was overengineering.
 
 **It is not, for one specific reason:** The named emotions enable **complex emotional
-engagement detection.** A student writing about slavery might score `grief: 0.35 +
-admiration: 0.28` — grief about the content, admiration for the people who survived it.
-VADER reads this as slightly negative. GoEmotions reads it as complex engagement. The
-`complex_emotional_engagement` feature in `linguistic_features.py` detects these
-co-occurring affect pairs and surfaces them as an asset: "Complex emotional engagement
-with course material."
+engagement detection.** Illustrative example (hypothetical, not tested): a student
+writing about slavery could score `grief: 0.35 + admiration: 0.28` — grief about the
+content, admiration for the people who survived it. VADER would likely read this as
+slightly negative (based on its lexicon's treatment of grief-related vocabulary).
+GoEmotions would surface the co-occurring emotions. The `complex_emotional_engagement`
+feature in `linguistic_features.py` detects these co-occurring affect pairs and surfaces
+them as an asset: "Complex emotional engagement with course material."
 
-This is the community cultural wealth framework operationalized at the affect level.
-Righteous anger about injustice, grief mixed with admiration, fear mixed with optimism —
-these are not "negative sentiment." They are evidence of deep engagement with course
-material that happens to be about painful subjects. The asset framing converts what
-VADER reads as a concern signal into what it actually is: a student bringing their full
-emotional intelligence to the material.
+**Caveat:** This illustrative example has not been validated against real student text.
+Whether GoEmotions actually produces these co-occurring scores on academic writing about
+painful subjects is an empirical question. The detection thresholds (both emotions > 0.1)
+are set by developer judgment, not validated against teacher assessments of engagement.
+
+The design intent connects to community cultural wealth: righteous anger about injustice,
+grief mixed with admiration, fear mixed with optimism — these would not be "negative
+sentiment" but evidence of engagement with course material about painful subjects. Whether
+the implementation delivers on this intent requires testing with the actual corpus.
 
 **The enrichment only reaches the LLM when the score is reliable.** For suppressed
 submissions (AAVE, ESL, short), neither the compound score nor the named emotions are
 shown — the LLM reads tone from text. This prevents the richer GoEmotions signal from
 becoming a more sophisticated bias vector.
+
+### Additional changes from this session (not elevated to observations)
+
+**Rename: `vader_sentiment` → `emotional_register_score`.** Conceptual clarity only — no
+behavior change. "Emotional register" better describes what the signal measures (or
+attempts to measure) than naming the tool that produces it. Minor, but the naming shapes
+how developers and future researchers think about the signal.
+
+**`was_transcribed` as soft caution.** Oral submissions transcribed to text get a soft
+caution (tier: low, not suppressed) because sentiment models trained on written text
+misread spoken register — disfluencies, hedging, non-linear structure. This is a
+data-quality concern (not demographic bias), so it warrants a caution rather than hard
+suppression. The `was_transcribed` flag was already in `PerSubmissionSummary`; wiring it
+to the suppression layer was straightforward.
+
+**GoEmotions top-3 in LLM prompt.** When GoEmotions is the backend and the score is not
+suppressed, the top 3 named emotions are surfaced in the LLM coding prompt (e.g.,
+"Named emotions: joy (0.42), admiration (0.31), curiosity (0.18)"). This gives the
+LLM more specific register information than a compound float alone. Not shown for
+suppressed submissions — the suppression instruction takes precedence.
 
 ### New Limitation
 
