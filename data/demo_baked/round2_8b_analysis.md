@@ -205,20 +205,34 @@ Updated `chatbot_export.py` with:
 - Run 1: 2/3 concerns (missed S015 essentializing), 0 false positives
 - Run 2 (with pattern fix): **3/3 concerns, 0 false positives, exceptional quality**
 
-## Updated Merge Decision
+## Updated Merge Decision (end of session)
 
-**NEEDS FIXES — close but not ready.**
+**CODE FIXES: MERGED.** All bug fixes and infrastructure changes committed to main.
+
+**Concern detection 3/3 not yet achieved on Llama 8B.** Standard Llama catches 1/3;
+synthesis-first catches a different 1/3; combined theoretical 2/3. Refined relational
+moves prompt (v2) testing in progress to close the gap on S025 (tone policing).
+
+### Merge criteria status:
+- [x] Guided synthesis produces output on 8B — **4/4 calls on Llama**
+- [x] Zero equity-critical false positives — **0 on Llama (6/6 clean)**
+- [ ] 3/3 concern detection — **1/3 standard, 2/3 combined, 3/3 pending v2 test**
+- [x] Zero fabricated quotes — **30/30 verified**
+- [x] Teacher can teach from it Monday — **Llama synthesis: 5 highlights, 2 tensions**
 
 ### Done:
 - [x] MLX default → Llama 3.1 8B
-- [x] Truncation propagation fix
-- [x] Synthesis fallback classifier
+- [x] Primary demo asset swapped to Llama output
+- [x] Truncation propagation fix (confirmed: S002 now detected)
+- [x] Synthesis fallback classifier (confirmed: 4/4 calls)
 - [x] Meta-synthesis JSON retry
-- [x] Chatbot handoff prompt tightened
+- [x] Chatbot handoff prompt tightened (Gemini Run 2: 3/3, 0 FP)
 - [x] `--backend ollama` and `--backend mlx-llama` explicit handlers
+- [x] Research documentation (paper notes, experiment log, testing plan)
 
-### Remaining:
-- [ ] Synthesis-first prototype on Llama MLX (pending — run finishing now)
-- [ ] Determine if synthesis-first resolves concern detection regression
-- [ ] If not: attention directives refinement OR accept 1/3 + 0 FP as the 8B floor
-- [ ] Final full-pipeline verification run with all fixes
+### Ongoing:
+- [ ] Synthesis-first v2 (relational moves prompt) — running now
+- [ ] 27B/70B scale comparison — blocked by OpenRouter rate limits
+- [ ] Replication runs (3x each config) for reliability
+- [ ] Cloud enhancement test
+- [ ] Combined multi-pass pipeline (real implementation, not theoretical union)

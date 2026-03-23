@@ -81,6 +81,19 @@ grading — you are noticing. Address these three orientations:
    tensions between different students' understandings? Who is in
    unspoken dialogue with whom?
 
+   Pay special attention to RELATIONAL MOVES — moments where one student's
+   framing affects how other students' voices land. Examples:
+   - A student calling for "calm" or "civility" in a class where others
+     are expressing urgent anger about injustice (tone policing)
+   - A student attributing traits to an entire group in a class where
+     members of that group are writing as individuals (essentializing)
+   - A student saying "I don't see race" in a class where others just
+     described how race shaped their family's life (colorblind erasure)
+   - A student implying certain writing styles aren't "academic enough"
+     in a class where those styles are doing rigorous intellectual work
+   These are only visible when you read the class as a community — name
+   them when you see them, because they matter for who feels safe to speak.
+
 Use student names. Quote their actual words. Notice what's quiet as
 much as what's loud. Write 400-600 words.
 """
