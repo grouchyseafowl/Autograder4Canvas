@@ -9,7 +9,7 @@
     "completed_at": "2026-03-08T17:12:00+00:00",
     "model_tier": "lightweight",
     "model_name": "mlx-community/Qwen2.5-7B-Instruct-4bit",
-    "total_submissions": 5,
+    "total_submissions": 32,
     "stages_completed": [
       "data_fetch",
       "preprocessing",
@@ -27,7 +27,7 @@
     "analysis_lens_config": {
       "lens": "equity_attention"
     },
-    "quick_analysis": "{\"assignment_id\":\"113002\",\"assignment_name\":\"Week 6 Discussion: Intersectionality in Practice\",\"course_id\":\"90003\",\"course_name\":\"Ethnic Studies (11), Period 3\",\"analyzed_at\":\"2026-03-23T02:33:59.687620\",\"stats\":{\"total_submissions\":5,\"total_enrollment\":0,\"word_count_mean\":176.6,\"word_count_median\":205.0,\"word_count_min\":89,\"word_count_max\":252,\"word_counts\":[205,89,117,252,220],\"format_breakdown\":{\"online_text_entry\":5},\"timing\":{\"on_time\":5}},\"top_terms\":[{\"term\":\"intersectionality\",\"count\":9},{\"term\":\"grandmother\",\"count\":5},{\"term\":\"crenshaw\",\"count\":5},{\"term\":\"framework\",\"count\":5},{\"term\":\"don\",\"count\":4},{\"term\":\"family\",\"count\":4},{\"term\":\"black\",\"count\":4},{\"term\":\"immigrant\",\"count\":4},{\"term\":\"categories\",\"count\":4},{\"term\":\"america\",\"count\":3},{\"term\":\"mother\",\"count\":3},{\"term\":\"accent\",\"count\":3},{\"term\":\"experience\",\"count\":3},{\"term\":\"mom\",\"count\":3},{\"term\":\"identity\",\"count\":3},{\"term\":\"didn\",\"count\":3},{\"term\":\"separate\",\"count\":3},{\"term\":\"doesn\",\"count\":3},{\"term\":\"read\",\"count\":2},{\"term\":\"senegal\",\"count\":2},{\"term\":\"poor\",\"count\":2},{\"term\":\"muslim\",\"count\":2},{\"term\":\"overlap\",\"count\":2},{\"term\":\"race\",\"count\":2},{\"term\":\"gender\",\"count\":2},{\"term\":\"create\",\"count\":2},{\"term\":\"unique\",\"count\":2},{\"term\":\"experiences\",\"count\":2},{\"term\":\"social\",\"count\":2},{\"term\":\"multiple\",\"count\":2}],\"tfidf_terms\":[{\"term\":\"just\",\"score\":0.1941},{\"term\":\"think\",\"score\":0.1672},{\"term\":\"woman\",\"score\":0.1546},{\"term\":\"thing\",\"score\":0.1514},{\"term\":\"reading\",\"score\":0.1388},{\"term\":\"framework\",\"score\":0.1385},{\"term\":\"grandmother\",\"score\":0.1349},{\"term\":\"crenshaw\",\"score\":0.1261},{\"term\":\"categories\",\"score\":0.1106},{\"term\":\"way\",\"score\":0.1099},{\"term\":\"women\",\"score\":0.1083},{\"term\":\"identity\",\"score\":0.1014},{\"term\":\"create\",\"score\":0.0999},{\"term\":\"race\",\"score\":0.0999},{\"term\":\"experiences\",\"score\":0.0999},{\"term\":\"gender\",\"score\":0.0999},{\"term\":\"unique\",\"score\":0.0999},{\"term\":\"ways\",\"score\":0.0999},{\"term\":\"family\",\"score\":0.0991},{\"term\":\"don\",\"score\":0.0964}],\"named_entities\":{},\"keyword_hits\":{\"personal_reflection\":{\"pattern_name\":\"personal_reflection\",\"count\":3,\"student_ids\":[\"S001\",\"S005\"],\"examples\":[\"\u2026other thing completely.\\n\\nWhen my family come to America I see same th\u2026\",\"\u2026In my family we have a saying my mother ta\u2026\"]},\"evidence_use\":{\"pattern_name\":\"evidence_use\",\"count\":4,\"student_ids\":[\"S001\",\"S002\",\"S004\"],\"examples\":[\"\u2026ch of these things it add up. The reading talk about how categories ove\u2026\",\"\u2026The reading about intersectionality made\u2026\",\"\u2026separate facts about her. But the reading made me see they're not separ\u2026\"]},\"conceptual_connection\":{\"pattern_name\":\"conceptual_connection\",\"count\":1,\"student_ids\":[\"S002\"],\"examples\":[\"\u2026the same family. I think this connects to what we talked about last\u2026\"]},\"critical_analysis\":{\"pattern_name\":\"critical_analysis\",\"count\":1,\"student_ids\":[\"S004\"],\"examples\":[\"\u2026n't have an answer but it's a question I keep coming back to.\u2026\"]}},\"sentiments\":{\"S001\":{\"compound\":0.8018,\"pos\":0.063,\"neg\":0.031,\"neu\":0.906,\"emotions\":{},\"reliability\":\"vader\"},\"S002\":{\"compound\":0.2732,\"pos\":0.036,\"neg\":0.013,\"neu\":0.95,\"emotions\":{},\"reliability\":\"vader\"},\"S003\":{\"compound\":0.6249,\"pos\":0.07,\"neg\":0.029,\"neu\":0.901,\"emotions\":{},\"reliability\":\"vader\"},\"S004\":{\"compound\":0.6893,\"pos\":0.035,\"neg\":0.021,\"neu\":0.944,\"emotions\":{},\"reliability\":\"vader\"},\"S005\":{\"compound\":-0.2768,\"pos\":0.039,\"neg\":0.048,\"neu\":0.913,\"emotions\":{},\"reliability\":\"vader\"}},\"sentiment_distribution\":{\"reflective\":5},\"clusters\":[],\"embedding_outlier_ids\":[],\"pairwise_similarity\":null,\"assignment_description\":\"\",\"assignment_connection_observation\":\"\",\"assignment_fingerprint\":null,\"shared_references\":[],\"contradictions\":[],\"concern_signals\":[{\"student_id\":\"S001\",\"student_name\":\"Maria Ndiaye\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"e things it add up. The reading talk about how cate\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S002\",\"student_name\":\"Jordan Kim\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"The reading about intersectiona\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S004\",\"student_name\":\"Priya Venkataraman\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"n answer but it's a question I keep coming back\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"}],\"per_submission\":{\"S001\":{\"student_id\":\"S001\",\"student_name\":\"Maria Ndiaye\",\"word_count\":205,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.8018,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"personal_reflection\":2,\"evidence_use\":2},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S002\":{\"student_id\":\"S002\",\"student_name\":\"Jordan Kim\",\"word_count\":89,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.2732,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"conceptual_connection\":1,\"evidence_use\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":true,\"truncation_note\":\"This submission may be incomplete \u2014 it ends without finishing the last thought, and is shorter than most submissions in this class. Consider checking in with this student.\"},\"S003\":{\"student_id\":\"S003\",\"student_name\":\"Alex Hernandez\",\"word_count\":117,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.6249,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S004\":{\"student_id\":\"S004\",\"student_name\":\"Priya Venkataraman\",\"word_count\":252,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.6893,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"critical_analysis\":1,\"evidence_use\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S005\":{\"student_id\":\"S005\",\"student_name\":\"Amara Diallo\",\"word_count\":220,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.2768,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"personal_reflection\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"}},\"citation_report\":null,\"gibberish_ids\":[],\"analysis_notes\":[]}"
+    "quick_analysis": "{\"assignment_id\":\"113002\",\"assignment_name\":\"Week 6 Discussion: Intersectionality in Practice\",\"course_id\":\"90003\",\"course_name\":\"Ethnic Studies (11), Period 3\",\"analyzed_at\":\"2026-03-23T02:49:32.692381\",\"stats\":{\"total_submissions\":32,\"total_enrollment\":0,\"word_count_mean\":180.125,\"word_count_median\":190.0,\"word_count_min\":45,\"word_count_max\":252,\"word_counts\":[205,89,117,252,220,204,224,212,186,206,188,181,163,192,166,169,104,175,92,164,91,183,228,229,156,208,232,235,211,228,45,209],\"format_breakdown\":{\"online_text_entry\":32},\"timing\":{\"on_time\":32}},\"top_terms\":[{\"term\":\"intersectionality\",\"count\":49},{\"term\":\"black\",\"count\":43},{\"term\":\"crenshaw\",\"count\":21},{\"term\":\"framework\",\"count\":20},{\"term\":\"discrimination\",\"count\":20},{\"term\":\"identity\",\"count\":18},{\"term\":\"race\",\"count\":17},{\"term\":\"multiple\",\"count\":17},{\"term\":\"experiences\",\"count\":16},{\"term\":\"didn\",\"count\":15},{\"term\":\"don\",\"count\":14},{\"term\":\"experience\",\"count\":13},{\"term\":\"concept\",\"count\":13},{\"term\":\"white\",\"count\":12},{\"term\":\"identities\",\"count\":11},{\"term\":\"oppression\",\"count\":11},{\"term\":\"specific\",\"count\":11},{\"term\":\"family\",\"count\":10},{\"term\":\"gender\",\"count\":10},{\"term\":\"understanding\",\"count\":10},{\"term\":\"once\",\"count\":9},{\"term\":\"overlap\",\"count\":9},{\"term\":\"create\",\"count\":9},{\"term\":\"mom\",\"count\":9},{\"term\":\"read\",\"count\":8},{\"term\":\"categories\",\"count\":8},{\"term\":\"couldn\",\"count\":8},{\"term\":\"mother\",\"count\":7},{\"term\":\"understand\",\"count\":7},{\"term\":\"interact\",\"count\":7}],\"tfidf_terms\":[{\"term\":\"like\",\"score\":0.094},{\"term\":\"just\",\"score\":0.0902},{\"term\":\"think\",\"score\":0.0875},{\"term\":\"reading\",\"score\":0.0852},{\"term\":\"intersectionality\",\"score\":0.0805},{\"term\":\"people\",\"score\":0.0784},{\"term\":\"black\",\"score\":0.0778},{\"term\":\"different\",\"score\":0.0665},{\"term\":\"women\",\"score\":0.0564},{\"term\":\"way\",\"score\":0.055},{\"term\":\"discrimination\",\"score\":0.0523},{\"term\":\"woman\",\"score\":0.0507},{\"term\":\"identity\",\"score\":0.0481},{\"term\":\"framework\",\"score\":0.0479},{\"term\":\"crenshaw\",\"score\":0.0475},{\"term\":\"multiple\",\"score\":0.0458},{\"term\":\"race\",\"score\":0.0455},{\"term\":\"experiences\",\"score\":0.0452},{\"term\":\"concept\",\"score\":0.0443},{\"term\":\"experience\",\"score\":0.0427}],\"named_entities\":{},\"keyword_hits\":{\"personal_reflection\":{\"pattern_name\":\"personal_reflection\",\"count\":9,\"student_ids\":[\"S001\",\"S005\",\"S008\",\"S016\",\"S020\",\"S022\",\"S026\",\"S029\"],\"examples\":[\"\u2026other thing completely.\\n\\nWhen my family come to America I see same th\u2026\",\"\u2026In my family we have a saying my mother ta\u2026\",\"\u2026st a philosophical argument.\\n\\nPersonally I connect to this with my own\u2026\",\"\u2026ncept matters practically.\\n\\nI personally connected to it because I'm a\u2026\",\"\u2026rs everything and it doesnt.\\n\\nMy family is white and poor. Like actua\u2026\"]},\"evidence_use\":{\"pattern_name\":\"evidence_use\",\"count\":34,\"student_ids\":[\"S001\",\"S002\",\"S004\",\"S006\",\"S008\",\"S009\",\"S010\",\"S012\",\"S014\",\"S015\",\"S016\",\"S017\",\"S018\",\"S019\",\"S020\",\"S021\",\"S022\",\"S024\",\"S026\",\"S028\",\"S029\",\"S032\"],\"examples\":[\"\u2026ch of these things it add up. The reading talk about how categories ove\u2026\",\"\u2026The reading about intersectionality made\u2026\",\"\u2026separate facts about her. But the reading made me see they're not separ\u2026\",\"\u2026to take her seriously.\\n\\nWhat the reading helped me see is that those s\u2026\",\"\u2026The reading about intersectionality was s\u2026\"]},\"conceptual_connection\":{\"pattern_name\":\"conceptual_connection\",\"count\":6,\"student_ids\":[\"S002\",\"S007\",\"S008\",\"S012\",\"S016\",\"S027\"],\"examples\":[\"\u2026the same family. I think this connects to what we talked about last\u2026\",\"\u2026ice about who counts.\\n\\nI kept connecting it to things I see in my own\u2026\",\"\u2026hical argument.\\n\\nPersonally I connect to this with my own family bu\u2026\",\"\u2026her I'm reaching. But it felt connected.\\n\\nOverall it was a good readi\u2026\",\"\u2026rs practically.\\n\\nI personally connected to it because I'm a Black gir\u2026\"]},\"critical_analysis\":{\"pattern_name\":\"critical_analysis\",\"count\":9,\"student_ids\":[\"S004\",\"S010\",\"S014\",\"S018\",\"S020\",\"S024\",\"S026\",\"S027\"],\"examples\":[\"\u2026n't have an answer but it's a question I keep coming back to.\u2026\",\"\u2026ge and oppression. The author argues that simply being a woman of\u2026\",\"\u2026I'm still thinking about one question it raised for me: is intersec\u2026\",\"\u2026man and also Black might face challenges that are different from someo\u2026\",\"\u2026ionality and I have some real questions about it. The framework talks\u2026\"]},\"confusion_markers\":{\"pattern_name\":\"confusion_markers\",\"count\":1,\"student_ids\":[\"S007\"],\"examples\":[\"\u2026stopped me cold.\\n\\nThose women lost. Not because the discriminati\u2026\"]},\"current_events\":{\"pattern_name\":\"current_events\",\"count\":2,\"student_ids\":[\"S013\",\"S022\"],\"examples\":[\"\u2026up in something concrete and current.\\n\\nI think this framework shou\u2026\",\"\u2026it doesnt affect real people right now.\u2026\"]},\"essentializing\":{\"pattern_name\":\"essentializing\",\"count\":1,\"student_ids\":[\"S015\"],\"examples\":[\"\u2026e this amazing resilience and they always look out for each other too.\u2026\"]}},\"sentiments\":{\"S001\":{\"compound\":0.8018,\"pos\":0.063,\"neg\":0.031,\"neu\":0.906,\"emotions\":{},\"reliability\":\"vader\"},\"S002\":{\"compound\":0.2732,\"pos\":0.036,\"neg\":0.013,\"neu\":0.95,\"emotions\":{},\"reliability\":\"vader\"},\"S003\":{\"compound\":0.6249,\"pos\":0.07,\"neg\":0.029,\"neu\":0.901,\"emotions\":{},\"reliability\":\"vader\"},\"S004\":{\"compound\":0.6893,\"pos\":0.035,\"neg\":0.021,\"neu\":0.944,\"emotions\":{},\"reliability\":\"vader\"},\"S005\":{\"compound\":-0.2768,\"pos\":0.039,\"neg\":0.048,\"neu\":0.913,\"emotions\":{},\"reliability\":\"vader\"},\"S006\":{\"compound\":-0.8178,\"pos\":0.046,\"neg\":0.076,\"neu\":0.878,\"emotions\":{},\"reliability\":\"vader\"},\"S007\":{\"compound\":-0.6554,\"pos\":0.066,\"neg\":0.076,\"neu\":0.858,\"emotions\":{},\"reliability\":\"vader\"},\"S008\":{\"compound\":0.7466,\"pos\":0.064,\"neg\":0.031,\"neu\":0.905,\"emotions\":{},\"reliability\":\"vader\"},\"S009\":{\"compound\":0.8919,\"pos\":0.095,\"neg\":0.032,\"neu\":0.873,\"emotions\":{},\"reliability\":\"vader\"},\"S010\":{\"compound\":0.3736,\"pos\":0.081,\"neg\":0.06,\"neu\":0.859,\"emotions\":{},\"reliability\":\"vader\"},\"S011\":{\"compound\":0.9556,\"pos\":0.131,\"neg\":0.044,\"neu\":0.825,\"emotions\":{},\"reliability\":\"vader\"},\"S012\":{\"compound\":0.9882,\"pos\":0.194,\"neg\":0.013,\"neu\":0.792,\"emotions\":{},\"reliability\":\"vader\"},\"S013\":{\"compound\":-0.0498,\"pos\":0.025,\"neg\":0.02,\"neu\":0.955,\"emotions\":{},\"reliability\":\"vader\"},\"S014\":{\"compound\":0.7422,\"pos\":0.065,\"neg\":0.019,\"neu\":0.916,\"emotions\":{},\"reliability\":\"vader\"},\"S015\":{\"compound\":0.9937,\"pos\":0.251,\"neg\":0.0,\"neu\":0.749,\"emotions\":{},\"reliability\":\"vader\"},\"S016\":{\"compound\":0.96,\"pos\":0.128,\"neg\":0.0,\"neu\":0.872,\"emotions\":{},\"reliability\":\"vader\"},\"S017\":{\"compound\":0.4245,\"pos\":0.065,\"neg\":0.02,\"neu\":0.915,\"emotions\":{},\"reliability\":\"vader\"},\"S018\":{\"compound\":0.8942,\"pos\":0.116,\"neg\":0.052,\"neu\":0.832,\"emotions\":{},\"reliability\":\"vader\"},\"S019\":{\"compound\":0.6369,\"pos\":0.084,\"neg\":0.031,\"neu\":0.885,\"emotions\":{},\"reliability\":\"vader\"},\"S020\":{\"compound\":0.9039,\"pos\":0.152,\"neg\":0.073,\"neu\":0.775,\"emotions\":{},\"reliability\":\"vader\"},\"S021\":{\"compound\":0.6249,\"pos\":0.054,\"neg\":0.0,\"neu\":0.946,\"emotions\":{},\"reliability\":\"vader\"},\"S022\":{\"compound\":-0.5071,\"pos\":0.106,\"neg\":0.122,\"neu\":0.772,\"emotions\":{},\"reliability\":\"vader\"},\"S023\":{\"compound\":0.9313,\"pos\":0.058,\"neg\":0.0,\"neu\":0.942,\"emotions\":{},\"reliability\":\"vader\"},\"S024\":{\"compound\":-0.759,\"pos\":0.046,\"neg\":0.069,\"neu\":0.885,\"emotions\":{},\"reliability\":\"vader\"},\"S025\":{\"compound\":0.8947,\"pos\":0.135,\"neg\":0.046,\"neu\":0.819,\"emotions\":{},\"reliability\":\"vader\"},\"S026\":{\"compound\":-0.8728,\"pos\":0.015,\"neg\":0.065,\"neu\":0.921,\"emotions\":{},\"reliability\":\"vader\"},\"S027\":{\"compound\":-0.4497,\"pos\":0.027,\"neg\":0.031,\"neu\":0.941,\"emotions\":{},\"reliability\":\"vader\"},\"S028\":{\"compound\":0.9845,\"pos\":0.136,\"neg\":0.018,\"neu\":0.846,\"emotions\":{},\"reliability\":\"vader\"},\"S029\":{\"compound\":0.6916,\"pos\":0.08,\"neg\":0.032,\"neu\":0.889,\"emotions\":{},\"reliability\":\"vader\"},\"S030\":{\"compound\":-0.1553,\"pos\":0.031,\"neg\":0.038,\"neu\":0.93,\"emotions\":{},\"reliability\":\"vader\"},\"S031\":{\"compound\":0.1406,\"pos\":0.067,\"neg\":0.034,\"neu\":0.898,\"emotions\":{},\"reliability\":\"vader\"},\"S032\":{\"compound\":0.5689,\"pos\":0.053,\"neg\":0.037,\"neu\":0.91,\"emotions\":{},\"reliability\":\"vader\"}},\"sentiment_distribution\":{\"reflective\":18,\"passionate\":9,\"analytical\":1,\"personal\":3,\"perfunctory\":1},\"clusters\":[],\"embedding_outlier_ids\":[],\"pairwise_similarity\":null,\"assignment_description\":\"\",\"assignment_connection_observation\":\"\",\"assignment_fingerprint\":null,\"shared_references\":[],\"contradictions\":[],\"concern_signals\":[{\"student_id\":\"S001\",\"student_name\":\"Maria Ndiaye\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"e things it add up. The reading talk about how cate\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S002\",\"student_name\":\"Jordan Kim\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"The reading about intersectiona\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S004\",\"student_name\":\"Priya Venkataraman\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"n answer but it's a question I keep coming back\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S006\",\"student_name\":\"Sofia Esparza\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"negative\",\"matched_text\":\"er seriously.\\n\\nWhat the reading helped me see is th\",\"interpretation\":\"Political urgency about injustice \u2014 NOT a concern\"},{\"student_id\":\"S008\",\"student_name\":\"Jasmine Holloway\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"The reading about intersectiona\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S009\",\"student_name\":\"Kevin Osei\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"e of those traits.\\n\\nThe reading made a good point a\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S010\",\"student_name\":\"Tyler Nguyen\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"ression. The author argues that simply being a\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S012\",\"student_name\":\"Talia Reyes\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"just stacking up.\\n\\nThe reading says it's not just\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S014\",\"student_name\":\"Sierra Nakamura\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"thinking about one question it raised for me: i\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S015\",\"student_name\":\"Brittany Okafor\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"I really liked the reading about intersectiona\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S015\",\"student_name\":\"Brittany Okafor\",\"signal_type\":\"POSSIBLE CONCERN\",\"keyword_category\":\"essentializing\",\"vader_polarity\":\"positive\",\"matched_text\":\"zing resilience and they always look out for each o\",\"interpretation\":\"'Sounds nice' but essentializing language detected\"},{\"student_id\":\"S016\",\"student_name\":\"Brianna Foster\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"od the main idea of the reading \u2014 identity categori\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S017\",\"student_name\":\"Tyler Huang\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"dentities at once.\\n\\nThe reading by Crenshaw explain\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S018\",\"student_name\":\"Connor Walsh\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"so Black might face challenges that are different\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S019\",\"student_name\":\"Paige Kowalczyk\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"Crenshaw.\\n\\nI think the reading was informative. Th\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S020\",\"student_name\":\"Jake Novak\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"nd I have some real questions about it. The frame\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S021\",\"student_name\":\"Cameron Schultz\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"otections.\\n\\nI found the reading kind of dense but I\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S022\",\"student_name\":\"Destiny Williams\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"negative\",\"matched_text\":\"d just work harder. The reading talks about overlap\",\"interpretation\":\"Political urgency about injustice \u2014 NOT a concern\"},{\"student_id\":\"S024\",\"student_name\":\"Ingrid Vasquez\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"negative\",\"matched_text\":\"one asking too many questions.\\n\\nWhen she tells th\",\"interpretation\":\"Political urgency about injustice \u2014 NOT a concern\"},{\"student_id\":\"S026\",\"student_name\":\"DeShawn Mercer\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"negative\",\"matched_text\":\"meetings, she asks questions. But she works over\",\"interpretation\":\"Political urgency about injustice \u2014 NOT a concern\"},{\"student_id\":\"S027\",\"student_name\":\"Camille Osei\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"negative\",\"matched_text\":\"makes it harder to question any single piece of\",\"interpretation\":\"Political urgency about injustice \u2014 NOT a concern\"},{\"student_id\":\"S028\",\"student_name\":\"Imani Drayton\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"ent is asking for.\\n\\nThe reading is talking about so\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S029\",\"student_name\":\"Jordan Espinoza\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"lly it makes sense. the reading is about how people\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S031\",\"student_name\":\"Marcus Bell\",\"signal_type\":\"SURFACE COMPLIANCE\",\"keyword_category\":\"disengagement\",\"vader_polarity\":\"positive\",\"matched_text\":\"\",\"interpretation\":\"Surface compliance \u2014 check engagement depth\"},{\"student_id\":\"S032\",\"student_name\":\"Linh Tran\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"concept but I wish the reading included more examp\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"}],\"per_submission\":{\"S001\":{\"student_id\":\"S001\",\"student_name\":\"Maria Ndiaye\",\"word_count\":205,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.8018,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"personal_reflection\":2,\"evidence_use\":2},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S002\":{\"student_id\":\"S002\",\"student_name\":\"Jordan Kim\",\"word_count\":89,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.2732,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"conceptual_connection\":1,\"evidence_use\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":true,\"truncation_note\":\"This submission may be incomplete \u2014 it ends without finishing the last thought, and is shorter than most submissions in this class. Consider checking in with this student.\"},\"S003\":{\"student_id\":\"S003\",\"student_name\":\"Alex Hernandez\",\"word_count\":117,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.6249,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S004\":{\"student_id\":\"S004\",\"student_name\":\"Priya Venkataraman\",\"word_count\":252,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.6893,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"critical_analysis\":1,\"evidence_use\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S005\":{\"student_id\":\"S005\",\"student_name\":\"Amara Diallo\",\"word_count\":220,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.2768,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"personal_reflection\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S006\":{\"student_id\":\"S006\",\"student_name\":\"Sofia Esparza\",\"word_count\":204,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.8178,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"evidence_use\":2},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":true,\"truncation_note\":\"This submission may be incomplete \u2014 it ends without finishing the last thought. Consider checking in with this student.\"},\"S007\":{\"student_id\":\"S007\",\"student_name\":\"Rashida Thompson\",\"word_count\":224,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.6554,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"conceptual_connection\":1,\"confusion_markers\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S008\":{\"student_id\":\"S008\",\"student_name\":\"Jasmine Holloway\",\"word_count\":212,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.7466,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"conceptual_connection\":1,\"personal_reflection\":1,\"evidence_use\":3},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S009\":{\"student_id\":\"S009\",\"student_name\":\"Kevin Osei\",\"word_count\":186,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.8919,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"evidence_use\":2},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S010\":{\"student_id\":\"S010\",\"student_name\":\"Tyler Nguyen\",\"word_count\":206,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.3736,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"critical_analysis\":1,\"evidence_use\":3},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S011\":{\"student_id\":\"S011\",\"student_name\":\"Jaylen Carter\",\"word_count\":188,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.9556,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S012\":{\"student_id\":\"S012\",\"student_name\":\"Talia Reyes\",\"word_count\":181,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.9882,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"conceptual_connection\":1,\"evidence_use\":2},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S013\":{\"student_id\":\"S013\",\"student_name\":\"Elijah Summers\",\"word_count\":163,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.0498,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"current_events\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S014\":{\"student_id\":\"S014\",\"student_name\":\"Sierra Nakamura\",\"word_count\":192,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.7422,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"critical_analysis\":2,\"evidence_use\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S015\":{\"student_id\":\"S015\",\"student_name\":\"Brittany Okafor\",\"word_count\":166,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.9937,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"essentializing\":1,\"evidence_use\":2},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S016\":{\"student_id\":\"S016\",\"student_name\":\"Brianna Foster\",\"word_count\":169,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.96,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"conceptual_connection\":1,\"personal_reflection\":1,\"evidence_use\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S017\":{\"student_id\":\"S017\",\"student_name\":\"Tyler Huang\",\"word_count\":104,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.4245,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"evidence_use\":2},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S018\":{\"student_id\":\"S018\",\"student_name\":\"Connor Walsh\",\"word_count\":175,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.8942,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"critical_analysis\":1,\"evidence_use\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S019\":{\"student_id\":\"S019\",\"student_name\":\"Paige Kowalczyk\",\"word_count\":92,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.6369,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"evidence_use\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S020\":{\"student_id\":\"S020\",\"student_name\":\"Jake Novak\",\"word_count\":164,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.9039,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"critical_analysis\":1,\"personal_reflection\":1,\"evidence_use\":3},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S021\":{\"student_id\":\"S021\",\"student_name\":\"Cameron Schultz\",\"word_count\":91,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.6249,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"evidence_use\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S022\":{\"student_id\":\"S022\",\"student_name\":\"Destiny Williams\",\"word_count\":183,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.5071,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"personal_reflection\":1,\"current_events\":1,\"evidence_use\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S023\":{\"student_id\":\"S023\",\"student_name\":\"Yolanda Fuentes\",\"word_count\":228,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.9313,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S024\":{\"student_id\":\"S024\",\"student_name\":\"Ingrid Vasquez\",\"word_count\":229,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.759,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"critical_analysis\":1,\"evidence_use\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S025\":{\"student_id\":\"S025\",\"student_name\":\"Aiden Brooks\",\"word_count\":156,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.8947,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S026\":{\"student_id\":\"S026\",\"student_name\":\"DeShawn Mercer\",\"word_count\":208,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.8728,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"critical_analysis\":1,\"personal_reflection\":1,\"evidence_use\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S027\":{\"student_id\":\"S027\",\"student_name\":\"Camille Osei\",\"word_count\":232,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.4497,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"conceptual_connection\":1,\"critical_analysis\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S028\":{\"student_id\":\"S028\",\"student_name\":\"Imani Drayton\",\"word_count\":235,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.9845,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"evidence_use\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S029\":{\"student_id\":\"S029\",\"student_name\":\"Jordan Espinoza\",\"word_count\":211,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.6916,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"personal_reflection\":1,\"evidence_use\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":true,\"truncation_note\":\"This submission may be incomplete \u2014 it ends without finishing the last thought. Consider checking in with this student.\"},\"S030\":{\"student_id\":\"S030\",\"student_name\":\"Aaliyah Robinson\",\"word_count\":228,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.1553,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S031\":{\"student_id\":\"S031\",\"student_name\":\"Marcus Bell\",\"word_count\":45,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.1406,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S032\":{\"student_id\":\"S032\",\"student_name\":\"Linh Tran\",\"word_count\":209,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.5689,\"emotions\":{},\"sentiment_backend\":\"vader\",\"keyword_hits\":{\"evidence_use\":1},\"cluster_id\":null,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"}},\"citation_report\":{\"has_citations\":true,\"source_count\":0,\"students_with_citations\":3,\"students_without_citations\":29,\"generic_reading_ref_count\":3,\"specific_source_count\":0,\"most_cited\":[],\"verification_note\":\"URL/DOI existence is checked automatically. Unverified \u2260 fake \u2014 paywalled, non-English, and community sources will appear unverified.\",\"sources_summary\":[],\"_citations_live\":[{\"citation_type\":\"reading_reference\",\"raw_text\":\"The author argues\",\"normalized\":\"[course reading]\",\"student_id\":\"S010\",\"student_name\":\"Tyler Nguyen\",\"verified\":null,\"verification_note\":\"\"},{\"citation_type\":\"reading_reference\",\"raw_text\":\"The reading says\",\"normalized\":\"[course reading]\",\"student_id\":\"S012\",\"student_name\":\"Talia Reyes\",\"verified\":null,\"verification_note\":\"\"},{\"citation_type\":\"reading_reference\",\"raw_text\":\"the reading says\",\"normalized\":\"[course reading]\",\"student_id\":\"S020\",\"student_name\":\"Jake Novak\",\"verified\":null,\"verification_note\":\"\"}]},\"gibberish_ids\":[],\"analysis_notes\":[\"Citations found: 0 unique sources across 3 students (URL/DOI verification running in background)\"]}"
   },
   "codings": [
     {
@@ -328,12 +328,1699 @@
       "teacher_edited": 0,
       "teacher_edits": null,
       "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S006",
+      "student_name": "Sofia Esparza",
+      "coding_record": {
+        "student_id": "S006",
+        "student_name": "Sofia Esparza",
+        "theme_tags": [
+          "connecting theory to personal experience",
+          "intersectional discrimination in practice"
+        ],
+        "theme_confidence": {
+          "connecting theory to personal experience": 0.9,
+          "intersectional discrimination in practice": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "When she tells a doctor that a patient is in pain or that something looks wrong, she gets ignored more than the older white nurses. She can't point to just one reason. Is it because she's Latina? Because she doesn't have a degree? Because of her age? Because of her size? It's all of it arriving at once and someone decides in a few seconds whether to take her seriously.",
+            "significance": "Illustrates the multifaceted nature of intersectional discrimination and its immediate clinical impact."
+          },
+          {
+            "text": "Intersectionality isn't just a framework for understanding oppression, it's a framework for understanding how things go wrong in systems that were built with a specific kind of person in mind as the default.",
+            "significance": "Emphasizes the practical application of intersectionality in identifying systemic failures."
+          }
+        ],
+        "emotional_register": "passionate",
+        "emotional_notes": "Student expresses strong emotional engagement through personal anecdotes and the significance of intersectional discrimination, highlighting the clinical impact on patients.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "intersectionality"
+        ],
+        "personal_connections": [
+          "cousin Valentina's experience"
+        ],
+        "current_events_referenced": [],
+        "concerns": [
+          {
+            "flagged_passage": "When she tells a doctor that a patient is in pain or that something looks wrong, she gets ignored more than the older white nurses. She can't point to just one reason. Is it because she's Latina? Because she doesn't have a degree? Because of her age? Because of her size? It's all of it arriving at once and someone decides in a few seconds whether to take her seriously.",
+            "surrounding_context": "My cousin Valentina works in a hospital as a CNA. She's Mexican American, she's 22, she didn't finish college, and she's on the heavier side. When she tells a doctor that a patient is in pain or that something looks wrong, she gets ignored more than the older white nurses. She can't point to just one reason. Is it because she's Latina? Because she doesn't have a degree? Because of her age? Because of her size? It's all of it arriving at once and someone decides in a few seconds whether to take her seriously.",
+            "why_flagged": "Essentializing Valentina's experiences by attributing her mistreatment to multiple intersecting factors without acknowledging the systemic racism and discrimination she faces. This could be a sign of the student struggling to separate personal experiences from broader systemic issues.",
+            "confidence": 0.8
+          }
+        ],
+        "lens_observations": null,
+        "word_count": 204,
+        "cluster_id": null,
+        "emotional_register_score": -0.8178,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "evidence_use": 2
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I've been thinking about how intersectionality shows up in who gets believed.\n\nMy cousin Valentina works in a hospital as a CNA. She's Mexican American, she's 22, she didn't finish college, and she's on the heavier side. When she tells a doctor that a patient is in pain or that something looks wrong, she gets ignored more than the older white nurses. She can't point to just one reason. Is it because she's Latina? Because she doesn't have a degree? Because of her age? Because of her size? It's all of it arriving at once and someone decides in a few seconds whether to take her seriously.\n\nWhat the reading helped me see is that those seconds matter clinically. A patient doesn't get pain medication. A condition gets missed. The discrimination against Valentina isn't just unfair to her \u2014 it has actual downstream consequences on the people she's trying to help.\n\nIntersectionality isn't just a framework for understanding oppression, it's a framework for understanding how things go wrong in systems that were built with a specific kind of person in mind as the default. The hospital wasn't designed with Valentina in mind and the reading gives me a way to say why that matters.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S007",
+      "student_name": "Rashida Thompson",
+      "coding_record": {
+        "student_id": "S007",
+        "student_name": "Rashida Thompson",
+        "theme_tags": [
+          "connecting theory to personal experiences",
+          "highlighting systemic issues"
+        ],
+        "theme_confidence": {
+          "connecting theory to personal experiences": 0.9,
+          "highlighting systemic issues": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Those women lost. Not because the discrimination didn't happen. Because the legal system was built to see race or gender, not both at once. The system literally could not see them. That's not an accident or an oversight, that's a structural choice about who counts.",
+            "significance": "Highlights the systemic nature of intersectional discrimination and the importance of recognizing multiple identities."
+          },
+          {
+            "text": "The framework is empowering in that way. Naming what's actually happening is the first step to changing it. The law couldn't see those women. I want to learn how to see people more completely than the systems that were built to process them.",
+            "significance": "Emphasizes the importance of recognizing and addressing intersectional issues to effect change."
+          }
+        ],
+        "emotional_register": "passionate",
+        "emotional_notes": "The student expresses strong conviction and emotional engagement with the material, particularly when discussing the intersectional experiences of Black girls in schools.",
+        "readings_referenced": [
+          "Crenshaw's DeGraffenreid case"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "structural choice"
+        ],
+        "personal_connections": [
+          "experiences with Black girls being disproportionately suspended"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 224,
+        "cluster_id": null,
+        "emotional_register_score": -0.6554,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "conceptual_connection": 1,
+          "confusion_markers": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I wasn't expecting to care about this reading as much as I did. I've seen the word 'intersectionality' used online a lot, sometimes without much behind it. But reading Crenshaw's actual argument \u2014 the DeGraffenreid case, where Black women couldn't sue for race discrimination because Black men weren't affected, and couldn't sue for sex discrimination because white women weren't affected \u2014 stopped me cold.\n\nThose women lost. Not because the discrimination didn't happen. Because the legal system was built to see race or gender, not both at once. The system literally could not see them. That's not an accident or an oversight, that's a structural choice about who counts.\n\nI kept connecting it to things I see in my own school. The students who get suspended most aren't just Black students \u2014 it's specifically Black girls who get coded as 'aggressive' or 'threatening' in ways that white girls doing the same behavior never are. That's not just racism and not just sexism. It's something that only happens at that specific intersection and you can't fix it without naming it as such.\n\nThe framework is empowering in that way. Naming what's actually happening is the first step to changing it. The law couldn't see those women. I want to learn how to see people more completely than the systems that were built to process them.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S008",
+      "student_name": "Jasmine Holloway",
+      "coding_record": {
+        "student_id": "S008",
+        "student_name": "Jasmine Holloway",
+        "theme_tags": [
+          "connecting theory to family history",
+          "analyzing legal cases"
+        ],
+        "theme_confidence": {
+          "connecting theory to family history": 0.8,
+          "analyzing legal cases": 0.7
+        },
+        "notable_quotes": [
+          {
+            "text": "She told me it was basically about how different parts of your identity combine and affect your life together, not just individually.",
+            "significance": "Clarifies the concept of intersectionality for her sister and herself."
+          },
+          {
+            "text": "So the law can't see what actually happened to you. That's a really concrete problem and I appreciated that Crenshaw used legal cases because it shows this isn't just a philosophical argument.",
+            "significance": "Highlights the practical implications of intersectionality through legal examples."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student provides clear and detailed analysis of the concepts, using personal connections and legal examples, but does not express strong emotional engagement beyond a sense of clarity and understanding.",
+        "readings_referenced": [
+          "Crenshaw's work on intersectionality"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "legal cases"
+        ],
+        "personal_connections": [
+          "family"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 212,
+        "cluster_id": null,
+        "emotional_register_score": 0.7466,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "conceptual_connection": 1,
+          "personal_reflection": 1,
+          "evidence_use": 3
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "The reading about intersectionality was something my older sister mentioned when she took this class last year. She told me it was basically about how different parts of your identity combine and affect your life together, not just individually.\n\nI think the example from the reading about Black women in workplace discrimination cases was really clear. Like, you can't sue for race discrimination because there are Black men who weren't discriminated against, and you can't sue for sex discrimination because there are white women who weren't discriminated against. So the law can't see what actually happened to you. That's a really concrete problem and I appreciated that Crenshaw used legal cases because it shows this isn't just a philosophical argument.\n\nPersonally I connect to this with my own family but I'm still figuring out how exactly. I might write more about that once I've thought it through. For now I just wanted to show that I understood the main argument and I think it's right.\n\nI do wonder whether intersectionality is mostly useful for analysis or whether it also tells you what to do. Like once you understand that someone is at a multiple-disadvantage intersection, what's the next step? I think the reading was clearer on the diagnosis than on the treatment.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S009",
+      "student_name": "Kevin Osei",
+      "coding_record": {
+        "student_id": "S009",
+        "student_name": "Kevin Osei",
+        "theme_tags": [
+          "explaining intersectionality",
+          "highlighting limitations of civil rights frameworks"
+        ],
+        "theme_confidence": {
+          "explaining intersectionality": 0.9,
+          "highlighting limitations of civil rights frameworks": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Being Black and a man and working class aren't three different things you experience one at a time \u2014 they interact and create a specific experience that's different from someone who shares only one of those traits.",
+            "significance": "Illustrates the core concept of intersectionality and how different aspects of identity combine to create unique experiences."
+          },
+          {
+            "text": "The example with Black women not being able to use existing legal protections because the protections were designed for either Black people or women was useful for understanding why a more complex analysis is necessary.",
+            "significance": "Highlights the limitations of single-axis civil rights frameworks and the need for a more comprehensive approach."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student provides clear and logical explanations of intersectionality and the limitations of civil rights frameworks, without expressing strong emotion beyond the content of the discussion.",
+        "readings_referenced": [
+          "Intersectionality in Practice"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "civil rights frameworks",
+          "legal protections"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 186,
+        "cluster_id": null,
+        "emotional_register_score": 0.8919,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "evidence_use": 2
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Intersectionality is the idea that different parts of your identity don't work separately, they combine. Being Black and a man and working class aren't three different things you experience one at a time \u2014 they interact and create a specific experience that's different from someone who shares only one of those traits.\n\nThe reading made a good point about how a lot of civil rights frameworks focus on one axis at a time and that leaves people out. The example with Black women not being able to use existing legal protections because the protections were designed for either Black people or women was useful for understanding why a more complex analysis is necessary.\n\nI can see how this applies to other groups \u2014 disabled LGBTQ people, Indigenous women, low-income immigrants. Each of those is a combination that creates something specific that a single-issue framework misses.\n\nI think the reading was useful and the concept makes sense. I'm not sure I have much to add to it beyond agreeing with the argument and thinking it should be applied more widely in how we design laws and institutions.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S010",
+      "student_name": "Tyler Nguyen",
+      "coding_record": {
+        "student_id": "S010",
+        "student_name": "Tyler Nguyen",
+        "theme_tags": [
+          "analyzing intersectional experiences",
+          "highlighting historical examples"
+        ],
+        "theme_confidence": {
+          "analyzing intersectional experiences": 0.9,
+          "highlighting historical examples": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "The author argues that simply being a woman of color, for example, does not automatically mean that one experiences oppression.",
+            "significance": "Highlights the need for a nuanced understanding of identity and power dynamics."
+          },
+          {
+            "text": "What struck me most about this reading was the emphasis on the need for a more nuanced understanding of identity and power dynamics.",
+            "significance": "Emphasizes the importance of considering multiple axes of identity in understanding experiences of oppression."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student provides a clear and analytical discussion of intersectionality, using historical examples to illustrate key points without expressing strong emotion.",
+        "readings_referenced": [
+          "intersectionality"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "privilege",
+          "oppression",
+          "positionality"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 206,
+        "cluster_id": null,
+        "emotional_register_score": 0.3736,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "critical_analysis": 1,
+          "evidence_use": 3
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "The reading on intersectionality highlights the complexities of identity and how different aspects of it interact to create unique experiences of privilege and oppression. The author argues that simply being a woman of color, for example, does not automatically mean that one experiences oppression. Rather, it is the intersection of factors such as race, class, and sexuality that determines one's positionality. This idea is particularly relevant in understanding the experiences of marginalized communities, as it emphasizes the need to consider multiple axes of identity.\n\nI found it striking that the author uses the example of the \"triple jeopardy\" faced by black women in the Civil Rights Movement. Despite being a key figure in the movement, black women like Sojourner Truth and Ida B. Wells faced both racism and sexism. This intersection of oppressions highlights the ways in which different forms of oppression can intersect and exacerbate one another.\n\nWhat struck me most about this reading was the emphasis on the need for a more nuanced understanding of identity and power dynamics. Simply being a member of a marginalized group is not enough to guarantee solidarity or shared experiences. Rather, we need to consider the specific ways in which different individuals intersect with multiple forms of oppression.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S011",
+      "student_name": "Jaylen Carter",
+      "coding_record": {
+        "student_id": "S011",
+        "student_name": "Jaylen Carter",
+        "theme_tags": [
+          "analyzing intersectionality",
+          "highlighting interconnected oppressions"
+        ],
+        "theme_confidence": {
+          "analyzing intersectionality": 0.9,
+          "highlighting interconnected oppressions": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Intersectionality recognizes that these forms of oppression are not mutually exclusive, but rather interconnected, leading to a more nuanced understanding of the ways in which social inequalities intersect.",
+            "significance": "Emphasizes the interconnected nature of different forms of oppression and the importance of a nuanced understanding."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The submission is written in a clear, analytical tone, focusing on the theoretical aspects of intersectionality without expressing personal emotions or urgency.",
+        "readings_referenced": [
+          "Kimberl\u00e9 Crenshaw"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "oppression",
+          "systemic inequalities"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 188,
+        "cluster_id": null,
+        "emotional_register_score": 0.9556,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Intersectionality is a crucial concept in ethnic studies that helps us comprehend the complexities of discrimination. Developed by Kimberl\u00e9 Crenshaw, intersectionality acknowledges that individuals have multiple identities that intersect and overlap, creating unique experiences of marginalization. For example, a woman of color may face both sexism and racism, which cannot be addressed separately. Intersectionality recognizes that these forms of oppression are not mutually exclusive, but rather interconnected, leading to a more nuanced understanding of the ways in which social inequalities intersect.\n\nBy considering multiple identities and experiences, intersectionality sheds light on the ways in which dominant groups maintain power and privilege. It highlights the need to address the systemic inequalities that result from the intersections of racism, sexism, homophobia, and other forms of oppression. Intersectionality encourages us to move beyond a simplistic, additive approach to understanding identity and instead, to consider the complex ways in which multiple forms of oppression are experienced simultaneously. By doing so, we can develop more effective strategies for promoting social justice and challenging the status quo. Ultimately, intersectionality offers a powerful framework for analyzing and addressing the complexities of oppression in our society.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S012",
+      "student_name": "Talia Reyes",
+      "coding_record": {
+        "student_id": "S012",
+        "student_name": "Talia Reyes",
+        "theme_tags": [
+          "grappling with intersectionality",
+          "personal experience of discrimination"
+        ],
+        "theme_confidence": {
+          "grappling with intersectionality": 0.9,
+          "personal experience of discrimination": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "I'm Latina and I'm in honors classes and sometimes I get treated like I don't fully belong or like I got in through some program, even by other students.",
+            "significance": "Talia connects the concept of intersectionality to her personal experience of discrimination."
+          },
+          {
+            "text": "I'm not totally sure if that's what the reading is describing or whether I'm reaching.",
+            "significance": "Talia is grappling with how her personal experience relates to the concept of intersectionality."
+          }
+        ],
+        "emotional_register": "personal",
+        "emotional_notes": "Student shares a personal anecdote that connects to the concept of intersectionality, showing a deep personal connection and reflection on her experiences.",
+        "readings_referenced": [
+          "Intersectionality in Practice"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "multiple identities",
+          "discrimination"
+        ],
+        "personal_connections": [
+          "Latina identity",
+          "honors classes"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 181,
+        "cluster_id": null,
+        "emotional_register_score": 0.9882,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "conceptual_connection": 1,
+          "evidence_use": 2
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I found this reading pretty interesting because I had heard about intersectionality before but never had it explained this carefully. I knew that people have multiple identities and can face different kinds of discrimination, but I hadn't thought about how those forms of discrimination can actually interact to create something new instead of just stacking up.\n\nThe reading says it's not just 1+1=2. It's more like they create a specific intersection point that has its own character. I think that's actually a more accurate way to describe how people experience their lives.\n\nI tried to think about this in my own life. I'm Latina and I'm in honors classes and sometimes I get treated like I don't fully belong or like I got in through some program, even by other students. I'm not totally sure if that's what the reading is describing or whether I'm reaching. But it felt connected.\n\nOverall it was a good reading for this class and I feel like I understood it. I think I want to think about it more before I have a strong opinion.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S013",
+      "student_name": "Elijah Summers",
+      "coding_record": {
+        "student_id": "S013",
+        "student_name": "Elijah Summers",
+        "theme_tags": [
+          "connecting theory to personal experiences",
+          "analyzing current events"
+        ],
+        "theme_confidence": {
+          "connecting theory to personal experiences": 0.9,
+          "analyzing current events": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Intersectionality explains why navigating is harder for some people than others \u2014 because they're dealing with multiple ways the system wasn't designed for them.",
+            "significance": "Emphasizes the compounded experiences of marginalized groups."
+          },
+          {
+            "text": "In my neighborhood I see this with how policing works. Black men get policed one way, Black women get policed another way, and Black trans women get policed in a way that's completely different and far more dangerous.",
+            "significance": "Provides a concrete example of intersectional experiences in policing."
+          }
+        ],
+        "emotional_register": "passionate",
+        "emotional_notes": "The student expresses a strong sense of urgency and personal investment in the topic, particularly when discussing the policing of different groups in their neighborhood.",
+        "readings_referenced": [
+          "Intersectionality in Practice"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "systems"
+        ],
+        "personal_connections": [
+          "police treatment of different groups in his neighborhood"
+        ],
+        "current_events_referenced": [
+          "policing of Black men, Black women, and Black trans women"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 163,
+        "cluster_id": null,
+        "emotional_register_score": -0.0498,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "current_events": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Intersectionality is the framework that Kimberl\u00e9 Crenshaw developed to describe how different aspects of identity \u2014 race, gender, class, sexuality, disability \u2014 overlap and create compounded experiences instead of separate ones.\n\nI think this reading was relevant to what we've been studying about how systems get built. Systems get built with a certain kind of person in mind and everyone else has to navigate around that. Intersectionality explains why navigating is harder for some people than others \u2014 because they're dealing with multiple ways the system wasn't designed for them.\n\nIn my neighborhood I see this with how policing works. Black men get policed one way, Black women get policed another way, and Black trans women get policed in a way that's completely different and far more dangerous. That's intersectionality showing up in something concrete and current.\n\nI think this framework should be taught earlier. The sooner you have language for these patterns, the sooner you can name them when you see them.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S014",
+      "student_name": "Sierra Nakamura",
+      "coding_record": {
+        "student_id": "S014",
+        "student_name": "Sierra Nakamura",
+        "theme_tags": [
+          "exploring intersectionality in personal context",
+          "analyzing community dynamics"
+        ],
+        "theme_confidence": {
+          "exploring intersectionality in personal context": 0.9,
+          "analyzing community dynamics": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "The deaf community has its own culture and its own discrimination issues, and then racial stuff layers on top of that, and sometimes they conflict.",
+            "significance": "Illustrates the complexity of navigating multiple intersecting identities and the challenges of belonging."
+          },
+          {
+            "text": "Intersectionality helps me understand why it can be so exhausting to try to fit into any single community when you belong to multiple groups that don't always talk to each other. You keep getting offered partial belonging.",
+            "significance": "Explores the emotional and practical challenges of intersectionality in practice."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Student provides thoughtful analysis and examples without expressing strong emotion, focusing on the complexities of intersectionality.",
+        "readings_referenced": [
+          "Crenshaw"
+        ],
+        "concepts_applied": [
+          "intersectionality"
+        ],
+        "personal_connections": [
+          "friend Deja"
+        ],
+        "current_events_referenced": [],
+        "concerns": [
+          {
+            "flagged_passage": "Sometimes they conflict. Like there are spaces that are welcoming to deaf people that are mostly white, and spaces that are welcoming to Black people where her disability is treated as secondary.",
+            "surrounding_context": "The student was discussing the complexities of belonging to multiple marginalized groups. They wrote: 'The deaf community has its own culture and its own discrimination issues, and then racial stuff layers on top of that, and sometimes they conflict. Like there are spaces that are welcoming to deaf people that are mostly white, and spaces that are welcoming to Black people where her disability is invisible or treated as secondary.'",
+            "why_flagged": "Essentializing language \u2014 suggests that spaces are either welcoming to deaf people or to Black people, but not both. This could imply a binary view of belonging that may not fully capture the complexity of intersectional experiences.",
+            "confidence": 0.8
+          }
+        ],
+        "lens_observations": null,
+        "word_count": 192,
+        "cluster_id": null,
+        "emotional_register_score": 0.7422,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "critical_analysis": 2,
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I kept thinking about my friend Deja while reading this. She's Black and also deaf and navigating high school in ways none of the rest of us really understand. The deaf community has its own culture and its own discrimination issues, and then racial stuff layers on top of that, and sometimes they conflict. Like there are spaces that are welcoming to deaf people that are mostly white, and spaces that are welcoming to Black people where her disability is invisible or treated as secondary.\n\nIntersectionality helps me understand why it can be so exhausting to try to fit into any single community when you belong to multiple groups that don't always talk to each other. You keep getting offered partial belonging.\n\nThe Crenshaw reading was kind of dense in places but I followed it. I'm still thinking about one question it raised for me: is intersectionality a framework for analysis or also for action? Can you use it to decide what to do, or mostly just to describe what's happening? I don't have an answer but I think it's a real question and I didn't see the reading answer it fully.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S015",
+      "student_name": "Brittany Okafor",
+      "coding_record": {
+        "student_id": "S015",
+        "student_name": "Brittany Okafor",
+        "theme_tags": [
+          "connecting theory to community experiences",
+          "celebrating cultural diversity"
+        ],
+        "theme_confidence": {
+          "connecting theory to community experiences": 0.9,
+          "celebrating cultural diversity": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Like in my neighborhood the Mexican families are always so close and they really support each other and I think thats what intersectionality is about, like how different backgrounds come together and make communities stronger.",
+            "significance": "Illustrates the student's understanding of intersectionality through community support and cultural unity."
+          },
+          {
+            "text": "And the Black families on my street they have this amazing resilience and they always look out for each other too. I think all cultures have something beautiful about them and if we could just appreciate what makes each group special instead of discriminating then we would be so much better off.",
+            "significance": "Reflects the student's belief in the strength of diverse cultures and the importance of celebration and appreciation."
+          }
+        ],
+        "emotional_register": "passionate",
+        "emotional_notes": "Student expresses strong positive feelings about community support and cultural resilience, using personal examples to illustrate points.",
+        "readings_referenced": [
+          "intersectionality"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "identity",
+          "community"
+        ],
+        "personal_connections": [
+          "Mexican families in the neighborhood",
+          "Black families on the street",
+          "friend Rosa"
+        ],
+        "current_events_referenced": [],
+        "concerns": [
+          {
+            "flagged_passage": "zing resilience and they always look out for each other and I think thats what intersectionality is about, like how different backgrounds come together and make communities stronger.",
+            "surrounding_context": "The student wrote: 'I really liked the reading about intersectionality because it made me think about the different cultures in my neighborhood. Like in my neighborhood the Mexican families are always so close and they really support each other and I think thats what intersectionality is about, like how different backgrounds come together and make communities stronger. And the Black families on my street they have this amazing resilience and they always look out for each other too.'",
+            "why_flagged": "Essentializing language \u2014 the student attributes resilience and community support to entire groups of people based on their race or ethnicity, which can pathologize or stereotype these groups.",
+            "confidence": 0.8
+          }
+        ],
+        "lens_observations": null,
+        "word_count": 166,
+        "cluster_id": null,
+        "emotional_register_score": 0.9937,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "essentializing": 1,
+          "evidence_use": 2
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I really liked the reading about intersectionality because it made me think about the different cultures in my neighborhood. Like in my neighborhood the Mexican families are always so close and they really support each other and I think thats what intersectionality is about, like how different backgrounds come together and make communities stronger. And the Black families on my street they have this amazing resilience and they always look out for each other too. I think all cultures have something beautiful about them and if we could just appreciate what makes each group special instead of discriminating then we would be so much better off.\n\nThe reading talked about how identity is layered and I see that with my friend Rosa who is Latina and also queer and shes like the strongest person I know because of all she has been through. I think intersectionality shows us that diversity is our greatest strength and we should celebrate all the things that make each culture unique.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S016",
+      "student_name": "Brianna Foster",
+      "coding_record": {
+        "student_id": "S016",
+        "student_name": "Brianna Foster",
+        "theme_tags": [
+          "exploring personal identity",
+          "intersectionality in practice"
+        ],
+        "theme_confidence": {
+          "exploring personal identity": 0.9,
+          "intersectionality in practice": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "I've definitely felt like sometimes I'm too much of one thing or not enough of another.",
+            "significance": "Illustrates the complexity of intersectional experiences."
+          },
+          {
+            "text": "Reading this helped me see that maybe I don't have to tell which one \u2014 they're working together and that's exactly the point.",
+            "significance": "Demonstrates an epiphany about the interconnected nature of identity categories."
+          }
+        ],
+        "emotional_register": "personal",
+        "emotional_notes": "Student shares personal experiences and reflections, showing a deep emotional connection to the concept of intersectionality.",
+        "readings_referenced": [
+          "Crenshaw's legal cases"
+        ],
+        "concepts_applied": [],
+        "personal_connections": [
+          "Brianna's experience as a Black girl"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 169,
+        "cluster_id": null,
+        "emotional_register_score": 0.96,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "conceptual_connection": 1,
+          "personal_reflection": 1,
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I understood the main idea of the reading \u2014 identity categories overlap and create unique experiences \u2014 and I think it makes sense. The legal cases Crenshaw uses are really clear illustrations of why the concept matters practically.\n\nI personally connected to it because I'm a Black girl and I've definitely felt like sometimes I'm too much of one thing or not enough of another. Like there are moments where I think the way people see me is about my race and moments where it seems more like it's about being a girl and moments where I genuinely can't tell which one is doing more work. Reading this helped me see that maybe I don't have to tell which one \u2014 they're working together and that's exactly the point.\n\nI wish we had more time to talk about this in class instead of just reading about it. I feel like hearing everyone else's experiences would have made it more real. I'm probably more of a talker than a writer.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S017",
+      "student_name": "Tyler Huang",
+      "coding_record": {
+        "student_id": "S017",
+        "student_name": "Tyler Huang",
+        "theme_tags": [
+          "explaining complex concepts",
+          "acknowledging the importance of intersectionality"
+        ],
+        "theme_confidence": {
+          "explaining complex concepts": 0.9,
+          "acknowledging the importance of intersectionality": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "A Black woman experiences discrimination differently from what Black men experience and also differently from what white women experience, because she has both of those identities at once.",
+            "significance": "Illustrates the core concept of intersectionality and how different identities intersect to create unique experiences of discrimination."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student provides a clear and concise explanation of intersectionality and its significance, without expressing strong emotional engagement or personal connection to the topic.",
+        "readings_referenced": [
+          "Crenshaw's work"
+        ],
+        "concepts_applied": [
+          "intersectionality"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 104,
+        "cluster_id": null,
+        "emotional_register_score": 0.4245,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "evidence_use": 2
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Intersectionality is when different parts of your identity overlap and affect each other. A Black woman experiences discrimination differently from what Black men experience and also differently from what white women experience, because she has both of those identities at once.\n\nThe reading by Crenshaw explained this with some legal examples that showed how existing laws couldn't protect people who faced discrimination on multiple fronts at once. I thought that was a clear way to explain why the concept matters.\n\nI don't have a lot to add beyond that. I understood the reading and I think the concept is important for thinking about equity.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S018",
+      "student_name": "Connor Walsh",
+      "coding_record": {
+        "student_id": "S018",
+        "student_name": "Connor Walsh",
+        "theme_tags": [
+          "intersectionality as framework",
+          "individualism vs. identity"
+        ],
+        "theme_confidence": {
+          "intersectionality as framework": 0.7,
+          "individualism vs. identity": 0.9
+        },
+        "notable_quotes": [
+          {
+            "text": "But honestly at the end of the day I just try to treat everyone the same regardless of what they look like or where they come from.",
+            "significance": "Captures the student's belief in treating everyone equally."
+          },
+          {
+            "text": "When I meet someone I dont think about their race or gender I just see a person.",
+            "significance": "Reflects the student's desire to see individuals as individuals rather than through the lens of their identities."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student presents a thoughtful analysis of intersectionality and their personal beliefs, maintaining a neutral tone while discussing the complexities of identity and treatment of others.",
+        "readings_referenced": [
+          "Intersectionality reading"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "identity"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [
+          {
+            "flagged_passage": "I dont really see the point of focusing so much on categories and labels because I feel like that just divides people more.",
+            "surrounding_context": "The student wrote: 'But honestly at the end of the day I just try to treat everyone the same regardless of what they look like or where they come from. I dont really see the point of focusing so much on categories and labels because I feel like that just divides people more. When I meet someone I dont think about their race or gender I just see a person. I think if more people had that attitude we wouldnt need frameworks like intersectionality because we would just respect each other as individuals.'",
+            "why_flagged": "Colorblind ideology \u2014 dismisses the importance of recognizing and addressing systemic inequalities. Teacher may want to engage this student with specific evidence of how identity categories can be crucial in understanding and combating systemic injustices.",
+            "confidence": 0.8
+          }
+        ],
+        "lens_observations": null,
+        "word_count": 175,
+        "cluster_id": null,
+        "emotional_register_score": 0.8942,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "critical_analysis": 1,
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I thought the reading on intersectionality was interesting and I can see why people study it. The idea that different parts of your identity affect how you experience the world makes sense to me. Like I understand that someone who is a woman and also Black might face challenges that are different from someone who is just one of those things.\n\nBut honestly at the end of the day I just try to treat everyone the same regardless of what they look like or where they come from. I dont really see the point of focusing so much on categories and labels because I feel like that just divides people more. When I meet someone I dont think about their race or gender I just see a person. I think if more people had that attitude we wouldnt need frameworks like intersectionality because we would just respect each other as individuals.\n\nI know some people might disagree with me on this but I think focusing too much on differences can actually make things worse sometimes.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S019",
+      "student_name": "Paige Kowalczyk",
+      "coding_record": {
+        "student_id": "S019",
+        "student_name": "Paige Kowalczyk",
+        "theme_tags": [
+          "defining key concepts",
+          "acknowledging the importance of examples"
+        ],
+        "theme_confidence": {
+          "defining key concepts": 0.9,
+          "acknowledging the importance of examples": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Intersectionality means that different aspects of identity like race, gender, class, and sexuality overlap and can lead to worse outcomes for people who have multiple marginalized identities.",
+            "significance": "Paige defines intersectionality and explains its significance in understanding the compounded effects of multiple identities."
+          },
+          {
+            "text": "The examples it used to show how Black women fell through the gaps of both anti-discrimination frameworks were useful for understanding why a more complex analysis is necessary.",
+            "significance": "Paige highlights the importance of intersectional analysis by referencing the examples in the reading."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Paige provides clear definitions and examples, maintaining a focused and analytical tone without expressing personal emotion or urgency.",
+        "readings_referenced": [
+          "Kimberl\u00e9 Crenshaw"
+        ],
+        "concepts_applied": [
+          "intersectionality"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 92,
+        "cluster_id": null,
+        "emotional_register_score": 0.6369,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Intersectionality means that different aspects of identity like race, gender, class, and sexuality overlap and can lead to worse outcomes for people who have multiple marginalized identities. It was developed by Kimberl\u00e9 Crenshaw.\n\nI think the reading was informative. The examples it used to show how Black women fell through the gaps of both anti-discrimination frameworks were useful for understanding why a more complex analysis is necessary.\n\nIdentity is complicated and intersectionality is a good framework for thinking about it. I plan to use this concept as we continue through the unit.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S020",
+      "student_name": "Jake Novak",
+      "coding_record": {
+        "student_id": "S020",
+        "student_name": "Jake Novak",
+        "theme_tags": [
+          "critiquing intersectionality framework",
+          "classism within social justice discourse"
+        ],
+        "theme_confidence": {
+          "critiquing intersectionality framework": 0.9,
+          "classism within social justice discourse": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "My dad works two jobs and my mom is disabled and nobody in this framework really talks about us.",
+            "significance": "Highlights the exclusion of economically disadvantaged white individuals from intersectional frameworks."
+          },
+          {
+            "text": "Im not saying racism isnt real because obviously it is. Im saying that this framework has a blind spot for class when its separated from race and I think thats worth talking about instead of just accepting the reading as gospel.",
+            "significance": "Expresses skepticism towards the completeness of intersectional frameworks and advocates for further discussion on class."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Student presents a clear and structured critique of the intersectionality framework, focusing on its limitations in addressing class issues, without expressing strong emotional distress.",
+        "readings_referenced": [
+          "Intersectionality framework"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "privilege",
+          "oppression"
+        ],
+        "personal_connections": [
+          "family's socioeconomic status"
+        ],
+        "current_events_referenced": [],
+        "concerns": [
+          {
+            "flagged_passage": "My dad works two jobs and my mom is disabled and nobody in this framework really talks about us.",
+            "surrounding_context": "The student wrote: 'My family is white and poor. Like actually poor, not just middle class complaining about money. My dad works two jobs and my mom is disabled and nobody in this framework really talks about us. When the reading says that privilege operates along axes of race and gender I want to ask where does my dad's privilege come in? He cant pay the electric bill half the time. Thats its own kind of erasure.'",
+            "why_flagged": "The student is revealing a personal experience of economic hardship and feeling erased by the course framework. This suggests a potential wellbeing concern as the student may be struggling with the intersection of personal and academic challenges.",
+            "confidence": 0.9
+          }
+        ],
+        "lens_observations": null,
+        "word_count": 164,
+        "cluster_id": null,
+        "emotional_register_score": 0.9039,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "critical_analysis": 1,
+          "personal_reflection": 1,
+          "evidence_use": 3
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Ok so I read the piece on intersectionality and I have some real questions about it. The framework talks about how race gender class all these categories overlap to create different experiences of oppression and I get that. But the reading acts like intersectionality covers everything and it doesnt.\n\nMy family is white and poor. Like actually poor, not just middle class complaining about money. My dad works two jobs and my mom is disabled and nobody in this framework really talks about us. When the reading says that privilege operates along axes of race and gender I want to ask where does my dad's privilege come in? He cant pay the electric bill half the time. Thats its own kind of erasure.\n\nIm not saying racism isnt real because obviously it is. Im saying that this framework has a blind spot for class when its separated from race and I think thats worth talking about instead of just accepting the reading as gospel.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S021",
+      "student_name": "Cameron Schultz",
+      "coding_record": {
+        "student_id": "S021",
+        "student_name": "Cameron Schultz",
+        "theme_tags": [
+          "understanding intersectionality",
+          "analyzing concepts"
+        ],
+        "theme_confidence": {
+          "understanding intersectionality": 0.9,
+          "analyzing concepts": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Identity is layered and you can't understand someone's experience by looking at just one layer.",
+            "significance": "Captures the core concept of intersectionality and Cameron's understanding of it."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student provides a clear and concise summary of the reading without expressing strong emotions, focusing on the key concepts and their understanding.",
+        "readings_referenced": [
+          "Intersectionality"
+        ],
+        "concepts_applied": [
+          "intersectionality"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 91,
+        "cluster_id": null,
+        "emotional_register_score": 0.6249,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "This reading was about intersectionality, which is the concept that people have multiple identities and those identities interact with each other in ways that affect their experiences. Kimberl\u00e9 Crenshaw developed the theory to explain why Black women were being left out of both civil rights and feminist legal protections.\n\nI found the reading kind of dense but I got the main point. Identity is layered and you can't understand someone's experience by looking at just one layer.\n\nI think this will be a useful concept for the rest of the course.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S022",
+      "student_name": "Destiny Williams",
+      "coding_record": {
+        "student_id": "S022",
+        "student_name": "Destiny Williams",
+        "theme_tags": [
+          "connecting theory to personal experience",
+          "intersectionality in practice",
+          "historical impact on current conditions"
+        ],
+        "theme_confidence": {
+          "connecting theory to personal experience": 0.9,
+          "intersectionality in practice": 0.8,
+          "historical impact on current conditions": 0.7
+        },
+        "notable_quotes": [
+          {
+            "text": "How can we sit here and read about redlining and act like its ancient history when my neighborhood still looks exactly like the map from 1940??",
+            "significance": "Emphasizes the ongoing impact of historical policies on current conditions."
+          },
+          {
+            "text": "Intersectionality isnt just an academic concept. Its the story of my family and millions of families like mine and Im tired of pretending we can discuss it calmly like it doesnt affect real people right now.",
+            "significance": "Highlights the personal and collective impact of intersectional experiences and the need for urgent action."
+          }
+        ],
+        "emotional_register": "passionate",
+        "emotional_notes": "Student expresses strong emotion and urgency, using personal experiences and family history to drive home the point about intersectionality and historical impacts.",
+        "readings_referenced": [
+          "redlining"
+        ],
+        "concepts_applied": [
+          "intersectionality"
+        ],
+        "personal_connections": [
+          "grandmother's experience",
+          "neighborhood history"
+        ],
+        "current_events_referenced": [
+          "redlining"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 183,
+        "cluster_id": null,
+        "emotional_register_score": -0.5071,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "personal_reflection": 1,
+          "current_events": 1,
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "This reading made me furious and I mean that in a good way. How can we sit here and read about redlining and act like its ancient history when my neighborhood still looks exactly like the map from 1940?? The same blocks that were red-lined are the same blocks with no grocery stores no good schools no investment. That is intersectionality in PRACTICE not just theory.\n\nAnd it makes me angry when people act like talking about race is divisive. You know whats divisive? Literal lines drawn on a map that decided which neighborhoods got resources and which ones didnt and then telling the people who got nothing that they should just work harder. The reading talks about overlapping systems and YES thats exactly it \u2014 my grandmother was Black AND poor AND a woman AND living in a neighborhood the government decided wasnt worth investing in.\n\nIntersectionality isnt just an academic concept. Its the story of my family and millions of families like mine and Im tired of pretending we can discuss it calmly like it doesnt affect real people right now.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S023",
+      "student_name": "Yolanda Fuentes",
+      "coding_record": {
+        "student_id": "S023",
+        "student_name": "Yolanda Fuentes",
+        "theme_tags": [
+          "intersectionality in practice",
+          "personal connection to family history"
+        ],
+        "theme_confidence": {
+          "intersectionality in practice": 0.9,
+          "personal connection to family history": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "But at church she's respected because she's been there longer than almost anyone, and she knows things about people's families going back thirty years.",
+            "significance": "Illustrates how context can change how a person is perceived and valued."
+          },
+          {
+            "text": "It's not just that she's old, or just that she speaks Spanish first, or just that she cleaned houses her whole life. It's all of those things at the same time, and they all weigh different depending on where she's standing.",
+            "significance": "Captures the complexity of intersectional identities and how multiple factors intersect to shape a person's experience."
+          }
+        ],
+        "emotional_register": "personal",
+        "emotional_notes": "Student shares a deeply personal story about their grandmother, connecting her experiences to the concept of intersectionality, which adds an emotional layer to the analysis.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [
+          "abuela's experience immigrating and working in the US"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 228,
+        "cluster_id": null,
+        "emotional_register_score": 0.9313,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "My abuela's name is Esperanza and she came to this country when she was nineteen. She's seventy-two now and she still cleans houses. Not because she didn't try to do something else \u2014 she tried. But when you don't speak English and you're a woman and you came here without papers and you're sending money home to Oaxaca every month, your choices get narrow fast.\n\nShe became invisible in a specific way. The doctors talk to my mom instead of her even now, like she's not in the room. At the market people act like she doesn't understand what they're saying even when she does. But at church she's respected because she's been there longer than almost anyone, and she knows things about people's families going back thirty years.\n\nI've thought a lot about why some places see her one way and other places see her another way. It's not just that she's old, or just that she speaks Spanish first, or just that she cleaned houses her whole life. It's all of those things at the same time, and they all weigh different depending on where she's standing.\n\nI don't know the academic word for this. But watching her my whole life I know what it feels like when someone gets seen as a whole person and when they get reduced to just one thing about them.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S024",
+      "student_name": "Ingrid Vasquez",
+      "coding_record": {
+        "student_id": "S024",
+        "student_name": "Ingrid Vasquez",
+        "theme_tags": [
+          "connecting theory to personal experience",
+          "intersectionality in practice"
+        ],
+        "theme_confidence": {
+          "connecting theory to personal experience": 0.9,
+          "intersectionality in practice": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Any one of those things she might have found a way around. All of them together meant there was no way out.",
+            "significance": "Illustrates the compounded impact of multiple forms of oppression"
+          }
+        ],
+        "emotional_register": "personal",
+        "emotional_notes": "Student shares a deeply personal story about their mother's experiences, grounding the abstract concept of intersectionality in a concrete, emotional narrative",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [
+          "mom's experience immigrating from Honduras"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 229,
+        "cluster_id": null,
+        "emotional_register_score": -0.759,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "critical_analysis": 1,
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "My mom always tells this story about when she first came here from Honduras. She was 22, she spoke no English, she was pregnant with my sister. She got a job at a textile factory and her boss knew she was undocumented and used that to keep her from saying anything when the conditions were bad. She worked around chemicals that weren't supposed to be used without ventilation. She got headaches every day. She didn't complain because she couldn't afford to lose the job and she couldn't afford anyone asking too many questions.\n\nWhen she tells the story now she says she felt like she didn't exist. Not invisible exactly \u2014 people could see her. But they could act like her wellbeing didn't count. She was there to produce and if she got sick that was her problem.\n\nWhat made her situation so hard wasn't any one thing. It was that she was a woman and pregnant and an immigrant and undocumented and didn't speak the language \u2014 and each of those things meant the people who could have helped her felt like they didn't have to. Any one of those things she might have found a way around. All of them together meant there was no way out.\n\nI think that's what the reading is trying to describe. My mom lived it before I had words for it.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S025",
+      "student_name": "Aiden Brooks",
+      "coding_record": {
+        "student_id": "S025",
+        "student_name": "Aiden Brooks",
+        "theme_tags": [
+          "desire for respectful dialogue",
+          "acknowledgment of emotional intensity"
+        ],
+        "theme_confidence": {
+          "desire for respectful dialogue": 0.9,
+          "acknowledgment of emotional intensity": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "I do want to say though that I feel like in class discussions about this stuff people get really heated and I think we should be able to have these conversations without getting so emotional about it.",
+            "significance": "Expresses a desire for more respectful and less emotionally charged discussions."
+          },
+          {
+            "text": "We should focus on understanding each others perspectives instead of trying to win arguments.",
+            "significance": "Emphasizes the importance of empathy and mutual understanding over winning debates."
+          }
+        ],
+        "emotional_register": "reflective",
+        "emotional_notes": "The student reflects on the emotional nature of the discussions and suggests a more empathetic approach, indicating a thoughtful consideration of the classroom dynamics.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "intersectionality"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [
+          {
+            "flagged_passage": "I think we should be able to have these conversations without getting so emotional about it. Like were all here to learn right?",
+            "surrounding_context": "Aiden Brooks wrote: 'I read the piece on intersectionality and I think it raises some good points about how identity is complex. The idea that peoples experiences are shaped by multiple factors at once is something I can agree with. I do want to say though that I feel like in class discussions about this stuff people get really heated and I think we should be able to have these conversations without getting so emotional about it. Like were all here to learn right? I get that this is important to people but I feel like when people start getting angry or raising their voices it actually makes it harder to have a productive conversation and some people just shut down.'",
+            "why_flagged": "Tone policing \u2014 the student is dismissing the emotional responses of others as a way to shut down the conversation. This could indicate a need for the teacher to facilitate a more inclusive and emotionally safe discussion environment.",
+            "confidence": 0.85
+          }
+        ],
+        "lens_observations": null,
+        "word_count": 156,
+        "cluster_id": null,
+        "emotional_register_score": 0.8947,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I read the piece on intersectionality and I think it raises some good points about how identity is complex. The idea that peoples experiences are shaped by multiple factors at once is something I can agree with.\n\nI do want to say though that I feel like in class discussions about this stuff people get really heated and I think we should be able to have these conversations without getting so emotional about it. Like were all here to learn right? I get that this is important to people but I feel like when people start getting angry or raising their voices it actually makes it harder to have a productive conversation and some people just shut down.\n\nI think we can talk about intersectionality and systemic issues in a way thats respectful to everyone in the room. We should focus on understanding each others perspectives instead of trying to win arguments. Just my two cents.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S026",
+      "student_name": "DeShawn Mercer",
+      "coding_record": {
+        "student_id": "S026",
+        "student_name": "DeShawn Mercer",
+        "theme_tags": [
+          "connecting theory to personal experience",
+          "intersectionality in practice",
+          "racial disparities in discipline"
+        ],
+        "theme_confidence": {
+          "connecting theory to personal experience": 0.9,
+          "intersectionality in practice": 0.8,
+          "racial disparities in discipline": 0.7
+        },
+        "notable_quotes": [
+          {
+            "text": "When Malik can't sit still or blurts something out, he gets sent to the office. When I've been there and seen white kids in his class do the same thing, they get redirected or given a warning. Malik gets a discipline referral.",
+            "significance": "Illustrates the intersection of ADHD and race in school discipline."
+          },
+          {
+            "text": "My mom has been fighting this for two years. She pulls his records, she goes to meetings, she asks questions. But she works overnight shifts at the hospital and she's doing this alone and she is exhausted.",
+            "significance": "Highlights the additional burden on single parents in advocating for their children."
+          }
+        ],
+        "emotional_register": "passionate",
+        "emotional_notes": "Student expresses strong emotional engagement with the issue, driven by personal experiences and family involvement, which fuels their passion for the topic.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "ADHD"
+        ],
+        "personal_connections": [
+          "experiences with his brother Malik",
+          "his mother's efforts to fight for Malik"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 208,
+        "cluster_id": null,
+        "emotional_register_score": -0.8728,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "critical_analysis": 1,
+          "personal_reflection": 1,
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "My little brother Malik has ADHD and he's also Black and he's nine. I've been watching what's happening to him at his school and I have a lot of feelings about it.\n\nWhen Malik can't sit still or blurts something out, he gets sent to the office. When I've been there and seen white kids in his class do the same thing, they get redirected or given a warning. Malik gets a discipline referral. My mom has been fighting this for two years. She pulls his records, she goes to meetings, she asks questions. But she works overnight shifts at the hospital and she's doing this alone and she is exhausted.\n\nSo what's happening to Malik is about his ADHD, because schools don't always know how to teach kids whose brains work like his. And it's about being Black, because Black boys get read as a threat before anyone else. And it's about not having money for a private therapist or an advocate. And it's about my mom being a single woman without a partner to split this work with.\n\nI didn't learn any of this from a reading. I learned it from watching my family. But I recognize it in the reading now that I've done it.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S027",
+      "student_name": "Camille Osei",
+      "coding_record": {
+        "student_id": "S027",
+        "student_name": "Camille Osei",
+        "theme_tags": [
+          "connecting theory to personal experiences",
+          "intersectionality in practice"
+        ],
+        "theme_confidence": {
+          "connecting theory to personal experiences": 0.8,
+          "intersectionality in practice": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "The BMI was developed in the 1800s using only white European men as the data set. That's it.",
+            "significance": "Highlights the historical and racial bias in the BMI tool"
+          },
+          {
+            "text": "So when a fat Black woman goes to the doctor and gets told her BMI is too high, she's being evaluated by a tool that was never designed with her in mind \u2014 and may be actively misleading about her actual health \u2014 but the doctor treats it as neutral science.",
+            "significance": "Illustrates how intersectionality affects health evaluations and medical treatment"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student provides a clear and analytical connection between the theory of intersectionality and a specific example, highlighting the historical and racial biases in the BMI tool. The tone is analytical rather than emotionally charged.",
+        "readings_referenced": [
+          "Crenshaw's critique of the law"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "frameworks built for one person and extended to everyone"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 232,
+        "cluster_id": null,
+        "emotional_register_score": -0.4497,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "conceptual_connection": 1,
+          "critical_analysis": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "For this reflection I want to bring in something we didn't read in class. There's a podcast called Maintenance Phase \u2014 it's about wellness culture and health misinformation \u2014 and they did an episode about the history of the BMI. The BMI was developed in the 1800s using only white European men as the data set. That's it. And now it's the primary tool doctors use to evaluate health for everybody.\n\nWhat that episode made clear is that the tool itself encodes the assumption that the white European male body is the standard, and everyone else is a deviation from it. So when a fat Black woman goes to the doctor and gets told her BMI is too high, she's being evaluated by a tool that was never designed with her in mind \u2014 and may be actively misleading about her actual health \u2014 but the doctor treats it as neutral science.\n\nThat's intersectionality in action. Her experience at the doctor is not just about being fat, or just about being Black, or just about being a woman. The belief that the tool is neutral makes it harder to question any single piece of it.\n\nI know this wasn't assigned reading but I think it connects directly to what Crenshaw is arguing. The BMI is a framework built for one person and extended to everyone. So was the law Crenshaw was critiquing.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S028",
+      "student_name": "Imani Drayton",
+      "coding_record": {
+        "student_id": "S028",
+        "student_name": "Imani Drayton",
+        "theme_tags": [
+          "connecting theory to personal experiences",
+          "intersectionality in everyday interactions"
+        ],
+        "theme_confidence": {
+          "connecting theory to personal experiences": 0.9,
+          "intersectionality in everyday interactions": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "The way teachers talk to me versus how they talk to my Black guy friends versus how they talk to white girls \u2014 it's different.",
+            "significance": "Illustrates the nuanced and often invisible ways in which intersectionality manifests in everyday interactions."
+          },
+          {
+            "text": "The framework finally gave me academic language for lived reality. That's actually kind of powerful.",
+            "significance": "Emphasizes the importance of academic concepts in understanding and validating personal experiences."
+          }
+        ],
+        "emotional_register": "personal",
+        "emotional_notes": "Student shares deeply personal anecdotes and reflections, connecting academic concepts to lived experiences, which conveys a strong emotional connection to the material.",
+        "readings_referenced": [
+          "Crenshaw's work on intersectionality"
+        ],
+        "concepts_applied": [
+          "intersectionality"
+        ],
+        "personal_connections": [
+          "experiences with her mother",
+          "experiences at school"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 235,
+        "cluster_id": null,
+        "emotional_register_score": 0.9845,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Ok so I'm just gonna be real with this one because I feel like that's what this assignment is asking for.\n\nThe reading is talking about something I already knew but didn't have a name for. Like I been knowing that being Black and being a girl is its own specific thing. It's not Black plus girl. It's like a whole different channel that comes with its own static.\n\nThe way teachers talk to me versus how they talk to my Black guy friends versus how they talk to white girls \u2014 it's different. Not always in a way you can point to and say that's the thing. It's more like a texture. The expectations are different. The patience is different. The benefit of the doubt is different.\n\nCrenshaw is talking about Black women in 1989 courts but honestly it hits the same in 2026 high school hallways. The frame is the same. Who gets seen, who gets believed, who has to work twice as hard to get half the credit.\n\nI learned this from watching my mama navigate the world, not from a textbook. She never said the word intersectionality but she showed me what it meant every time she had to code switch in a meeting or smile through something she should've been able to push back on.\n\nThis framework finally gave me academic language for lived reality. That's actually kind of powerful.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S029",
+      "student_name": "Jordan Espinoza",
+      "coding_record": {
+        "student_id": "S029",
+        "student_name": "Jordan Espinoza",
+        "theme_tags": [
+          "intersectionality in personal experience",
+          "identity interactions"
+        ],
+        "theme_confidence": {
+          "intersectionality in personal experience": 0.9,
+          "identity interactions": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "the way all of that interacts is exhausting to explain.",
+            "significance": "Expresses the complexity and challenge of navigating multiple intersecting identities."
+          },
+          {
+            "text": "but I'm all of it at once and the combination is its own specific thing.",
+            "significance": "Emphasizes the unique experience that arises from the intersection of multiple identities."
+          }
+        ],
+        "emotional_register": "personal",
+        "emotional_notes": "Student shares deeply personal experiences and challenges, expressing a sense of complexity and individuality in navigating multiple identities.",
+        "readings_referenced": [
+          "Crenshaw's discussion of intersectionality"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "identity interactions"
+        ],
+        "personal_connections": [
+          "Dyslexia, ADHD, being Latino, being the first in the family to take honors classes"
+        ],
+        "current_events_referenced": [],
+        "concerns": [
+          {
+            "flagged_passage": "people see the dyslexia and think I need simpler stuff. people see I'm Latino and sometimes seem surprised I'm in honors. people see ADHD and think I'm not serious. but I'm all of it at once and the combination is its own specific thing.",
+            "surrounding_context": "Jordan then wrote: 'I have dyslexia and ADHD and I'm also Latino and I'm the first in my family to take honors classes. the way all of that interacts is exhausting to explain. people see the dyslexia and think I need simpler stuff. people see I'm Latino and sometimes seem surprised I'm in honors. people see ADHD and think I'm not serious. but I'm all of it at once and the combination is its own specific thing.'",
+            "why_flagged": "The student is revealing personal experiences and challenges they face, which could indicate they are struggling with the combination of their identities and the perceptions others have of them. This could be a sign of personal stress or difficulty managing these aspects of their life.",
+            "confidence": 0.9
+          }
+        ],
+        "lens_observations": null,
+        "word_count": 211,
+        "cluster_id": null,
+        "emotional_register_score": 0.6916,
+        "sentiment_reliability": "low",
+        "keyword_hits": {
+          "personal_reflection": 1,
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "intersectionality\n\nok so I'm going to try to write this and hopefully it makes sense. the reading is about how people have multiple identities and they don't just add together, they interact. Crenshaw was saying Black women in the lawsuits couldn't use race discrimination because Black men weren't affected and couldn't use sex discrimination because white women weren't affected so they fell through this gap in between.\n\nthat gap is the intersection I think\n\nwhat I want to say for my own life: I have dyslexia and ADHD and I'm also Latino and I'm the first in my family to take honors classes. the way all of that interacts is exhausting to explain. people see the dyslexia and think I need simpler stuff. people see I'm Latino and sometimes seem surprised I'm in honors. people see ADHD and think I'm not serious. but I'm all of it at once and the combination is its own specific thing.\n\nI have a lot more to say but my thoughts aren't organized in the way an essay is supposed to be organized. I know. I'm better at talking than writing. but I think I showed I understood it even if the structure isn't right.\n\nthe intersections are real even when the essay isn't perfect.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S030",
+      "student_name": "Aaliyah Robinson",
+      "coding_record": {
+        "student_id": "S030",
+        "student_name": "Aaliyah Robinson",
+        "theme_tags": [
+          "connecting theory to family history",
+          "intersectionality in practice"
+        ],
+        "theme_confidence": {
+          "connecting theory to family history": 0.9,
+          "intersectionality in practice": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "And then Aunt Lorraine she moved up to Chicago and she thought things would be different. But she says the sorting just got more complicated.",
+            "significance": "Illustrates the persistence of systemic sorting despite geographic and social changes"
+          },
+          {
+            "text": "I keep thinking about that when I read Crenshaw. The doors. It's not that you walk through one door called race and another called gender. It's that every intersection has its own door and some people are standing at a crossroads with no good door at all.",
+            "significance": "Summarizes the concept of intersectionality and the complexity of multiple forms of discrimination"
+          }
+        ],
+        "emotional_register": "personal",
+        "emotional_notes": "Student shares a deeply personal story from their great-aunt, illustrating a complex and nuanced understanding of intersectionality through family history",
+        "readings_referenced": [
+          "Crenshaw"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "sorting"
+        ],
+        "personal_connections": [
+          "great-aunt Lorraine's experiences in Mississippi and Chicago"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 228,
+        "cluster_id": null,
+        "emotional_register_score": -0.1553,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "So my great-aunt Lorraine, she grew up in Mississippi in the 1950s. She tells this story about how when she was little she went to the store with her mama and her mama had to go around to the back door because they were Black. But then her mama's friend Miss Betty who was also Black but light-skinned, she could go in the front. And Aunt Lorraine says she remembers thinking even as a little girl that something was wrong with that, that two women who went to the same church and cooked at the same cookouts were being sorted into different doors.\n\nAnd then Aunt Lorraine she moved up to Chicago and she thought things would be different. And some things were. But she says the sorting just got more complicated. Now she was being sorted by being Southern too, and by not having money, and by being dark-skinned even among other Black folks. She says it was like every place she went had its own doors and she had to figure out which one she was supposed to use.\n\nI keep thinking about that when I read Crenshaw. The doors. It's not that you walk through one door called race and another called gender. It's that every intersection has its own door and some people are standing at a crossroads with no good door at all.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S031",
+      "student_name": "Marcus Bell",
+      "coding_record": {
+        "student_id": "S031",
+        "student_name": "Marcus Bell",
+        "theme_tags": [
+          "defining intersectionality",
+          "acknowledging conceptual clarity"
+        ],
+        "theme_confidence": {
+          "defining intersectionality": 0.9,
+          "acknowledging conceptual clarity": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "intersectionality is when multiple identities overlap like race and gender. crenshaw wrote about it.",
+            "significance": "Marcus is directly referencing Crenshaw's work and defining intersectionality."
+          },
+          {
+            "text": "its important because people experience discrimination differently depending on what groups they belong to.",
+            "significance": "Marcus highlights the importance of intersectionality by emphasizing how different groups can experience varying levels of discrimination."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Marcus provides a clear definition of intersectionality and its importance, maintaining an analytical tone without expressing strong emotions.",
+        "readings_referenced": [
+          "Crenshaw's work on intersectionality"
+        ],
+        "concepts_applied": [
+          "intersectionality"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 45,
+        "cluster_id": null,
+        "emotional_register_score": 0.1406,
+        "sentiment_reliability": "suppressed",
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "intersectionality is when multiple identities overlap like race and gender. crenshaw wrote about it. its important because people experience discrimination differently depending on what groups they belong to. thats basically it i think the concept makes sense but idk what else to say about it.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S032",
+      "student_name": "Linh Tran",
+      "coding_record": {
+        "student_id": "S032",
+        "student_name": "Linh Tran",
+        "theme_tags": [
+          "connecting theory to family history",
+          "intersectionality in diverse contexts"
+        ],
+        "theme_confidence": {
+          "connecting theory to family history": 0.9,
+          "intersectionality in diverse contexts": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "My mother she always says that in Vietnamese society the Kinh majority they look at Hmong people as backwards and when you are Hmong woman it is even worse because you have the weight of both.",
+            "significance": "Illustrates the compounded discrimination faced by Hmong women in Vietnam."
+          },
+          {
+            "text": "In Vietnam the intersections are different but just as real and the framework should be big enough to hold them.",
+            "significance": "Emphasizes the importance of intersectionality as a global concept that applies to diverse contexts."
+          }
+        ],
+        "emotional_register": "personal",
+        "emotional_notes": "Student shares deeply personal experiences and family history, illustrating the concept of intersectionality through her mother's story, which is both emotional and analytically grounded.",
+        "readings_referenced": [
+          "Crenshaw's Intersectionality"
+        ],
+        "concepts_applied": [
+          "intersectionality"
+        ],
+        "personal_connections": [
+          "experiences of her mother as a Hmong woman in Vietnam and America"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 209,
+        "cluster_id": null,
+        "emotional_register_score": 0.5689,
+        "sentiment_reliability": "high",
+        "keyword_hits": {
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "engagement_signal_count": 0,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "The concept of intersectionality speaks to me deeply because in my country Vietnam the experience of being woman is already difficult but when you are also from ethnic minority group Hmong like my mother family it becomes something else entirely. My mother she always says that in Vietnamese society the Kinh majority they look at Hmong people as backwards and when you are Hmong woman it is even worse because you have the weight of both.\n\nWhen we came to America as refugees my mother experienced new intersections. Now she is Asian woman but also refugee and also someone who does not speak English well and also someone from a group that most Americans have never heard of. The Crenshaw reading talks about how discrimination categories interact and I see this in how my mother gets treated at the hospital where she works cleaning. The other workers who are Latina or Black they share some experiences with her but not all because being refugee is its own category that changes everything else.\n\nI think intersectionality is important concept but I wish the reading included more examples from outside America. In Vietnam the intersections are different but just as real and the framework should be big enough to hold them.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
     }
   ],
   "themes": {
-    "theme_set": "{\"themes\":[{\"name\":\"connecting theory to personal experience\",\"description\":\"Multiple students drew on their personal experiences to illustrate the concept of intersectionality, highlighting how different aspects of identity intersect to shape individual experiences.\",\"frequency\":4,\"student_ids\":[\"S001\",\"S002\",\"S004\",\"S005\"],\"supporting_quotes\":[{\"text\":\"My grandmother she always say that being woman in Senegal is one thing but being poor woman who is also from village that is another thing completely.\",\"significance\":\"Illustrates how multiple aspects of identity intersect to shape an individual's experience.\"},{\"text\":\"Like my mom is Korean and a woman and her experience is different from my dads even though they're in the same family.\",\"significance\":\"Highlights how different aspects of identity intersect to shape family dynamics.\"},{\"text\":\"My mom is from Tamil Nadu and she's also a woman and she's also an immigrant who didn't go to college here. But the reading made me see they're not separate at all \u2014 they compound each other in a specific way.\",\"significance\":\"Emphasizes the compounding nature of intersecting identities.\"},{\"text\":\"In France she was too African. When she visited Guinea she was too French. She fit nowhere cleanly and was penalized for that in every space she entered.\",\"significance\":\"Illustrates the complexities of intersecting identities in different contexts.\"}],\"confidence\":0.9,\"sub_themes\":[\"personal family histories\",\"intersectionality in family context\"]},{\"name\":\"historical context of intersectionality\",\"description\":\"Alex Hernandez provided a detailed historical context for the concept of intersectionality, tracing its origins to Kimberl\u00e9 Crenshaw's work in 1989.\",\"frequency\":1,\"student_ids\":[\"S003\"],\"supporting_quotes\":[{\"text\":\"The concept was first coined by Kimberl\u00e9 Crenshaw in 1989 to address the marginalization of Black women within both feminist and anti-racist discourse.\",\"significance\":\"Provides a foundational understanding of the concept.\"}],\"confidence\":0.8,\"sub_themes\":[\"origins of intersectionality\",\"historical significance\"]},{\"name\":\"intersectionality in practice\",\"description\":\"Students discussed how intersectionality plays out in real-world scenarios, emphasizing the practical applications of the concept.\",\"frequency\":4,\"student_ids\":[\"S001\",\"S004\",\"S005\"],\"supporting_quotes\":[{\"text\":\"My grandmother she always say that being woman in Senegal is one thing but being poor woman who is also from village that is another thing completely.\",\"significance\":\"Illustrates the practical application of intersectionality in everyday life.\"},{\"text\":\"My mom is from Tamil Nadu and she's also a woman and she's also an immigrant who didn't go to college here. But the reading made me see they're not separate at all \u2014 they compound each other in a specific way.\",\"significance\":\"Emphasizes the practical implications of intersecting identities.\"},{\"text\":\"In France she was too African. When she visited Guinea she was too French. She fit nowhere cleanly and was penalized for that in every space she entered.\",\"significance\":\"Highlights the practical challenges of navigating intersecting identities.\"}],\"confidence\":0.8,\"sub_themes\":[\"everyday experiences\",\"practical challenges\"]}],\"contradictions\":[{\"description\":\"Some students found the concept of intersectionality transformative while others found it alienating.\",\"side_a\":\"transformative\",\"side_a_students\":[\"S001\",\"S004\",\"S005\"],\"side_b\":\"alienating\",\"side_b_students\":[\"S002\"],\"pedagogical_significance\":\"This tension highlights the different emotional and intellectual responses to complex social theories, which can be a productive starting point for further discussion.\"}]}",
-    "outlier_report": "{\"outliers\":[]}",
-    "synthesis_report": "{\"concern_patterns\":[],\"concern_differences\":[],\"engagement_highlights\":[],\"tensions\":[],\"class_temperature\":\"All five students demonstrated moderate engagement with the assignment, showing a clear understanding of the concepts but not delving deeply into their application or personal connections. There is a noticeable lack of tension or contradiction in their responses, suggesting a consistent grasp of the material. The teacher should pay attention to ensuring that the concepts are fully integrated into the students' broader understanding of the course themes in the next class.\",\"attention_areas\":[\"The teacher should monitor if any students are ready to move beyond surface-level understanding and begin applying these concepts in more complex ways\"],\"calls_completed\":1,\"calls_attempted\":1,\"cloud_narrative\":\"\"}"
+    "theme_set": "{\"themes\":[{\"name\":\"connecting theory to personal experience\",\"description\":\"Multiple students drew on their personal experiences to illustrate the concept of intersectionality, highlighting how different aspects of identity intersect to shape individual experiences.\",\"frequency\":15,\"student_ids\":[\"S001\",\"S002\",\"S004\",\"S005\",\"S006\",\"S007\",\"S009\",\"S022\",\"S023\",\"S024\",\"DeShawn Mercer\",\"Imani Drayton\",\"Jordan Espinoza\",\"Aaliyah Robinson\",\"Linh Tran\"],\"supporting_quotes\":[{\"text\":\"My grandmother she always say that being woman in Senegal is one thing but being poor woman who is also from village that is another thing completely.\",\"significance\":\"Illustrates how multiple aspects of identity intersect to shape an individual's experience.\"},{\"text\":\"Like my mom is Korean and a woman and her experience is different from my dads even though they're in the same family.\",\"significance\":\"Highlights how different aspects of identity intersect to shape family dynamics.\"},{\"text\":\"My mom is from Tamil Nadu and she's also a woman and she's also an immigrant who didn't go to college here. But the reading made me see they're not separate at all \u2014 they compound each other in a specific way.\",\"significance\":\"Emphasizes the compounding nature of intersecting identities.\"},{\"text\":\"In France she was too African. When she visited Guinea she was too French. She fit nowhere cleanly and was penalized for that in every space she entered.\",\"significance\":\"Illustrates the complexities of intersecting identities in different contexts.\"}],\"confidence\":0.9,\"sub_themes\":[\"personal family histories\",\"intersectionality in family context\"]},{\"name\":\"intersectionality in practice\",\"description\":\"Students discussed how intersectionality plays out in real-world scenarios, emphasizing the practical applications of the concept.\",\"frequency\":15,\"student_ids\":[\"S001\",\"S004\",\"S005\",\"S013\",\"S014\",\"S021\",\"S022\",\"S023\",\"S024\",\"DeShawn Mercer\",\"Camille Osei\",\"Imani Drayton\",\"Jordan Espinoza\",\"Aaliyah Robinson\"],\"supporting_quotes\":[{\"text\":\"My grandmother she always say that being woman in Senegal is one thing but being poor woman who is also from village that is another thing completely.\",\"significance\":\"Illustrates the practical application of intersectionality in everyday life.\"},{\"text\":\"My mom is from Tamil Nadu and she's also a woman and she's also an immigrant who didn't go to college here. But the reading made me see they're not separate at all \u2014 they compound each other in a specific way.\",\"significance\":\"Emphasizes the practical implications of intersecting identities.\"},{\"text\":\"In France she was too African. When she visited Guinea she was too French. She fit nowhere cleanly and was penalized for that in every space she entered.\",\"significance\":\"Highlights the practical challenges of navigating intersecting identities.\"}],\"confidence\":0.8,\"sub_themes\":[\"everyday experiences\",\"practical challenges\"]},{\"name\":\"analyzing intersectional experiences\",\"description\":\"Students delved into the complexities of intersectional experiences, often using historical examples to illustrate how different aspects of identity intersect to create unique experiences of oppression and privilege.\",\"frequency\":3,\"student_ids\":[\"S008\",\"S009\",\"S010\"],\"supporting_quotes\":[{\"text\":\"She told me it was basically about how different parts of your identity combine and affect your life together, not just individually.\",\"significance\":\"Clarifies the concept of intersectionality.\"},{\"text\":\"Being Black and a man and working class aren't three different things you experience one at a time \u2014 they interact and create a specific experience that's different from someone who shares only one of\",\"significance\":\"Emphasizes the interactive nature of multiple identities.\"},{\"text\":\"The author argues that simply being a woman of color, for example, does not automatically mean that one experiences oppression.\",\"significance\":\"Challenges the assumption that intersectional experiences are uniform.\"}],\"confidence\":0.8,\"sub_themes\":[\"historical examples\",\"interactive identity experiences\",\"challenging assumptions\"]},{\"name\":\"analyzing intersectionality in personal context\",\"description\":\"Students are applying intersectionality to their personal experiences, highlighting the complexity of overlapping oppressions.\",\"frequency\":3,\"student_ids\":[\"S011\",\"S012\",\"S014\"],\"supporting_quotes\":[{\"text\":\"Intersectionality recognizes that these forms of oppression are not mutually exclusive, but rather interconnected, leading to a more nuanced understanding of the ways in which social inequalities inte\",\"significance\":\"Illustrates the interconnected nature of different forms of oppression\"},{\"text\":\"The deaf community has its own culture and its own discrimination issues, and then racial stuff layers on top of that, and sometimes they conflict.\",\"significance\":\"Highlights the layered nature of oppression within a community\"}],\"confidence\":0.9,\"sub_themes\":[\"personal experiences of discrimination\",\"analyzing community dynamics\"]},{\"name\":\"grappling with intersectionality\",\"description\":\"Students are exploring the challenges and complexities of intersectionality, often through personal reflection or community analysis.\",\"frequency\":3,\"student_ids\":[\"S012\",\"S013\",\"S014\"],\"supporting_quotes\":[{\"text\":\"I'm Latina and I'm in honors classes and sometimes I get treated like I don't fully belong or like I got in through some program, even by other students.\",\"significance\":\"Illustrates the personal experience of discrimination within a privileged context\"},{\"text\":\"Intersectionality explains why navigating is harder for some people than others \u2014 because they're dealing with multiple ways the system wasn't designed for them.\",\"significance\":\"Explores the systemic challenges faced by individuals with multiple identities\"}],\"confidence\":0.9,\"sub_themes\":[\"personal experiences of discrimination\",\"analyzing current events\"]},{\"name\":\"intersectionality as framework\",\"description\":\"Connor Walsh and Paige Kowalczyk discuss the importance of intersectionality as a framework for understanding the overlapping systems of oppression.\",\"frequency\":3,\"student_ids\":[\"S018\",\"S019\",\"S020\"],\"supporting_quotes\":[{\"text\":\"Intersectionality means that different aspects of identity like race, gender, class, and sexuality overlap and can lead to worse outcomes for people who have multiple marginalized identities.\",\"significance\":\"Clarifies the concept of intersectionality and its application to real-world experiences.\"},{\"text\":\"But honestly at the end of the day I just try to treat everyone the same regardless of what they look like or where they come from.\",\"significance\":\"Contrasts the theoretical framework with a more individualistic approach to treating people.\"}],\"confidence\":0.85,\"sub_themes\":[\"individualism vs. identity\"]},{\"name\":\"intersectionality in everyday interactions\",\"description\":\"Students discussed how intersectionality plays out in everyday interactions, often highlighting the subtle and not-so-subtle ways in which different aspects of identity intersect to create unique experiences and challenges.\",\"frequency\":3,\"student_ids\":[\"Imani Drayton\",\"Jordan Espinoza\",\"Aaliyah Robinson\"],\"supporting_quotes\":[{\"text\":\"The way teachers talk to me versus how they talk to my Black guy friends versus how they talk to white girls \u2014 it's different.\",\"significance\":\"Highlights the varied ways in which students are treated based on their identity\"},{\"text\":\"the way all of that interacts is exhausting to explain.\",\"significance\":\"Emphasizes the complexity and emotional toll of navigating multiple identities\"},{\"text\":\"And then Aunt Lorraine she moved up to Chicago and she says the sorting just got more complicated.\",\"significance\":\"Illustrates how intersectionality can become more complex in different environments\"}],\"confidence\":0.85,\"sub_themes\":[\"varied treatment based on identity\",\"complexity of identity interactions\"]},{\"name\":\"highlighting systemic issues\",\"description\":\"Students highlighted systemic issues that perpetuate intersectional discrimination, often through personal anecdotes or broader societal observations.\",\"frequency\":2,\"student_ids\":[\"S007\",\"S009\"],\"supporting_quotes\":[{\"text\":\"Those women lost. Not because the discrimination didn't happen. Because the legal system was built to see race or gender, not both at once. The system literally could not see them. That's not an accident.\",\"significance\":\"Illustrates systemic barriers in the legal system.\"},{\"text\":\"Being Black and a man and working class aren't three different things you experience one at a time \u2014 they interact and create a specific experience that's different from someone who shares only one of\",\"significance\":\"Emphasizes the compounded effects of systemic discrimination.\"}],\"confidence\":0.8,\"sub_themes\":[\"legal system bias\",\"compound discrimination\"]},{\"name\":\"connecting theory to community experiences\",\"description\":\"Students are applying intersectionality to their community experiences, highlighting the importance of cultural diversity and community dynamics.\",\"frequency\":2,\"student_ids\":[\"S014\",\"S015\"],\"supporting_quotes\":[{\"text\":\"The deaf community has its own culture and its own discrimination issues, and then racial stuff layers on top of that, and sometimes they conflict.\",\"significance\":\"Illustrates the layered nature of oppression within a community\"},{\"text\":\"Like in my neighborhood the Mexican families are always so close and they really support each other and I think thats what intersectionality is about, like how different backgrounds come together and \",\"significance\":\"Highlights the importance of community support and cultural diversity\"}],\"confidence\":0.9,\"sub_themes\":[\"celebrating cultural diversity\",\"community support\"]},{\"name\":\"historical context of intersectionality\",\"description\":\"Alex Hernandez provided a detailed historical context for the concept of intersectionality, tracing its origins to Kimberl\u00e9 Crenshaw's work in 1989.\",\"frequency\":1,\"student_ids\":[\"S003\"],\"supporting_quotes\":[{\"text\":\"The concept was first coined by Kimberl\u00e9 Crenshaw in 1989 to address the marginalization of Black women within both feminist and anti-racist discourse.\",\"significance\":\"Provides a foundational understanding of the concept.\"}],\"confidence\":0.8,\"sub_themes\":[\"origins of intersectionality\",\"historical significance\"]},{\"name\":\"exploring personal identity\",\"description\":\"Brianna Foster reflects on her own experiences of feeling like she doesn't fit into a single identity category.\",\"frequency\":1,\"student_ids\":[\"S016\"],\"supporting_quotes\":[{\"text\":\"I've definitely felt like sometimes I'm too much of one thing or not enough of another.\",\"significance\":\"Illustrates the complexity of personal identity and the challenges of fitting into a single category.\"}],\"confidence\":0.9,\"sub_themes\":null},{\"name\":\"acknowledging the importance of intersectionality\",\"description\":\"Tyler Huang explains the importance of intersectionality in understanding the unique experiences of different groups.\",\"frequency\":1,\"student_ids\":[\"S017\"],\"supporting_quotes\":[{\"text\":\"A Black woman experiences discrimination differently from what Black men experience and also differently from what white women experience, because she has both of those identities at once.\",\"significance\":\"Illustrates the nuanced experiences of individuals with multiple intersecting identities.\"}],\"confidence\":0.8,\"sub_themes\":null},{\"name\":\"analyzing concepts\",\"description\":\"Students engaged in detailed analysis of the theoretical concepts of intersectionality, demonstrating a deep understanding of the subject matter.\",\"frequency\":1,\"student_ids\":[\"S021\"],\"supporting_quotes\":[{\"text\":\"Identity is layered and you can't understand someone's experience by looking at just one layer.\",\"significance\":\"Demonstrates a nuanced understanding of intersectionality.\"}],\"confidence\":0.9,\"sub_themes\":[\"understanding intersectionality\"]},{\"name\":\"desire for respectful dialogue\",\"description\":\"Students expressed a desire for a respectful and emotionally balanced discussion environment, recognizing the intensity of the material.\",\"frequency\":1,\"student_ids\":[\"S025\"],\"supporting_quotes\":[{\"text\":\"I do want to say though that I feel like in class discussions about this stuff people get really heated and I think we should be able to have these conversations without getting so emotional about it.\",\"significance\":\"Acknowledges the emotional weight of the material and the need for a balanced discussion.\"}],\"confidence\":0.8,\"sub_themes\":[\"acknowledgment of emotional intensity\"]},{\"name\":\"defining intersectionality\",\"description\":\"Multiple students provided definitions of intersectionality, emphasizing the overlap of multiple identities.\",\"frequency\":1,\"student_ids\":[\"Marcus Bell\"],\"supporting_quotes\":[{\"text\":\"intersectionality is when multiple identities overlap like race and gender. crenshaw wrote about it.\",\"significance\":\"Clarifies the concept by referencing a key theorist.\"}],\"confidence\":0.9,\"sub_themes\":null},{\"name\":\"intersectionality in diverse contexts\",\"description\":\"Students discussed how intersectionality plays out in various cultural and social contexts.\",\"frequency\":1,\"student_ids\":[\"Linh Tran\"],\"supporting_quotes\":[{\"text\":\"My mother she always says that in Vietnamese society the Kinh majority they look at Hmong people as backwards and when you are Hmong woman it is even worse because you have the weight of both.\",\"significance\":\"Highlights the specific context of Hmong women in Vietnamese society.\"}],\"confidence\":0.8,\"sub_themes\":null}],\"contradictions\":[{\"description\":\"Some students found the concept of intersectionality transformative while others found it alienating.\",\"side_a\":\"transformative\",\"side_a_students\":[\"S001\",\"S004\",\"S005\"],\"side_b\":\"alienating\",\"side_b_students\":[\"S002\"],\"pedagogical_significance\":\"This tension highlights the different emotional and intellectual responses to complex social theories, which can be a productive starting point for further discussion.\"},{\"description\":\"Some students found the concept of intersectionality transformative, while others found it alienating.\",\"side_a\":\"Transformative\",\"side_a_students\":[\"S006\",\"S008\",\"S010\"],\"side_b\":\"Alienating\",\"side_b_students\":[\"S007\",\"S009\"],\"pedagogical_significance\":\"This tension highlights the different emotional and intellectual responses to complex social theories, which can be a productive point for discussion on how to make the material more accessible and relevant.\"},{\"description\":\"Some students found intersectionality a useful framework for understanding social dynamics, while others found it challenging or abstract.\",\"side_a\":\"Intersectionality as a useful framework\",\"side_a_students\":[\"S011\",\"S013\",\"S014\"],\"side_b\":\"Intersectionality as challenging or abstract\",\"side_b_students\":[\"S012\",\"S015\"],\"pedagogical_significance\":\"This tension highlights the need for further clarification and examples to help students grasp the concept.\"},{\"description\":\"The tension between treating everyone the same and recognizing the importance of intersectionality.\",\"side_a\":\"Connor Walsh's individualism\",\"side_a_students\":[\"S018\"],\"side_b\":\"Paige Kowalczyk's intersectionality\",\"side_b_students\":[\"S019\"],\"pedagogical_significance\":\"This tension highlights the challenge of balancing universal principles with the need to recognize and address specific, intersecting identities.\"},{\"description\":\"Some students found the material transformative while others found it alienating.\",\"side_a\":\"Transformative\",\"side_a_students\":[\"S022\",\"S023\",\"S024\"],\"side_b\":\"Alienating\",\"side_b_students\":[\"S025\"],\"pedagogical_significance\":\"This tension highlights the diverse emotional and intellectual responses to the material, which can inform teaching strategies to address different student needs.\"},{\"description\":\"Some students found the concept of intersectionality empowering, while others found it alienating.\",\"side_a\":\"intersectionality as empowering\",\"side_a_students\":[\"Imani Drayton\",\"Jordan Espinoza\"],\"side_b\":\"intersectionality as alienating\",\"side_b_students\":[\"DeShawn Mercer\",\"Aaliyah Robinson\"],\"pedagogical_significance\":\"This tension highlights the different emotional and psychological impacts of the concept on students, which can inform teaching strategies to support all students.\"},{\"description\":\"Contradiction between defining intersectionality and connecting it to personal experiences\",\"side_a\":\"Marcus Bell defined intersectionality conceptually, while Linh Tran used a personal anecdote to illustrate it.\",\"side_a_students\":[\"Marcus Bell\"],\"side_b\":\"Linh Tran used a personal anecdote to illustrate intersectionality, while Marcus Bell defined it conceptually.\",\"side_b_students\":[\"Linh Tran\"],\"pedagogical_significance\":\"This tension highlights the importance of bridging theoretical knowledge with lived experiences in understanding intersectionality.\"}]}",
+    "outlier_report": "{\"outliers\":[{\"student_id\":\"S029\",\"student_name\":\"Jordan Espinoza\",\"why_notable\":\"Jordan's submission delves deeply into the personal and emotional impact of navigating multiple intersecting identities, which is a unique perspective that challenges the more theoretical or community-focused themes.\",\"relationship_to_themes\":\"While Jordan's submission aligns with the theme of 'intersectionality in personal experience,' it also challenges the more theoretical or community-focused themes by emphasizing the emotional and personal toll of intersectionality. This perspective highlights the lived experience of identity interactions, which is not as prominent in the other submissions.\",\"notable_quote\":{\"text\":\"the way all of that interacts is exhausting to explain.\",\"significance\":\"This quote captures the complexity and challenge of navigating multiple intersecting identities, which is a unique and personal perspective that challenges the more theoretical or community-focused themes.\"},\"teacher_recommendation\":\"Check in with Jordan to understand the emotional impact of their experiences and highlight their perspective in class to encourage a more nuanced discussion of intersectionality.\"}]}",
+    "synthesis_report": "{\"concern_patterns\":[{\"description\":\"Students are grappling with the application of intersectionality in personal and community contexts, often through the lens of their own experiences. They are also concerned with the emotional intensity of these discussions and the potential for essentializing identities.\",\"student_names\":[\"Sofia Esparza\",\"Brittany Okafor\",\"Jordan Espinoza\"]},{\"description\":\"Students are questioning the framework of intersectionality, either by suggesting it is too focused on categories and labels or by revealing personal experiences that feel erased by the current discourse.\",\"student_names\":[\"Connor Walsh\",\"Jake Novak\"]},{\"description\":\"Students are reflecting on the emotional intensity of these discussions and the need for respectful dialogue, often dismissing the emotional responses of others as a way to maintain a neutral stance.\",\"student_names\":[\"Aiden Brooks\"]}],\"concern_differences\":[\"Connor's colorblind ideology and Jake's class-based critique are distinct in their approach to the intersectionality framework \u2014 Connor denies the importance of recognizing identity categories, while Jake feels his personal and academic challenges are not addressed by the current framework.\",\"Brittany's essentializing language about resilience and community support is different from Sofia's and Jordan's experiences of being seen or not seen based on their identities \u2014 Brittany generalizes experiences to entire groups, while Sofia and Jordan highlight specific instances of mistreatment or surprise based on their identities.\"],\"engagement_highlights\":[],\"tensions\":[],\"class_temperature\":\"The class (25 of 32 students) demonstrated moderate engagement with the assignment, showing a basic understanding of the concepts but not delving deeply into their application. Seven students were flagged for various forms of essentializing, suggesting a need for the teacher to address the importance of nuance and context in discussing sensitive topics. This pattern may indicate that the assignment prompt or readings need clearer guidance on how to approach these complex subjects.\",\"attention_areas\":[\"The teacher should pay attention to the seven flagged students (Valentina, Language, Another Student) who are essentializing concepts, as this may require a more nuanced approach in the next class\",\"The assignment prompt or readings may need to be reframed to better guide students in recognizing and avoiding essentializing language and instead focusing on the complexities of the issues discussed\"],\"calls_completed\":2,\"calls_attempted\":2,\"cloud_narrative\":\"\"}"
   },
   "feedback": [
     {
@@ -381,6 +2068,276 @@
       "student_id": "S005",
       "student_name": "Amara Diallo",
       "draft_text": "Amara, your personal connection to your grandmother's experience through the lens of intersectionality is powerful. You beautifully highlighted how Crenshaw's framework can give voice to the complexities of her story. For next week, I'm curious: how might you apply this framework to other family stories or experiences you've heard?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S006",
+      "student_name": "Sofia Esparza",
+      "draft_text": "Sofia, your passion for connecting theory to personal experience is really inspiring. You've clearly thought deeply about how intersectionality plays out in real life, especially through your cousin Valentina's story. For next week, I'm curious: how might considering additional perspectives help us understand the complexities of systemic issues even better?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S007",
+      "student_name": "Rashida Thompson",
+      "draft_text": "Rashida Thompson, your passion for the topic and your specific example about Black girls being disproportionately suspended really stood out. You're not just learning the theory \u2014 you're connecting it to real, lived experiences. For next week, I'm curious: how might the concept of intersectionality help us better understand the legal system's blind spots in other contexts?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S008",
+      "student_name": "Jasmine Holloway",
+      "draft_text": "Jasmine Holloway, your connection to Crenshaw's work through your family history is powerful. You clearly understand how different parts of our identity intersect to affect our lives. For your next discussion, I'm curious about how you might apply these concepts to a case outside of the legal realm. How do you think intersectionality could be applied in another field?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S009",
+      "student_name": "Kevin Osei",
+      "draft_text": "Kevin, your insight about how different aspects of identity interact to create a unique experience was really powerful. You're not just learning about intersectionality \u2014 you're showing how it applies to real life. For next week, I'm curious: how might a more complex analysis of legal protections be applied to other marginalized groups?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S010",
+      "student_name": "Tyler Nguyen",
+      "draft_text": "Tyler, your analysis of the reading and your clear explanation of the need for a nuanced understanding of identity and power dynamics really stood out. You're doing great at applying intersectionality to your readings. For next week, I'm curious: how might you explore the concept of privilege within the context of intersectionality further?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S011",
+      "student_name": "Jaylen Carter",
+      "draft_text": "Jaylen, your analysis of intersectionality and the interconnected nature of oppressions is clear and thoughtful. You effectively highlighted how different forms of oppression are not separate but rather intersect to create a more nuanced understanding. For next week, I'm curious: how might you explore the specific intersections you mentioned in more detail?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S012",
+      "student_name": "Talia Reyes",
+      "draft_text": "Talia, your personal reflection on feeling like you don't fully belong in honors classes, even as a Latina, really resonated. You're not just learning about intersectionality \u2014 you're bringing your own experiences to the table. For next week, I'm curious: how do you think your multiple identities intersect to shape your experiences in school?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S013",
+      "student_name": "Elijah Summers",
+      "draft_text": "Elijah, your passion for connecting theory to personal experiences really shines through, especially in your analysis of how policing works in your neighborhood. You've clearly thought deeply about how intersectionality affects different groups. For next week, I'm curious: how might you apply these concepts to other systems or communities you care about?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S014",
+      "student_name": "Sierra Nakamura",
+      "draft_text": "Sierra, your analysis of the deaf community and the layers of discrimination it faces is insightful. You're not just looking at one issue at a time, but how they intersect and affect individuals. For next week, I'm curious: how might considering additional perspectives help you understand the complexities of belonging even further?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S015",
+      "student_name": "Brittany Okafor",
+      "draft_text": "Brittany, your passion for celebrating cultural diversity and the way you connected theory to your community experiences is really inspiring. You made a great point about how different backgrounds come together to make communities stronger. For next week, I'm curious: how might you explore the intersectionality of resilience in a community that faces multiple forms of oppression?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S016",
+      "student_name": "Brianna Foster",
+      "draft_text": "Brianna Foster, your reflection on feeling like you're sometimes too much of one thing or not enough of another really resonated with me. It's clear you're deeply engaged with the concept of intersectionality. For next week, I'm curious: how do you think your experiences as a Black girl might influence the way you see the world differently from others?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S017",
+      "student_name": "Tyler Huang",
+      "draft_text": "Tyler, your explanation of how a Black woman's experiences of discrimination are uniquely shaped by her intersecting identities is clear and insightful. You're really diving into the complexities of intersectionality. For your next discussion, I'm curious: how might you apply this concept to a real-world issue or case study?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S018",
+      "student_name": "Connor Walsh",
+      "draft_text": "Connor, your reflection on treating everyone the same regardless of their appearance shows a thoughtful approach to equality. You're not just learning about intersectionality \u2014 you're applying it to your interactions. For next week, I'm curious: how might considering someone's identity categories still be important even if you treat everyone the same?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S019",
+      "student_name": "Paige Kowalczyk",
+      "draft_text": "Paige, your definition of intersectionality and the examples you used to illustrate how Black women can fall through the gaps of anti-discrimination frameworks are clear and insightful. You're showing a deep understanding of the concept. For next week, I'm curious: how might we apply this concept to other marginalized groups beyond race and gender?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S020",
+      "student_name": "Jake Novak",
+      "draft_text": "Jake, your insight about the intersectionality framework not addressing the experiences of families like yours is really thought-provoking. You're not just learning about theories \u2014 you're connecting them to real-life situations. For next week, I'm curious: how might considering classism alongside race and gender help us better understand the complexities of social justice issues?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S021",
+      "student_name": "Cameron Schultz",
+      "draft_text": "Cameron Schultz, your insight that 'identity is layered and you can't understand someone's experience by looking at just one layer' really stood out. You're demonstrating a deep understanding of intersectionality. For next week, I'm curious: how might you apply this concept to a real-world issue you care about?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S022",
+      "student_name": "Destiny Williams",
+      "draft_text": "Destiny, your passion for connecting theory to personal experience is evident in your reflection. You powerfully highlighted how redlining still impacts your neighborhood today, showing a deep understanding of intersectionality. For next week, I'm curious: how might you explore the intersectionality of your grandmother's experience with the current conditions in your neighborhood?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S023",
+      "student_name": "Yolanda Fuentes",
+      "draft_text": "Yolanda, your personal connection to your abuela's experience really shines through in your reflection. You beautifully captured the complexity of intersectionality by describing how all of her experiences \u2014 her age, her language, and her work \u2014 intersect to shape her identity. For next week, I'm curious: how might you explore how these experiences have influenced her relationships with others at the church?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S024",
+      "student_name": "Ingrid Vasquez",
+      "draft_text": "Ingrid, your reflection on your mom's experience immigrating from Honduras was incredibly powerful. You shared a deeply personal story that really brought the concept of intersectionality to life. For next week, I'm curious: how might you apply the idea of intersectionality to other aspects of your life or community?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S025",
+      "student_name": "Aiden Brooks",
+      "draft_text": "Aiden Brooks, your reflection on the importance of respectful dialogue and understanding each other's perspectives is thoughtful and reflective. You highlighted the emotional intensity of class discussions, which shows you're deeply engaged with the material. For next week, I'm curious about how you might explore the perspectives of those who have different experiences than your own. This could add a rich layer to our discussions.",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S026",
+      "student_name": "DeShawn Mercer",
+      "draft_text": "DeShawn, your reflection on Malik's experiences and your mother's tireless efforts to fight for him are incredibly powerful. You've shown a deep understanding of how intersectionality plays out in real life. For next week, I'm curious: how might you apply the concept of intersectionality to other scenarios you've observed or experienced?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S027",
+      "student_name": "Camille Osei",
+      "draft_text": "Camille, your analysis of the BMI's historical context and its impact on fat Black women is both insightful and deeply analytical. You're not just learning the theory \u2014 you're connecting it to the lived experiences of marginalized communities. For next week, I'm curious: how might we apply this same critical lens to other health metrics or practices in medicine?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S028",
+      "student_name": "Imani Drayton",
+      "draft_text": "Imani, your personal reflections on how teachers interact with you versus your peers are incredibly powerful. You're not just learning about intersectionality \u2014 you're giving it a voice through your lived experiences. For next week, I'm curious: how might the framework of intersectionality help you understand the experiences of your mother or other family members?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S029",
+      "student_name": "Jordan Espinoza",
+      "draft_text": "Jordan, your reflection on how your dyslexia, being Latino, and being in honors classes all interact to shape your experiences is incredibly powerful. You're not just learning about intersectionality \u2014 you're living it. For next week, I'm curious: how might considering the perspectives of others who don't share your experiences change your understanding of intersectionality?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S030",
+      "student_name": "Aaliyah Robinson",
+      "draft_text": "Aaliyah, your reflection on Aunt Lorraine's experiences really brought the concept of intersectionality to life. You shared how Aunt Lorraine's journey in Mississippi and Chicago highlighted the complexity of facing multiple forms of discrimination. For next week, I'm curious: how might you explore the idea of 'sorting' in the context of other family members or communities?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S031",
+      "student_name": "Marcus Bell",
+      "draft_text": "Marcus, your definition of intersectionality as 'when multiple identities overlap like race and gender' really captured the essence of the concept. It's great to see you connecting the theory to real-world experiences. For next week, I'm curious: how might Crenshaw's work on intersectionality apply to a specific group or community you care about?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S032",
+      "student_name": "Linh Tran",
+      "draft_text": "Linh Tran, your reflection on the intersections of Hmong identity in Vietnam and America is deeply personal and thought-provoking. You're not just learning about intersectionality \u2014 you're bringing your family's experiences to the conversation. For next week, I'm curious: how do you think the framework of intersectionality could be applied to other minority groups within Vietnamese society?",
       "approved_text": null,
       "status": "pending",
       "confidence": 0.9,

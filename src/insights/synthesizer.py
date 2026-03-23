@@ -123,11 +123,13 @@ def _records_to_summary(records: List[SubmissionCodingRecord]) -> str:
 
 def _summarize_linguistic_diversity(
     coding_records: List[SubmissionCodingRecord],
+    trends: Optional[List[str]] = None,
 ) -> str:
     """Aggregate linguistic_assets across all records into a class-level block.
 
     Counts how many students exhibit each unique asset label and produces a
-    teacher-facing summary.  Returns empty string when no assets are detected.
+    teacher-facing summary.  Returns empty string when no assets are detected
+    (unless trends are provided).
     """
     asset_counts: Dict[str, int] = {}
     for r in coding_records:
@@ -138,7 +140,7 @@ def _summarize_linguistic_diversity(
                 seen.add(label)
                 asset_counts[label] = asset_counts.get(label, 0) + 1
 
-    if not asset_counts:
+    if not asset_counts and not trends:
         return ""
 
     # Sort by count descending, then alphabetically for stability
@@ -146,6 +148,14 @@ def _summarize_linguistic_diversity(
     lines = ["LINGUISTIC DIVERSITY IN THIS CLASS:"]
     for label, count in sorted_assets:
         lines.append(f"  - {count} student{'s' if count != 1 else ''}: {label}")
+
+    # Add trends if provided
+    if trends:
+        lines.append("")
+        lines.append("LINGUISTIC TRENDS:")
+        for t in trends:
+            lines.append(f"  \u25cf {t}")
+
     lines.append("This communicative diversity is a classroom resource.")
     return "\n".join(lines)
 

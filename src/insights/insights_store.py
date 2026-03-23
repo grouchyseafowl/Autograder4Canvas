@@ -125,6 +125,16 @@ CREATE TABLE IF NOT EXISTS prompt_calibration (
     correction_type     TEXT,
     created_at          TEXT
 );
+
+-- feature_baselines: per-course linguistic feature distributions (EMA-evolving)
+CREATE TABLE IF NOT EXISTS feature_baselines (
+    course_id       TEXT PRIMARY KEY,
+    baseline_json   TEXT,
+    n_runs          INTEGER DEFAULT 1,
+    n_students_last INTEGER DEFAULT 0,
+    created_at      TEXT,
+    updated_at      TEXT
+);
 """
 
 
@@ -650,6 +660,70 @@ class InsightsStore:
             (profile_id, limit),
         ).fetchall()
         return [dict(r) for r in rows]
+
+    # ── Feature baselines ────────────────────────────────────────────────
+
+    def save_feature_baseline(self, course_id: str, baseline_json: str, n_students: int):
+        """Save or update feature baseline for a course (EMA pattern)."""
+        now = datetime.now(timezone.utc).isoformat()
+        self._conn.execute(
+            """INSERT INTO feature_baselines (course_id, baseline_json, n_runs, n_students_last, created_at, updated_at)
+               VALUES (?, ?, 1, ?, ?, ?)
+               ON CONFLICT(course_id) DO UPDATE SET
+                 baseline_json = excluded.baseline_json,
+                 n_runs = feature_baselines.n_runs + 1,
+                 n_students_last = excluded.n_students_last,
+                 updated_at = excluded.updated_at""",
+            (course_id, baseline_json, n_students, now, now),
+        )
+        self._conn.commit()
+
+    def get_feature_baseline(self, course_id: str) -> Optional[str]:
+        """Get the most recent feature baseline JSON for a course."""
+        row = self._conn.execute(
+            "SELECT baseline_json FROM feature_baselines WHERE course_id = ?",
+            (course_id,),
+        ).fetchone()
+        return row["baseline_json"] if row else None
+
+    def save_feature_correction(self, profile_id: str, student_id: str, feature_name: str, correction_type: str, submission_text: str = ""):
+        """Store a teacher correction to a linguistic feature detection."""
+        self._conn.execute(
+            """INSERT INTO prompt_calibration
+               (profile_id, submission_text, original_coding, corrected_coding, correction_type, created_at)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (profile_id, submission_text[:500],
+             json.dumps({"feature": feature_name, "student_id": student_id}),
+             json.dumps({"correction": correction_type}),
+             f"feature_{correction_type}",
+             datetime.now(timezone.utc).isoformat()),
+        )
+        self._conn.commit()
+
+    def get_feature_corrections(self, profile_id: str, limit: int = 20) -> List[Dict]:
+        """Get recent feature corrections for a teacher profile."""
+        rows = self._conn.execute(
+            """SELECT original_coding, corrected_coding, correction_type, created_at
+               FROM prompt_calibration
+               WHERE profile_id = ? AND correction_type LIKE 'feature_%'
+               ORDER BY created_at DESC LIMIT ?""",
+            (profile_id, limit),
+        ).fetchall()
+        results = []
+        for r in rows:
+            try:
+                orig = json.loads(r["original_coding"])
+                corr = json.loads(r["corrected_coding"])
+                results.append({
+                    "feature": orig.get("feature", ""),
+                    "student_id": orig.get("student_id", ""),
+                    "correction": corr.get("correction", ""),
+                    "type": r["correction_type"],
+                    "at": r["created_at"],
+                })
+            except (json.JSONDecodeError, KeyError):
+                pass
+        return results
 
     # ── Feedback ───────────────────────────────────────────────────────────
 

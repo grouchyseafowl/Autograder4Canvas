@@ -89,6 +89,22 @@ class LinguisticFeatureResult(BaseModel):
     aic_adjustments: Dict[str, float] = {}  # merged weight adjustments
 
 
+class FeatureBaseline(BaseModel):
+    """Per-class feature distribution for cohort-relative thresholds.
+
+    Computed after detect_features() runs on all submissions.
+    Stored in InsightsStore. Fed back to detect_features() on subsequent runs.
+    Follows CohortCalibrator pattern: Bayesian cold-start -> EMA evolution.
+    """
+    hedge_rate_median: float = 0.0
+    hedge_rate_iqr: float = 2.0
+    communal_ratio_median: float = 0.0
+    aave_feature_rate: float = 0.0
+    multilingual_rate: float = 0.0
+    narrative_rate: float = 0.0
+    n_students: int = 0
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Category: Syntactic Variation (AAVE)
 # ═══════════════════════════════════════════════════════════════════════════
@@ -154,33 +170,30 @@ _AAVE_ASSET = "AAVE linguistic features — authentic voice"
 
 # --- spaCy POS cascade helpers (optional, for better zero copula detection) ---
 
-_SPACY_CHECKED = False
-_SPACY_OK = False
-_SPACY_NLP = None  # cached spaCy model
+_NLP_CACHE: Dict[str, Any] = {}
 
 
 def _spacy_available() -> bool:
-    """Check whether spaCy + en_core_web_sm are importable. Caches result."""
-    global _SPACY_CHECKED, _SPACY_OK
-    if _SPACY_CHECKED:
-        return _SPACY_OK
-    _SPACY_CHECKED = True
+    """Check if spaCy + en_core_web_sm available. Caches result."""
+    if "__checked" in _NLP_CACHE:
+        return _NLP_CACHE["__checked"]
     try:
-        import spacy  # noqa: F811
-        spacy.load("en_core_web_sm", exclude=["parser", "lemmatizer"])
-        _SPACY_OK = True
-    except Exception:
-        _SPACY_OK = False
-    return _SPACY_OK
-
-
-def _get_spacy_nlp():
-    """Return a cached spaCy nlp model (parser+lemmatizer excluded for speed)."""
-    global _SPACY_NLP
-    if _SPACY_NLP is None:
         import spacy
-        _SPACY_NLP = spacy.load("en_core_web_sm", exclude=["parser", "lemmatizer"])
-    return _SPACY_NLP
+        spacy.load("en_core_web_sm", exclude=["parser", "lemmatizer"])
+        _NLP_CACHE["__checked"] = True
+    except Exception:
+        _NLP_CACHE["__checked"] = False
+    return _NLP_CACHE["__checked"]
+
+
+def _get_spacy_nlp(enable_parser: bool = False) -> Any:
+    """Get cached spaCy model. Two variants: fast (no parser) and full (with parser)."""
+    key = "full" if enable_parser else "fast"
+    if key not in _NLP_CACHE:
+        import spacy
+        exclude = ["lemmatizer"] if enable_parser else ["parser", "lemmatizer"]
+        _NLP_CACHE[key] = spacy.load("en_core_web_sm", exclude=exclude)
+    return _NLP_CACHE[key]
 
 
 def _spacy_zero_copula(text: str) -> List[LinguisticFeature]:
@@ -226,6 +239,38 @@ def _spacy_zero_copula(text: str) -> List[LinguisticFeature]:
         sentiment_effect="caveat",
         aic_weight_adjustments=_AAVE_AIC_ADJUSTMENTS,
     )]
+
+
+def _spacy_dep_zero_copula(text: str) -> List[LinguisticFeature]:
+    """Dep-parse zero copula: ADJ/NOUN with pronoun subject but no copula dependency.
+
+    More accurate than POS-sequence: uses dependency relations to detect
+    missing copula verb. Only runs when parser is available.
+    """
+    try:
+        nlp = _get_spacy_nlp(enable_parser=True)
+    except Exception:
+        return []
+    doc = nlp(text)
+    copula_gaps = []
+    for token in doc:
+        if token.pos_ in ("ADJ", "NOUN") and token.dep_ in ("ROOT", "acomp", "ccomp"):
+            has_subj = any(c.dep_ == "nsubj" and c.pos_ == "PRON" for c in token.children)
+            has_cop = any(c.dep_ == "cop" for c in token.children)
+            if has_subj and not has_cop:
+                subj = next((c for c in token.children if c.dep_ == "nsubj"), None)
+                if subj:
+                    copula_gaps.append(f"{subj.text} {token.text}")
+    if copula_gaps:
+        return [LinguisticFeature(
+            name="zero_copula_dep",
+            category="syntactic_variation",
+            evidence=copula_gaps[:3],
+            asset_label=_AAVE_ASSET,
+            sentiment_effect="caveat",
+            aic_weight_adjustments=_AAVE_AIC_ADJUSTMENTS,
+        )]
+    return []
 
 
 def _detect_syntactic_variation(text: str) -> List[LinguisticFeature]:
@@ -293,13 +338,25 @@ def _detect_syntactic_variation(text: str) -> List[LinguisticFeature]:
         ))
 
     # --- spaCy POS cascade (optional, runs only when regex found ≥1 feature) ---
+    existing_names = {f.name for f in features}
     if features and _spacy_available():
         pos_features = _spacy_zero_copula(text)
         # Add any POS-detected features not already found by regex
-        existing_names = {f.name for f in features}
         for pf in pos_features:
             if pf.name not in existing_names:
                 features.append(pf)
+                existing_names.add(pf.name)
+
+    # Dep-parse cascade (even more accurate, but requires parser)
+    if features:
+        try:
+            dep_features = _spacy_dep_zero_copula(text)
+            for df in dep_features:
+                if df.name not in existing_names:
+                    features.append(df)
+                    existing_names.add(df.name)
+        except Exception:
+            pass
 
     return features
 
@@ -348,39 +405,55 @@ def _langdetect_code_mixing(text: str) -> List[LinguisticFeature]:
 
     Splits text into sentences, runs langdetect on each, and emits a
     code_mixing_langdetect feature if >=2 different languages are detected
-    across sentences (with at least one non-English).
+    across sentences (with at least one non-English at >0.7 confidence).
     """
     try:
-        from langdetect import detect
+        from langdetect import detect_langs
     except ImportError:
         return []
 
     # Simple sentence split (period/question/exclamation followed by space+capital)
     sentences = re.split(r'(?<=[.!?])\s+', text)
-    sentences = [s.strip() for s in sentences if len(s.strip()) >= 10]
+    sentences = [s.strip() for s in sentences if len(s.strip()) >= 20]
 
     if len(sentences) < 2:
         return []
 
-    detected_langs: set = set()
-    for sent in sentences:
-        try:
-            lang = detect(sent)
-            detected_langs.add(lang)
-        except Exception:
-            continue
+    try:
+        detected_langs: set = set()
+        non_english_sentences = 0
+        english_sentences = 0
+        for sent in sentences:
+            try:
+                langs = detect_langs(sent)
+                # Only accept top detection if confidence > 0.7
+                if langs and langs[0].prob > 0.7:
+                    lang = langs[0].lang
+                    detected_langs.add(lang)
+                    if lang == "en":
+                        english_sentences += 1
+                    else:
+                        non_english_sentences += 1
+            except Exception:
+                continue
 
-    # Need >=2 different languages, at least one non-English
-    non_english = detected_langs - {"en"}
-    if len(detected_langs) >= 2 and non_english:
-        return [LinguisticFeature(
-            name="code_mixing_langdetect",
-            category="multilingual",
-            evidence=[f"languages detected: {', '.join(sorted(detected_langs))}"],
-            asset_label="Multilingual — code-mixing as communicative resource",
-            sentiment_effect="caveat",
-            aic_weight_adjustments={"personal_voice": 0.8},
-        )]
+        # Need >=2 different languages, at least one non-English
+        non_english = detected_langs - {"en"}
+        if len(detected_langs) >= 2 and non_english:
+            # Dedup: if all non-English sentences are same language, verify
+            # English is ALSO present (true code-mixing vs single-language submission)
+            if len(non_english) == 1 and english_sentences == 0:
+                return []  # single non-English language, not code-mixing
+            return [LinguisticFeature(
+                name="code_mixing_langdetect",
+                category="multilingual",
+                evidence=[f"languages detected: {', '.join(sorted(detected_langs))}"],
+                asset_label="Multilingual — code-mixing as communicative resource",
+                sentiment_effect="caveat",
+                aic_weight_adjustments={"personal_voice": 0.8},
+            )]
+    except Exception:
+        pass
 
     return []
 
@@ -485,6 +558,7 @@ def _detect_register_affect(
     compound_score: float,
     emotions: Dict[str, float],
     keyword_hits: Dict[str, int],
+    hedge_threshold: float = 3.0,
 ) -> List[LinguisticFeature]:
     """Detect register and affect features."""
     features: List[LinguisticFeature] = []
@@ -508,7 +582,7 @@ def _detect_register_affect(
     if word_count >= 50:
         hedge_count = len(_HEDGES.findall(text))
         density = (hedge_count / word_count) * 100
-        if density > 3.0:
+        if density > hedge_threshold:
             features.append(LinguisticFeature(
                 name="hedging_density",
                 category="register_affect",
@@ -753,6 +827,134 @@ def _build_caveat(features: List[LinguisticFeature], tier: str) -> str:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# Class-Level Analysis
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def surface_linguistic_trends(
+    feature_results: List[LinguisticFeatureResult],
+    n_students: int,
+) -> List[str]:
+    """Surface surprising linguistic trends at the class level.
+
+    Returns a list of human-readable trend observations.
+    """
+    if n_students < 5:
+        return []  # too small for meaningful trends
+
+    trends = []
+    feature_counts: Dict[str, int] = {}
+    for r in feature_results:
+        seen_in_student: set = set()
+        for f in r.features:
+            if f.name not in seen_in_student:
+                seen_in_student.add(f.name)
+                feature_counts[f.name] = feature_counts.get(f.name, 0) + 1
+
+    # High frequency features
+    for feature, count in feature_counts.items():
+        pct = count / n_students
+        if pct > 0.4:
+            trends.append(
+                f"High frequency: {feature} detected in {pct:.0%} of submissions — "
+                f"may reflect the linguistic community context of this class."
+            )
+
+    # Feature co-occurrence
+    from collections import Counter
+    co_occurrences: Counter = Counter()
+    for r in feature_results:
+        names = tuple(sorted(set(f.name for f in r.features)))
+        if len(names) >= 2:
+            co_occurrences[names] += 1
+    for combo, count in co_occurrences.most_common(3):
+        if count >= 2:
+            trends.append(
+                f"Co-occurring features ({count} students): {' + '.join(combo)}"
+            )
+
+    return trends
+
+
+def compute_feature_baseline(
+    feature_results: List[LinguisticFeatureResult],
+    prior: Optional[FeatureBaseline] = None,
+    ema_weight: float = 0.3,
+) -> FeatureBaseline:
+    """Compute class-level feature distributions from detection results.
+
+    If prior is provided, blends with EMA (0.3 new + 0.7 prior).
+    Follows CohortCalibrator pattern.
+    """
+    n = len(feature_results)
+    if n == 0:
+        return prior or FeatureBaseline()
+
+    # Collect per-submission metrics
+    hedge_rates = []
+    communal_ratios = []
+    aave_count = 0
+    multi_count = 0
+    narrative_count = 0
+
+    for r in feature_results:
+        # Extract hedge rate from evidence if present
+        for f in r.features:
+            if f.name == "hedging_density" and f.evidence:
+                try:
+                    rate = float(f.evidence[0].split()[0])
+                    hedge_rates.append(rate)
+                except (ValueError, IndexError):
+                    pass
+            if f.name == "communal_voice" and f.evidence:
+                try:
+                    parts = f.evidence[0]
+                    # "we/our/us: 5, I/my/me: 2"
+                    communal = int(parts.split(":")[1].split(",")[0].strip())
+                    individual = int(parts.split(":")[2].strip())
+                    if individual > 0:
+                        communal_ratios.append(communal / individual)
+                except (ValueError, IndexError):
+                    pass
+
+        categories = set(f.category for f in r.features)
+        if "syntactic_variation" in categories:
+            aave_count += 1
+        if "multilingual" in categories:
+            multi_count += 1
+        if any(f.name == "narrative_structure" for f in r.features):
+            narrative_count += 1
+
+    new = FeatureBaseline(
+        hedge_rate_median=statistics.median(hedge_rates) if hedge_rates else 0.0,
+        hedge_rate_iqr=(
+            statistics.quantiles(hedge_rates, n=4)[2] - statistics.quantiles(hedge_rates, n=4)[0]
+            if len(hedge_rates) >= 4 else 2.0
+        ),
+        communal_ratio_median=statistics.median(communal_ratios) if communal_ratios else 0.0,
+        aave_feature_rate=aave_count / n,
+        multilingual_rate=multi_count / n,
+        narrative_rate=narrative_count / n,
+        n_students=n,
+    )
+
+    if prior and prior.n_students > 0:
+        # EMA blend
+        w = ema_weight
+        return FeatureBaseline(
+            hedge_rate_median=w * new.hedge_rate_median + (1-w) * prior.hedge_rate_median,
+            hedge_rate_iqr=w * new.hedge_rate_iqr + (1-w) * prior.hedge_rate_iqr,
+            communal_ratio_median=w * new.communal_ratio_median + (1-w) * prior.communal_ratio_median,
+            aave_feature_rate=w * new.aave_feature_rate + (1-w) * prior.aave_feature_rate,
+            multilingual_rate=w * new.multilingual_rate + (1-w) * prior.multilingual_rate,
+            narrative_rate=w * new.narrative_rate + (1-w) * prior.narrative_rate,
+            n_students=n,
+        )
+
+    return new
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # Public API
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -766,6 +968,8 @@ def detect_features(
     emotions: Optional[Dict[str, float]] = None,
     keyword_hits: Optional[Dict[str, int]] = None,
     assignment_connection_overlap: Optional[float] = None,
+    baseline: Optional["FeatureBaseline"] = None,
+    prior_corrections: Optional[List[Dict]] = None,
 ) -> LinguisticFeatureResult:
     """Detect linguistic features in a student submission.
 
@@ -782,12 +986,17 @@ def detect_features(
     compound_score : float
         Raw compound score from the emotional register scorer (-1.0 to 1.0).
     emotions : dict or None
-        GoEmotions label→score dict (empty or None if VADER fallback).
+        GoEmotions label->score dict (empty or None if VADER fallback).
     keyword_hits : dict or None
-        Pattern name → match count from match_all_patterns().
+        Pattern name -> match count from match_all_patterns().
     assignment_connection_overlap : float or None
-        Vocabulary overlap score (0.0–1.0).  Currently unused but reserved
+        Vocabulary overlap score (0.0-1.0).  Currently unused but reserved
         for future low-overlap detection.
+    baseline : FeatureBaseline or None
+        Cohort-level feature distributions for baseline-adjusted thresholds.
+        If provided, thresholds adapt to class norms (e.g., hedge density).
+    prior_corrections : list of dict or None
+        Teacher corrections from prior runs (reserved for future use).
 
     Returns
     -------
@@ -797,6 +1006,12 @@ def detect_features(
         emotions = {}
     if keyword_hits is None:
         keyword_hits = {}
+
+    # Compute baseline-adjusted thresholds
+    if baseline:
+        hedge_threshold = max(2.0, baseline.hedge_rate_median + 1.5 * baseline.hedge_rate_iqr)
+    else:
+        hedge_threshold = 3.0
 
     features: List[LinguisticFeature] = []
 
@@ -814,6 +1029,7 @@ def detect_features(
     try:
         features.extend(_detect_register_affect(
             text, word_count, compound_score, emotions, keyword_hits,
+            hedge_threshold=hedge_threshold,
         ))
     except Exception as e:
         log.warning("Register/affect detection failed: %s", e)

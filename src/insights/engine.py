@@ -621,6 +621,45 @@ class InsightsEngine:
             self._store.complete_stage(run_id, "coding")
 
             # ----------------------------------------------------------
+            # Linguistic feature baselines + trends
+            # ----------------------------------------------------------
+            _trends: List[str] = []
+            try:
+                from modules.linguistic_features import compute_feature_baseline, surface_linguistic_trends, FeatureBaseline
+                import json as _json_feat
+
+                # Collect feature results from quick analysis
+                _feature_results = []
+                for sid in texts:
+                    _qs = qa_result.per_submission.get(sid) if qa_result else None
+                    if _qs and hasattr(_qs, 'linguistic_repertoire') and _qs.linguistic_repertoire:
+                        _feature_results.append(_qs.linguistic_repertoire)
+
+                if _feature_results:
+                    # Compute and store baseline (EMA with prior if available)
+                    _prior_json = self._store.get_feature_baseline(str(course_id))
+                    _prior = None
+                    if _prior_json:
+                        try:
+                            _prior = FeatureBaseline(**_json_feat.loads(_prior_json))
+                        except Exception:
+                            pass
+                    _new_baseline = compute_feature_baseline(_feature_results, prior=_prior)
+                    self._store.save_feature_baseline(
+                        str(course_id),
+                        _json_feat.dumps(_new_baseline.model_dump() if hasattr(_new_baseline, 'model_dump') else vars(_new_baseline)),
+                        n_students=len(_feature_results),
+                    )
+
+                    # Surface trends for synthesis
+                    _trends = surface_linguistic_trends(_feature_results, len(texts))
+                    if _trends:
+                        log.info("Linguistic trends: %s", _trends)
+            except Exception as e:
+                log.debug("Feature baseline/trends: %s", e)
+                _trends = []
+
+            # ----------------------------------------------------------
             # Cohort calibration (post-coding batch pass)
             # Requires the full class of AIC results — cannot run per-student.
             # Annotates each coding_record with class-relative percentile ranks.

@@ -1,15 +1,15 @@
 {
   "ethnic_studies": {
-    "quick_analysis": 3.82,
-    "coding_total": 135.82,
-    "coding_per_student_avg": 26.76,
-    "concerns": 124.96,
-    "themes": 86.51,
-    "outliers": 0.0,
-    "synthesis": 11.86,
-    "feedback": 99.63,
-    "total": 489.36,
-    "students": 5,
-    "per_student_total": 97.87
+    "quick_analysis": 2.29,
+    "coding_total": 1186.09,
+    "coding_per_student_avg": 36.57,
+    "concerns": 876.3,
+    "themes": 791.94,
+    "outliers": 24.72,
+    "synthesis": 61.19,
+    "feedback": 842.53,
+    "total": 3821.63,
+    "students": 32,
+    "per_student_total": 119.43
   }
 }
