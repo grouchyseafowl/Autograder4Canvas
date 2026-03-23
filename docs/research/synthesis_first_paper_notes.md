@@ -283,6 +283,191 @@ model capability that constrains which models can participate in structured pipe
 **Timing.** Qwen: 3821s total, 119s/student. Llama: 4713s total, 147s/student.
 Llama is 23% slower per student. Synthesis-first class reading adds ~235s one-time cost.
 
+## Session 2026-03-22b: Signal Layer as Equity Infrastructure
+
+*Session focus: VADER signal improvements — suppression layer, GoEmotions swap, linguistic feature detection module.*
+
+### Thesis extension: The pre-LLM signal layer is itself an architectural intervention
+
+The original paper thesis locates "intelligence" in the structure of inquiry — synthesis-first
+vs. atomized pipeline. This session revealed a complementary thesis: the **pre-LLM signal
+layer** (sentiment scoring, keyword matching, signal matrix) is not neutral infrastructure.
+It encodes the linguistic norms of its training data, and those norms systematically
+disadvantage specific student populations.
+
+VADER was trained predominantly on standard written English social media text. GoEmotions
+was trained on Reddit comments. Both encode monolingual, neurotypical, standard-English
+norms as "neutral." When applied to AAVE, ESL, or neurodivergent writing, they produce
+systematically biased scores. This is not a bug in the model — it is the model working
+as designed on data that was never its training distribution.
+
+**The architectural intervention:** Rather than replacing the biased model (which would
+just substitute one bias profile for another), the system interposes a **suppression layer**
+between the signal and the LLM. The suppression layer detects when the signal is unreliable
+for a specific submission and either withholds it (suppressed), caveats it (low), or
+passes it through (high). The LLM never sees the biased score — it sees either the
+suppression instruction or the caveated score.
+
+This is the disability studies question applied at the signal level: "Is the problem the
+student's writing, or the tool that's reading it?" The suppression layer answers: the
+tool. And it acts on that answer by breaking the causal chain between biased tool output
+and downstream harm.
+
+### Observation 5: Back-door bias paths survive direct suppression
+
+During QC, we discovered that suppressing the sentiment score alone was insufficient.
+The signal matrix — which classifies submissions into categories like "POSSIBLE CONCERN"
+or "LOW ENGAGEMENT" — was computed from the **same biased compound score** before the
+suppression layer ran. So a student writing in AAVE might have their sentiment score
+suppressed, but the signal matrix context still told the LLM "LOW ENGAGEMENT: perfunctory
+response."
+
+This is a concrete example of how bias leaks through indirect channels even after the
+direct channel is blocked. The fix: when suppression fires, the signal matrix context
+is also caveated with a reliability note. But the broader finding is methodological:
+**auditing for bias requires tracing all downstream consumers of a biased signal, not
+just the primary display path.**
+
+**Framework connection (#ALGORITHMIC_JUSTICE):** This is exactly what Virginia Eubanks
+describes in *Automating Inequality* — the harm doesn't come from any single decision
+point but from the system of interlocking automated judgments. Fixing one node (sentiment
+display) while leaving another node (signal matrix) consuming the same biased input
+reproduces the harm through a different path.
+
+### Observation 6: The teacher correction problem
+
+Standard ML practice would treat teacher corrections as ground truth for active learning:
+teacher dismisses a false positive → system learns → fewer false positives. We built this
+mechanism, then removed it.
+
+**Why:** A teacher who unconsciously reads AAVE writing as less serious will dismiss AAVE
+asset chips. If the system learns from those dismissals, it learns the teacher's bias. The
+system becomes *less* protective for the students who most need protection, because of
+the teacher who most needs the system's intervention. The sensitivity floor for protected
+categories (AAVE, ESL, communal voice) would be eroded by the very biases the system
+exists to counteract.
+
+**The alternative:** Detection sensitivity is driven by **cohort-relative baselines** —
+computed from the class's own linguistic profile via exponential moving average across
+runs. The class data itself teaches the system what's normal for this population. This
+is structural observation from the data, not filtered through teacher judgment.
+
+Teacher corrections are still stored — for audit, institutional accountability, and a
+future "bias mirror" feature that could show teachers their own correction patterns
+relative to student linguistic profiles. But they do not feed back into detection.
+
+**Framework connection (#CRITICAL_PEDAGOGY):** This is a refusal of the banking model
+applied to the system's own learning. The standard ML feedback loop treats the teacher
+as the authoritative "depositor" of correct labels. The alternative treats the student
+community's actual writing as the authority on its own linguistic profile. The class
+teaches the system; the system does not defer to the teacher's classifications of
+what counts as a linguistic feature worth protecting.
+
+**Framework tension (#CRITICAL_PEDAGOGY vs. #INTERDEPENDENCE):** Removing teacher agency
+over detection sensitivity is paternalistic. The system says "we know better than you
+what needs protection." From an interdependence perspective, this fails to design for
+mutual reliance — it positions the system as the protector and the teacher as a potential
+threat. A more interdependent design might surface the teacher's correction patterns
+back to them as reflection data rather than silently overriding their judgment. (The
+"bias mirror" feature is designed for this but not yet built.)
+
+### Observation 7: Detection as asset-surfacing vs. detection as surveillance
+
+The linguistic feature detection module (`src/modules/linguistic_features.py`) detects
+AAVE syntactic features, ESL L1 transfer patterns, communal voice, narrative structure,
+hedging density, neurodivergent writing patterns, and complex emotional engagement. Every
+detected feature carries an `asset_label` (teacher-facing positive framing) and a
+`sentiment_effect` (what to do about the biased score).
+
+**The design principle:** Detection must not be worse than non-detection. If we detect
+AAVE features and do nothing useful with that detection, we have built surveillance
+infrastructure — the system knows who writes in AAVE, and that knowledge sits in a
+database. Detection is only justified if it produces protective or asset-surfacing action.
+
+The current system uses detection for:
+- **Sentiment suppression** — breaking the bias chain (protective)
+- **AIC weight adjustment** — reducing markers that penalize non-standard writing (protective)
+- **Asset chips** — green labels visible to the teacher like "AAVE linguistic features —
+  authentic voice" or "Multilingual — writing across languages" (asset-surfacing)
+- **LLM prompt context** — telling the coding model "this student's writing includes AAVE
+  features; read engagement through their actual voice" (reframing)
+
+**The tension:** Even with asset framing, the system is categorizing students' linguistic
+practices. A student using habitual be may not identify as an AAVE speaker. The regex
+creates the category it claims to detect — "AAVE features" is a linguistic classification
+imposed on text, not a self-identification by the writer. The asset label ("authentic
+voice") is the system's framing, not the student's.
+
+**Framework connection (#FEMINIST_TECHNOSCIENCE):** Haraway's "view from nowhere" applies
+here. The detection module claims to observe linguistic features objectively, but the
+features it looks for (zero copula, habitual be, negative concord) are categories defined
+by sociolinguistic research — they are themselves situated knowledge. The module encodes
+a particular scholarly tradition's way of categorizing Black language, then applies that
+categorization to student text. This is a situated view presented as detection.
+
+**What partially mitigates this:** The feature-based (not population-based) architecture.
+The system detects *features*, not *demographics*. A student with one AAVE feature and
+three ESL features gets all four chips — the system doesn't classify them as "AAVE speaker"
+or "ESL student." The intersectional combination is preserved. But this mitigation is
+incomplete — the features themselves encode demographic associations.
+
+### Observation 8: GoEmotions as signal enrichment — the legitimate use case
+
+GoEmotions (Demszky et al., 2020) provides 28 emotion labels (joy, admiration, curiosity,
+grief, anger, caring, etc.) vs. VADER's 4 (positive, negative, neutral, compound). The
+paper notes asked whether the richer signal was overengineering.
+
+**It is not, for one specific reason:** The named emotions enable **complex emotional
+engagement detection.** A student writing about slavery might score `grief: 0.35 +
+admiration: 0.28` — grief about the content, admiration for the people who survived it.
+VADER reads this as slightly negative. GoEmotions reads it as complex engagement. The
+`complex_emotional_engagement` feature in `linguistic_features.py` detects these
+co-occurring affect pairs and surfaces them as an asset: "Complex emotional engagement
+with course material."
+
+This is the community cultural wealth framework operationalized at the affect level.
+Righteous anger about injustice, grief mixed with admiration, fear mixed with optimism —
+these are not "negative sentiment." They are evidence of deep engagement with course
+material that happens to be about painful subjects. The asset framing converts what
+VADER reads as a concern signal into what it actually is: a student bringing their full
+emotional intelligence to the material.
+
+**The enrichment only reaches the LLM when the score is reliable.** For suppressed
+submissions (AAVE, ESL, short), neither the compound score nor the named emotions are
+shown — the LLM reads tone from text. This prevents the richer GoEmotions signal from
+becoming a more sophisticated bias vector.
+
+### New Limitation
+
+11. **Linguistic feature detection creates the categories it claims to detect.** The AAVE
+regex encodes sociolinguistic categories (zero copula, habitual be) that are themselves
+scholarly constructions. A student's writing is not "AAVE" or "ESL" — those are
+classifications the system imposes. The feature-based (vs. population-based) architecture
+partially mitigates this but does not eliminate it. The system's view of linguistic
+diversity is bounded by which features the developers chose to detect.
+
+### New Open Questions
+
+6. Does the suppression layer actually change LLM coding output quality for AAVE/ESL
+   writers? We've blocked the bias path but haven't measured whether the LLM produces
+   different (better) codings with vs. without the biased score.
+7. Does cohort-relative baseline adaptation actually improve precision over fixed
+   thresholds? The EMA mechanism exists but has not been tested across multiple runs
+   on the same class.
+8. At what point does linguistic feature detection become surveillance? Is there a
+   threshold of granularity beyond which the system knows too much about students'
+   linguistic identities for the protection it provides?
+9. Can the "bias mirror" feature (showing teachers their own correction patterns
+   relative to student linguistic profiles) be designed without itself becoming a
+   punitive instrument?
+
+### New Files
+
+- Linguistic features module: `src/modules/linguistic_features.py`
+- Updated suppression layer: `src/insights/patterns.py` (AAVE regex, `assess_sentiment_reliability`)
+- GoEmotions scorer: `src/insights/quick_analyzer.py` (`_build_emotion_scorer`, `_try_go_emotions_scorer`)
+- Prompt display logic: `src/insights/submission_coder.py` (tier-aware display, signal matrix caveating)
+
 ## Untested Alternatives
 
 - **Synthesis-only chatbot export mode** — pre-coded records sent to chatbot for
