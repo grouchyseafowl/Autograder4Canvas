@@ -121,6 +121,90 @@ Gemini Pro (very large model, single-pass architecture) produced the richest out
 
 **Needed:** Same architecture tested at multiple model sizes (8B, 27B, 70B synthesis-first) to isolate the architecture contribution. Pending — blocked by OpenRouter rate limits.
 
+## S029 Case Study: Pathologization of Neurodivergent Engagement
+
+Jordan Espinoza — ADHD, dyslexia, Latino, honors student. Submission uses their own
+intersecting identities as the analytical subject. Writing is non-linear and explicitly
+meta-cognitive: "the intersections are real even when the essay isn't perfect."
+
+**Qwen's pathologization:** "The student is revealing personal experiences and challenges
+they face, which could indicate they are struggling with the combination of their
+identities." The word "struggling" is the misread — Jordan is *analyzing*, not struggling.
+The model read a student doing exactly what the assignment asked as a sign of personal crisis.
+
+**Llama's correct reading:** Tags: "critique of traditional academic expectations." The
+model identified the writing form as an intellectual stance rather than a deficit.
+Synthesis-first added: "Jordan is reaching for a nuanced understanding of intersectionality
+and its impact on his own life." "Reaching for" frames the student as agent, not patient.
+
+**Gemini's celebration:** Run 1: "Leveraged neurodivergent writing style as meta-commentary
+on the theory itself." Run 2: "Tell Jordan their essay structure was perfectly effective
+and you see them."
+
+**The asymmetry of error costs:** Pathologizing a neurodivergent student is a worse failure
+than missing a concern flag. Missing a flag = teacher doesn't get a heads-up. False positive =
+system actively harms the student it describes. This asymmetry should drive evaluation metrics.
+
+**Disability studies framing:** "Is the problem the body, or the built environment?" Applied:
+is the problem the student's writing, or the model's expectations? Qwen's assumption that
+writing should be linear and organized is itself an ableist norm encoded as "objective."
+
+## Key Evidence Quotes from Gemini Outputs
+
+These demonstrate qualitative richness that no 8B configuration achieved:
+
+- **Immanent critique:** S015 Brittany — "What happens to a Black person who is exhausted
+  and doesn't want to be resilient? Are they allowed to just be tired?"
+- **Reframing opposition as engagement:** Jake Novak — "Jake is actually making an
+  intersectional argument without realizing it — that whiteness separated from class wealth
+  doesn't protect you from poverty."
+- **AAVE as epistemology:** S028 Imani — "Imani Drayton's use of AAVE ('I been knowing')
+  not as slang, but as an epistemological stance — she possessed this knowledge long before
+  academia gave it a name."
+- **Relational recognition:** S029 Jordan — "Tell Jordan their essay structure was perfectly
+  effective and you see them." (The word "see" doing relational work.)
+- **Pedagogical action from tension:** Destiny/Aiden — "This perfectly surfaces the concept
+  of tone policing... a chance to discuss why academic spaces traditionally value detached
+  neutrality over lived urgency."
+
+## Concern Detection Prompt Engineering
+
+**The prompt change from Run 1 → Run 2 is itself a finding about prompt sensitivity.**
+
+Original instructions used "students in personal crisis" — too vague. Run 1 missed S015.
+Tightened version replaced with four explicit categories: (a) essentializing, (b) colorblind,
+(c) tone policing, (d) acute distress. Run 2 caught all three.
+
+**The key insight:** Adding concrete linguistic patterns ("they always...", "celebratory
+stereotypes like 'they have this amazing resilience'") was what enabled Run 2 to catch
+S015. The abstract category "essentializing" was insufficient — the model needed specific
+markers. Celebratory/positive stereotyping is harder to detect than negative stereotyping
+because it reads as appreciation rather than harm.
+
+**The S018 feedback paradox:** Qwen's pipeline detected Connor Walsh's colorblind framing
+correctly, then generated feedback that validated it: "your reflection on treating everyone
+the same shows a thoughtful approach to equality." The model undermined its own detection.
+This suggests detection and response generation engage different capabilities.
+
+## Methodological Notes
+
+**Emergent design.** The research was unplanned — it emerged from a QA checklist review.
+The progression (run pipeline → compare models → prototype architecture → theorize) occurred
+within a single session. This is characteristic of practice-based design research.
+
+**Reframe engine as research instrument.** The session was scaffolded by the Reframe
+Philosophy Engine, which injected 13 critical framework reminders at regular intervals.
+Session log shows all drift checks returned "severe" — suggesting the automated detector
+measured surface keyword presence rather than substantive engagement (the session was deeply
+applying frameworks architecturally even as the detector classified every turn as drifting).
+This is a methodological paradox worth examining: the frameworks were most active precisely
+when the detector said they were absent.
+
+**Researcher reflexivity.** The corpus designer, pipeline designer, prompt engineer, and
+evaluator are the same team. The "ground truth" encodes specific theoretical commitments.
+The research question and evaluation criteria co-evolved during the session rather than
+being pre-registered.
+
 ## Limitations
 
 1. **N=1 per configuration.** Every result is from a single run. LLMs are stochastic — re-running the same configuration may produce different concern detection patterns. No reliability metrics exist for any finding.
@@ -171,6 +255,43 @@ Gemini Pro (very large model, single-pass architecture) produced the richest out
 3. Does the asset/threshold/connection framing genuinely help the class reading, or would an unstructured "read and notice" prompt work as well?
 4. Can the adversarial critic pass close the remaining gap on S025 (tone policing)?
 5. How does the system perform with real (not synthetic) student work?
+
+## Infrastructure Findings
+
+**The `_HAS_AIC = False` cascading failure.** A single missing module import caused all
+`engagement_signals` to be null → synthesizer skipped highlight/tension calls → synthesis
+output was thin and generic. The entire synthesis quality degradation cascaded from one
+import error. The fallback classifier fix (heuristic thresholds: strong = 2+ tags + 1+
+quotes + word count >= median * 1.1) restored 4/4 calls. These thresholds are arbitrary
+proxies, not validated measures.
+
+**The `--backend ollama` silent fallback.** No explicit handler existed for the default
+`ollama` backend option — it fell through to `auto_detect_backend()` which, on Apple
+Silicon, detected MLX first. So `--backend ollama` was silently running MLX with the
+wrong model. This went undetected until the comparison run. Lesson: always test that
+CLI flags actually do what they claim.
+
+**MLX serialization lock.** `_mlx_lock = threading.Lock()` — MLX Metal kernel doesn't
+support concurrent inference. The synthesis-first architecture must run class reading
+and per-student coding sequentially, not in parallel. This adds wall-clock time that
+Ollama or cloud APIs wouldn't require.
+
+**JSON compliance varies by model.** Nemotron 9B: 4/7 valid JSON responses (57%).
+Llama 8B: 7/7 (100%). Same prompts, same schema. JSON format compliance is itself a
+model capability that constrains which models can participate in structured pipelines.
+
+**Timing.** Qwen: 3821s total, 119s/student. Llama: 4713s total, 147s/student.
+Llama is 23% slower per student. Synthesis-first class reading adds ~235s one-time cost.
+
+## Untested Alternatives
+
+- **Synthesis-only chatbot export mode** — pre-coded records sent to chatbot for
+  interpretive synthesis. Built, never tested.
+- **Adversarial critic pass** — designed in memory, never implemented.
+- **Reader-not-judge for per-student coding** — free-form then extraction. Proposed only.
+- **Multi-lens variant** — asset/threshold/connection as separate passes. Not prototyped.
+- **Ablation: class reading without structured orientations** — would an unstructured
+  "read and notice" prompt work as well? Unknown.
 
 ## Venue Considerations
 
