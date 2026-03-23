@@ -622,7 +622,92 @@ mandating its use for evaluation).
     contexts? A single teacher using the tool voluntarily is different from a district
     mandate. The current design optimizes for the voluntary case.
 
-### New Limitation
+### Observation 11: The normate teacher — who the system thinks is holding the tool
+
+The entire system — suppression layer, asset chips, learn notes, Observation 10's
+"teacher as learner" reframe — assumes a specific teacher: white, male, cisgender,
+native English speaker, institutionally secure. Garland-Thomson's normate, holding
+a grading tool. Every design decision assumes this person is the one whose bias
+needs managing and whose learning needs supporting.
+
+But a Black woman teaching Ethnic Studies doesn't need an expandable chip to tell
+her what habitual be is. She lives that grammar. The chip isn't teaching — it's
+patronizing. A Latina teacher who speaks three languages doesn't need the system
+to explain that code-mixing is "a sophisticated communicative strategy." She knows.
+The learn note assumes deficit — in the teacher. The same deficit framing the system
+claims to reject when applied to students.
+
+**The institutional violence the simple hierarchy obscures.** The system frames the
+classroom as teacher=power, student=vulnerable. But this ignores:
+
+- **Teachers of color are already over-surveilled** — by administrators, by parents
+  who challenge their authority in ways they wouldn't challenge a white teacher, by
+  students who test boundaries differently across racial lines. The system adds one
+  more layer of algorithmic oversight to a teacher who is already watched.
+- **Gender violence against teachers** — from students, from parents, from
+  administrators — is real, documented, and structurally invisible in the
+  "protect students from teacher bias" frame.
+- **Institutional disempowerment of teachers** — through standardized testing
+  mandates, curriculum control, precarious employment, union-busting, and
+  "accountability" frameworks. The institution that deploys this tool against
+  teachers is often the same institution that fails to protect them.
+- **The simple hierarchy model is itself an institutional tool** — by framing
+  classrooms as "teacher has power, student doesn't," institutions justify
+  surveillance OF teachers while obscuring violence AGAINST teachers. The
+  system we built reproduces this frame.
+
+**#DISABILITY_STUDIES (Garland-Thomson):** The normate — the unmarked, assumed-default
+subject — structures the design space. Our system's "teacher" is implicitly the
+person most likely to hold bias against non-standard English: white, monolingual,
+trained in prescriptive grammar. But a teacher who IS multilingual, who IS an AAVE
+speaker, who IS disabled, who IS queer — that teacher's relationship to the asset
+chips is fundamentally different. The system cannot tell the difference.
+
+**#FEMINIST_TECHNOSCIENCE (Haraway):** Whose view is encoded as "objective"? The
+institution's view — which frames teachers as potential threats and students as
+potential victims. This is not a neutral observation; it is a power arrangement
+that serves institutional interests (justify surveillance, deflect responsibility
+for structural conditions onto individual teachers).
+
+**#CRITICAL_PEDAGOGY (Freire):** The banking model applies in BOTH directions. The
+institution deposits "correct practice" into teachers via evaluation frameworks.
+The system deposits "correct understanding of linguistic diversity" via learn notes.
+Both assume the teacher is a receptacle. Observation 10 recognized this for the
+bias mirror but didn't go far enough — the learn notes themselves reproduce it
+when the teacher already possesses the knowledge the note "teaches."
+
+**#TRANSFORMATIVE_JUSTICE (Mingus):** Can we address potential teacher bias without
+replicating institutional violence against teachers? The current design doesn't
+ask this question. It assumes the teacher needs protection FROM (suppression layer)
+and education ABOUT (learn notes). It doesn't ask whether the teacher needs
+protection FROM THE INSTITUTION that will deploy this tool.
+
+**Design implications (unresolved):**
+
+1. The learn notes should be framed as **reference material**, not education directed
+   at a presumed-ignorant audience. "This feature is described in sociolinguistic
+   literature as..." rather than "This student uses X — here's what you should know."
+   The difference is subtle but it's the difference between assuming deficit and
+   offering a resource.
+
+2. The system should account for the possibility that the teacher knows more about
+   the student's linguistic context than the algorithm does. A Black teacher in an
+   AAVE-speaking community has knowledge the regex can't match. The system should
+   position its detection as a floor, not a ceiling — and should not assume the
+   teacher needs to be raised to that floor.
+
+3. The voluntary-use assumption matters more than we initially acknowledged. If a
+   teacher chooses to use this tool, the power dynamic is different from a district
+   mandating it. In the mandated case, the tool becomes an extension of institutional
+   surveillance regardless of its design intent. The system should have clear
+   documentation that it is designed for teacher-initiated use, not institutional
+   deployment against teachers.
+
+4. None of these implications have been tested against actual teachers — especially
+   teachers of color, multilingual teachers, and teachers who themselves come from
+   the communities the system claims to protect.
+
+### New Limitations
 
 12. **The system was designed around students, not with teachers.** No teachers were
 consulted during the design of the suppression layer, the asset chips, the learn notes,
@@ -633,6 +718,24 @@ the development team. A teacher might reasonably say: "You built a system to pro
 students from me, decided how it would interact with me, and never asked me." The
 Observation 10 reframe (teacher as learner) partially addresses this but was itself
 produced without teacher input.
+
+13. **The system assumes the normate teacher.** Every protective mechanism assumes
+the teacher is the person most likely to hold bias — white, monolingual, trained in
+prescriptive grammar. Teachers who are themselves multilingual, AAVE speakers,
+disabled, queer, or from the communities the system "protects" have a fundamentally
+different relationship to the tool. The system cannot distinguish between a teacher
+who dismisses an AAVE chip because they don't value AAVE and a teacher who dismisses
+it because they already live it. This is not a fixable UX problem — it is a structural
+limitation of any system that positions itself between teacher and student.
+
+14. **The institutional deployment problem.** The system is designed for voluntary
+teacher use but has no mechanism to prevent institutional deployment as an evaluation
+tool. If a district mandates this system and uses its outputs (asset chip interaction
+patterns, suppression trigger rates, correction logs) to evaluate teachers, the system
+becomes an instrument of the institutional surveillance it was designed to avoid. The
+non-storage of protected-category corrections mitigates one path but doesn't close
+the gap: the system's outputs (student coding records, synthesis reports) are
+themselves observable by administrators.
 
 ### New Files
 

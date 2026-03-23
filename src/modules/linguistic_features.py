@@ -172,125 +172,120 @@ _AAVE_ASSET = "AAVE linguistic features — authentic voice"
 
 # ---------------------------------------------------------------------------
 # Learn notes — expandable explanations for teacher learning
-# These teach, not evaluate. Available when teacher expands the chip.
+# Reference notes — available when teacher expands the chip.  Framed as
+# reference material, NOT as education directed at a presumed-ignorant
+# audience.  The teacher may already know everything here — and may know
+# more than the algorithm does.  These are context for the *detection*,
+# not instruction for the *teacher*.
 # ---------------------------------------------------------------------------
 _LEARN_NOTES = {
     "aave_lexical": (
-        "This student uses vocabulary features of African American Vernacular "
-        "English (AAVE) — a complete linguistic system with its own grammar, "
-        "not 'broken English.' These features (like 'finna,' 'ain't,' 'no cap') "
-        "are part of a rich linguistic tradition. Sentiment analysis tools trained "
-        "on standard English often misread AAVE affect, so this score is adjusted."
+        "Detected: vocabulary features of African American Vernacular English "
+        "(AAVE). AAVE is a complete linguistic system with its own grammar "
+        "(Rickford, 1999). Features like 'finna,' 'ain't,' 'no cap' are part "
+        "of a rich linguistic tradition. Sentiment tools trained on standard "
+        "English often misread AAVE affect — this score has been adjusted."
     ),
     "zero_copula": (
-        "This student omits the copula verb ('is/are') in places where AAVE "
-        "grammar allows it — e.g., 'she tired' instead of 'she is tired.' This "
-        "is a systematic grammatical rule in AAVE (described by linguist John "
-        "Rickford), not a missing word. It follows the same pattern as Russian "
-        "and Arabic, which also drop copula verbs."
+        "Detected: copula deletion ('she tired' for 'she is tired'). This is "
+        "a systematic grammatical rule in AAVE described by Rickford (1999), "
+        "not a missing word. The same pattern occurs in Russian, Arabic, and "
+        "many other languages."
     ),
     "zero_copula_pos": (
-        "Same as zero copula — detected via part-of-speech analysis for higher "
-        "accuracy. 'She tired' follows AAVE grammatical rules for copula deletion."
+        "Detected via part-of-speech analysis: copula deletion. Same pattern "
+        "as zero_copula — AAVE grammatical rule for copula omission."
     ),
     "zero_copula_dep": (
-        "Same as zero copula — confirmed via dependency parsing. This is a "
-        "grammatical feature of AAVE, not a missing word."
+        "Detected via dependency parsing: copula deletion. Same pattern "
+        "as zero_copula — confirmed with higher-accuracy syntactic analysis."
     ),
     "negative_concord": (
-        "This student uses double negation ('didn't nobody tell me') — a "
-        "grammatical feature of AAVE that intensifies negation. This construction "
-        "is standard in many world languages (Spanish, French, Russian). It was "
-        "also standard in English until prescriptive grammarians stigmatized it "
-        "in the 18th century."
+        "Detected: double negation ('didn't nobody tell me'). Negative concord "
+        "is an AAVE grammatical feature that intensifies negation. Standard in "
+        "many world languages (Spanish, French, Russian). Was also standard in "
+        "English until 18th-century prescriptive grammarians stigmatized it."
     ),
     "remote_past_bin": (
-        "This student uses 'been' to mark the remote past ('I been knew that') "
-        "— an AAVE tense marker with no direct equivalent in standard English. "
-        "It means the action started long ago and the speaker finds it obvious. "
-        "This is a precise temporal distinction that standard English lacks."
+        "Detected: remote past 'been' ('I been knew that'). An AAVE tense "
+        "marker with no direct standard English equivalent — marks that the "
+        "action started long ago and the speaker finds it obvious. A precise "
+        "temporal distinction standard English lacks."
     ),
     "existential_its": (
-        "This student uses 'it's a lot of' where standard English would use "
-        "'there are many.' This is an AAVE existential construction — a "
-        "grammatical pattern, not a confusion between 'it's' and 'there are.'"
+        "Detected: existential 'it's' ('it's a lot of' for 'there are many'). "
+        "An AAVE existential construction — a grammatical pattern, not a "
+        "confusion between 'it's' and 'there are.'"
     ),
     "habitual_be": (
-        "This student uses uninflected 'be' to mark habitual or ongoing action "
-        "('she be working') — an AAVE aspect marker meaning something happens "
-        "regularly, not just right now. Standard English has no single-word "
-        "equivalent for this distinction."
+        "Detected: uninflected 'be' marking habitual action ('she be working'). "
+        "An AAVE aspect marker meaning something happens regularly, not just "
+        "right now. Standard English has no single-word equivalent for this "
+        "distinction."
     ),
     "was_translated": (
-        "This submission was translated from another language. The student is "
-        "a multilingual writer engaging with course material across languages. "
-        "Sentiment scores on translated text are unreliable — the translation "
-        "process changes affect markers."
+        "This submission was translated from another language. Sentiment scores "
+        "on translated text are unreliable — translation changes affect markers. "
+        "The student is engaging with course material across languages."
     ),
     "tense_mixing": (
-        "This student mixes tenses in a way that suggests L1 (first language) "
-        "transfer — their home language may handle tense differently than "
-        "English. This is a sign of multilingual competence: the student is "
-        "navigating between two grammatical systems."
+        "Detected: tense patterns suggesting L1 transfer — the student's home "
+        "language may handle tense differently than English. Transfer patterns "
+        "are evidence of active navigation between two grammatical systems."
     ),
     "article_error": (
-        "This student's article usage ('the homework,' 'a research') reflects "
-        "transfer from a home language that handles articles differently — or "
-        "has no articles at all (Mandarin, Russian, Korean, Arabic). This is "
-        "multilingual writing, not carelessness."
+        "Detected: article usage reflecting L1 transfer ('the homework,' "
+        "'a research'). Many languages handle articles differently or have "
+        "none at all (Mandarin, Russian, Korean, Arabic)."
     ),
     "preposition_transfer": (
-        "This student's preposition choices ('depend of,' 'interested for') "
-        "reflect direct translation from their home language's preposition "
-        "system. Each language maps spatial and abstract relationships "
-        "differently — transfer patterns are evidence of active bilingual "
-        "processing."
+        "Detected: preposition patterns reflecting L1 transfer ('depend of,' "
+        "'interested for'). Each language maps spatial and abstract "
+        "relationships differently — transfer patterns are evidence of active "
+        "bilingual processing."
     ),
     "code_mixing": (
-        "This student mixes languages within their submission. Code-mixing is "
-        "a sophisticated communicative strategy — bilingual speakers do it to "
-        "access precise concepts, maintain cultural identity, or express ideas "
-        "that work better in one language than another."
+        "Detected: language mixing within the submission. Code-mixing is a "
+        "communicative strategy — bilingual speakers use it to access precise "
+        "concepts, maintain cultural identity, or express ideas that work "
+        "better in one language."
     ),
     "code_mixing_langdetect": (
-        "Multiple languages detected across sentences in this submission. "
-        "Code-mixing between languages is a sign of multilingual fluency, "
-        "not confusion."
+        "Detected: multiple languages across sentences. Code-mixing between "
+        "languages is associated with multilingual fluency."
     ),
     "communal_voice": (
-        "This student uses 'we/our/us' more than 'I/my/me' — engaging through "
-        "a communal rather than individual voice. Many cultural traditions "
-        "center collective experience over individual opinion. This is a "
-        "different mode of academic engagement, not a lack of personal voice."
+        "Detected: communal pronouns ('we/our/us') used more than individual "
+        "pronouns ('I/my/me'). Many cultural and intellectual traditions "
+        "center collective experience. This is a mode of academic engagement, "
+        "not a lack of individual voice."
     ),
     "narrative_structure": (
-        "This student engages through storytelling, dialogue, or sequential "
+        "Detected: engagement through storytelling, dialogue, or sequential "
         "narration rather than thesis-evidence-conclusion structure. Narrative "
-        "is a knowledge-making tradition in its own right — in many communities, "
-        "stories ARE how analysis happens."
+        "is a knowledge-making tradition in its own right."
     ),
     "flat_affect_engaged": (
-        "This student's writing has a neutral emotional tone but shows "
-        "substantive engagement with course concepts. Some students engage "
-        "deeply through understated expression — a flat tone does not mean "
-        "flat thinking."
+        "Detected: neutral emotional tone with substantive concept engagement. "
+        "Some writers engage deeply through understated expression — flat tone "
+        "does not indicate flat thinking."
     ),
     "hedging_density": (
-        "This student uses frequent hedging language ('maybe,' 'I think,' "
-        "'it seems'). This may reflect cultural communication norms, "
-        "second-language caution, or simply a careful thinking style. High "
-        "hedging is not low confidence — it can signal intellectual humility."
+        "Detected: frequent hedging language ('maybe,' 'I think,' 'it seems'). "
+        "May reflect cultural communication norms, second-language caution, "
+        "or careful thinking style. High hedging can signal intellectual "
+        "humility rather than low confidence."
     ),
     "complex_emotional_engagement": (
-        "This student shows co-occurring emotions (e.g., grief AND admiration, "
-        "anger AND caring). This complexity suggests deep engagement with "
-        "difficult course material — they are holding multiple feelings at once "
-        "rather than reducing the material to a simple reaction."
+        "Detected: co-occurring emotions (e.g., grief AND admiration, anger "
+        "AND caring). Emotional complexity in response to difficult course "
+        "material suggests the student is holding multiple reactions at once "
+        "rather than simplifying."
     ),
     "formulaic_structure": (
-        "This student uses a taught essay format ('In this essay I will...' "
-        "/ 'In conclusion...'). This structure was likely explicitly taught — "
-        "the student is following learned conventions, which is different from "
+        "Detected: taught essay format ('In this essay I will...' / 'In "
+        "conclusion...'). This structure was likely explicitly taught — the "
+        "student is following learned conventions, which differs from "
         "AI-generated text that may use similar patterns."
     ),
 }
