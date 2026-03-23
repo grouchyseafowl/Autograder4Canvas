@@ -832,6 +832,25 @@ class DishonestyAnalyzer:
                 # Don't let ESL detection failure break analysis
                 print(f"  ⚠ ESL detection skipped: {e}")
 
+        # Linguistic feature detection (subsumes ESL, adds AAVE/affect/convention)
+        # Runs alongside ContextAnalyzer — the new detector covers everything the
+        # old one did plus additional features.  AIC weight adjustments are applied
+        # multiplicatively to self._marker_weights so both systems stack.
+        try:
+            from modules.linguistic_features import detect_features
+            _repertoire = detect_features(text, word_count, was_translated=False)
+            if _repertoire.aic_adjustments:
+                for _lf_marker, _lf_mult in _repertoire.aic_adjustments.items():
+                    if _lf_marker in self._marker_weights:
+                        self._marker_weights[_lf_marker] *= _lf_mult
+                        esl_notes.append(
+                            f"linguistic_features: {_lf_marker} *= {_lf_mult:.2f}"
+                        )
+        except ImportError:
+            pass  # graceful fallback — module not yet available
+        except Exception as e:
+            print(f"  ⚠ Linguistic feature detection skipped: {e}")
+
         # PHASE 6: Process optional student-provided context
         student_context_applied = False
         student_context_adjustments = []

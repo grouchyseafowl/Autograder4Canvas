@@ -279,7 +279,7 @@ def _synthesize_medium(
 def _synthesize_deep(
     theme_set, outlier_report, quick_analysis, coding_records,
     assignment_name, course_name, total, context_text, interests_text,
-    backend, profile_fragment="",
+    backend, profile_fragment="", linguistic_diversity="",
 ) -> SynthesisReport:
     # Full records for deep tier
     records_data = [r.model_dump() for r in coding_records]
@@ -301,6 +301,7 @@ def _synthesize_deep(
         )[:3000],
         teacher_interests=interests_text,
         profile_fragment=profile_fragment,
+        linguistic_diversity=linguistic_diversity,
         _SYNTHESIS_SECTIONS="",
     )
     return _run_synthesis(prompt, backend)

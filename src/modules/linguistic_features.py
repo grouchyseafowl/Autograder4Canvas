@@ -152,6 +152,81 @@ _EXISTENTIAL_ITS = re.compile(r"\bit'?s\s+a\s+lot\s+of\b", re.IGNORECASE)
 _AAVE_AIC_ADJUSTMENTS = {"grammatical_perfection": 0.5}
 _AAVE_ASSET = "AAVE linguistic features — authentic voice"
 
+# --- spaCy POS cascade helpers (optional, for better zero copula detection) ---
+
+_SPACY_CHECKED = False
+_SPACY_OK = False
+_SPACY_NLP = None  # cached spaCy model
+
+
+def _spacy_available() -> bool:
+    """Check whether spaCy + en_core_web_sm are importable. Caches result."""
+    global _SPACY_CHECKED, _SPACY_OK
+    if _SPACY_CHECKED:
+        return _SPACY_OK
+    _SPACY_CHECKED = True
+    try:
+        import spacy  # noqa: F811
+        spacy.load("en_core_web_sm", exclude=["parser", "lemmatizer"])
+        _SPACY_OK = True
+    except Exception:
+        _SPACY_OK = False
+    return _SPACY_OK
+
+
+def _get_spacy_nlp():
+    """Return a cached spaCy nlp model (parser+lemmatizer excluded for speed)."""
+    global _SPACY_NLP
+    if _SPACY_NLP is None:
+        import spacy
+        _SPACY_NLP = spacy.load("en_core_web_sm", exclude=["parser", "lemmatizer"])
+    return _SPACY_NLP
+
+
+def _spacy_zero_copula(text: str) -> List[LinguisticFeature]:
+    """Detect zero copula via spaCy POS tagging.
+
+    Looks for PRON token followed within a 3-token window by ADJ/NOUN
+    where no AUX or copula verb (be/is/are/was/were) intervenes.
+    """
+    try:
+        nlp = _get_spacy_nlp()
+        doc = nlp(text)
+    except Exception:
+        return []
+
+    _COPULA_LEMMAS = {"be", "is", "are", "was", "were"}
+    evidence: List[str] = []
+
+    tokens = list(doc)
+    for i, tok in enumerate(tokens):
+        if tok.pos_ != "PRON":
+            continue
+        # Look ahead up to 3 tokens
+        window_end = min(i + 4, len(tokens))
+        found_copula = False
+        for j in range(i + 1, window_end):
+            t = tokens[j]
+            if t.pos_ == "AUX" or (t.pos_ == "VERB" and t.text.lower() in _COPULA_LEMMAS):
+                found_copula = True
+                break
+            if t.pos_ in ("ADJ", "NOUN"):
+                if not found_copula:
+                    evidence.append(f"{tok.text} {t.text}")
+                break
+
+    if not evidence:
+        return []
+
+    return [LinguisticFeature(
+        name="zero_copula_pos",
+        category="syntactic_variation",
+        evidence=evidence[:3],
+        asset_label=_AAVE_ASSET,
+        sentiment_effect="caveat",
+        aic_weight_adjustments=_AAVE_AIC_ADJUSTMENTS,
+    )]
+
 
 def _detect_syntactic_variation(text: str) -> List[LinguisticFeature]:
     """Detect AAVE syntactic and lexical features."""
@@ -217,6 +292,15 @@ def _detect_syntactic_variation(text: str) -> List[LinguisticFeature]:
             aic_weight_adjustments=_AAVE_AIC_ADJUSTMENTS,
         ))
 
+    # --- spaCy POS cascade (optional, runs only when regex found ≥1 feature) ---
+    if features and _spacy_available():
+        pos_features = _spacy_zero_copula(text)
+        # Add any POS-detected features not already found by regex
+        existing_names = {f.name for f in features}
+        for pf in pos_features:
+            if pf.name not in existing_names:
+                features.append(pf)
+
     return features
 
 
@@ -257,6 +341,48 @@ _MULTILINGUAL_AIC = {
     "ai_transitions": 0.6,
     "inflated_vocabulary": 0.6,
 }
+
+
+def _langdetect_code_mixing(text: str) -> List[LinguisticFeature]:
+    """Detect code-mixing via langdetect (optional — graceful fallback).
+
+    Splits text into sentences, runs langdetect on each, and emits a
+    code_mixing_langdetect feature if >=2 different languages are detected
+    across sentences (with at least one non-English).
+    """
+    try:
+        from langdetect import detect
+    except ImportError:
+        return []
+
+    # Simple sentence split (period/question/exclamation followed by space+capital)
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    sentences = [s.strip() for s in sentences if len(s.strip()) >= 10]
+
+    if len(sentences) < 2:
+        return []
+
+    detected_langs: set = set()
+    for sent in sentences:
+        try:
+            lang = detect(sent)
+            detected_langs.add(lang)
+        except Exception:
+            continue
+
+    # Need >=2 different languages, at least one non-English
+    non_english = detected_langs - {"en"}
+    if len(detected_langs) >= 2 and non_english:
+        return [LinguisticFeature(
+            name="code_mixing_langdetect",
+            category="multilingual",
+            evidence=[f"languages detected: {', '.join(sorted(detected_langs))}"],
+            asset_label="Multilingual — code-mixing as communicative resource",
+            sentiment_effect="caveat",
+            aic_weight_adjustments={"personal_voice": 0.8},
+        )]
+
+    return []
 
 
 def _detect_multilingual(
@@ -310,6 +436,11 @@ def _detect_multilingual(
             sentiment_effect="caveat",
             aic_weight_adjustments={"personal_voice": 0.8},
         ))
+
+    # langdetect-based code-mixing (more accurate than regex)
+    if not any(f.name == "code_mixing" for f in features):
+        _lang_features = _langdetect_code_mixing(text)
+        features.extend(_lang_features)
 
     return features
 

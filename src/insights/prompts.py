@@ -706,6 +706,7 @@ QUICK ANALYSIS HIGHLIGHTS:
 {quick_analysis_summary}
 {teacher_interests}
 {profile_fragment}
+{linguistic_diversity}
 {_SYNTHESIS_SECTIONS}
 
 Write clearly and concisely. Use student names. Include verbatim quotes. \
@@ -736,6 +737,7 @@ QUICK ANALYSIS:
 {quick_analysis_summary}
 {teacher_interests}
 {profile_fragment}
+{linguistic_diversity}
 {_SYNTHESIS_SECTIONS}
 
 Write for a tired teacher who needs key info fast but also wants genuine \
@@ -777,6 +779,7 @@ QUICK ANALYSIS:
 {quick_analysis_json}
 {teacher_interests}
 {profile_fragment}
+{linguistic_diversity}
 {_SYNTHESIS_SECTIONS}
 
 Write for a teacher who cares deeply about their students and wants to \

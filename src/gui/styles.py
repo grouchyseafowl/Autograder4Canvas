@@ -98,6 +98,11 @@ WARN_PINK     = "#C4708A"   # soft rose — warning toast text
 TERM_GREEN    = "#72B85A"   # connected / ok
 BURN_RED      = "#C04020"   # error
 
+# Linguistic asset chip colors (green/teal — distinct from amber register and red concern)
+ASSET_CHIP_BG = "rgba(0, 180, 140, 0.15)"
+ASSET_CHIP_BORDER = "rgba(0, 180, 140, 0.4)"
+ASSET_CHIP_TEXT = "#00B48C"
+
 # Borders
 BORDER_DARK   = "#3A2808"   # subtle warm border
 BORDER_AMBER  = "#6A4A12"   # glowing amber border

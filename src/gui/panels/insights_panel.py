@@ -40,6 +40,7 @@ from gui.styles import (
     STATUS_WARN,
     BG_VOID, BG_CARD, BG_PANEL, BG_INSET,
     BORDER_DARK, BORDER_AMBER, PANE_BG_GRADIENT,
+    ASSET_CHIP_BG, ASSET_CHIP_BORDER, ASSET_CHIP_TEXT,
     make_run_button, make_secondary_button,
     make_section_label, make_h_rule, make_content_pane,
     GripSplitter,
@@ -2220,6 +2221,23 @@ class InsightsPanel(QWidget):
             reg_chip = PhosphorChip(register, active=True, accent="amber")
             chip_row.addWidget(reg_chip)
 
+        # Linguistic asset chips (green/teal — community cultural wealth framing)
+        _ling_assets = (
+            record.get("linguistic_assets", [])
+            if isinstance(record, dict)
+            else getattr(record, "linguistic_assets", [])
+        )
+        for _la in (_ling_assets or [])[:2]:  # max 2 chips per card
+            _la_text = _la if isinstance(_la, str) else str(_la)
+            _la_chip = QLabel(f" {_la_text} ")
+            _la_chip.setStyleSheet(
+                f"color: {ASSET_CHIP_TEXT}; background: {ASSET_CHIP_BG};"
+                f" border: 1px solid {ASSET_CHIP_BORDER}; border-radius: 8px;"
+                f" font-size: {px(10)}px; padding: 2px 8px;"
+            )
+            _la_chip.setToolTip("Linguistic asset (community cultural wealth)")
+            chip_row.addWidget(_la_chip)
+
         engagement_signals = record.get("engagement_signals") or {}
         engagement_depth = engagement_signals.get("engagement_depth", "")
         if engagement_depth and engagement_depth != "unavailable":
@@ -2972,6 +2990,7 @@ class InsightsPanel(QWidget):
             "focus_areas": "Your Focus Areas",
             "concerns": "What Your Students Need You to See",
             "divergent_approaches": "Divergent Approaches",
+            "linguistic_diversity": "Linguistic Diversity",
             "looking_ahead": "Looking Ahead",
             "students_to_check_in_with": "Students Carrying More Than Their Share",
         }
@@ -3249,6 +3268,59 @@ class InsightsPanel(QWidget):
 
             lo.addWidget(t_pane)
 
+        # ── Card 5: Linguistic Diversity (if present) ────────────────────
+        ling_diversity = data.get("linguistic_diversity") or {}
+        ld_summary = ling_diversity.get("summary", "")
+        ld_assets = ling_diversity.get("assets") or []
+        if ld_summary or ld_assets:
+            ld_pane = make_content_pane("synthLingDiversity")
+            # Override top border to teal
+            current_qss = ld_pane.styleSheet()
+            ld_pane.setStyleSheet(current_qss.replace(
+                f"border-top-color: {BORDER_AMBER}",
+                f"border-top-color: {ASSET_CHIP_TEXT}"
+            ))
+            ld_lo = QVBoxLayout(ld_pane)
+            ld_lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+            ld_lo.setSpacing(SPACING_XS)
+            ld_lo.addWidget(make_section_label("LINGUISTIC DIVERSITY"))
+
+            if ld_summary:
+                ld_lbl = QLabel(ld_summary)
+                ld_lbl.setWordWrap(True)
+                ld_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
+                    f" background: transparent; border: none;"
+                )
+                ld_lo.addWidget(ld_lbl)
+
+            if ld_assets:
+                asset_row = QHBoxLayout()
+                asset_row.setSpacing(4)
+                for asset_text in ld_assets[:6]:
+                    _a_chip = QLabel(f" {asset_text} ")
+                    _a_chip.setStyleSheet(
+                        f"color: {ASSET_CHIP_TEXT}; background: {ASSET_CHIP_BG};"
+                        f" border: 1px solid {ASSET_CHIP_BORDER};"
+                        f" border-radius: 8px;"
+                        f" font-size: {px(10)}px; padding: 2px 8px;"
+                    )
+                    asset_row.addWidget(_a_chip)
+                asset_row.addStretch()
+                ld_lo.addLayout(asset_row)
+
+            ld_framing = QLabel(
+                "Linguistic diversity is a classroom resource, not a deficit."
+            )
+            ld_framing.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+                f" font-style: italic;"
+                f" background: transparent; border: none;"
+            )
+            ld_lo.addWidget(ld_framing)
+
+            lo.addWidget(ld_pane)
+
         # ── Cloud narrative (optional) ─────────────────────────────────────
         cloud_narrative = data.get("cloud_narrative", "")
         if cloud_narrative:
@@ -3336,6 +3408,7 @@ class InsightsPanel(QWidget):
             "focus_areas": "Your Focus Areas",
             "concerns": "What Your Students Need You to See",
             "divergent_approaches": "Divergent Approaches",
+            "linguistic_diversity": "Linguistic Diversity",
             "looking_ahead": "Looking Ahead",
             "students_to_check_in_with": "Students Carrying More Than Their Share",
         }
