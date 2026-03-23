@@ -329,6 +329,11 @@ def run_pipeline(course_key: str, small_batch: int = 0,
                 backend=backend,
             )
             per_student_times.append(time.time() - st)
+            # Copy truncation flag from QuickAnalysis (engine.py does this;
+            # this script must mirror it).
+            if quick_sub and quick_sub.is_possibly_truncated:
+                record.is_possibly_truncated = True
+                record.truncation_note = quick_sub.truncation_note
             coding_records.append(record)
 
             if (i + 1) % 5 == 0 or i == total - 1:
@@ -634,9 +639,11 @@ def main():
     parser.add_argument("--small-batch", type=int, default=0,
                         help="Limit to N students (for quick testing)")
     parser.add_argument("--backend", default="ollama",
-                        choices=["ollama", "sonnet", "opus", "qwen3-cloud", "deepseek-cloud",
-                                 "openai-compat"],
-                        help="LLM backend: ollama (local 8B), sonnet, opus, "
+                        choices=["ollama", "mlx-llama", "sonnet", "opus", "qwen3-cloud",
+                                 "deepseek-cloud", "openai-compat"],
+                        help="LLM backend: ollama (llama3.1:8b via Ollama), "
+                             "mlx-llama (Meta-Llama-3.1-8B via MLX — faster, fairer vs Qwen MLX), "
+                             "sonnet, opus, "
                              "qwen3-cloud (480B via Ollama), deepseek-cloud (671B via Ollama), "
                              "openai-compat (any OpenAI-compatible API via env vars: "
                              "CLOUD_API_URL, CLOUD_API_KEY, CLOUD_MODEL)")
@@ -655,7 +662,20 @@ def main():
     tier_override = args.tier
     output_suffix = args.output_suffix
 
-    if args.backend == "sonnet":
+    if args.backend == "ollama":
+        backend_override = BackendConfig(
+            name="ollama",
+            model="llama3.1:8b",
+            base_url="http://localhost:11434",
+        )
+        output_suffix = output_suffix or "_llama8b"
+    elif args.backend == "mlx-llama":
+        backend_override = BackendConfig(
+            name="mlx",
+            model="mlx-community/Meta-Llama-3.1-8B-Instruct-4bit",
+        )
+        output_suffix = output_suffix or "_llama8b_mlx"
+    elif args.backend == "sonnet":
         backend_override = BackendConfig(
             name="cloud",
             model="claude-sonnet-4-20250514",

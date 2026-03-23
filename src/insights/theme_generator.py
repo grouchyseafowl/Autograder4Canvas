@@ -531,8 +531,31 @@ def _meta_synthesize(
         parsed = parse_json_response(raw)
 
         if "_parse_error" in parsed:
-            log.warning("Meta-synthesis parse failed — combining theme sets manually")
-            return _manual_merge(theme_sets)
+            # Retry once with stripped-down input (names + frequencies only,
+            # no quotes) to reduce token pressure that causes truncated JSON.
+            log.warning("Meta-synthesis parse failed — retrying with compact input")
+            compact_sets = []
+            for i, ts in enumerate(theme_sets):
+                compact_sets.append({
+                    "group": i + 1,
+                    "themes": [
+                        {"name": t.name, "frequency": t.frequency,
+                         "student_ids": t.student_ids}
+                        for t in ts.themes
+                    ],
+                })
+            retry_prompt = THEME_META_SYNTHESIS_PROMPT.format(
+                n_groups=len(theme_sets),
+                assignment_name=assignment_name,
+                teacher_interests=interests_text,
+                theme_sets_json=json.dumps(compact_sets, indent=1),
+                profile_fragment=profile_fragment,
+            )
+            raw2 = send_text(backend, retry_prompt, SYSTEM_PROMPT, max_tokens=_max_tok)
+            parsed = parse_json_response(raw2)
+            if "_parse_error" in parsed:
+                log.warning("Meta-synthesis retry also failed — combining theme sets manually")
+                return _manual_merge(theme_sets)
 
         return _parse_theme_set(parsed)
 

@@ -364,13 +364,20 @@ subject is demonstrating engagement, not crisis.
    important. Name who and preserve both sides.
 5. Identify outliers — submissions that don't fit the themes are often the
    most important findings
-6. Flag concerns ONLY for: (a) language that essentializes or stereotypes
-   groups, (b) colorblind/post-racial claims that dismiss structural
-   inequality, (c) tone policing that silences others' emotional responses,
-   (d) explicit signs of acute personal distress unrelated to the material
-   (e.g., "I can't stop crying", safety concerns). Do NOT flag: anger about
-   injustice, students describing their own marginalization, non-standard
-   writing styles, or short/incomplete submissions.
+6. Flag concerns ONLY for:
+   (a) Essentializing language — attributing fixed traits to entire racial/ethnic
+       groups, including positive stereotypes. Watch for patterns like "all X
+       people are...", "they always...", "[group] just naturally..." — celebratory
+       stereotypes ("they have this amazing resilience") are as much a concern as
+       negative ones, because they flatten individuals into group traits.
+   (b) Colorblind/post-racial claims that dismiss structural inequality
+       ("I don't see race", "treat everyone the same", "we don't need labels").
+   (c) Tone policing — dismissing others' emotional responses as unproductive
+       or calling for "civility" in ways that silence urgency about injustice.
+   (d) Explicit signs of acute personal distress unrelated to the material
+       (e.g., "I can't stop crying", safety concerns).
+   Do NOT flag: anger about injustice, students describing their own
+   marginalization, non-standard writing styles, or short/incomplete submissions.
 
 **OUTPUT FORMAT:**
 Produce a report with these sections:

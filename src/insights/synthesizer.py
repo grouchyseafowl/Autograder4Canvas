@@ -473,6 +473,29 @@ def guided_synthesis(
         if r.engagement_signals
         and r.engagement_signals.get("engagement_depth") in ("limited", "minimal")
     ]
+
+    # Fallback classification when AIC is absent (engagement_signals all null).
+    # Uses structural proxies: theme count, notable quote count, word count.
+    # Not as accurate as AIC, but sufficient to gate highlight/tension calls.
+    _aic_absent = not any(r.engagement_signals for r in coding_records)
+    if _aic_absent and coding_records:
+        word_counts = [r.word_count for r in coding_records if r.word_count]
+        wc_median = sorted(word_counts)[len(word_counts) // 2] if word_counts else 100
+        for r in coding_records:
+            tags = r.theme_tags or []
+            quotes = r.notable_quotes or []
+            wc = r.word_count or 0
+            # Strong proxy: substantive tags + at least one notable quote + above-median length
+            if len(tags) >= 2 and len(quotes) >= 1 and wc >= wc_median * 1.1:
+                strong.append(r)
+            # Limited proxy: very sparse output + short
+            elif len(tags) <= 1 and wc <= wc_median * 0.6:
+                limited.append(r)
+        if strong or limited:
+            log.info(
+                "Synthesis fallback classifier (AIC absent): strong=%d limited=%d",
+                len(strong), len(limited),
+            )
     # Middle: everyone not in flagged, strong, or limited
     flagged_ids = {r.student_id for r in flagged}
     strong_ids = {r.student_id for r in strong}

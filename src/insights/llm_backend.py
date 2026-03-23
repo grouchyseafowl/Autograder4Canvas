@@ -258,7 +258,7 @@ def auto_detect_backend(
             return BackendConfig(
                 name="mlx",
                 model=s.get("insights_mlx_model",
-                            "mlx-community/Qwen2.5-7B-Instruct-4bit"),
+                            "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit"),
             )
         return None
 

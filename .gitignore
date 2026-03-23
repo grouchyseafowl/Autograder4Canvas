@@ -140,3 +140,7 @@ COMMAND_REFERENCE.txt
 
 # Documentation (generated)
 *.pdf
+
+# Research notes (not for distribution)
+docs/research/
+scripts/prototype_synthesis_first.py
