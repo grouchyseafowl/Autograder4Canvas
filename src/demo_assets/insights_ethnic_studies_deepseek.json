@@ -78,7 +78,8 @@
         "lens_observations": null,
         "word_count": 205,
         "cluster_id": 1,
-        "vader_sentiment": 0.8018,
+        "emotional_register_score": 0.8018,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "personal_reflection": 2,
           "evidence_use": 2
@@ -139,7 +140,8 @@
         "lens_observations": null,
         "word_count": 89,
         "cluster_id": 1,
-        "vader_sentiment": 0.2732,
+        "emotional_register_score": 0.2732,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "conceptual_connection": 1,
           "evidence_use": 1
@@ -200,7 +202,8 @@
         "lens_observations": null,
         "word_count": 117,
         "cluster_id": 2,
-        "vader_sentiment": 0.6249,
+        "emotional_register_score": 0.6249,
+        "sentiment_reliability": "high",
         "keyword_hits": {},
         "preprocessing": null,
         "draft_feedback": null
@@ -258,7 +261,8 @@
         "lens_observations": null,
         "word_count": 206,
         "cluster_id": 2,
-        "vader_sentiment": 0.3736,
+        "emotional_register_score": 0.3736,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "critical_analysis": 1,
           "evidence_use": 3
@@ -319,7 +323,8 @@
         "lens_observations": null,
         "word_count": 188,
         "cluster_id": 2,
-        "vader_sentiment": 0.9556,
+        "emotional_register_score": 0.9556,
+        "sentiment_reliability": "high",
         "keyword_hits": {},
         "preprocessing": null,
         "draft_feedback": null
@@ -392,7 +397,8 @@
         "lens_observations": null,
         "word_count": 166,
         "cluster_id": 1,
-        "vader_sentiment": 0.9937,
+        "emotional_register_score": 0.9937,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "essentializing": 1,
           "evidence_use": 2
@@ -465,7 +471,8 @@
         "lens_observations": null,
         "word_count": 175,
         "cluster_id": 1,
-        "vader_sentiment": 0.8942,
+        "emotional_register_score": 0.8942,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "critical_analysis": 1,
           "evidence_use": 1
@@ -529,7 +536,8 @@
         "lens_observations": null,
         "word_count": 164,
         "cluster_id": 2,
-        "vader_sentiment": 0.9039,
+        "emotional_register_score": 0.9039,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "critical_analysis": 1,
           "personal_reflection": 1,
@@ -597,7 +605,8 @@
         "lens_observations": null,
         "word_count": 183,
         "cluster_id": 1,
-        "vader_sentiment": -0.5071,
+        "emotional_register_score": -0.5071,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "personal_reflection": 1,
           "current_events": 1,
@@ -661,7 +670,8 @@
         "lens_observations": null,
         "word_count": 156,
         "cluster_id": 1,
-        "vader_sentiment": 0.8947,
+        "emotional_register_score": 0.8947,
+        "sentiment_reliability": "high",
         "keyword_hits": {},
         "preprocessing": null,
         "draft_feedback": null
@@ -712,7 +722,8 @@
         "lens_observations": null,
         "word_count": 172,
         "cluster_id": 0,
-        "vader_sentiment": -0.9659,
+        "emotional_register_score": -0.9659,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "current_events": 1
         },
@@ -772,7 +783,8 @@
         "lens_observations": null,
         "word_count": 201,
         "cluster_id": 4,
-        "vader_sentiment": -0.2579,
+        "emotional_register_score": -0.2579,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "critical_analysis": 1
         },
@@ -825,7 +837,8 @@
         "lens_observations": null,
         "word_count": 212,
         "cluster_id": 0,
-        "vader_sentiment": -0.986,
+        "emotional_register_score": -0.986,
+        "sentiment_reliability": "high",
         "keyword_hits": {},
         "preprocessing": null,
         "draft_feedback": null
@@ -876,7 +889,8 @@
         "lens_observations": null,
         "word_count": 228,
         "cluster_id": 3,
-        "vader_sentiment": -0.9819,
+        "emotional_register_score": -0.9819,
+        "sentiment_reliability": "high",
         "keyword_hits": {},
         "preprocessing": null,
         "draft_feedback": null
@@ -927,7 +941,8 @@
         "lens_observations": null,
         "word_count": 240,
         "cluster_id": 3,
-        "vader_sentiment": 0.8121,
+        "emotional_register_score": 0.8121,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "current_events": 2
         },
@@ -980,7 +995,8 @@
         "lens_observations": null,
         "word_count": 251,
         "cluster_id": 3,
-        "vader_sentiment": -0.9916,
+        "emotional_register_score": -0.9916,
+        "sentiment_reliability": "high",
         "keyword_hits": {},
         "preprocessing": null,
         "draft_feedback": null
@@ -1038,7 +1054,8 @@
         "lens_observations": null,
         "word_count": 266,
         "cluster_id": 0,
-        "vader_sentiment": -0.8475,
+        "emotional_register_score": -0.8475,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "conceptual_connection": 1
         },
@@ -1093,7 +1110,8 @@
         "lens_observations": null,
         "word_count": 274,
         "cluster_id": 3,
-        "vader_sentiment": -0.9549,
+        "emotional_register_score": -0.9549,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "current_events": 2,
           "evidence_use": 1
@@ -1154,7 +1172,8 @@
         "lens_observations": null,
         "word_count": 281,
         "cluster_id": 0,
-        "vader_sentiment": -0.9821,
+        "emotional_register_score": -0.9821,
+        "sentiment_reliability": "high",
         "keyword_hits": {},
         "preprocessing": null,
         "draft_feedback": null
@@ -1205,7 +1224,8 @@
         "lens_observations": null,
         "word_count": 289,
         "cluster_id": 3,
-        "vader_sentiment": -0.9652,
+        "emotional_register_score": -0.9652,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "conceptual_connection": 2
         },
@@ -1260,7 +1280,8 @@
         "lens_observations": null,
         "word_count": 293,
         "cluster_id": 3,
-        "vader_sentiment": 0.9184,
+        "emotional_register_score": 0.9184,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "current_events": 1
         },
@@ -1322,7 +1343,8 @@
         "lens_observations": null,
         "word_count": 297,
         "cluster_id": 3,
-        "vader_sentiment": 0.9204,
+        "emotional_register_score": 0.9204,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "evidence_use": 1
         },
@@ -1378,7 +1400,8 @@
         "lens_observations": null,
         "word_count": 310,
         "cluster_id": 0,
-        "vader_sentiment": -0.9876,
+        "emotional_register_score": -0.9876,
+        "sentiment_reliability": "high",
         "keyword_hits": {},
         "preprocessing": null,
         "draft_feedback": null
@@ -1432,7 +1455,8 @@
         "lens_observations": null,
         "word_count": 318,
         "cluster_id": 0,
-        "vader_sentiment": -0.8907,
+        "emotional_register_score": -0.8907,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "current_events": 1
         },
@@ -1489,7 +1513,8 @@
         "lens_observations": null,
         "word_count": 330,
         "cluster_id": 3,
-        "vader_sentiment": -0.9939,
+        "emotional_register_score": -0.9939,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "conceptual_connection": 1,
           "current_events": 2
@@ -1543,7 +1568,8 @@
         "lens_observations": null,
         "word_count": 120,
         "cluster_id": 3,
-        "vader_sentiment": -0.8442,
+        "emotional_register_score": -0.8442,
+        "sentiment_reliability": "high",
         "keyword_hits": {},
         "preprocessing": null,
         "draft_feedback": null
@@ -1594,7 +1620,8 @@
         "lens_observations": null,
         "word_count": 120,
         "cluster_id": 0,
-        "vader_sentiment": 0.4009,
+        "emotional_register_score": 0.4009,
+        "sentiment_reliability": "high",
         "keyword_hits": {},
         "preprocessing": null,
         "draft_feedback": null
@@ -1652,7 +1679,8 @@
         "lens_observations": null,
         "word_count": 120,
         "cluster_id": 3,
-        "vader_sentiment": -0.9726,
+        "emotional_register_score": -0.9726,
+        "sentiment_reliability": "high",
         "keyword_hits": {},
         "preprocessing": null,
         "draft_feedback": null
@@ -1710,7 +1738,8 @@
         "lens_observations": null,
         "word_count": 120,
         "cluster_id": 4,
-        "vader_sentiment": 0.2023,
+        "emotional_register_score": 0.2023,
+        "sentiment_reliability": "high",
         "keyword_hits": {
           "critical_analysis": 1
         },

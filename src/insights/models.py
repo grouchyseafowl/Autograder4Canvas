@@ -9,7 +9,7 @@ against map-reduce information loss.
 import logging
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 _log = logging.getLogger(__name__)
 
@@ -101,6 +101,14 @@ class SubmissionCodingRecord(BaseModel):
     sentiment_reliability: str = "high"  # "high" | "low" | "suppressed"
     keyword_hits: Dict[str, int] = {}
 
+    @model_validator(mode="before")
+    @classmethod
+    def _migrate_vader_sentiment(cls, data: Any) -> Any:
+        """Backward compat: old DB records use 'vader_sentiment' key."""
+        if isinstance(data, dict) and "vader_sentiment" in data:
+            data.setdefault("emotional_register_score", data.pop("vader_sentiment"))
+        return data
+
     # Preprocessing metadata
     preprocessing: Optional[PreprocessingMetadata] = None
 
@@ -109,6 +117,10 @@ class SubmissionCodingRecord(BaseModel):
 
     # AIC engagement dimensions — snapshot, not character assessment. Some engagement happens outside of text.
     engagement_signals: Optional[Dict[str, Any]] = None
+
+    # Count of non-null engagement signal dimensions — used to surface zero-signal students.
+    # Computed after engagement_signals is populated (in engine.py).
+    engagement_signal_count: int = 0
 
     # Truncation detection (copied from PerSubmissionSummary for UI access)
     is_possibly_truncated: bool = False

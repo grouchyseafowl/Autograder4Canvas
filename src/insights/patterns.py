@@ -288,10 +288,10 @@ def match_all_patterns(text: str) -> Dict[str, int]:
 # ---------------------------------------------------------------------------
 # Sentiment reliability / suppression layer
 # ---------------------------------------------------------------------------
-# AAVE (African American Vernacular English) lexical markers.
-# Presence suggests VADER scores are unreliable — VADER was trained
-# predominantly on standard written English and systematically misreads
-# AAVE sentiment (Blodgett & O'Connor, 2017; Blodgett et al., EMNLP 2017).
+# AAVE (African American Vernacular English) lexical + syntactic markers.
+# Presence suggests sentiment model scores are unreliable — both VADER and
+# GoEmotions were trained predominantly on standard written English and
+# systematically misread AAVE affect (Blodgett et al., EMNLP 2017).
 # These markers are linguistic features of a dialect, NOT errors.
 _AAVE_MARKERS: re.Pattern = re.compile(
     r"\b("
@@ -302,7 +302,7 @@ _AAVE_MARKERS: re.Pattern = re.compile(
     r"fasho|"                                           # for sure
     r"bruh|"                                            # address term
     r"y'?all|"                                          # 2nd-person plural — very reliable AAVE/Southern marker
-    r"they\s+was|we\s+was|you\s+was|"                  # copula variation
+    r"they\s+was|we\s+was|you\s+was|"                  # leveled 'was' agreement
     r"(?:he|she|they|we|y'?all)\s+be\b|"               # habitual be — syntactic AAVE marker
     r"he\s+don'?t|she\s+don'?t|they\s+don'?t|"        # 3rd-person singular don't
     r"done\s+told|done\s+said|done\s+went|"            # AAVE completive done (original)
