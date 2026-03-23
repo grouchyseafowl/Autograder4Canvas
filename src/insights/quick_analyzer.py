@@ -28,6 +28,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from insights.models import (
     AssignmentConnectionScore,
+    AssignmentFingerprint,
     ConcernSignal,
     ContradictionSignal,
     EmbeddingCluster,
@@ -36,6 +37,7 @@ from insights.models import (
     PairwiseSimilarityStats,
     PerSubmissionSummary,
     QuickAnalysisResult,
+    ReferenceMatchScore,
     SharedReference,
     SubmissionStats,
     TermFrequency,
@@ -129,6 +131,306 @@ def _tokenize(text: str) -> List[str]:
     text = _strip_html(text)
     words = re.findall(r"[a-zA-Z]{3,}", text.lower())
     return [w for w in words if w not in _STOPWORDS]
+
+
+# ---------------------------------------------------------------------------
+# Assignment fingerprint extraction (Mechanism 2 — Assignment Context Awareness)
+# ---------------------------------------------------------------------------
+
+# Engagement type detection keywords.  Order matters — first match wins,
+# except when multiple categories match → "mixed".
+_ENGAGEMENT_PATTERNS: Dict[str, List[re.Pattern]] = {
+    "personal_reflection": [
+        re.compile(r"\b(?:share\s+your\s+personal|reflect\s+on|your\s+experience|your\s+own|personal\s+narrative|how\s+(?:has|have|do|does|did)\s+(?:this|these|the)\b)", re.I),
+        re.compile(r"\b(?:what\s+does\s+this\s+mean\s+to\s+you|connect\s+to\s+your\s+(?:life|experience)|in\s+your\s+(?:life|experience))\b", re.I),
+    ],
+    "analysis": [
+        re.compile(r"\b(?:analyze|evaluate|argue|critique|critical(?:ly)?|assess|examine|interpret|compare\s+and\s+contrast)\b", re.I),
+    ],
+    "summary": [
+        re.compile(r"\b(?:summarize|describe|explain|outline|identify\s+the\s+(?:main|key))\b", re.I),
+    ],
+    "discussion": [
+        re.compile(r"\b(?:discuss|respond\s+to|what\s+do\s+you\s+think|do\s+you\s+agree|your\s+(?:thoughts|opinion|response)|react\s+to)\b", re.I),
+    ],
+}
+
+
+def extract_assignment_fingerprint(
+    assignment_description: str,
+) -> Optional[AssignmentFingerprint]:
+    """Extract named references from an assignment description using NLP.
+
+    Pure NLP — no LLM required.  Uses spaCy NER for author names and work
+    titles, regex for quoted/italicized titles, and TF-IDF for key concepts.
+
+    Returns None if spaCy is unavailable or the description is empty.
+    """
+    desc = _strip_html(assignment_description).strip()
+    if not desc or len(desc) < 20:
+        return None
+
+    # ----- Named entity extraction (spaCy) -----
+    try:
+        import spacy
+        nlp = spacy.load("en_core_web_sm", disable=["parser", "lemmatizer"])
+    except (ImportError, OSError):
+        log.info("spaCy/en_core_web_sm not available — skipping assignment fingerprint")
+        return None
+
+    doc = nlp(desc)
+
+    # PERSON entities → author names
+    raw_persons = []
+    for ent in doc.ents:
+        if ent.label_ == "PERSON":
+            name = ent.text.strip()
+            if len(name) >= 2:
+                raw_persons.append(name)
+
+    # WORK_OF_ART entities → titles
+    raw_works = []
+    for ent in doc.ents:
+        if ent.label_ == "WORK_OF_ART":
+            title = ent.text.strip()
+            if len(title) >= 3:
+                raw_works.append(title)
+
+    # All entities for raw_named_entities (deduplicated)
+    raw_entities = list(dict.fromkeys(
+        ent.text.strip() for ent in doc.ents if len(ent.text.strip()) >= 2
+    ))
+
+    # ----- Regex for quoted / italicized titles -----
+    # Quoted text: "Title Here" or 'Title Here'
+    for m in re.finditer(r'["\u201c]([^"\u201d]{3,80})["\u201d]', desc):
+        candidate = m.group(1).strip()
+        # Skip if it looks like an instruction phrase, not a title
+        if not re.match(r'^(?:for example|such as|e\.g\.|i\.e\.)', candidate, re.I):
+            if candidate not in raw_works:
+                raw_works.append(candidate)
+
+    # Italic markers in HTML-stripped text (from <em> or <i> tags — we get
+    # the text but lose the tags).  Look for *text* or _text_ in markdown-style.
+    for m in re.finditer(r'[*_]([^*_]{3,80})[*_]', desc):
+        candidate = m.group(1).strip()
+        if candidate not in raw_works:
+            raw_works.append(candidate)
+
+    # Deduplicate author names (keep longest form, case-insensitive)
+    author_names = _deduplicate_names(raw_persons)
+
+    # Deduplicate work titles
+    work_titles = list(dict.fromkeys(raw_works))
+
+    # ----- Key concept extraction (TF-IDF on the description) -----
+    key_concepts = _extract_key_concepts(desc)
+
+    # ----- Engagement type detection -----
+    engagement_type = _detect_engagement_type(desc)
+
+    return AssignmentFingerprint(
+        author_names=author_names,
+        work_titles=work_titles,
+        key_concepts=key_concepts,
+        engagement_type=engagement_type,
+        raw_named_entities=raw_entities,
+    )
+
+
+def _deduplicate_names(names: List[str]) -> List[str]:
+    """Deduplicate person names: keep the longest form per last-name.
+
+    E.g., ["Kimberle Crenshaw", "Crenshaw"] → ["Kimberle Crenshaw"]
+    """
+    if not names:
+        return []
+    # Sort longest first so we keep the fullest form
+    sorted_names = sorted(set(names), key=len, reverse=True)
+    result = []
+    seen_lower = set()
+    for name in sorted_names:
+        name_lower = name.lower()
+        # Check if this name is a substring of an already-kept name
+        if any(name_lower in kept for kept in seen_lower):
+            continue
+        result.append(name)
+        seen_lower.add(name_lower)
+    return result
+
+
+def _extract_key_concepts(description: str, top_n: int = 10) -> List[str]:
+    """Extract distinctive terms from the assignment description using TF-IDF.
+
+    Since we only have one document (the assignment description), we use
+    single-document TF-IDF against a pseudo-corpus of individual sentences
+    to surface terms that are distinctive within the description itself.
+    Falls back to simple frequency-based extraction if sklearn is unavailable.
+    """
+    # Tokenize into content words
+    tokens = _tokenize(description)
+    if not tokens:
+        return []
+
+    # Split description into sentences as pseudo-documents for TF-IDF
+    sentences = [s.strip() for s in re.split(r'[.!?]+', description) if len(s.strip()) > 10]
+
+    if len(sentences) >= 2:
+        try:
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            vec = TfidfVectorizer(
+                stop_words="english",
+                max_features=200,
+                min_df=1,
+                token_pattern=r"[a-zA-Z]{3,}",
+            )
+            tfidf = vec.fit_transform(sentences)
+            feature_names = vec.get_feature_names_out()
+            # Average TF-IDF across sentences
+            avg_scores = tfidf.mean(axis=0).A1
+            top_indices = avg_scores.argsort()[-top_n:][::-1]
+            concepts = [
+                feature_names[i] for i in top_indices
+                if avg_scores[i] > 0 and feature_names[i] not in _STOPWORDS
+            ]
+            return concepts[:top_n]
+        except (ImportError, ValueError):
+            pass
+
+    # Fallback: frequency-based (most common non-stopword tokens)
+    counter = Counter(tokens)
+    return [term for term, _ in counter.most_common(top_n)]
+
+
+def _detect_engagement_type(description: str) -> str:
+    """Detect what type of engagement the assignment asks for.
+
+    Returns one of: personal_reflection, analysis, summary, discussion, mixed.
+    Forgiving — defaults to "mixed" when unclear.
+    """
+    matched_types = []
+    for eng_type, patterns in _ENGAGEMENT_PATTERNS.items():
+        for pat in patterns:
+            if pat.search(description):
+                matched_types.append(eng_type)
+                break  # one match per type is enough
+
+    if len(matched_types) == 0:
+        return "mixed"
+    elif len(matched_types) == 1:
+        return matched_types[0]
+    else:
+        return "mixed"
+
+
+def match_submission_references(
+    submission_text: str,
+    fingerprint: AssignmentFingerprint,
+) -> ReferenceMatchScore:
+    """Match a single submission against the assignment fingerprint.
+
+    Checks which author names, work titles, and key concepts from the
+    assignment description appear in the student's submission text.
+
+    Case-insensitive matching.  For author names, matches on last name
+    alone (e.g., "Crenshaw" matches "Kimberle Crenshaw" in the fingerprint).
+    """
+    text_lower = submission_text.lower()
+
+    # Match author names (case-insensitive, last-name match)
+    authors_found = []
+    for author in fingerprint.author_names:
+        # Try full name first, then last name
+        if author.lower() in text_lower:
+            authors_found.append(author)
+        else:
+            # Try last name only (last word of the name)
+            parts = author.split()
+            if len(parts) > 1 and parts[-1].lower() in text_lower:
+                # Verify it's a word boundary match, not a substring
+                last = parts[-1].lower()
+                if re.search(r'\b' + re.escape(last) + r'\b', text_lower):
+                    authors_found.append(author)
+
+    # Match work titles (case-insensitive, allow partial for long titles)
+    titles_found = []
+    for title in fingerprint.work_titles:
+        title_lower = title.lower()
+        if title_lower in text_lower:
+            titles_found.append(title)
+        elif len(title.split()) > 3:
+            # For long titles, check if significant portion appears
+            title_words = [w for w in title_lower.split() if w not in _STOPWORDS and len(w) > 2]
+            if title_words:
+                found_count = sum(1 for w in title_words if re.search(r'\b' + re.escape(w) + r'\b', text_lower))
+                if found_count / len(title_words) >= 0.6:
+                    titles_found.append(title)
+
+    # Match key concepts (word-boundary match)
+    concepts_found = []
+    for concept in fingerprint.key_concepts:
+        concept_lower = concept.lower()
+        if re.search(r'\b' + re.escape(concept_lower) + r'\b', text_lower):
+            concepts_found.append(concept)
+
+    # Compute overall match ratio
+    total_refs = len(fingerprint.author_names) + len(fingerprint.work_titles) + len(fingerprint.key_concepts)
+    found_count = len(authors_found) + len(titles_found) + len(concepts_found)
+    match_ratio = found_count / max(total_refs, 1)
+
+    # Build observation
+    observation = _build_reference_observation(
+        authors_found, len(fingerprint.author_names),
+        titles_found, len(fingerprint.work_titles),
+        concepts_found, len(fingerprint.key_concepts),
+    )
+
+    return ReferenceMatchScore(
+        authors_found=authors_found,
+        authors_total=len(fingerprint.author_names),
+        titles_found=titles_found,
+        titles_total=len(fingerprint.work_titles),
+        concepts_found=concepts_found,
+        concepts_total=len(fingerprint.key_concepts),
+        match_ratio=round(match_ratio, 4),
+        observation=observation,
+    )
+
+
+def _build_reference_observation(
+    authors_found: List[str], authors_total: int,
+    titles_found: List[str], titles_total: int,
+    concepts_found: List[str], concepts_total: int,
+) -> str:
+    """Build a human-readable observation about reference matching."""
+    parts = []
+    total_refs = authors_total + titles_total + concepts_total
+    if total_refs == 0:
+        return ""
+
+    found_total = len(authors_found) + len(titles_found) + len(concepts_found)
+
+    if authors_total > 0:
+        parts.append(f"{len(authors_found)}/{authors_total} named authors")
+    if titles_total > 0:
+        parts.append(f"{len(titles_found)}/{titles_total} work titles")
+    if concepts_total > 0:
+        parts.append(f"{len(concepts_found)}/{concepts_total} key concepts")
+
+    detail = ", ".join(parts)
+
+    if found_total == 0:
+        return (
+            f"No named references from the assignment detected ({detail}). "
+            f"The student may be engaging through personal experience, "
+            f"paraphrase, or non-academic vocabulary."
+        )
+    elif found_total < total_refs * 0.3:
+        return f"Few named references from the assignment ({detail})."
+    elif found_total >= total_refs * 0.7:
+        return f"Strong reference to assigned material ({detail})."
+    else:
+        return f"Some references to assigned material ({detail})."
 
 
 class QuickAnalyzer:
@@ -251,6 +553,45 @@ class QuickAnalyzer:
                     f"low vocabulary connection to the assignment keywords."
                 )
 
+        # Assignment fingerprint (named reference extraction)
+        _fingerprint: Optional[AssignmentFingerprint] = None
+        _reference_scores: Dict[str, ReferenceMatchScore] = {}
+        if assignment_description.strip():
+            self._progress("Extracting assignment fingerprint...")
+            _fingerprint = extract_assignment_fingerprint(assignment_description)
+            if _fingerprint:
+                result.assignment_fingerprint = _fingerprint
+                has_refs = (
+                    _fingerprint.author_names
+                    or _fingerprint.work_titles
+                    or _fingerprint.key_concepts
+                )
+                if has_refs:
+                    for sid, body in texts.items():
+                        _reference_scores[sid] = match_submission_references(
+                            body, _fingerprint
+                        )
+                    # Class-level note
+                    ref_parts = []
+                    if _fingerprint.author_names:
+                        ref_parts.append(
+                            f"{len(_fingerprint.author_names)} author(s): "
+                            + ", ".join(_fingerprint.author_names[:5])
+                        )
+                    if _fingerprint.work_titles:
+                        ref_parts.append(
+                            f"{len(_fingerprint.work_titles)} title(s): "
+                            + ", ".join(_fingerprint.work_titles[:3])
+                        )
+                    if _fingerprint.key_concepts:
+                        ref_parts.append(
+                            f"{len(_fingerprint.key_concepts)} key concept(s)"
+                        )
+                    result.analysis_notes.append(
+                        f"Assignment fingerprint: {'; '.join(ref_parts)} "
+                        f"(engagement type: {_fingerprint.engagement_type})"
+                    )
+
         self._progress("Detecting shared references...")
         result.shared_references = self._shared_references(texts)
 
@@ -356,6 +697,7 @@ class QuickAnalyzer:
                 gibberish_reason=gib.reason if gib else "",
                 gibberish_detail=gib.detail if gib else "",
                 assignment_connection=_connection_scores.get(sid),
+                reference_match=_reference_scores.get(sid),
                 is_possibly_truncated=_is_trunc,
                 truncation_note=_trunc_note,
             )

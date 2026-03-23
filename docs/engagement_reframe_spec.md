@@ -21,14 +21,16 @@ The signals the system already collects — human presence categories, organizat
 
 These are binary, non-negotiable flags. No cultural bias risk. Keep as explicit flags in the UI.
 
-| Signal | What it catches | Source |
-|---|---|---|
-| **Smoking gun** | Raw chatbot HTML/markdown paste artifacts | `_detect_raw_ai_artifacts()` |
-| **Unicode manipulation** | Zero-width characters, homoglyph insertion | Preprocessing (to build) |
-| **Teacher-test detection** | "Does anyone read these?" messages | `patterns.py` TEACHER_NOTE |
-| **Incoherence gate** | Keyboard mash, Lorem ipsum, random characters | `analyze_text()` pre-check (to build) |
+| Signal | What it catches | Source | Status |
+|---|---|---|---|
+| **Smoking gun** | Raw chatbot HTML/markdown paste artifacts | `_detect_raw_ai_artifacts()` | ✅ Built. Forces concern_level='high'. |
+| **Unicode manipulation** | Zero-width characters, homoglyph insertion | `Academic_Dishonesty_Check_v2.py` | ✅ Detection built (count + details). Normalization/stripping not yet implemented. |
+| **Teacher-test detection** | "Does anyone read these?" messages | `patterns.py` TEACHER_NOTE | ✅ Built. 70+ regex variants + semantic detection in QuickAnalyzer. Surfaced as relationship marker, not concern. |
+| **Incoherence gate** | Keyboard mash, Lorem ipsum, random characters | `gibberish_gate.py` | ✅ Built. Conservative gate (confidence ≥0.7 to skip LLM). Equity safeguards: does NOT flag poor grammar, AAVE, slang, non-English, short-but-genuine. Translated text bypasses all checks. |
 
 These work because they detect **gaming behavior** — active attempts to circumvent rather than engage. No ambiguity, no population sensitivity.
+
+All four Tier 1 signals are implemented and wired into both the AIC pathway (`Academic_Dishonesty_Check_v2.py`) and the Insights pipeline (`quick_analyzer.py`). Integrity flags are tracked in `marker_counts` and `markers_found` dicts, added to `context_applied` notes with ⚠ prefix.
 
 ### Tier 2: Structural indicators — what the data actually shows
 
@@ -75,6 +77,13 @@ These signals carry differential risk across populations:
 
 **Validation status**: 13 AI essays across 4 models (ChatGPT, Gemini Pro, Gemini Thinking, Claude Sonnet) + 200 DAIGT human essays. Signals implemented in `organizational_analyzer.py`, wired into convergence in `Academic_Dishonesty_Check_v2.py`. Calibration snapshot: `data/calibration_snapshots/claude_validation.json`. Further validation needed via OpenRouter (GPT-4o, Llama, Mistral) to characterize model-dependency more broadly.
 
+**Implementation status (2026-03-22)**: All three Phase A signals are ✅ built with gradient scoring:
+- Sentence-starter diversity: gradient at ≥0.95, max score 0.6 for perfect diversity with ≥8 sentences
+- Comma density: gradient 3.5–5.0, max score 0.4 at ≥5.0 per 100 words
+- Average word length: gradient 4.5–5.0, max score 0.4 at ≥5.0 chars
+
+These participate in the **8-channel convergence system**: pattern_markers, organizational, hp_absence, authenticity_deficit, uniformity, starter_diversity, comma_density, avg_word_length. Multiplier formula: `1.0 + 0.2 × (converging - 2)` when 3+ channels agree. ESL protection: comma_density and avg_word_length are **completely zeroed** (not reduced) when ESL error patterns are detected.
+
 **Reoriented signals** (not excluded — reframed from detection to engagement interpretation):
 
 These signals were originally designed as AI detection markers. They're unreliable for detection (unstable across model versions, high cultural bias risk). But under the engagement frame, they have value as supplementary engagement context — IF reinterpreted:
@@ -117,8 +126,8 @@ The 8 AIC modes (discussion, essay, lab, notes, personal, draft, outline, auto) 
 | **Course engagement** | References to class, readings, discussions, assignment context | Contextual Grounding (35%) | "Is this student connected to the course?" |
 | **Personal investment** | Stakes, care, emotional connection to the material | Emotional Stakes (20%) | "Does this matter to this student?" |
 | **Real-time processing** | Self-correction, hedging, false starts, revision thinking | Productive Messiness (10%) | "Is this student thinking as they write?" |
-| **Source depth** | Specific quotes, page references vs. generic "the reading says" | New detector (to build) + `citation_checker.py` | "Did this student engage with the actual readings?" |
-| **Hedging presence** | Natural epistemic uncertainty in discussion context | New detector (to build, mode-sensitive) | "Is this student expressing genuine uncertainty?" |
+| **Source depth** | Specific quotes, page references vs. generic "the reading says" | ✅ `citation_checker.py` integrated into AIC + Insights | "Did this student engage with the actual readings?" |
+| **Hedging presence** | Natural epistemic uncertainty in discussion context | Partially covered by HPD productive_messiness markers (self-correction, hedging). No standalone mode-sensitive detector. | "Is this student expressing genuine uncertainty?" |
 
 **Note on contextual grounding and citations**: The system currently uses GENERIC patterns ("In class when...", "The textbook on page...") for contextual grounding. Canvas API integration should target READING references (author names, work titles, specific concepts), not just the assignment prompt — a student who feeds the prompt into ChatGPT will produce on-topic text but WON'T reference the specific arguments from assigned readings.
 
@@ -141,12 +150,12 @@ These operate across submissions, not on individual text. They're the strongest 
 
 | Signal | What it measures | Source | Value to teacher |
 |---|---|---|---|
-| **Similarity clusters** | Multiple students saying the same thing the same way | QuickAnalyzer embeddings (to build pairwise) | "Several students submitted very similar responses — is the assignment eliciting diverse thinking?" |
-| **Theme convergence** | Class gravitating toward specific ideas | Insights pipeline (existing) | "Here's what the class is most engaged with" |
-| **Engagement outliers** | Students whose engagement pattern differs significantly from class | QuickAnalyzer clusters (existing) | "These students may need a conversation" |
-| **Concern patterns** | Essentializing, tone-policing, structural misunderstandings | Insights pipeline (existing) | "Watch for these patterns in class discussion" |
-| **Longitudinal voice** | How a student's engagement changes over time | To build (requires multiple assignments) | "This student's engagement shifted — here's how" |
-| **Class trajectory** | How the class's engagement evolves across assignments — both quantitative (signal trends) AND qualitative (how the engagement changes, not just that it does) | To build; qualitative dimension can use 8B LLM (Ollama) for narrative description, with potential to scale to larger models | "The class started with surface-level engagement with intersectionality but by Assignment 4, students are connecting course concepts to their own experiences and citing specific passages" |
+| **Similarity clusters** | Multiple students saying the same thing the same way | ✅ `quick_analyzer._pairwise_similarity()` | "Several students submitted very similar responses — is the assignment eliciting diverse thinking?" |
+| **Theme convergence** | Class gravitating toward specific ideas | ✅ Insights pipeline (theme_generator + synthesizer) | "Here's what the class is most engaged with" |
+| **Engagement outliers** | Students whose engagement pattern differs significantly from class | ✅ QuickAnalyzer clusters + outlier pass | "These students may need a conversation" |
+| **Concern patterns** | Essentializing, tone-policing, structural misunderstandings | ✅ Concern detector + signal matrix + anti-bias post-processing | "Watch for these patterns in class discussion" |
+| **Longitudinal voice** | How a student's engagement changes over time | ⚠️ Partial: `trajectory.py` StudentArc tracks word counts + submission status across runs. Missing: per-student signal vectors, Mahalanobis distance, drift detection. | "This student's engagement shifted — here's how" |
+| **Class trajectory** | How the class's engagement evolves across assignments — both quantitative (signal trends) AND qualitative (how the engagement changes, not just that it does) | ⚠️ Partial: `trajectory.py` TrajectoryAnalyzer computes theme evolution (recurring/new/fading), engagement trends, concern trends, exhaustion trends, most-referenced readings. Missing: qualitative narrative via LLM. | "The class started with surface-level engagement with intersectionality but by Assignment 4, students are connecting course concepts to their own experiences and citing specific passages" |
 
 **Equity framing for similarity**: Similarity can indicate strong community, collaborative learning, or shared cultural knowledge (#INTERDEPENDENCE, #COMMUNITY_CULTURAL_WEALTH) — not only copying. Surface as class-level pattern ("this assignment had unusually high similarity"), NOT as individual student flags. The first question is always: "Is the assignment designed to produce diverse responses?"
 
@@ -157,7 +166,9 @@ These operate across submissions, not on individual text. They're the strongest 
 
 This signal is ambiguous by design: it COULD indicate AI use, or it COULD indicate students collaborating, or consulting the same outside source. The system surfaces the pattern; the teacher interprets. The key innovation is comparing student framing against the TEACHER'S framing — which requires assignment context awareness (Mechanism 2).
 
-**Longitudinal signals serve both student AND class**: Per-student voice tracking shows individual growth and consistency. Class trajectory shows whether the group is deepening, stagnating, or diverging across assignments. Both require cross-assignment data storage (not yet built).
+**Longitudinal signals serve both student AND class**: Per-student voice tracking shows individual growth and consistency. Class trajectory shows whether the group is deepening, stagnating, or diverging across assignments. Cross-assignment data storage is partially built: `InsightsStore` persists per-run codings, and `TrajectoryAnalyzer` loads all completed runs for a course to compute semester-level patterns. What's missing: per-student engagement signal vectors (not just word counts) stored across runs, and statistical consistency analysis (Mahalanobis distance).
+
+**Pairwise similarity implementation (2026-03-22)**: ✅ Built in `quick_analyzer._pairwise_similarity()`. Uses scikit-learn cosine similarity on TF-IDF vectors. Class-level stats (mean, max, pairs >0.85, >0.70). Individual pairs surfaced ONLY at ≥0.90 threshold (HighSimilarityPair records). Pedagogical framing built in — observation text notes collaborative/community interpretations, never blame. This matches the "What we're NOT building" exclusion of moderate-threshold pair flagging.
 
 ---
 
@@ -204,6 +215,7 @@ Structural indicators (Tier 2) surface as supplementary context:
 
 ### Engagement summary format (per student)
 
+**Design target** (from original spec):
 ```
 Engagement Snapshot: [Student Name] — [Assignment Name]
   Course connection:    ████████░░  Strong (references class discussion, cites p.47)
@@ -222,6 +234,15 @@ Engagement Snapshot: [Student Name] — [Assignment Name]
   collaborative work — that this analysis cannot see.
 ```
 
+**Current implementation (2026-03-22)**: ✅ Engagement snapshots are displayed in `insights_panel.py` as a chip row per student card:
+- **Engagement depth**: color-coded chip (green=strong, amber=moderate, rose=limited/minimal)
+- **Conversation opportunity**: 💬 "check in" chip (rose) when engagement limited/minimal
+- **Register**: subject area code chip (amber) when applicable
+- **Truncation warning**: rose chip when submission appears incomplete
+- **Source depth**: specific citations, generic references, total count + interpretation
+
+**Gap**: Bar chart visualization (the `████████░░` format above) is not implemented — display uses categorical chips only. This is a reasonable trade-off for 8B model reliability: 8B models can't judge engagement_depth gradients reliably, so the system surfaces evidence (quotes, concepts, connections) and lets the teacher judge. The chips are more honest than false-precision bar charts.
+
 Note: "Engagement Snapshot" — not "Profile." The word "snapshot" frames it as situational and temporal; "profile" implies a fixed characterization.
 
 ---
@@ -229,20 +250,39 @@ Note: "Engagement Snapshot" — not "Profile." The word "snapshot" frames it as 
 ## What this means for AIC vs Insights
 
 **AIC** (fast, no LLM required):
-- Computes engagement signals from text analysis alone
-- Provides per-student engagement profile
-- Flags integrity signals (Tier 1)
-- Notes structural indicators (Tier 2)
+- Computes engagement signals from text analysis alone (HPD → 5 engagement dimensions + source_depth)
+- 8-channel convergence system with multiplier at 3+ channels
+- Flags integrity signals (Tier 1: smoking gun, unicode, gibberish)
+- Notes structural indicators (Tier 2: sentence uniformity, starter diversity, comma density, avg word length)
+- ESL protections (error pattern detection → 40% score reduction + structural signal zeroing)
+- Mode-adaptive thresholds via `weight_personal_voice` scaling
 - Runs in seconds, works offline
 
-**Insights pipeline** (deeper, requires LLM):
-- Class-level themes, concerns, synthesis
-- Nuanced engagement assessment (LLM-evaluated)
-- Cross-student patterns
-- Feedback generation
-- Takes minutes-hours, needs Ollama or API
+**Insights pipeline** (deeper, requires LLM — ✅ substantially built):
 
-**Relationship**: AIC is the fast pre-screen; Insights is the deep analysis. They complement, don't duplicate. A teacher running AIC sees "this student may not be engaging deeply — here's a conversation starter." A teacher running Insights sees "here's what the whole class is thinking, where they're struggling, and which students need attention."
+The pipeline is tier-differentiated (lightweight/medium/deep) and stages are:
+1. Data fetch (Canvas API)
+2. Preprocessing (translation via Ollama + transcription via whisper.cpp)
+3. Quick analysis (non-LLM: TF-IDF, embedding clustering, pairwise similarity, keyword patterns, VADER + GoEmotions, assignment connection scoring, gibberish gate, citation analysis)
+4. Per-submission coding (LLM: themes, quotes, emotional register, lens observations, engagement signals — with concept validation hallucination guard)
+5. Concern detection (always separate LLM call — with anti-bias post-processing: tone-policing protection, content-vs-distress classification)
+6. Theme generation (embedding-cluster-grouped, with timeout fallback to tag-frequency themes)
+7. Outlier surfacing
+8. Guided synthesis (4-call scoped approach: concern patterns → engagement highlights → tensions → class temperature)
+9. Short submission review (engagement-focused verdict: CREDIT or TEACHER_REVIEW, with 8 brevity categories and anti-bias post-processing)
+10. Feedback drafting (per-student drafts with equity framing, multilingual acknowledgment)
+11. Cross-validation (LLM vs. signal matrix comparison → ValidationFlag)
+
+**Additional infrastructure built**:
+- Resumable pipeline with stage checkpoints (recovery after crash/restart)
+- Sleep prevention (caffeinate/powercfg/systemd-inhibit)
+- Teacher profile system (TeacherProfileManager: theme renames/splits/merges, concern sensitivity, custom patterns, prompt fragment generation)
+- Lens template system (subject-specific analysis framing: ethnic studies, social science, humanities, English/writing)
+- Course profile dialog (GUI for profile management, template fork/save)
+- Trajectory analysis (cross-run: theme evolution, engagement/concern/exhaustion trends, student arcs)
+- Chatbot export (packages results for student-facing assistant)
+
+**Relationship**: AIC is the fast pre-screen; Insights is the deep analysis. They complement, don't duplicate. AIC engagement signals feed into Insights `SubmissionCodingRecord.engagement_signals`. A teacher running AIC sees "this student may not be engaging deeply — here's a conversation starter." A teacher running Insights sees "here's what the whole class is thinking, where they're struggling, and which students need attention."
 
 ---
 
@@ -285,40 +325,62 @@ The DAIGT test corpus gives us formal competition essays from strong writers. It
 
 ---
 
-## Implementation priorities (revised)
+## Implementation priorities — status as of 2026-03-22
 
-### Phase A: Foundation + signals
+### Phase A: Foundation + signals — ✅ COMPLETE (except corpus expansion)
 
-1. Gradient sentence uniformity in `organizational_analyzer.py`
-2. Unicode preprocessing (zero-width stripping, whitespace normalization)
-3. Sentence-starter diversity (new signal, strongest theoretical stability)
-4. Expanded AI test corpus via OpenRouter (`GitHub/Reframe` has the API; preference for free tier; also direct Gemini Pro/Claude access)
-5. Wire `gibberish_gate.py` and `citation_checker.py` into AIC pathway
+1. ✅ Gradient sentence uniformity in `organizational_analyzer.py` — gradient scoring 0.15–0.40
+2. ⚠️ Unicode preprocessing — detection built (count + details), stripping/normalization not yet implemented
+3. ✅ Sentence-starter diversity — gradient scoring, d=2.13 effect size
+4. ❌ Expanded AI test corpus via OpenRouter — not started
+5. ✅ Wire `gibberish_gate.py` and `citation_checker.py` into AIC pathway — both integrated with graceful fallback
+6. ✅ Comma density — gradient scoring, d=1.85 effect size
+7. ✅ Average word length — gradient scoring, d=2.17 effect size
+8. ✅ 8-channel convergence system — multiplier at 3+ channels
+9. ✅ ESL protections — error pattern detection + structural signal zeroing
 
-### Phase B: Calibration infrastructure
+### Phase B: Calibration infrastructure — ❌ NOT STARTED
 
-6. Cohort calibration (class-relative baselines in RunStore)
-7. Assignment context extraction (named references from Canvas API — target readings, not prompts)
-8. Cold-start Bayesian priors
+10. ❌ Cohort calibration (class-relative baselines) — highest-impact remaining gap
+11. ⚠️ Assignment context extraction — Canvas API fetches assignment description; QA computes vocabulary overlap (AssignmentConnectionScore). Missing: named reference extraction, engagement expectation matrix, reading-vs-topic distinction
+12. ❌ Cold-start Bayesian priors — WeightComposer provides education-level defaults but not wired into calibration
 
-### Phase C: Engagement framing + population-level
+### Phase C: Engagement framing + population-level — ✅ MOSTLY COMPLETE
 
-9. UI reframe (engagement snapshots, conversation starters, integrity flags separate)
-10. Class-level similarity (pairwise cosine, surfaced as class pattern only)
-11. Citation depth as engagement signal (specific vs generic references)
-12. Reoriented signals (TTR as vocabulary range, AI transitions as register mismatch, etc. — credit presence, never penalize absence)
+13. ✅ UI reframe — engagement depth chips (strong/moderate/limited/minimal), conversation opportunity, register chips. Integrity flags tracked separately. Bar chart visualization not implemented (chips are more honest for 8B reliability).
+14. ✅ Class-level similarity — pairwise cosine in `quick_analyzer.py`, class-level stats, ≥0.90 pairs surfaced with pedagogical framing
+15. ✅ Citation depth as engagement signal — specific vs generic distinction in `citation_checker.py`, mapped to source_depth in engagement signals
+16. ⚠️ Reoriented signals — structural analysis exists; asymmetric "credit presence, never penalize absence" principle not explicitly enforced in code
 
-### Phase D: Teacher feedback + longitudinal
+### Phase D: Teacher feedback + longitudinal — ⚠️ PARTIAL
 
-13. Teacher feedback loop (corrections, thresholds, annotations)
-14. Voice fingerprinting (per-student signal vectors)
-15. Growth tracking + drift detection
+17. ⚠️ Teacher feedback loop — TeacherProfileManager built (theme renames/splits/merges, concern sensitivity ±0.1, custom patterns, strength patterns, disabled defaults). Missing: per-signal weight overrides, threshold adjustment, per-student annotations alongside signal data, correction pattern recognition surfacing.
+18. ❌ Voice fingerprinting — StudentArc tracks word counts across runs but not signal vectors. No Mahalanobis distance, no drift detection.
+19. ⚠️ Growth tracking — TrajectoryAnalyzer computes theme evolution, engagement/concern/exhaustion trends at class level. Per-student engagement signal growth not tracked.
 
-### Phase E: Emergent intelligence
+### Phase E: Emergent intelligence — ❌ NOT STARTED
 
-16. Class culture modeling (emerges from B + D)
-17. Predictive engagement (from D longitudinal data)
-18. AI literacy coaching prompts
+20. ❌ Class culture modeling (depends on B + D)
+21. ❌ Predictive engagement (depends on D longitudinal data)
+22. ❌ AI literacy coaching prompts
+
+### Built beyond original spec (not in original phases)
+
+These features were built during the Insights pipeline implementation and were not anticipated in the original spec:
+
+- ✅ **Guided synthesis** — 4-call scoped approach replacing broken open-ended synthesis (concern patterns → engagement highlights → tensions → class temperature)
+- ✅ **Cross-validation** — LLM vs. signal matrix comparison, ValidationFlag model
+- ✅ **Short submission review** — 8 brevity categories (concise_complete, dense_engagement, format_appropriate, multilingual, partial_attempt, wrong_submission, placeholder, unclear), anti-bias post-processing, register bias detection
+- ✅ **Feedback drafting** — per-student draft feedback with equity framing, multilingual acknowledgment, confidence thresholding
+- ✅ **Trajectory analysis** — cross-run theme evolution (recurring/new/fading/one-time), engagement/concern/exhaustion trends, most-referenced readings, per-student word count arcs
+- ✅ **Lens template system** — subject-specific analysis framing (ethnic studies, social science, humanities, English/writing) with equity attention, concern framing fragments, assignment variants
+- ✅ **Course profile dialog** — GUI for profile management with template fork/save system
+- ✅ **Chatbot export** — packages synthesis + codings for student-facing assistant
+- ✅ **Embedding-based clustering** — sentence-transformers + k-means/HDBSCAN for theme grouping
+- ✅ **Signal matrix** — VADER × keyword category pre-screening with critical keyword protection (structural critique ≠ concern)
+- ✅ **Anti-bias post-processing** — tone-policing detection in concern flags, content-vs-distress classification, AAVE sentiment suppression, informal register bias detection
+- ✅ **Resumable pipeline** — stage checkpoints for crash recovery
+- ✅ **Concept validation** — hallucination guard rejecting concepts 8B attributes from prompt rather than submission text
 
 ---
 
@@ -334,10 +396,23 @@ The DAIGT test corpus gives us formal competition essays from strong writers. It
 
 ## Open questions
 
-1. **Canvas API**: OAuth flow, scopes, offline caching. Can we pull module/page content for reading metadata, or just assignment descriptions?
-2. **Student visibility design**: Opt-in trajectory sharing. Student-private by default. What does the teacher see without opt-in — aggregate class data only?
-3. **RunStore schema**: ClassBaseline, TeacherCalibration, StudentSnapshot tables. Cross-run queries. Migration from current schema.
+### Resolved
+
+- ~~**Integration with other agent's work**~~: ✅ `gibberish_gate.py`, `citation_checker.py`, expanded `patterns.py` all wired in. Citation depth = engagement signal. Hallucinated citation detection available via async URL/DOI verification (informational only).
+
+### Still open
+
+1. **Canvas API reading list integration**: Canvas API fetches assignment descriptions (✅ built). Still needed: `GET /courses/:id/modules` for linked materials/reading titles. Named reference extraction from assignment description (TF-IDF + spaCy NER) is infrastructure-ready but not built. This would power the reading-vs-topic distinction in Mechanism 2.
+2. **Student visibility design** (#INDIGENOUS_DATA_SOVEREIGNTY): Opt-in trajectory sharing. Student-private by default. What does the teacher see without opt-in — aggregate class data only? This is a design requirement, not optional.
+3. **RunStore schema extensions**: ClassBaseline (Mechanism 1), StudentSnapshot (Mechanism 4) tables not built. TeacherCalibration partially covered by `teacher_profiles` + `prompt_calibration` tables in InsightsStore. Need migration plan.
 4. **Diverse testing corpus**: Partnership for real classroom data (with consent). Synthetic samples are prerequisite but not substitute. IRB-equivalent process for K-12/college.
-5. **Integration with other agent's work**: `gibberish_gate.py`, `citation_checker.py`, expanded `patterns.py` teacher-test detection all wire into this framework. Citation depth = engagement signal. Hallucinated citations (404 URLs) = integrity signal.
-6. **Dash patterns in current AI**: User observation that current models use many dashes. Our n=4 corpus showed 0-3 — likely outdated. OpenRouter testing with current model versions needed.
-7. **The privileged disengaged student**: System detects zero engagement across all dimensions — conversation: "I noticed your response doesn't connect to our class work." We accept sophisticated AI use may not be catchable; engagement framing still surfaces the disengagement.
+5. **Dash patterns in current AI**: User observation that current models use many dashes. Our n=4 corpus showed 0-3 — likely outdated. OpenRouter testing with current model versions needed.
+6. **The privileged disengaged student**: System detects zero engagement across all dimensions — conversation: "I noticed your response doesn't connect to our class work." We accept sophisticated AI use may not be catchable; engagement framing still surfaces the disengagement.
+
+### New questions (emerged from implementation)
+
+7. **AIC-Insights signal unification**: AIC computes engagement signals (HPD → 5 dimensions); Insights QuickAnalyzer computes overlapping but distinct signals (TF-IDF, embedding clusters, VADER, keyword patterns). No unified per-submission signal vector feeds both systems. Cohort calibration (Mechanism 1) needs to decide: which system's signals are the baseline? Both? A merged superset?
+8. **Hardcoded threshold configurability**: Multiple thresholds are hardcoded across the pipeline (assignment connection: 30%/10%, pairwise similarity: 0.90/0.85/0.70, disengagement: median×0.4, concern confidence: 0.7, theme timeout: 300s, concern sensitivity adjustment: ±0.1). These should be surfaced as configurable parameters — but where? Teacher profile? Course profile? Global settings? Per-mechanism?
+9. **Prompt calibration table usage**: `InsightsStore.prompt_calibration` table exists (stores teacher corrections: original_coding → corrected_coding), but nothing reads from it. How should corrections feed back into future prompts? Direct few-shot examples? Weight adjustment? This is the bridge between Mechanism 3 (teacher feedback) and actual prompt improvement.
+10. **Integrity flags in Insights UI**: Tier 1 flags (unicode, gibberish, smoking gun) are tracked in AIC results but NOT displayed in the Insights panel Student Work cards. They appear only in `grading_results_panel.py`. Should be surfaced as warning chips or banner alerts in Insights too.
+11. **Concern sensitivity calibration basis**: TeacherProfileManager adjusts concern sensitivity by ±0.1 per teacher action (acknowledge/dismiss). This is ad-hoc — no theoretical basis or validation. Does 10 dismissals = zero sensitivity? Should there be a floor? How does this interact with the signal matrix pre-screening?

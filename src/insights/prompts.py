@@ -50,7 +50,7 @@ understand what the student is saying.
 
 STUDENT: {student_name}
 ASSIGNMENT PROMPT: {assignment_prompt}
-
+{class_context}
 NON-LLM ANALYSIS (grounding context — verify against the text):
 - Emotional register signal: {vader_compound} ({vader_polarity}){top_emotions} ⚠ Signal misreads AAVE, ESL writing,
   and righteous anger — treat as rough signal only, not ground truth.
@@ -144,7 +144,7 @@ You are helping a teacher understand what this student is thinking.
 
 STUDENT: {student_name}
 ASSIGNMENT PROMPT: {assignment_prompt}
-{teacher_interests}
+{teacher_interests}{class_context}
 PRE-COMPUTED SIGNALS (floor — your analysis should go beyond these):
 - Emotional register signal: {vader_compound} ({vader_polarity}){top_emotions} ⚠ Signal misreads AAVE, ESL writing,
   and righteous anger. Your emotional_register judgment supersedes this score.
@@ -509,7 +509,7 @@ projects" not "confusion")
 pedagogically important. Surface it. "Some students found the reading \
 transformative while others found it alienating" — name who, and preserve \
 both sides.
-- Include 2-4 supporting quotes per theme (verbatim from the records)
+- For each theme, include 1-2 supporting quotes. Use ONLY the exact text from the "quote" field in the records above — do not fabricate, paraphrase, or invent quotes. If no relevant quote exists for a theme, use an empty list.
 - Themes should cover most submissions. If a submission doesn't fit any \
 theme, that's fine — the outlier pass will handle it.
 - Frequency = how many students, not how many mentions

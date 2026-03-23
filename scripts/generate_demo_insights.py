@@ -467,34 +467,32 @@ def run_pipeline(course_key: str, small_batch: int = 0,
               f"{len(outlier_report.outliers)} outliers")
 
     # ── Stage 6: Synthesis ──
-    from insights.synthesizer import synthesize
-    from insights.models import SynthesisReport
+    from insights.synthesizer import guided_synthesis
+    from insights.models import GuidedSynthesisResult
 
     ckpt = _load_ckpt(run_key, "synthesis") if resume else None
     if ckpt:
-        synthesis = SynthesisReport.model_validate(ckpt["synthesis"])
+        synthesis = GuidedSynthesisResult.model_validate(ckpt["synthesis"])
         timing["synthesis"] = ckpt["timing"]
         print(f"\n[Stage 6] Synthesis... [RESUMED — {timing['synthesis']}s]")
     else:
-        print(f"\n[Stage 6] Synthesis report...")
+        print(f"\n[Stage 6] Synthesis report (guided)...")
         t0 = time.time()
-        synthesis = synthesize(
-            theme_set,
-            outlier_report,
-            qa_result,
+        synthesis = guided_synthesis(
             coding_records,
             tier=tier,
             backend=backend,
             assignment_name=cfg["assignment_name"],
-            course_name=cfg["course_name"],
-            teacher_context=cfg["teacher_context"],
+            qa_result=qa_result,
+            settings=user_settings,
         )
         timing["synthesis"] = round(time.time() - t0, 2)
         _save_ckpt(run_key, "synthesis", {
             "synthesis": json.loads(synthesis.model_dump_json()),
             "timing": timing["synthesis"],
         })
-        print(f"  Synthesis complete: {timing['synthesis']}s")
+        print(f"  Synthesis complete: {timing['synthesis']}s — "
+              f"{synthesis.calls_completed}/{synthesis.calls_attempted} calls completed")
 
     # ── Stage 7: Draft feedback ──
     from insights.feedback_drafter import FeedbackDrafter
@@ -551,22 +549,12 @@ def run_pipeline(course_key: str, small_batch: int = 0,
             print(f"    {stage}: {t}s")
     print(f"{'─'*40}")
 
-    # ── Normalize synthesis sections (8B model sometimes omits keys) ──
-    REQUIRED_SECTIONS = [
-        "what_students_said", "emergent_themes",
-        "tensions_and_contradictions", "surprises", "focus_areas",
-        "concerns", "divergent_approaches", "looking_ahead",
-        "students_to_check_in_with",
-    ]
-    synth_dict = json.loads(synthesis.model_dump_json())
-    sections = synth_dict.get("sections", {})
-    for key in REQUIRED_SECTIONS:
-        if key not in sections:
-            sections[key] = "(Insufficient data for this section.)"
-    synth_dict["sections"] = sections
-    # Re-serialize with normalized sections
-    from insights.models import SynthesisReport
-    synthesis = SynthesisReport.model_validate(synth_dict)
+    # ── Guided synthesis reliability check ──
+    if synthesis.calls_completed == 0:
+        log.warning(
+            "Guided synthesis: 0/%d calls completed — synthesis_report will be empty",
+            synthesis.calls_attempted,
+        )
 
     # ── Assemble baked JSON ──
     stages_completed = [

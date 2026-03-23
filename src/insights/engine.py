@@ -370,6 +370,23 @@ class InsightsEngine:
             progress("Coding submissions with LLM...")
             coding_records: List[SubmissionCodingRecord] = []
 
+            # Build class context once — used as reference point for per-student coding.
+            # Gives the 8B a sense of the full class distribution so it can assess
+            # relative engagement rather than coding each submission in isolation.
+            _stats = qa_result.stats
+            _class_context = ""
+            if _stats.total_submissions > 0:
+                _parts = [
+                    f"Class has {_stats.total_submissions} submissions.",
+                    f"Typical word count: {int(_stats.word_count_median)} words "
+                    f"(range {_stats.word_count_min}–{_stats.word_count_max}).",
+                ]
+                if _stats.word_count_mean > 0:
+                    _parts.append(
+                        f"Average word count: {int(_stats.word_count_mean)} words."
+                    )
+                _class_context = " ".join(_parts)
+
             # AIC engagement signals — fast (<0.1s per submission), no LLM
             aic_analyzer = None
             if _HAS_AIC:
@@ -466,6 +483,11 @@ class InsightsEngine:
                         emotional_notes=f"Gibberish gate: {quick_sub.gibberish_detail}",
                         notable_quotes=[],
                         word_count=wc,
+                        integrity_flags={
+                            "gibberish": True,
+                            "gibberish_reason": quick_sub.gibberish_reason,
+                            "gibberish_detail": quick_sub.gibberish_detail,
+                        },
                     )
                     coding_records.append(record)
                     self._store.save_coding(
@@ -499,6 +521,7 @@ class InsightsEngine:
 
                 # Run AIC engagement signals before coding (fast, no LLM)
                 engagement = None
+                aic_result = None
                 if aic_analyzer is not None:
                     try:
                         aic_result = aic_analyzer.analyze_text(
@@ -536,6 +559,7 @@ class InsightsEngine:
                     analysis_lens=analysis_lens,
                     teacher_interests=teacher_interests,
                     profile_fragment=profile_fragment,
+                    class_context=_class_context,
                 )
 
                 if record is not None:
@@ -544,6 +568,26 @@ class InsightsEngine:
                     if quick_sub and quick_sub.is_possibly_truncated:
                         record.is_possibly_truncated = True
                         record.truncation_note = quick_sub.truncation_note
+
+                    # Copy Tier 1 integrity flags for UI display
+                    _iflags: dict = {}
+                    if aic_result is not None:
+                        if aic_result.smoking_gun:
+                            _iflags["smoking_gun"] = True
+                            _iflags["smoking_gun_details"] = list(
+                                aic_result.smoking_gun_details
+                            )
+                        if aic_result.unicode_manipulation:
+                            _iflags["unicode_manipulation"] = True
+                            _iflags["unicode_manipulation_details"] = list(
+                                aic_result.unicode_manipulation_details
+                            )
+                    if quick_sub and quick_sub.is_gibberish:
+                        _iflags["gibberish"] = True
+                        _iflags["gibberish_reason"] = quick_sub.gibberish_reason
+                        _iflags["gibberish_detail"] = quick_sub.gibberish_detail
+                    if _iflags:
+                        record.integrity_flags = _iflags
 
                 coding_records.append(record)
 
@@ -1297,6 +1341,16 @@ class InsightsEngine:
 
                 from insights.submission_coder import code_submission
 
+                # Build class context for resume path
+                _resume_stats = qa_result.stats if qa_result else None
+                _resume_class_context = ""
+                if _resume_stats and _resume_stats.total_submissions > 0:
+                    _resume_class_context = (
+                        f"Class has {_resume_stats.total_submissions} submissions. "
+                        f"Typical word count: {int(_resume_stats.word_count_median)} words "
+                        f"(range {_resume_stats.word_count_min}–{_resume_stats.word_count_max})."
+                    )
+
                 initial_coded_count = len(coded_sids)
                 for i, (sid, body) in enumerate(uncoded_items):
                     if self._cancelled:
@@ -1370,6 +1424,7 @@ class InsightsEngine:
                             analysis_lens=analysis_lens,
                             teacher_interests=teacher_interests,
                             profile_fragment=profile_fragment,
+                            class_context=_resume_class_context,
                         )
 
                     coding_records.append(record)

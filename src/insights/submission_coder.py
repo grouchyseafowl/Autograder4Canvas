@@ -228,6 +228,7 @@ def code_submission(
     analysis_lens: Optional[Dict] = None,
     teacher_interests: Optional[list] = None,
     profile_fragment: str = "",
+    class_context: str = "",
 ) -> SubmissionCodingRecord:
     """Code one student submission using the LLM.
 
@@ -306,6 +307,7 @@ def code_submission(
             interests_text=interests_text,
             backend=backend,
             profile_fragment=profile_fragment,
+            class_context=class_context,
         )
     else:
         record = _code_full(
@@ -324,6 +326,7 @@ def code_submission(
             backend=backend,
             analysis_lens=analysis_lens,
             profile_fragment=profile_fragment,
+            class_context=class_context,
         )
 
     # Carry forward non-LLM metadata
@@ -355,13 +358,16 @@ def _code_lightweight(
     interests_text: str,
     backend: BackendConfig,
     profile_fragment: str = "",
+    class_context: str = "",
 ) -> SubmissionCodingRecord:
     """Lightweight tier: 2 decomposed calls (comprehension + interpretation)."""
 
     # Call 1: Comprehension
+    class_context_block = f"\nCLASS CONTEXT: {class_context}\n" if class_context else ""
     comp_prompt = COMPREHENSION_PROMPT.format(
         student_name=student_name,
         assignment_prompt=assignment_prompt,
+        class_context=class_context_block,
         vader_compound=vader_compound,
         vader_polarity=vader_polarity,
         top_emotions=top_emotions,
@@ -446,13 +452,16 @@ def _code_full(
     backend: BackendConfig,
     analysis_lens: Optional[Dict] = None,
     profile_fragment: str = "",
+    class_context: str = "",
 ) -> SubmissionCodingRecord:
     """Medium/Deep tier: single combined coding call."""
 
+    class_context_block = f"\nCLASS CONTEXT: {class_context}\n" if class_context else ""
     prompt = CODING_FULL_PROMPT.format(
         student_name=student_name,
         assignment_prompt=assignment_prompt,
         teacher_interests=interests_text,
+        class_context=class_context_block,
         vader_compound=vader_compound,
         vader_polarity=vader_polarity,
         top_emotions=top_emotions,

@@ -2148,6 +2148,70 @@ class InsightsPanel(QWidget):
             header_row.addWidget(wc_lbl)
         pane_lo.addLayout(header_row)
 
+        # ── Integrity flag banner (Tier 1 — above engagement chips) ──
+        integrity_flags = record.get("integrity_flags") or {}
+        if integrity_flags:
+            integrity_row = QHBoxLayout()
+            integrity_row.setSpacing(4)
+
+            if integrity_flags.get("smoking_gun"):
+                sg_chip = PhosphorChip(
+                    "\u26a0 Chatbot paste artifacts detected",
+                    active=True, accent="rose",
+                )
+                details = integrity_flags.get("smoking_gun_details", [])
+                if details:
+                    sg_chip.setToolTip(
+                        "Observed:\n" + "\n".join(
+                            f"  \u2022 {d}" for d in details[:5]
+                        )
+                    )
+                integrity_row.addWidget(sg_chip)
+
+            if integrity_flags.get("unicode_manipulation"):
+                um_details = integrity_flags.get(
+                    "unicode_manipulation_details", []
+                )
+                # Sum invisible character counts from "Nx NAME" entries
+                _um_total = 0
+                for _d in um_details:
+                    try:
+                        _um_total += int(_d.split("x")[0])
+                    except (ValueError, IndexError):
+                        _um_total += 1
+                um_text = "Text manipulation detected"
+                if _um_total > 0:
+                    um_text += f" ({_um_total} invisible character"
+                    if _um_total != 1:
+                        um_text += "s"
+                    um_text += ")"
+                um_chip = PhosphorChip(
+                    um_text, active=True, accent="rose",
+                )
+                if um_details:
+                    um_chip.setToolTip(
+                        "Observed:\n" + "\n".join(
+                            f"  \u2022 {d}" for d in um_details[:5]
+                        )
+                    )
+                integrity_row.addWidget(um_chip)
+
+            if integrity_flags.get("gibberish"):
+                gib_reason = integrity_flags.get("gibberish_reason", "")
+                gib_text = "Submission flagged"
+                if gib_reason:
+                    gib_text += f": {gib_reason}"
+                gib_chip = PhosphorChip(
+                    gib_text, active=True, accent="rose",
+                )
+                gib_detail = integrity_flags.get("gibberish_detail", "")
+                if gib_detail:
+                    gib_chip.setToolTip(gib_detail)
+                integrity_row.addWidget(gib_chip)
+
+            integrity_row.addStretch()
+            pane_lo.addLayout(integrity_row)
+
         # Line 2: chip row — register + engagement depth + truncation
         chip_row = QHBoxLayout()
         chip_row.setSpacing(4)
@@ -4216,8 +4280,9 @@ class InsightsPanel(QWidget):
         self._store.update_coding_concerns(run_id, student_id, record_json, edits)
 
         # Profile calibration
+        wellbeing_note = None
         if self._profile_mgr:
-            self._profile_mgr.record_concern_action(
+            wellbeing_note = self._profile_mgr.record_concern_action(
                 concern.get("why_flagged", ""), action
             )
         self._store.save_calibration(
@@ -4227,9 +4292,12 @@ class InsightsPanel(QWidget):
         )
 
         self._invalidate_layers("codings")
-        self._show_toast(
-            f"Concern {'acknowledged' if action == 'acknowledge' else 'dismissed'}."
-        )
+        if wellbeing_note:
+            self._show_toast(wellbeing_note)
+        else:
+            self._show_toast(
+                f"Concern {'acknowledged' if action == 'acknowledge' else 'dismissed'}."
+            )
 
     # ── Theme edit handlers ──
 

@@ -198,6 +198,28 @@ CREATE TABLE IF NOT EXISTS grading_results (
 
 CREATE INDEX IF NOT EXISTS idx_grading_results_course
     ON grading_results (course_id, assignment_id);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- class_baselines: per-class engagement signal distributions (Mechanism 1)
+-- One row per (course, assignment) AIC run. Stores statistical distributions
+-- of the fast AIC signals so individual students can be interpreted relative
+-- to their own class, not against absolute thresholds.
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS class_baselines (
+    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id                  TEXT NOT NULL,        -- unique identifier for this analysis run
+    course_id               TEXT NOT NULL,
+    assignment_mode         TEXT,                 -- AIC mode (notes, essay, discussion, etc.)
+    education_level         TEXT,                 -- high_school, community_college, etc.
+    n_students              INTEGER,
+    signals                 TEXT NOT NULL,        -- JSON: {signal_name: {mean, median, stdev, p10, p25, p75, p90, iqr}}
+    assignment_type_prior_used  INTEGER DEFAULT 0,   -- 1 if cold-start Bayesian prior was applied
+    prior_weight_used       REAL,                 -- Bayesian prior weight (null if no prior)
+    created_at              TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_baselines_course
+    ON class_baselines (course_id, created_at DESC);
 """
 
 
@@ -1037,6 +1059,136 @@ class RunStore:
 
         wb.save(output_path)
         return output_path
+
+    # ── Class baselines (Mechanism 1: Cohort Calibration) ────────────────
+
+    def save_class_baseline(
+        self,
+        run_id: str,
+        course_id: str,
+        assignment_mode: Optional[str],
+        education_level: Optional[str],
+        n_students: int,
+        signals: Dict[str, Any],
+        prior_used: bool = False,
+        prior_weight: Optional[float] = None,
+    ) -> None:
+        """Persist class-level engagement signal distributions.
+
+        Called after all students in a batch are analyzed. The signals dict
+        contains per-signal statistical distributions (mean, stdev, percentiles)
+        computed by CohortCalibrator.compute_class_distributions().
+
+        Args:
+            run_id: Unique identifier for this analysis run (typically
+                    f"{course_id}_{assignment_id}_{timestamp}")
+            course_id: Canvas course ID
+            assignment_mode: AIC mode (notes, essay, discussion, etc.)
+            education_level: Education level profile used
+            n_students: Number of students whose signals were included
+            signals: Dict of {signal_name: {mean, median, stdev, p10, ...}}
+            prior_used: True if Bayesian cold-start prior was applied
+            prior_weight: The prior weight used (None if no prior)
+        """
+        self._conn.execute(
+            """
+            INSERT INTO class_baselines
+                (run_id, course_id, assignment_mode, education_level,
+                 n_students, signals, assignment_type_prior_used,
+                 prior_weight_used, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                run_id,
+                str(course_id),
+                assignment_mode,
+                education_level,
+                n_students,
+                json.dumps(signals, default=str),
+                int(prior_used),
+                prior_weight,
+                self._now(),
+            ),
+        )
+        self._conn.commit()
+
+    def get_class_baseline(
+        self,
+        course_id: str,
+        assignment_mode: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Return the most recent baseline for a course.
+
+        If assignment_mode is given, returns the most recent baseline
+        matching that mode. Otherwise returns the most recent baseline
+        regardless of mode.
+
+        Returns:
+            Dict with all baseline columns (signals JSON decoded) or None.
+        """
+        if assignment_mode:
+            row = self._conn.execute(
+                """
+                SELECT * FROM class_baselines
+                WHERE course_id = ? AND assignment_mode = ?
+                ORDER BY created_at DESC
+                LIMIT 1
+                """,
+                (str(course_id), assignment_mode),
+            ).fetchone()
+        else:
+            row = self._conn.execute(
+                """
+                SELECT * FROM class_baselines
+                WHERE course_id = ?
+                ORDER BY created_at DESC
+                LIMIT 1
+                """,
+                (str(course_id),),
+            ).fetchone()
+
+        if row is None:
+            return None
+
+        d = dict(row)
+        try:
+            d["signals"] = json.loads(d.get("signals") or "{}")
+        except (json.JSONDecodeError, TypeError):
+            d["signals"] = {}
+        return d
+
+    def get_baseline_history(
+        self,
+        course_id: str,
+        limit: int = 20,
+    ) -> List[Dict[str, Any]]:
+        """Return all baselines for a course, newest first.
+
+        Used for computing EMA evolution across assignments. Limited to
+        the most recent `limit` entries to keep queries bounded.
+
+        Returns:
+            List of dicts with signals JSON decoded.
+        """
+        rows = self._conn.execute(
+            """
+            SELECT * FROM class_baselines
+            WHERE course_id = ?
+            ORDER BY created_at DESC
+            LIMIT ?
+            """,
+            (str(course_id), limit),
+        ).fetchall()
+
+        result = []
+        for r in rows:
+            d = dict(r)
+            try:
+                d["signals"] = json.loads(d.get("signals") or "{}")
+            except (json.JSONDecodeError, TypeError):
+                d["signals"] = {}
+            result.append(d)
+        return result
 
     # ── Cleanup helpers ────────────────────────────────────────────────────
 

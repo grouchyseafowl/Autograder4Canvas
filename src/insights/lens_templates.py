@@ -33,6 +33,10 @@ class LensTemplate:
     # relevant and adds subject-appropriate patterns.  Empty string = use
     # the hardcoded defaults unmodified.
     concern_framing_fragment: str = ""
+    # Default strength patterns — surfaced when teacher has not defined custom ones.
+    # These represent community cultural wealth and non-dominant forms of engagement
+    # that the pipeline should actively look for.
+    default_strength_patterns: List[str] = field(default_factory=list)
     # Assignment type sub-templates
     assignment_variants: Dict[str, List[str]] = field(default_factory=dict)
 
@@ -102,6 +106,14 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "Do NOT flag passion, anger, or grief about injustice — these are "
             "appropriate engagement, not behavioral concerns."
         ),
+        default_strength_patterns=[
+            "student connects course material to community or family knowledge",
+            "student demonstrates translanguaging or multilingual thinking",
+            "student brings outside sources or cross-disciplinary connections",
+            "student challenges or extends the assigned framework's scope",
+            "student shows meta-awareness of their own knowledge-making process",
+            "student's writing demonstrates rhetorical sophistication in any register",
+        ],
     ),
 
     "social_science": LensTemplate(
@@ -166,6 +178,13 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "science contexts — patterns about group behavior, structural "
             "inequality, and identity deserve scrutiny."
         ),
+        default_strength_patterns=[
+            "student applies theoretical frameworks to their own lived experience as evidence",
+            "student questions whose experiences are treated as data vs. anecdote",
+            "student brings cross-disciplinary frameworks into analysis",
+            "student demonstrates methodological awareness in evaluating sources",
+            "student surfaces structural explanations rather than individual deficit framing",
+        ],
     ),
 
     "humanities": LensTemplate(
@@ -227,6 +246,13 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "Essentializing and colorblind framing apply when students discuss "
             "characters, authors, or historical figures by identity categories."
         ),
+        default_strength_patterns=[
+            "student brings their own cultural or religious interpretive tradition to the text",
+            "student connects the text to family knowledge, proverbs, or community wisdom",
+            "student challenges 'universal' claims and names whose experience they represent",
+            "student surfaces non-Western or Indigenous intellectual traditions",
+            "student develops an original interpretive claim not present in course materials",
+        ],
     ),
 
     "english": LensTemplate(
@@ -287,6 +313,13 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "Also flag: student dismisses another writer's voice or style as "
             "'incorrect' rather than engaging with its choices."
         ),
+        default_strength_patterns=[
+            "student demonstrates code-switching with intentionality across registers",
+            "student draws on home language or community rhetorical traditions as strength",
+            "student's voice is distinct and consistent with their own linguistic identity",
+            "student takes structural or formal risks in their writing",
+            "student writes with passion or specificity about community or lived experience",
+        ],
     ),
 
     "history": LensTemplate(
@@ -350,6 +383,13 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "- Student treats a single source's perspective as objective fact "
             "without noting whose perspective it represents"
         ),
+        default_strength_patterns=[
+            "student connects historical events to their own family or community history",
+            "student surfaces whose testimony and archives are missing from the record",
+            "student applies historical thinking to question whose perspective dominates",
+            "student connects historical causes to present structural conditions",
+            "student centers the experience of communities not in the textbook narrative",
+        ],
     ),
 
     "science": LensTemplate(
@@ -424,6 +464,13 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "- Student dismisses a counterexample or outlier without explanation\n"
             "Wellbeing signals always apply regardless of subject."
         ),
+        default_strength_patterns=[
+            "student connects scientific concepts to community or environmental health context",
+            "student brings community ecological or traditional knowledge into dialogue with course concepts",
+            "student questions whose communities are studied and who benefits from research",
+            "student demonstrates sophisticated data reasoning that goes beyond surface patterns",
+            "student surfaces structural context for health, environmental, or social outcomes",
+        ],
     ),
 
     "psychology": LensTemplate(
@@ -506,6 +553,13 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "Neurodivergent self-description is NOT a concern — it is expertise. "
             "Wellbeing signals always apply."
         ),
+        default_strength_patterns=[
+            "student identifies cultural specificity in psychological research and its limits",
+            "student applies psychological concepts to structural rather than individual explanations",
+            "student brings lived experience of neurodivergence, disability, or mental health as expertise",
+            "student critiques WEIRD sampling or universality assumptions in foundational research",
+            "student uses culturally specific vocabulary for psychological experience with precision",
+        ],
     ),
 
     "government_civics": LensTemplate(
@@ -585,6 +639,13 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "Do NOT flag passionate civic engagement, including anger about "
             "injustice — this is the course working as intended."
         ),
+        default_strength_patterns=[
+            "student brings lived experience of navigating government systems as primary source knowledge",
+            "student distinguishes between formal rights and actual community access",
+            "student surfaces community-based governance, mutual aid, or resistance as civic practice",
+            "student demonstrates sophisticated structural analysis of how policy operates on bodies",
+            "student connects historical civic struggles to present conditions",
+        ],
     ),
 
     "health_sciences": LensTemplate(
@@ -668,6 +729,13 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "in health fields may disclose personal health experiences in "
             "the course of doing the work."
         ),
+        default_strength_patterns=[
+            "student centers the patient or community perspective rather than the provider or system",
+            "student brings community health knowledge or traditional healing practices as valid expertise",
+            "student surfaces structural determinants of health disparities",
+            "student demonstrates awareness of medical racism or historical harm in health institutions",
+            "student applies disability justice or social model frameworks to clinical questions",
+        ],
     ),
 
     "arts": LensTemplate(
@@ -750,6 +818,13 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "Do NOT flag art that expresses pain, rage, grief, or political "
             "conviction — this is what art does."
         ),
+        default_strength_patterns=[
+            "student articulates connections between their cultural tradition and artistic choices",
+            "student brings community or ancestral artistic lineage into the work",
+            "student takes creative risks that challenge expected forms or conventions",
+            "student demonstrates critical engagement with whose aesthetics are centered",
+            "student's artistic voice is distinct and rooted in specific cultural knowledge",
+        ],
     ),
 
     "general": LensTemplate(
@@ -788,6 +863,13 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "All default patterns apply. Use judgment about which patterns "
             "are most relevant given the assignment topic."
         ),
+        default_strength_patterns=[
+            "student makes cross-disciplinary connections",
+            "student brings lived experience or community knowledge as evidence",
+            "student demonstrates metacognitive awareness of their own thinking",
+            "student challenges or extends the scope of the course material",
+            "student's engagement reflects care for their community or subject matter",
+        ],
     ),
 }
 
@@ -818,3 +900,15 @@ def get_concern_framing_fragment(subject_key: str) -> str:
     """
     t = LENS_TEMPLATES.get(subject_key, LENS_TEMPLATES["general"])
     return t.concern_framing_fragment
+
+
+def get_default_strength_patterns(subject_key: str) -> List[str]:
+    """Return default strength patterns for a subject area.
+
+    Used when a teacher has not defined custom strength patterns.
+    Always returns something — falls back to general if key unknown.
+    These patterns represent community cultural wealth and non-dominant
+    forms of engagement that the pipeline should actively surface.
+    """
+    t = LENS_TEMPLATES.get(subject_key, LENS_TEMPLATES["general"])
+    return list(t.default_strength_patterns)

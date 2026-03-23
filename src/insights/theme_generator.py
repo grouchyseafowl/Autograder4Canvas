@@ -40,7 +40,7 @@ log = logging.getLogger(__name__)
 # Group size limits by tier
 _GROUP_SIZES = {
     "lightweight": 5,   # Tiny groups for 8B — larger batches timeout on 20+ students
-    "medium": 15,
+    "medium": 10,
     "deep_thinking": 30,
 }
 
@@ -236,6 +236,117 @@ def _parse_theme_set(parsed: dict) -> ThemeSet:
     return ThemeSet(themes=themes, contradictions=contradictions)
 
 
+def _validate_theme_quotes(
+    theme_set: ThemeSet, records: List[SubmissionCodingRecord]
+) -> ThemeSet:
+    """Strip theme quotes that don't appear in any student's coding record.
+
+    Prevents fabrication (#ALGORITHMIC_JUSTICE): a teacher reading
+    'Amani said X' and acting on it when X is fiction causes direct harm.
+    Checks the first 40 characters as a prefix — generous enough to catch
+    minor whitespace/punctuation differences while blocking inventions.
+    """
+    known_prefixes: set = set()
+    for r in records:
+        for q in r.notable_quotes:
+            known_prefixes.add(q.text[:40].lower().strip())
+
+    if not known_prefixes:
+        return theme_set
+
+    validated_themes = []
+    for theme in theme_set.themes:
+        valid_quotes = []
+        for quote in theme.supporting_quotes:
+            prefix = quote.text[:40].lower().strip()
+            matched = any(
+                prefix in known or known in prefix
+                for known in known_prefixes
+            )
+            if matched:
+                valid_quotes.append(quote)
+            else:
+                log.warning(
+                    "Stripped fabricated theme quote from '%s': %.60s...",
+                    theme.name, quote.text,
+                )
+        validated_themes.append(theme.model_copy(update={"supporting_quotes": valid_quotes}))
+
+    return theme_set.model_copy(update={"themes": validated_themes})
+
+
+def _embedding_dedup_themes(theme_set: ThemeSet, threshold: float = 0.85) -> ThemeSet:
+    """Merge near-duplicate themes using sentence-transformer embeddings.
+
+    8B models produce 20-30 fragmented themes on larger classes. This pass
+    merges themes whose names+descriptions are semantically ≥ threshold similar,
+    keeping the higher-frequency theme and merging student_ids and quotes.
+
+    Falls back silently (returns input unchanged) if sentence-transformers
+    is unavailable — the dependency is optional.
+    """
+    if len(theme_set.themes) < 2:
+        return theme_set
+
+    try:
+        from sentence_transformers import SentenceTransformer, util as st_util
+        import torch
+    except ImportError:
+        log.debug("sentence-transformers not available — skipping embedding dedup")
+        return theme_set
+
+    try:
+        model = SentenceTransformer("all-MiniLM-L6-v2")
+        texts = [f"{t.name}: {t.description}" for t in theme_set.themes]
+        embeddings = model.encode(texts, convert_to_tensor=True, show_progress_bar=False)
+        cosine_scores = st_util.cos_sim(embeddings, embeddings)
+
+        merged_into: dict = {}  # index → canonical index
+        for i in range(len(theme_set.themes)):
+            if i in merged_into:
+                continue
+            for j in range(i + 1, len(theme_set.themes)):
+                if j in merged_into:
+                    continue
+                if cosine_scores[i][j].item() >= threshold:
+                    # Keep the higher-frequency theme as canonical
+                    canonical = i if theme_set.themes[i].frequency >= theme_set.themes[j].frequency else j
+                    duplicate = j if canonical == i else i
+                    merged_into[duplicate] = canonical
+
+        if not merged_into:
+            return theme_set
+
+        # Build merged themes
+        canonical_themes: dict = {}
+        for idx, theme in enumerate(theme_set.themes):
+            if idx in merged_into:
+                continue
+            canonical_themes[idx] = theme
+
+        for dup_idx, can_idx in merged_into.items():
+            dup = theme_set.themes[dup_idx]
+            can = canonical_themes[can_idx]
+            merged_ids = list(dict.fromkeys(can.student_ids + dup.student_ids))
+            merged_quotes = (can.supporting_quotes + dup.supporting_quotes)[:3]
+            canonical_themes[can_idx] = can.model_copy(update={
+                "student_ids": merged_ids,
+                "frequency": len(merged_ids),
+                "supporting_quotes": merged_quotes,
+            })
+
+        deduped = list(canonical_themes.values())
+        log.info(
+            "Embedding dedup: %d themes → %d (threshold=%.2f, merged=%d)",
+            len(theme_set.themes), len(deduped), threshold, len(merged_into),
+        )
+        return theme_set.model_copy(update={"themes": deduped})
+
+    except Exception as exc:
+        log.warning("Embedding dedup failed (%s) — returning original theme set", exc)
+        return theme_set
+
+
 def generate_themes(
     coding_records: List[SubmissionCodingRecord],
     *,
@@ -259,10 +370,12 @@ def generate_themes(
 
     # If all records fit in one group, single call
     if len(coding_records) <= group_size:
-        return _generate_single(
+        result = _generate_single(
             coding_records, assignment_name, interests_text, lens_fragment,
             backend, profile_fragment, tier=tier,
         )
+        result = _validate_theme_quotes(result, coding_records)
+        return _embedding_dedup_themes(result)
 
     # Hierarchical: group -> theme sets -> meta-synthesis
     groups = _group_by_cluster(coding_records, group_size)
@@ -279,13 +392,16 @@ def generate_themes(
         group_theme_sets.append(ts)
 
     if len(group_theme_sets) == 1:
-        return group_theme_sets[0]
+        result = _validate_theme_quotes(group_theme_sets[0], coding_records)
+        return _embedding_dedup_themes(result)
 
     # Meta-synthesis: merge group theme sets
-    return _meta_synthesize(
+    result = _meta_synthesize(
         group_theme_sets, assignment_name, interests_text, backend,
         profile_fragment, tier=tier,
     )
+    result = _validate_theme_quotes(result, coding_records)
+    return _embedding_dedup_themes(result)
 
 
 def _generate_single(

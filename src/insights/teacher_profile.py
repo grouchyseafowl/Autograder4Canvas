@@ -14,6 +14,46 @@ from insights.insights_store import InsightsStore
 from insights.models import TeacherAnalysisProfile
 
 
+# ---------------------------------------------------------------------------
+# Wellbeing signal protection
+# ---------------------------------------------------------------------------
+# Concern patterns that must always surface, even if previously dismissed.
+# These can be reduced but never below WELLBEING_SENSITIVITY_FLOOR.
+# The teacher still decides what to do — but the system doesn't go silent
+# on safety.
+PROTECTED_WELLBEING_PATTERNS = {
+    "distress",
+    "self-harm", "self harm",
+    "suicide", "suicidal",
+    "crisis",
+    "harm",
+    "safety",
+    "abuse",
+    "violence",
+    "isolation",
+    "hopeless",
+    "help",
+}
+
+WELLBEING_SENSITIVITY_FLOOR = 0.3  # Never suppress below this
+
+WELLBEING_FLOOR_NOTE = (
+    "Safety signals remain active at minimum sensitivity — "
+    "these patterns always surface so students in crisis are visible."
+)
+
+
+def is_protected_concern(concern_text: str) -> bool:
+    """Check if a concern contains wellbeing/safety language that should
+    never be fully suppressed.
+
+    Matches against PROTECTED_WELLBEING_PATTERNS using case-insensitive
+    substring search. A single hit is enough — err on the side of surfacing.
+    """
+    lower = concern_text.lower()
+    return any(pattern in lower for pattern in PROTECTED_WELLBEING_PATTERNS)
+
+
 class TeacherProfileManager:
     """Wraps InsightsStore profile persistence with edit-recording helpers.
 
@@ -79,21 +119,45 @@ class TeacherProfileManager:
         })
         self._save()
 
-    def record_concern_action(self, concern_text: str, action: str) -> None:
+    def record_concern_action(
+        self, concern_text: str, action: str,
+    ) -> Optional[str]:
         """Adjust concern sensitivity based on teacher action.
 
         action: "acknowledge" or "dismiss"
+
+        Returns a notification string when a protected wellbeing concern
+        hits the sensitivity floor, so the caller can surface it to the
+        teacher. Returns None otherwise.
+
+        Protected concerns (distress, self-harm, crisis, etc.) can never
+        be suppressed below WELLBEING_SENSITIVITY_FLOOR.  The teacher
+        still decides what to act on — but the system will keep surfacing
+        safety signals so students in crisis remain visible.
         """
         key = concern_text[:80]
         current = self._profile.concern_sensitivity.get(key, 0.5)
+        note: Optional[str] = None
+
         if action == "acknowledge":
             self._profile.concern_sensitivity[key] = min(1.0, current + 0.1)
         elif action == "dismiss":
-            self._profile.concern_sensitivity[key] = max(0.0, current - 0.1)
+            new_val = current - 0.1
+            protected = is_protected_concern(key)
+            if protected:
+                floor = WELLBEING_SENSITIVITY_FLOOR
+                new_val = max(floor, new_val)
+                if new_val <= floor:
+                    note = WELLBEING_FLOOR_NOTE
+            else:
+                new_val = max(0.0, new_val)
+            self._profile.concern_sensitivity[key] = new_val
+
         self._append_history("concern_action", {
             "concern": key, "action": action,
         })
         self._save()
+        return note
 
     def record_tag_edit(
         self, student_id: str, added: List[str], removed: List[str],
@@ -259,7 +323,12 @@ class TeacherProfileManager:
         return "\n".join(lines)
 
     def get_concern_sensitivity_fragment(self) -> str:
-        """Build a prompt fragment from concern sensitivity adjustments."""
+        """Build a prompt fragment from concern sensitivity adjustments.
+
+        Protected wellbeing concerns at the sensitivity floor are annotated
+        so the LLM understands these are safety signals that always surface,
+        regardless of the teacher's dismiss history.
+        """
         if not self._profile.concern_sensitivity:
             return ""
         lines = ["TEACHER CONCERN CALIBRATION:"]
@@ -268,6 +337,11 @@ class TeacherProfileManager:
         )[:10]:
             if val >= 0.7:
                 lines.append(f"  - High sensitivity: {key}")
+            elif val <= WELLBEING_SENSITIVITY_FLOOR and is_protected_concern(key):
+                lines.append(
+                    f"  - {key} — sensitivity is at minimum "
+                    "(safety signal — always surfaces)"
+                )
             elif val <= 0.3:
                 lines.append(f"  - Low sensitivity (often dismissed): {key}")
         return "\n".join(lines) if len(lines) > 1 else ""

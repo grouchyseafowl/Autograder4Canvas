@@ -94,6 +94,15 @@ try:
 except ImportError:
     HAS_CITATION_CHECKER = False
 
+# Import cohort calibration (Mechanism 1: class-relative baselines)
+try:
+    from modules.cohort_calibration import (
+        CohortCalibrator, extract_signal_vector, SIGNAL_NAMES
+    )
+    HAS_COHORT_CALIBRATION = True
+except ImportError:
+    HAS_COHORT_CALIBRATION = False
+
 # Version info
 VERSION = "2.0.0"
 VERSION_DATE = "2025-12-26"
@@ -474,6 +483,10 @@ class AnalysisResult:
     # Phase 8: Two-axis weight system provenance
     education_level: Optional[str] = None       # which edu level profile was used
     population_settings: Optional[Dict] = None  # effective population settings dict
+
+    # Mechanism 1: Cohort calibration — class-relative signal interpretations
+    # Maps signal_name → interpretation string (e.g., 'typical', 'conversation_opportunity')
+    cohort_percentiles: Optional[Dict[str, str]] = None
 
 
 # =============================================================================
@@ -2314,6 +2327,94 @@ def analyze_assignment(course_id: int,
             )
     except Exception as _e:
         print(f"  ⚠ RunStore save skipped: {_e}")
+
+    # ── Mechanism 1: Cohort Calibration ──────────────────────────────────
+    # Compute class-relative baselines from fast AIC signals and annotate
+    # each student result with class-relative percentile interpretations.
+    if HAS_COHORT_CALIBRATION and len(results) >= 3:
+        try:
+            calibrator = CohortCalibrator()
+
+            # Extract signal vectors from all results
+            signal_vectors = []
+            vector_map = {}  # student_id → signal vector
+            for r in results:
+                vec = extract_signal_vector(r)
+                if vec is not None:
+                    signal_vectors.append(vec)
+                    vector_map[r.student_id] = vec
+
+            if len(signal_vectors) >= 3:
+                # Compute class distributions
+                distributions = calibrator.compute_class_distributions(signal_vectors)
+
+                # Check for prior baseline (EMA evolution)
+                _edu_level = (
+                    composed_weights.education_level
+                    if composed_weights is not None
+                    else context_profile
+                )
+                _prior_used = False
+                _prior_weight = None
+
+                try:
+                    from automation.run_store import RunStore as _RS
+                    _baseline_store = _RS()
+                    _prev_baseline = _baseline_store.get_class_baseline(
+                        str(course_id), assignment_mode=assignment_type
+                    )
+
+                    if _prev_baseline and _prev_baseline.get('signals'):
+                        # Evolve baseline with EMA
+                        prev_signals = _prev_baseline['signals']
+                        for sig_name, stats in distributions.items():
+                            if sig_name in prev_signals:
+                                prev_mean = prev_signals[sig_name].get('mean')
+                                if prev_mean is not None:
+                                    stats['mean'] = calibrator.evolve_baseline(
+                                        stats['mean'], prev_mean
+                                    )
+                    else:
+                        # Cold start: apply Bayesian blending with education-level priors
+                        _prior_weight = max(10, 25 - len(signal_vectors))
+                        _prior_used = True
+                        for sig_name, stats in distributions.items():
+                            stats['mean'] = calibrator.cold_start_baseline(
+                                stats['mean'],
+                                len(signal_vectors),
+                                education_level=_edu_level or "community_college",
+                                signal_name=sig_name,
+                            )
+
+                    # Save baseline to RunStore
+                    _run_id = f"{course_id}_{assignment_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                    _baseline_store.save_class_baseline(
+                        run_id=_run_id,
+                        course_id=str(course_id),
+                        assignment_mode=assignment_type,
+                        education_level=_edu_level,
+                        n_students=len(signal_vectors),
+                        signals=distributions,
+                        prior_used=_prior_used,
+                        prior_weight=_prior_weight,
+                    )
+                except Exception as _be:
+                    print(f"  ⚠ Baseline persistence skipped: {_be}")
+
+                # Annotate each result with class-relative interpretations
+                for r in results:
+                    vec = vector_map.get(r.student_id)
+                    if vec is not None:
+                        r.cohort_percentiles = calibrator.compute_student_percentiles(
+                            vec, distributions
+                        )
+
+                n_annotated = sum(1 for r in results if r.cohort_percentiles)
+                print(f"  Cohort calibration: {len(signal_vectors)} vectors, "
+                      f"{n_annotated} students annotated with class-relative percentiles")
+
+        except Exception as _ce:
+            print(f"  ⚠ Cohort calibration skipped: {_ce}")
 
     # Report any errors that occurred
     if errors:

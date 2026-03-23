@@ -126,6 +126,11 @@ class SubmissionCodingRecord(BaseModel):
     is_possibly_truncated: bool = False
     truncation_note: str = ""
 
+    # Tier 1 integrity flags (copied from AIC + QuickAnalysis for UI access)
+    # These are binary, non-negotiable observations — no cultural bias risk.
+    # Displayed as warning banners, never verdicts.
+    integrity_flags: Optional[Dict[str, Any]] = None
+
     # Theme tags that may be in tension with flagged concerns — teacher review recommended, never auto-correct.
     theme_concern_notes: List[str] = []
 
@@ -218,6 +223,8 @@ class PerSubmissionSummary(BaseModel):
     gibberish_detail: str = ""
     # Assignment connection (vocabulary overlap with assignment description)
     assignment_connection: Optional["AssignmentConnectionScore"] = None
+    # Named reference match (authors, titles, concepts from assignment description)
+    reference_match: Optional["ReferenceMatchScore"] = None
     # Truncation detection (non-LLM heuristic)
     is_possibly_truncated: bool = False
     truncation_note: str = ""
@@ -244,6 +251,46 @@ class AssignmentConnectionScore(BaseModel):
     keyword_overlap_count: int = 0       # how many assignment keywords found
     keyword_overlap_ratio: float = 0.0   # found / expected
     observation: str = ""                # human-readable note for the teacher
+
+
+class AssignmentFingerprint(BaseModel):
+    """Named references extracted from an assignment description.
+
+    Pure NLP — no LLM required.  Uses spaCy NER + TF-IDF + keyword
+    matching to identify what the assignment asks students to engage with.
+
+    This fingerprint is then matched against each submission to measure
+    whether the student referenced the assigned readings / concepts.
+    Like AssignmentConnectionScore, this measures NAMED REFERENCE OVERLAP
+    only — a student engaging through lived experience, personal narrative,
+    or non-standard vocabulary is engaging with the material even if they
+    don't name the author or use the term "intersectionality."
+    """
+    author_names: List[str] = []        # e.g., ["Crenshaw", "hooks"]
+    work_titles: List[str] = []         # e.g., ["Mapping the Margins"]
+    key_concepts: List[str] = []        # e.g., ["intersectionality", "traffic intersection metaphor"]
+    engagement_type: str = "mixed"      # personal_reflection | analysis | summary | discussion | mixed
+    raw_named_entities: List[str] = []  # All NER results for reference
+
+
+class ReferenceMatchScore(BaseModel):
+    """Per-submission match against the AssignmentFingerprint.
+
+    Counts how many named authors, work titles, and key concepts from the
+    assignment description appear in the student's submission.
+
+    Same equity caveat as AssignmentFingerprint: absence of named references
+    does not mean absence of engagement.  Students may engage through
+    personal narrative, paraphrase, or non-academic vocabulary.
+    """
+    authors_found: List[str] = []       # which author names appeared
+    authors_total: int = 0              # how many were in the fingerprint
+    titles_found: List[str] = []        # which work titles appeared
+    titles_total: int = 0
+    concepts_found: List[str] = []      # which key concepts appeared
+    concepts_total: int = 0
+    match_ratio: float = 0.0           # (authors + titles + concepts found) / total
+    observation: str = ""              # human-readable note for the teacher
 
 
 class HighSimilarityPair(BaseModel):
@@ -323,6 +370,8 @@ class QuickAnalysisResult(BaseModel):
     # Assignment connection (vocabulary overlap between submissions and assignment)
     assignment_description: str = ""
     assignment_connection_observation: str = ""
+    # Assignment fingerprint (named references extracted from assignment description)
+    assignment_fingerprint: Optional[AssignmentFingerprint] = None
 
     # Cross-submission patterns
     shared_references: List[SharedReference] = []
