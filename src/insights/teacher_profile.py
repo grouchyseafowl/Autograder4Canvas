@@ -407,6 +407,147 @@ class TeacherProfileManager:
             lines.append(f"  - {p}")
         return "\n".join(lines)
 
+    def get_calibration_fragment(self) -> str:
+        """Build a prompt fragment from recent teacher corrections.
+
+        This closes the feedback loop: corrections saved via save_calibration()
+        (tag edits, concern actions, theme renames, etc.) are formatted into
+        natural-language examples that teach the LLM the teacher's judgment.
+
+        The fragment is anonymized — no student names or IDs are included.
+        Submission text is truncated to avoid leaking student work across
+        students.  Returns empty string if no corrections exist.
+        """
+        import json as _json
+
+        corrections = self._store.get_recent_corrections(
+            self._profile_id, limit=5,
+        )
+        if not corrections:
+            return ""
+
+        lines = [
+            "TEACHER CORRECTIONS (learn from these):",
+            "The teacher has corrected similar assessments in the past:",
+        ]
+
+        for c in corrections:
+            correction_type = c.get("correction_type", "general")
+            original_raw = c.get("original_coding", "")
+            corrected_raw = c.get("corrected_coding", "")
+
+            # Parse JSON payloads safely
+            try:
+                original = _json.loads(original_raw) if original_raw else {}
+            except (_json.JSONDecodeError, TypeError):
+                original = {}
+            try:
+                corrected = _json.loads(corrected_raw) if corrected_raw else {}
+            except (_json.JSONDecodeError, TypeError):
+                corrected = {}
+
+            # Build a human-readable correction line based on type
+            description = self._format_correction(
+                correction_type, original, corrected,
+            )
+            if description:
+                lines.append(f"- {description}")
+
+        # Only emit if we produced at least one concrete correction line
+        if len(lines) <= 2:
+            return ""
+
+        lines.append(
+            "Apply these corrections to similar cases in this analysis."
+        )
+        return "\n".join(lines)
+
+    @staticmethod
+    def _format_correction(
+        correction_type: str, original: dict, corrected: dict,
+    ) -> str:
+        """Format a single correction record into a prompt-safe description.
+
+        Returns empty string if the correction can't be meaningfully described.
+        All output is anonymized — no student names or IDs.
+        """
+        if correction_type == "tag_remove":
+            removed = set(original.get("theme_tags", [])) - set(
+                corrected.get("theme_tags", [])
+            )
+            if removed:
+                return (
+                    f"Tag(s) {', '.join(repr(t) for t in removed)} were removed "
+                    f"by the teacher as not applicable."
+                )
+
+        elif correction_type == "tag_add":
+            added = set(corrected.get("theme_tags", [])) - set(
+                original.get("theme_tags", [])
+            )
+            if added:
+                return (
+                    f"Tag(s) {', '.join(repr(t) for t in added)} were added "
+                    f"by the teacher as missing from the original coding."
+                )
+
+        elif correction_type == "concern_dismiss":
+            why = corrected.get("why_flagged", "")
+            if why:
+                return (
+                    f"A concern flagged as \"{why[:120]}\" was dismissed "
+                    f"by the teacher as not applicable."
+                )
+
+        elif correction_type == "concern_acknowledge":
+            why = corrected.get("why_flagged", "")
+            if why:
+                return (
+                    f"A concern flagged as \"{why[:120]}\" was acknowledged "
+                    f"by the teacher as valid — keep flagging similar cases."
+                )
+
+        elif correction_type == "theme_rename":
+            old_name = original.get("name", "")
+            new_name = corrected.get("name", "")
+            if old_name and new_name:
+                return (
+                    f"Theme \"{old_name}\" was renamed to \"{new_name}\" — "
+                    f"use the new name in future analysis."
+                )
+
+        elif correction_type == "theme_delete":
+            theme = original.get("theme", "")
+            if theme:
+                return (
+                    f"Theme \"{theme}\" was deleted by the teacher as not useful."
+                )
+
+        elif correction_type == "feedback_edit":
+            return (
+                "Draft feedback was edited by the teacher to better match "
+                "their voice and pedagogical approach."
+            )
+
+        elif correction_type == "outlier_to_theme":
+            theme = corrected.get("theme", "")
+            if theme:
+                return (
+                    f"An outlier submission was reclassified into theme "
+                    f"\"{theme}\" by the teacher."
+                )
+
+        elif correction_type == "outlier_create_theme":
+            theme = corrected.get("theme", "")
+            if theme:
+                return (
+                    f"The teacher created a new theme \"{theme}\" from an "
+                    f"outlier submission — consider this theme category."
+                )
+
+        # Fallback for unknown types: skip rather than leak raw JSON
+        return ""
+
     def get_strengths_fragment(self) -> str:
         """Build a prompt fragment for strength patterns to surface.
 
@@ -439,8 +580,9 @@ class TeacherProfileManager:
     def get_full_profile_fragment(self) -> str:
         """Combine all profile fragments into one block for prompt injection.
 
-        Includes: theme vocabulary, concern calibration, interests, equity
-        attention framing, AND teacher-defined strength patterns.
+        Includes: theme vocabulary, concern calibration, prompt calibration
+        feedback loop, interests, equity attention framing, AND teacher-defined
+        strength patterns.
         Strength patterns flow into coding prompts as positive surfacing
         instructions; they are benign noise in concern detection prompts.
         """
@@ -450,6 +592,7 @@ class TeacherProfileManager:
             self.get_concern_sensitivity_fragment(),
             self.get_disabled_defaults_fragment(),
             self.get_custom_concern_fragment(),
+            self.get_calibration_fragment(),
             self.get_strengths_fragment(),
             self.get_interests_fragment(),
             self.get_equity_fragment(),

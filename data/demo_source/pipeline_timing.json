@@ -1,15 +1,15 @@
 {
-  "biology": {
-    "quick_analysis": 12.97,
-    "coding_total": 736.86,
-    "coding_per_student_avg": 28.98,
-    "concerns": 435.45,
-    "themes": 843.77,
-    "outliers": 68.27,
-    "synthesis": 158.63,
-    "feedback": 572.93,
-    "total": 2857.86,
-    "students": 25,
-    "per_student_total": 114.31
+  "ethnic_studies": {
+    "quick_analysis": 3.82,
+    "coding_total": 135.82,
+    "coding_per_student_avg": 26.76,
+    "concerns": 124.96,
+    "themes": 86.51,
+    "outliers": 0.0,
+    "synthesis": 11.86,
+    "feedback": 99.63,
+    "total": 489.36,
+    "students": 5,
+    "per_student_total": 97.87
   }
 }

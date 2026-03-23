@@ -339,11 +339,11 @@ The DAIGT test corpus gives us formal competition essays from strong writers. It
 8. ✅ 8-channel convergence system — multiplier at 3+ channels
 9. ✅ ESL protections — error pattern detection + structural signal zeroing
 
-### Phase B: Calibration infrastructure — ❌ NOT STARTED
+### Phase B: Calibration infrastructure — ✅ MOSTLY COMPLETE
 
-10. ❌ Cohort calibration (class-relative baselines) — highest-impact remaining gap
-11. ⚠️ Assignment context extraction — Canvas API fetches assignment description; QA computes vocabulary overlap (AssignmentConnectionScore). Missing: named reference extraction, engagement expectation matrix, reading-vs-topic distinction
-12. ❌ Cold-start Bayesian priors — WeightComposer provides education-level defaults but not wired into calibration
+10. ✅ Cohort calibration — `cohort_calibration.py` module with CohortCalibrator class, ClassBaseline table in RunStore, Bayesian cold-start with education-level priors, EMA baseline evolution, per-student percentile annotation. Integrated into `analyze_assignment()`.
+11. ✅ Assignment context extraction — vocabulary overlap (AssignmentConnectionScore) + named reference extraction (AssignmentFingerprint: spaCy NER for authors/titles, TF-IDF for key concepts, engagement type detection). Per-student ReferenceMatchScore with match ratios. Missing: engagement expectation matrix, Canvas modules API for reading lists.
+12. ✅ Cold-start Bayesian priors — education-level priors (high_school, community_college, four_year, university, online) for all 6 signals. Formula: `effective = (n × class_mean + prior_weight × type_mean) / (n + prior_weight)` where `prior_weight = max(10, 25 - n)`.
 
 ### Phase C: Engagement framing + population-level — ✅ MOSTLY COMPLETE
 
@@ -354,7 +354,7 @@ The DAIGT test corpus gives us formal competition essays from strong writers. It
 
 ### Phase D: Teacher feedback + longitudinal — ⚠️ PARTIAL
 
-17. ⚠️ Teacher feedback loop — TeacherProfileManager built (theme renames/splits/merges, concern sensitivity ±0.1, custom patterns, strength patterns, disabled defaults). Missing: per-signal weight overrides, threshold adjustment, per-student annotations alongside signal data, correction pattern recognition surfacing.
+17. ⚠️ Teacher feedback loop — TeacherProfileManager built (theme renames/splits/merges, concern sensitivity with wellbeing floor at 0.3, custom patterns, strength patterns, disabled defaults, prompt calibration feedback loop injecting recent corrections into future prompts). Missing: per-signal weight overrides, threshold adjustment, per-student annotations alongside signal data, correction pattern recognition surfacing.
 18. ❌ Voice fingerprinting — StudentArc tracks word counts across runs but not signal vectors. No Mahalanobis distance, no drift detection.
 19. ⚠️ Growth tracking — TrajectoryAnalyzer computes theme evolution, engagement/concern/exhaustion trends at class level. Per-student engagement signal growth not tracked.
 
@@ -381,6 +381,8 @@ These features were built during the Insights pipeline implementation and were n
 - ✅ **Anti-bias post-processing** — tone-policing detection in concern flags, content-vs-distress classification, AAVE sentiment suppression, informal register bias detection
 - ✅ **Resumable pipeline** — stage checkpoints for crash recovery
 - ✅ **Concept validation** — hallucination guard rejecting concepts 8B attributes from prompt rather than submission text
+- ✅ **Wellbeing signal protection** — safety-critical concern patterns (distress, self-harm, crisis, etc.) can never be suppressed below 0.3 sensitivity regardless of teacher dismissals. Teacher receives transparent notification when floor is hit. (#TRANSFORMATIVE_JUSTICE: system always surfaces potential student distress; teacher still decides what to do.)
+- ✅ **Prompt calibration feedback loop** — teacher corrections (tag edits, concern actions, theme changes) are read from `prompt_calibration` table and injected as natural-language examples in future coding prompts. Anonymized, bounded to 5 most recent. Closes the loop between teacher feedback and system improvement.
 
 ---
 

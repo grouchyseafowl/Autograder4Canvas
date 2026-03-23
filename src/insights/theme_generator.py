@@ -249,7 +249,9 @@ def _validate_theme_quotes(
     known_prefixes: set = set()
     for r in records:
         for q in r.notable_quotes:
-            known_prefixes.add(q.text[:40].lower().strip())
+            prefix = q.text[:40].lower().strip()
+            if prefix:  # guard against empty quotes becoming universal matches
+                known_prefixes.add(prefix)
 
     if not known_prefixes:
         return theme_set

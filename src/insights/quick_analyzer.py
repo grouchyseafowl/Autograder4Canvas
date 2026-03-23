@@ -681,6 +681,25 @@ class QuickAnalyzer:
             # Truncation detection (non-LLM heuristic)
             _is_trunc, _trunc_note = self._is_possibly_truncated(body, wc, _class_median_wc)
 
+            # Linguistic feature detection — shared layer for AIC + Insights
+            _ac = _connection_scores.get(sid)
+            try:
+                from modules.linguistic_features import detect_features
+                _ling_repertoire = detect_features(
+                    body, wc,
+                    was_translated=sub_meta.get("was_translated", False),
+                    was_transcribed=sub_meta.get("was_transcribed", False),
+                    compound_score=vader_compound,
+                    emotions=_emotions,
+                    keyword_hits=kw_hits,
+                    assignment_connection_overlap=(
+                        _ac.vocabulary_overlap if _ac else None
+                    ),
+                )
+            except Exception as e:
+                log.warning("Linguistic feature detection failed for %s: %s", sid, e)
+                _ling_repertoire = None
+
             result.per_submission[sid] = PerSubmissionSummary(
                 student_id=sid,
                 student_name=sub_meta.get("student_name", f"Student {sid}"),
@@ -700,6 +719,7 @@ class QuickAnalyzer:
                 reference_match=_reference_scores.get(sid),
                 is_possibly_truncated=_is_trunc,
                 truncation_note=_trunc_note,
+                linguistic_repertoire=_ling_repertoire,
             )
 
         return result

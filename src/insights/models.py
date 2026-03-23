@@ -100,6 +100,8 @@ class SubmissionCodingRecord(BaseModel):
     emotional_register_score: float = 0.0
     sentiment_reliability: str = "high"  # "high" | "low" | "suppressed"
     keyword_hits: Dict[str, int] = {}
+    # Linguistic assets (from detect_features) — teacher-facing, positive framing
+    linguistic_assets: List[str] = []
 
     @model_validator(mode="before")
     @classmethod
@@ -130,6 +132,15 @@ class SubmissionCodingRecord(BaseModel):
     # These are binary, non-negotiable observations — no cultural bias risk.
     # Displayed as warning banners, never verdicts.
     integrity_flags: Optional[Dict[str, Any]] = None
+
+    # Mechanism 1: Class-relative writing pattern context (from CohortCalibrator).
+    # cohort_percentiles: per-signal rank labels (for detailed tooltip breakdown)
+    # cohort_z_score: average z-score across all signals — positive = above class
+    #   mean, negative = below. This is the primary UI display value.
+    # These measure structural writing patterns (sentence variety, vocabulary,
+    # punctuation density, voice authenticity) — NOT content or integrity.
+    cohort_percentiles: Optional[Dict[str, str]] = None
+    cohort_z_score: Optional[float] = None
 
     # Theme tags that may be in tension with flagged concerns — teacher review recommended, never auto-correct.
     theme_concern_notes: List[str] = []
@@ -228,6 +239,10 @@ class PerSubmissionSummary(BaseModel):
     # Truncation detection (non-LLM heuristic)
     is_possibly_truncated: bool = False
     truncation_note: str = ""
+    # Linguistic repertoire (feature-based, not population-based)
+    # Stores full detection result for sentiment tier, asset labels, LLM context, AIC adjustments.
+    # None for old data — submission_coder falls back to assess_sentiment_reliability.
+    linguistic_repertoire: Optional[Any] = None  # LinguisticFeatureResult from modules.linguistic_features
 
 
 class AssignmentConnectionScore(BaseModel):

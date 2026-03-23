@@ -8,22 +8,21 @@ The DAIGT test corpus gives us formal competition essays from strong writers. It
 
 ## Mechanism 1: Cohort calibration (build first — highest impact)
 
-**Status: ❌ NOT BUILT** — This is the highest-impact remaining gap. All AIC thresholds are currently absolute, not class-relative. Infrastructure exists (WeightComposer for education-level defaults, AIC_MODE_WEIGHT_PRESETS for assignment-type priors) but no distribution computation or percentile-based thresholds.
+**Status: ✅ BUILT (2026-03-22)** — Core infrastructure implemented. Class-relative baselines replace absolute thresholds.
 
-**What exists that supports this**:
-- `WeightComposer` (`src/modules/weight_composer.py`) — education-level defaults per institution type (high_school, community_college, four_year, university, online). Provides the `type_mean` source for cold-start priors.
-- `AIC_MODE_WEIGHT_PRESETS` — per-mode (discussion, essay, lab, etc.) weight profiles. Provides assignment-type priors.
-- `RunStore.get_cohort()` — returns flat student lists but no aggregated statistics.
-- QuickAnalyzer already computes per-submission statistics (word count, sentiment, TF-IDF terms) that could feed distribution computation.
-- AIC computes per-submission signal values (sentence_variance, starter_diversity, comma_density, avg_word_length, hp_confidence) that are the natural inputs for distribution tracking.
+**What's built**:
+- `CohortCalibrator` class (`src/modules/cohort_calibration.py`) — computes per-signal distributions (mean, median, stdev, P10/P25/P75/P90, IQR) from AIC signal vectors
+- `extract_signal_vector()` — extracts 6 signals from AnalysisResult (sentence_variance, starter_diversity, comma_density, avg_word_length, hp_confidence, authenticity)
+- `get_percentile_rank()` — maps values to engagement interpretations (conversation_opportunity, worth_monitoring, typical, strong_engagement)
+- `cold_start_baseline()` — Bayesian blending with education-level priors (5 levels × 6 signals). Prior weight: `max(10, 25 - n)`.
+- `evolve_baseline()` — EMA update (α=0.3)
+- `class_baselines` table in RunStore with save/get/history methods
+- Integration in `analyze_assignment()` — after all students analyzed, computes distributions, applies cold-start or EMA, saves baseline, annotates each AnalysisResult with `cohort_percentiles`
+- Minimum 3 students required for both distributions and integration activation
 
-**What needs building**:
-- ClassBaseline table in RunStore (schema below)
-- Distribution computation after each run (mean, stdev, percentiles from AIC + QA signals)
-- Percentile-based threshold replacement in AIC convergence channels
-- Bayesian cold-start blending logic
-- EMA baseline evolution across runs
-- UI to show "relative to this class" context
+**What's remaining**:
+- UI to surface "relative to this class" context alongside engagement chips
+- Using percentile ranks to adjust convergence channel thresholds (currently annotations only, not yet replacing absolute thresholds)
 
 ---
 
@@ -67,20 +66,22 @@ ClassBaseline:
 
 ## Mechanism 2: Assignment context awareness
 
-**Status: ⚠️ PARTIALLY BUILT** — Foundation exists but structured extraction is missing.
+**Status: ✅ MOSTLY BUILT (2026-03-22)** — Named reference extraction and per-student matching implemented.
 
-**What exists**:
-- `DataFetcher.fetch_assignment_info()` (`src/insights/data_fetcher.py:155-172`) — fetches assignment metadata from Canvas API (description, rubric)
-- `AssignmentConnectionScore` model (`src/insights/models.py:214-235`) — measures vocabulary overlap between submission and assignment description via TF-IDF
-- QuickAnalyzer computes `assignment_connection_observation` — surfaced in synthesis Call 4
-- `citation_checker.py` distinguishes specific citations (author-year, URL, DOI, quoted title) from generic references ("the reading says...")
-- spaCy `en_core_web_sm` is already a project dependency (used in QuickAnalyzer for NER on submissions)
+**What's built**:
+- `DataFetcher.fetch_assignment_info()` — fetches assignment metadata from Canvas API
+- `AssignmentConnectionScore` — vocabulary overlap via TF-IDF
+- `AssignmentFingerprint` model — author_names, work_titles, key_concepts, engagement_type, raw_named_entities
+- `extract_assignment_fingerprint()` — spaCy NER (PERSON, WORK_OF_ART), regex for quoted/italicized titles, TF-IDF for key concepts, keyword matching for engagement type
+- `ReferenceMatchScore` model — per-student: authors_found/total, titles_found/total, concepts_found/total, match_ratio, observation
+- `match_submission_references()` — matches submissions against fingerprint (last-name-only author matching, partial title matching at 60% threshold, concept word-boundary matching)
+- Wired into QuickAnalyzer flow with class-level analysis notes
+- `citation_checker.py` distinguishes specific citations from generic references
 
-**What needs building**:
-- Named reference extraction FROM the assignment description (apply spaCy NER + TF-IDF to the assignment text itself, not just submissions)
+**What's remaining**:
 - Engagement expectation matrix (what signal levels are expected for THIS assignment type)
 - Reading list extraction from Canvas modules API (`GET /courses/:id/modules`)
-- Comparison: did student cite assigned readings vs. just the topic?
+- UI surfacing of reference match scores in student cards
 
 ---
 
@@ -122,7 +123,7 @@ Assignment: "Respond to Crenshaw's Mapping the Margins"
 
 ## Mechanism 3: Teacher feedback loop (granular, not binary)
 
-**Status: ⚠️ PARTIALLY BUILT** — Profile persistence and concern sensitivity exist. Granular signal corrections, threshold adjustment, per-student annotations, and correction pattern recognition do not.
+**Status: ⚠️ PARTIALLY BUILT** — Profile persistence, concern sensitivity with wellbeing floor, and prompt calibration feedback loop exist. Granular per-signal weight overrides, threshold adjustment, per-student annotations, and correction pattern recognition do not.
 
 **What exists**:
 - `TeacherProfileManager` (`src/insights/teacher_profile.py`) — records theme renames, theme splits/merges, concern actions, tag edits, custom concern patterns, custom strength patterns, disabled default patterns
@@ -132,13 +133,15 @@ Assignment: "Respond to Crenshaw's Mapping the Margins"
 - `InsightsStore.prompt_calibration` table exists (stores teacher corrections: original_coding → corrected_coding) but **nothing reads from it yet**
 - Course profile dialog (GUI) for profile management with template fork/save
 
-**What needs building**:
-- Per-signal weight overrides (not just concern sensitivity — teacher should be able to say "productive_messiness doesn't apply to lab reports")
-- Threshold adjustment mechanism (teacher-defined floor for conversation triggers, not fixed percentile)
+**What's newly built**:
+- **Wellbeing signal protection**: Safety-critical patterns (distress, self-harm, crisis, etc.) can never be suppressed below 0.3 sensitivity. Teacher receives transparent notification when floor is hit. `is_protected_concern()` helper. Prompt fragment annotates protected concerns.
+- **Prompt calibration feedback loop**: `get_calibration_fragment()` reads recent corrections from `prompt_calibration` table and formats them as natural-language examples in the coding prompt. Handles 8 correction types (tag add/remove, concern dismiss/acknowledge, theme rename/delete, feedback edit, outlier reclassification). Anonymized, bounded to 5 most recent. Wired into `get_full_profile_fragment()`.
+
+**What still needs building**:
+- Per-signal weight overrides (teacher says "productive_messiness doesn't apply to lab reports")
+- Threshold adjustment mechanism (teacher-defined floor for conversation triggers)
 - Per-student annotations alongside signal data ("this ESL student starts sentences with 'I' due to L1 transfer")
 - Correction pattern recognition ("You've corrected authentic_voice 8 times for communal expression — adjust the weight?")
-- Prompt calibration feedback loop (reading from prompt_calibration table to improve future prompts)
-- Concern sensitivity calibration basis (±0.1 is ad-hoc; needs floor/ceiling and theoretical grounding)
 
 ---
 
@@ -290,11 +293,11 @@ n=4 AI essays with text is too small for confident claims. Need:
 4. ❌ Expanded AI test corpus via OpenRouter
 5. ✅ Wire `gibberish_gate.py` and `citation_checker.py` into AIC pathway
 
-### Phase B: Calibration infrastructure — ❌ NEXT PRIORITY
+### Phase B: Calibration infrastructure — ✅ MOSTLY COMPLETE
 
-6. ❌ **Cohort calibration** — highest-impact remaining gap (Mechanism 1)
-7. ⚠️ Assignment context extraction — vocabulary overlap built, named reference extraction not
-8. ❌ Cold-start Bayesian priors
+6. ✅ **Cohort calibration** — CohortCalibrator class, ClassBaseline table, AIC integration, per-student percentile annotations
+7. ✅ Assignment context extraction — vocabulary overlap + named reference extraction (AssignmentFingerprint, ReferenceMatchScore). Missing: engagement expectation matrix, Canvas modules API.
+8. ✅ Cold-start Bayesian priors — education-level priors for 6 signals across 5 institution types
 
 ### Phase C: Engagement framing + population-level — ✅ MOSTLY COMPLETE
 
@@ -304,7 +307,7 @@ n=4 AI essays with text is too small for confident claims. Need:
 
 ### Phase D: Teacher feedback + longitudinal — ⚠️ PARTIAL
 
-12. ⚠️ Teacher feedback loop — profile persistence built; per-signal overrides, threshold adjustment, per-student annotations, correction patterns not built
+12. ⚠️ Teacher feedback loop — profile persistence + wellbeing signal protection + prompt calibration feedback loop built; per-signal overrides, threshold adjustment, per-student annotations, correction patterns not built
 13. ❌ Voice fingerprinting — word count trajectory only, not signal vectors
 14. ⚠️ Growth tracking — class-level trends built, per-student engagement signal growth not tracked
 

@@ -2237,6 +2237,43 @@ class InsightsPanel(QWidget):
                 eng_chip = PhosphorChip(engagement_depth, active=False, accent="rose")
             chip_row.addWidget(eng_chip)
 
+        # Cohort deviation chip — class-relative writing pattern context
+        # Uses z-score (standard deviations from class mean) rather than
+        # percentile buckets, so the teacher sees HOW FAR a student deviates.
+        # Only shown when deviation is notable (|z| >= 1.0).
+        # Signals measured: sentence variety, vocabulary complexity,
+        # punctuation density, voice authenticity — structural patterns only.
+        _cohort_z = record.get("cohort_z_score")
+        if _cohort_z is not None and abs(_cohort_z) >= 1.0:
+            _z_abs = abs(_cohort_z)
+            _z_label = f"{_z_abs:.1f}SD"
+            _tip_base = (
+                "Writing patterns (sentence variety, word complexity, "
+                "punctuation density, voice authenticity) compared to "
+                "this class.\n\nThese are structural signals — they "
+                "describe HOW the student writes, not what."
+            )
+            if _cohort_z > 0:
+                _coh_chip = QLabel(f" \u2191 {_z_label} above class ")
+                _coh_chip.setStyleSheet(
+                    f"color: {TERM_GREEN}; background: rgba(114,184,90,0.10);"
+                    f" border: 1px solid rgba(114,184,90,0.25); border-radius: 8px;"
+                    f" font-size: {px(10)}px; padding: 2px 8px;"
+                )
+                _coh_chip.setToolTip(
+                    f"Writing patterns are {_z_abs:.1f} standard deviations "
+                    f"above the class average.\n\n{_tip_base}"
+                )
+            else:
+                _coh_chip = PhosphorChip(
+                    f"\u2193 {_z_label} below class", active=False, accent="rose"
+                )
+                _coh_chip.setToolTip(
+                    f"Writing patterns are {_z_abs:.1f} standard deviations "
+                    f"below the class average.\n\n{_tip_base}"
+                )
+            chip_row.addWidget(_coh_chip)
+
         if engagement_signals.get("conversation_opportunity"):
             checkin_chip = PhosphorChip("\U0001f4ac check in", active=False, accent="rose")
             chip_row.addWidget(checkin_chip)

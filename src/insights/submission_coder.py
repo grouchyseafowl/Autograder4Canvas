@@ -244,23 +244,32 @@ def code_submission(
     lens_fragment = _build_lens_fragment(analysis_lens)
     interests_text = _build_interests_fragment(teacher_interests)
 
-    # Assess reliability — ESL/AAVE/short/transcribed submissions suppress or caveat.
-    # Suppression is non-negotiable: biased anchoring harms equity.
-    word_count_for_reliability = len(submission_text.split())
-    _ac = quick_summary.assignment_connection if quick_summary else None
-    reliability = assess_sentiment_reliability(
-        submission_text,
-        word_count=word_count_for_reliability,
-        was_translated=quick_summary.was_translated if quick_summary else False,
-        was_transcribed=quick_summary.was_transcribed if quick_summary else False,
-        assignment_connection_overlap=_ac.vocabulary_overlap if _ac else None,
-        compound_score=vader_compound,
-    )
+    # Linguistic repertoire → sentiment tier + LLM context + asset labels.
+    # Uses the feature-based detector (from quick analysis) when available;
+    # falls back to assess_sentiment_reliability for backward compat.
+    _repertoire = quick_summary.linguistic_repertoire if quick_summary else None
+    if _repertoire and hasattr(_repertoire, "sentiment_tier"):
+        _reliability_tier = _repertoire.sentiment_tier
+        _reliability_triggers = list(_repertoire.sentiment_triggers)
+        linguistic_context = _repertoire.llm_context_note or ""
+    else:
+        # Fallback: bare assess_sentiment_reliability (no repertoire available)
+        word_count_for_reliability = len(submission_text.split())
+        _ac = quick_summary.assignment_connection if quick_summary else None
+        _rel = assess_sentiment_reliability(
+            submission_text,
+            word_count=word_count_for_reliability,
+            was_translated=quick_summary.was_translated if quick_summary else False,
+            was_transcribed=quick_summary.was_transcribed if quick_summary else False,
+            assignment_connection_overlap=_ac.vocabulary_overlap if _ac else None,
+            compound_score=vader_compound,
+        )
+        _reliability_tier = _rel.tier
+        _reliability_triggers = list(_rel.triggers)
+        linguistic_context = ""
     # Build concise display strings for the prompt — NOT the full diagnostic caveat.
-    # The caveat text on SentimentReliabilityResult is for logging; the prompt
-    # needs a clean, short instruction the LLM can act on.
-    trigger_summary = ", ".join(reliability.triggers)
-    if reliability.tier == "suppressed":
+    trigger_summary = ", ".join(_reliability_triggers)
+    if _reliability_tier == "suppressed":
         display_compound: object = "[SUPPRESSED]"
         display_polarity: str = f"score withheld ({trigger_summary}) — read tone directly from text"
         # Guard: the signal matrix was computed from the same biased score.
@@ -270,7 +279,7 @@ def code_submission(
             f"[Signal matrix reliability note: same bias risk applies ({trigger_summary}) "
             f"— treat matrix signals as weak context only]\n{signal_ctx}"
         )
-    elif reliability.tier == "low":
+    elif _reliability_tier == "low":
         display_compound = f"{vader_compound:.3f}"
         display_polarity = f"{vader_polarity} [weak signal: {trigger_summary}]"
     else:
@@ -282,7 +291,7 @@ def code_submission(
     # or when score is withheld (would contradict the suppression instruction).
     _backend = quick_summary.sentiment_backend if quick_summary else ""
     _emotions_dict = quick_summary.emotions if quick_summary else {}
-    if _backend == "go_emotions" and reliability.tier != "suppressed" and _emotions_dict:
+    if _backend == "go_emotions" and _reliability_tier != "suppressed" and _emotions_dict:
         _top3 = sorted(_emotions_dict.items(), key=lambda kv: kv[1], reverse=True)[:3]
         top_emotions_str = (
             "\n  Named emotions: "
@@ -300,6 +309,7 @@ def code_submission(
             vader_compound=display_compound,
             vader_polarity=display_polarity,
             top_emotions=top_emotions_str,
+            linguistic_context=linguistic_context,
             keyword_hits=keyword_hits,
             cluster_id=cluster_id,
             signal_ctx=signal_ctx,
@@ -318,6 +328,7 @@ def code_submission(
             vader_compound=display_compound,
             vader_polarity=display_polarity,
             top_emotions=top_emotions_str,
+            linguistic_context=linguistic_context,
             keyword_hits=keyword_hits,
             cluster_id=cluster_id,
             signal_ctx=signal_ctx,
@@ -334,10 +345,13 @@ def code_submission(
     record.student_name = student_name
     record.word_count = len(submission_text.split())
     record.emotional_register_score = vader_compound
-    record.sentiment_reliability = reliability.tier
+    record.sentiment_reliability = _reliability_tier
     if quick_summary:
         record.cluster_id = quick_summary.cluster_id
         record.keyword_hits = quick_summary.keyword_hits
+    # Linguistic assets (from feature detection — asset framing, not deficit)
+    if _repertoire and hasattr(_repertoire, "asset_labels"):
+        record.linguistic_assets = _repertoire.asset_labels
 
     return record
 
@@ -351,6 +365,7 @@ def _code_lightweight(
     vader_compound: Any,
     vader_polarity: str,
     top_emotions: str = "",
+    linguistic_context: str = "",
     keyword_hits: str,
     cluster_id: str,
     signal_ctx: str,
@@ -364,10 +379,13 @@ def _code_lightweight(
 
     # Call 1: Comprehension
     class_context_block = f"\nCLASS CONTEXT: {class_context}\n" if class_context else ""
+    # Linguistic context note goes before signals so it frames how the LLM reads
+    _ling_block = f"\n{linguistic_context}\n" if linguistic_context else ""
     comp_prompt = COMPREHENSION_PROMPT.format(
         student_name=student_name,
         assignment_prompt=assignment_prompt,
         class_context=class_context_block,
+        linguistic_context=_ling_block,
         vader_compound=vader_compound,
         vader_polarity=vader_polarity,
         top_emotions=top_emotions,
@@ -444,6 +462,7 @@ def _code_full(
     vader_compound: Any,
     vader_polarity: str,
     top_emotions: str = "",
+    linguistic_context: str = "",
     keyword_hits: str,
     cluster_id: str,
     signal_ctx: str,
@@ -457,11 +476,13 @@ def _code_full(
     """Medium/Deep tier: single combined coding call."""
 
     class_context_block = f"\nCLASS CONTEXT: {class_context}\n" if class_context else ""
+    _ling_block = f"\n{linguistic_context}\n" if linguistic_context else ""
     prompt = CODING_FULL_PROMPT.format(
         student_name=student_name,
         assignment_prompt=assignment_prompt,
         teacher_interests=interests_text,
         class_context=class_context_block,
+        linguistic_context=_ling_block,
         vader_compound=vader_compound,
         vader_polarity=vader_polarity,
         top_emotions=top_emotions,

@@ -218,11 +218,13 @@ def run_pipeline(course_key: str, small_batch: int = 0,
     from insights.llm_backend import BackendConfig, auto_detect_backend
     from settings import load_settings
 
+    # Always load settings — needed for guided_synthesis cloud enhancement
+    user_settings = load_settings()
+
     if backend_override:
         backend = backend_override
     else:
         # Use the user's configured backend (from GUI settings)
-        user_settings = load_settings()
         backend = auto_detect_backend("lightweight", user_settings)
         if backend is None:
             # Fallback to hardcoded Ollama if nothing detected

@@ -399,6 +399,11 @@ class InsightsEngine:
                     log.warning("Could not instantiate AIC analyzer: %s", e)
                     aic_analyzer = None
 
+            # Accumulate per-student AIC results for batch cohort calibration
+            # (cohort calibration needs the full class distribution — can't be
+            # per-student; we run it once after the coding loop completes)
+            _aic_results_by_sid: Dict = {}
+
             for i, (sid, body) in enumerate(texts.items()):
                 if self._cancelled:
                     return None
@@ -530,6 +535,7 @@ class InsightsEngine:
                             student_name=name,
                         )
                         engagement = aic_result.engagement_signals
+                        _aic_results_by_sid[sid] = aic_result
                     except Exception as e:
                         log.warning("AIC engagement signals failed for %s: %s", sid, e)
                         engagement = None
@@ -564,6 +570,12 @@ class InsightsEngine:
 
                 if record is not None:
                     record.engagement_signals = engagement
+                    # Count non-null signal dimensions — surfaces zero-signal students.
+                    if engagement:
+                        record.engagement_signal_count = sum(
+                            1 for v in engagement.values()
+                            if v is not None and v != "" and v is not False
+                        )
                     # Copy truncation data from QuickAnalysis for UI access
                     if quick_sub and quick_sub.is_possibly_truncated:
                         record.is_possibly_truncated = True
@@ -607,6 +619,67 @@ class InsightsEngine:
                     time.sleep(throttle)
 
             self._store.complete_stage(run_id, "coding")
+
+            # ----------------------------------------------------------
+            # Cohort calibration (post-coding batch pass)
+            # Requires the full class of AIC results — cannot run per-student.
+            # Annotates each coding_record with class-relative percentile ranks.
+            # ----------------------------------------------------------
+            if _aic_results_by_sid and len(_aic_results_by_sid) >= 3:
+                try:
+                    from modules.cohort_calibration import (
+                        CohortCalibrator,
+                        extract_signal_vector,
+                    )
+                    _calibrator = CohortCalibrator()
+                    _signal_vectors = []
+                    _vector_map: Dict = {}
+                    for _sid, _ar in _aic_results_by_sid.items():
+                        _vec = extract_signal_vector(_ar)
+                        if _vec:
+                            _signal_vectors.append(_vec)
+                            _vector_map[_sid] = _vec
+
+                    if _signal_vectors:
+                        _distributions = _calibrator.compute_class_distributions(
+                            _signal_vectors
+                        )
+                        # Annotate each coding record with percentiles + z-score
+                        _n_annotated = 0
+                        for _rec in coding_records:
+                            _vec = _vector_map.get(_rec.student_id)
+                            if _vec is not None and _distributions:
+                                _rec.cohort_percentiles = (
+                                    _calibrator.compute_student_percentiles(
+                                        _vec, _distributions
+                                    )
+                                )
+                                # Compute average z-score across signals
+                                _z_scores = []
+                                for _sig, _val in _vec.items():
+                                    _stats = _distributions.get(_sig)
+                                    if _stats and _stats.get("stdev", 0) > 0:
+                                        _z = (_val - _stats["mean"]) / _stats["stdev"]
+                                        _z_scores.append(_z)
+                                if _z_scores:
+                                    _rec.cohort_z_score = round(
+                                        sum(_z_scores) / len(_z_scores), 2
+                                    )
+                                _n_annotated += 1
+                                # Re-save with cohort data
+                                self._store.save_coding(
+                                    run_id,
+                                    _rec.student_id,
+                                    _rec.student_name,
+                                    _rec.model_dump_json(),
+                                )
+                        log.info(
+                            "Cohort calibration: %d vectors, %d records annotated",
+                            len(_signal_vectors),
+                            _n_annotated,
+                        )
+                except Exception as _ce:
+                    log.warning("Cohort calibration skipped in Insights engine: %s", _ce)
 
             if self._cancelled:
                 return None
