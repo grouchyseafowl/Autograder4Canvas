@@ -343,9 +343,14 @@ def assess_sentiment_reliability(
 ) -> SentimentReliabilityResult:
     """Assess whether the emotional register signal is reliable for this submission.
 
-    Suppression is non-negotiable for ESL and AAVE writers.  A biased baseline
-    score shown to the LLM without caveat constitutes a harm — it anchors
-    the model toward a false reading.
+    Suppression fires when the TOOL is unreliable for the TEXT — not when the
+    WRITER belongs to a population.  The ground is tool bias, not writer identity.
+    This distinction matters: if future models learn to produce AAVE text, the
+    suppression layer must still fire because the sentiment scorer is still biased
+    against AAVE grammar — regardless of who wrote it.
+
+    A biased baseline score shown to the LLM without caveat constitutes a harm —
+    it anchors the model toward a false reading.
 
     Parameters
     ----------

@@ -74,7 +74,11 @@ class LinguisticFeature(BaseModel):
     asset_label: str = ""        # teacher-facing chip label (short)
     learn_note: str = ""         # expandable explanation (teacher learning, not evaluation)
     protected: bool = False      # True = AAVE, ESL, communal voice — corrections NOT stored
-    sentiment_effect: str = "none"  # "suppress" | "caveat" | "none"
+    # Effect on sentiment score reliability: "suppress" | "caveat" | "none".
+    # Ground: the TOOL is biased against this TEXT PATTERN.  Not: the WRITER
+    # belongs to a group.  This distinction survives future models that might
+    # produce non-standard registers — the sentiment scorer is still biased.
+    sentiment_effect: str = "none"
     aic_weight_adjustments: Dict[str, float] = {}  # marker → multiplier
 
 
