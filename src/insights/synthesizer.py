@@ -121,6 +121,35 @@ def _records_to_summary(records: List[SubmissionCodingRecord]) -> str:
     return "\n".join(lines)
 
 
+def _summarize_linguistic_diversity(
+    coding_records: List[SubmissionCodingRecord],
+) -> str:
+    """Aggregate linguistic_assets across all records into a class-level block.
+
+    Counts how many students exhibit each unique asset label and produces a
+    teacher-facing summary.  Returns empty string when no assets are detected.
+    """
+    asset_counts: Dict[str, int] = {}
+    for r in coding_records:
+        # Dedupe per student — count each label at most once per student
+        seen: set = set()
+        for label in r.linguistic_assets:
+            if label and label not in seen:
+                seen.add(label)
+                asset_counts[label] = asset_counts.get(label, 0) + 1
+
+    if not asset_counts:
+        return ""
+
+    # Sort by count descending, then alphabetically for stability
+    sorted_assets = sorted(asset_counts.items(), key=lambda x: (-x[1], x[0]))
+    lines = ["LINGUISTIC DIVERSITY IN THIS CLASS:"]
+    for label, count in sorted_assets:
+        lines.append(f"  - {count} student{'s' if count != 1 else ''}: {label}")
+    lines.append("This communicative diversity is a classroom resource.")
+    return "\n".join(lines)
+
+
 def _build_interests(teacher_interests: list) -> str:
     if not teacher_interests:
         return ""
@@ -159,31 +188,32 @@ def synthesize(
     total = len(coding_records)
     interests_text = _build_interests(teacher_interests or [])
     context_text = _build_teacher_context(teacher_context)
+    diversity_text = _summarize_linguistic_diversity(coding_records)
 
     if tier == "lightweight":
         return _synthesize_lightweight(
             theme_set, outlier_report, quick_analysis, coding_records,
             assignment_name, course_name, total, context_text, interests_text,
-            backend, profile_fragment,
+            backend, profile_fragment, diversity_text,
         )
     elif tier == "medium":
         return _synthesize_medium(
             theme_set, outlier_report, quick_analysis, coding_records,
             assignment_name, course_name, total, context_text, interests_text,
-            backend, profile_fragment,
+            backend, profile_fragment, diversity_text,
         )
     else:
         return _synthesize_deep(
             theme_set, outlier_report, quick_analysis, coding_records,
             assignment_name, course_name, total, context_text, interests_text,
-            backend, profile_fragment,
+            backend, profile_fragment, diversity_text,
         )
 
 
 def _synthesize_lightweight(
     theme_set, outlier_report, quick_analysis, coding_records,
     assignment_name, course_name, total, context_text, interests_text,
-    backend, profile_fragment="",
+    backend, profile_fragment="", linguistic_diversity="",
 ) -> SynthesisReport:
     """3-pass synthesis for lightweight tier.
 
@@ -205,6 +235,7 @@ def _synthesize_lightweight(
         quick_analysis_summary=_summarize_quick_analysis(quick_analysis),
         teacher_interests=interests_text,
         profile_fragment=profile_fragment,
+        linguistic_diversity=linguistic_diversity,
         _SYNTHESIS_SECTIONS="{pass_sections}",
     )
 
@@ -225,7 +256,7 @@ def _synthesize_lightweight(
 def _synthesize_medium(
     theme_set, outlier_report, quick_analysis, coding_records,
     assignment_name, course_name, total, context_text, interests_text,
-    backend, profile_fragment="",
+    backend, profile_fragment="", linguistic_diversity="",
 ) -> SynthesisReport:
     prompt = SYNTHESIS_PROMPT_MEDIUM.format(
         assignment_name=assignment_name,
@@ -239,6 +270,7 @@ def _synthesize_medium(
         quick_analysis_summary=_summarize_quick_analysis(quick_analysis),
         teacher_interests=interests_text,
         profile_fragment=profile_fragment,
+        linguistic_diversity=linguistic_diversity,
         _SYNTHESIS_SECTIONS="",
     )
     return _run_synthesis(prompt, backend)
