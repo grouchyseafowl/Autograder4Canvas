@@ -627,6 +627,30 @@ class InsightsStore:
         )
         self._conn.commit()
 
+    def get_recent_corrections(
+        self, profile_id: str, limit: int = 5,
+    ) -> List[Dict]:
+        """Return the N most recent prompt calibration corrections for this profile.
+
+        These corrections form a feedback loop: teacher edits (tag changes,
+        concern actions, theme renames, etc.) are saved by the GUI via
+        save_calibration(), then read back here and injected into future
+        LLM prompts so the model learns from the teacher's judgment.
+
+        Returns list of dicts with: submission_text, original_coding,
+        corrected_coding, correction_type, created_at.  Ordered newest-first.
+        """
+        rows = self._conn.execute(
+            """SELECT submission_text, original_coding, corrected_coding,
+                      correction_type, created_at
+               FROM prompt_calibration
+               WHERE profile_id = ?
+               ORDER BY created_at DESC
+               LIMIT ?""",
+            (profile_id, limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
     # ── Feedback ───────────────────────────────────────────────────────────
 
     def save_feedback(

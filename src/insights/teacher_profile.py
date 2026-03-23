@@ -408,19 +408,30 @@ class TeacherProfileManager:
         return "\n".join(lines)
 
     def get_strengths_fragment(self) -> str:
-        """Build a prompt fragment for teacher-defined strength patterns.
+        """Build a prompt fragment for strength patterns to surface.
 
-        These flow into the coding prompt (not the concern prompt) to ensure
-        the pipeline surfaces positive signals the teacher cares about —
-        community knowledge, code-switching, unexpected connections, etc.
+        Uses teacher-defined custom patterns when available; falls back to
+        subject-area defaults from lens_templates. These flow into the coding
+        prompt to ensure the pipeline surfaces community cultural wealth,
+        code-switching, unexpected connections, and non-dominant engagement.
         """
         patterns = self._profile.custom_strength_patterns
         if not patterns:
+            from insights.lens_templates import get_default_strength_patterns
+            subject = getattr(self._profile, "subject_area", "general") or "general"
+            patterns = get_default_strength_patterns(subject)
+        if not patterns:
             return ""
-        lines = [
+        using_defaults = not self._profile.custom_strength_patterns
+        header = (
+            "STRENGTH PATTERNS TO SURFACE "
+            "(look for these — note as positive observations in theme_tags or lens_observations):"
+            if using_defaults
+            else
             "STRENGTH PATTERNS TO SURFACE (defined by this teacher — "
             "note these as positive observations in theme_tags or lens_observations):"
-        ]
+        )
+        lines = [header]
         for p in patterns[:10]:
             lines.append(f"  - {p}")
         return "\n".join(lines)
