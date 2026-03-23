@@ -481,6 +481,42 @@ classifications the system imposes. The feature-based (vs. population-based) arc
 partially mitigates this but does not eliminate it. The system's view of linguistic
 diversity is bounded by which features the developers chose to detect.
 
+### Observation 9: Tone policing as the 8B ceiling
+
+S025 Aiden Brooks was missed by EVERY Llama 8B configuration: standard, synthesis-first
+v1, synthesis-first v2 with relational moves. The v2 class reading detected "tone
+policing" as a concept but attributed it to Connor Walsh (wrong student). The per-student
+coding read Aiden as "trying to balance intellectual discussion with emotional regulation"
+— the charitable reading, not the critical one.
+
+**Why this is hard for 8B:** (1) Tone policing sounds cooperative — RLHF training rewards
+not flagging reasonable requests for civility. (2) The harm is relational, not textual —
+"let's be respectful" only harms in context with "this reading made me furious." (3) The
+concern prompt already lists matching patterns ("too emotional") — Llama doesn't fire even
+with pattern match, while Qwen does. Model-level resistance, not prompt gap.
+
+**Proposed fix: Pairwise relational concern check.** Class reading identifies students who
+call for calm AND students who express urgent anger. Per-student coding for the "calm"
+student receives explicit injection: "In this class, [Destiny] wrote about redlining with
+fury. Read Aiden's call for 'not getting emotional' in light of what it does to Destiny's
+ability to participate." Forces the model to evaluate the specific dynamic rather than
+abstractly classify. Untested — next prototype priority.
+
+**Critical limitation of the pairwise approach:** It depends on there being a Destiny in
+the data — a student who expressed the urgency that Aiden's civility request would silence.
+If the classroom culture has already succeeded in suppressing urgent voices, the text shows
+no conflict and the system sees nothing wrong. Tone policing produces the very homogeneity
+that makes it undetectable. A text-based system can only catch tone policing when someone
+has RESISTED it — when the policing has failed. The harm that succeeds leaves no trace in
+the text.
+
+Partial mitigations: (1) detect suspiciously narrow emotional range given the material —
+if an intersectionality assignment produces zero anger, that's a signal; (2) use
+teacher_context for information the text doesn't show; (3) document as a fundamental
+boundary of text-based analysis. The system works best in classrooms where students feel
+safe enough to write authentically. Where that safety doesn't exist, the harm is real but
+the evidence isn't in the data.
+
 ### New Open Questions
 
 6. Does the suppression layer actually change LLM coding output quality for AAVE/ESL
