@@ -50,7 +50,7 @@ understand what the student is saying.
 
 STUDENT: {student_name}
 ASSIGNMENT PROMPT: {assignment_prompt}
-{class_context}
+{class_context}{linguistic_context}
 NON-LLM ANALYSIS (grounding context — verify against the text):
 - Emotional register signal: {vader_compound} ({vader_polarity}){top_emotions} ⚠ Signal misreads AAVE, ESL writing,
   and righteous anger — treat as rough signal only, not ground truth.
@@ -144,7 +144,7 @@ You are helping a teacher understand what this student is thinking.
 
 STUDENT: {student_name}
 ASSIGNMENT PROMPT: {assignment_prompt}
-{teacher_interests}{class_context}
+{teacher_interests}{class_context}{linguistic_context}
 PRE-COMPUTED SIGNALS (floor — your analysis should go beyond these):
 - Emotional register signal: {vader_compound} ({vader_polarity}){top_emotions} ⚠ Signal misreads AAVE, ESL writing,
   and righteous anger. Your emotional_register judgment supersedes this score.
