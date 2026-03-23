@@ -37,16 +37,37 @@ def _ckpt_path(course_key: str, stage: str) -> Path:
     return CHECKPOINTS_DIR / f"{course_key}_{stage}.json"
 
 
+def _sanitize_for_json(obj):
+    """Recursively remove lone surrogates and null bytes that break json.loads."""
+    if isinstance(obj, str):
+        # Replace lone surrogates (U+D800–U+DFFF) and null bytes with replacement char
+        return obj.encode("utf-8", errors="replace").decode("utf-8").replace("\x00", "\ufffd")
+    if isinstance(obj, dict):
+        return {k: _sanitize_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize_for_json(v) for v in obj]
+    return obj
+
+
 def _save_ckpt(course_key: str, stage: str, data: dict) -> None:
     CHECKPOINTS_DIR.mkdir(parents=True, exist_ok=True)
-    _ckpt_path(course_key, stage).write_text(json.dumps(data, default=str))
+    try:
+        text = json.dumps(_sanitize_for_json(data), default=str)
+    except (ValueError, UnicodeEncodeError) as e:
+        log.warning("Checkpoint sanitization needed for %s_%s: %s", course_key, stage, e)
+        text = json.dumps(data, default=str, ensure_ascii=True)
+    _ckpt_path(course_key, stage).write_text(text)
     log.info("Checkpoint saved: %s_%s", course_key, stage)
 
 
 def _load_ckpt(course_key: str, stage: str) -> Optional[dict]:
     p = _ckpt_path(course_key, stage)
     if p.exists():
-        return json.loads(p.read_text())
+        try:
+            return json.loads(p.read_text())
+        except json.JSONDecodeError as e:
+            log.warning("Checkpoint %s_%s is corrupted (%s) — discarding", course_key, stage, e)
+            p.unlink()
     return None
 
 
@@ -125,8 +146,12 @@ def run_pipeline(course_key: str, small_batch: int = 0,
     cfg = COURSES[course_key]
     timing = {}
 
+    # Each (course, suffix) pair gets its own checkpoint namespace so concurrent
+    # runs of the same course don't collide (e.g. _llama70b vs _qwen3_32b).
+    run_key = f"{course_key}{output_suffix}" if output_suffix else course_key
+
     # Auto-detect resume if checkpoints exist
-    if not resume and _has_any_checkpoint(course_key):
+    if not resume and _has_any_checkpoint(run_key):
         resume = True
         log.info("Checkpoints found for %s — resuming automatically. "
                  "Use --no-resume to force a fresh run.", course_key)
@@ -162,7 +187,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
     from insights.quick_analyzer import QuickAnalyzer
     from insights.models import QuickAnalysisResult
 
-    ckpt = _load_ckpt(course_key, "quick_analysis") if resume else None
+    ckpt = _load_ckpt(run_key, "quick_analysis") if resume else None
     if ckpt:
         qa_result = QuickAnalysisResult.model_validate(ckpt["result"])
         timing["quick_analysis"] = ckpt["timing"]
@@ -182,7 +207,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
             course_name=cfg["course_name"],
         )
         timing["quick_analysis"] = round(time.time() - t0, 2)
-        _save_ckpt(course_key, "quick_analysis",
+        _save_ckpt(run_key, "quick_analysis",
                    {"result": json.loads(qa_result.model_dump_json()), "timing": timing["quick_analysis"]})
         print(f"  Done: {timing['quick_analysis']}s — "
               f"{qa_result.stats.total_submissions} submissions, "
@@ -239,7 +264,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
 
     assignment_prompt = f"Assignment: {cfg['assignment_name']}"
 
-    ckpt = _load_ckpt(course_key, "coding") if resume else None
+    ckpt = _load_ckpt(run_key, "coding") if resume else None
     if ckpt:
         coding_records: List[SubmissionCodingRecord] = [
             SubmissionCodingRecord.model_validate(r) for r in ckpt["records"]
@@ -316,7 +341,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
             timing["coding_per_student_avg"] = round(
                 sum(per_student_times) / len(per_student_times), 2
             )
-        _save_ckpt(course_key, "coding", {
+        _save_ckpt(run_key, "coding", {
             "records": [r.model_dump() for r in coding_records],
             "timing": timing["coding_total"],
             "per_student_avg": timing.get("coding_per_student_avg", 0),
@@ -327,7 +352,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
     # ── Stage 3: Concern detection ──
     from insights.concern_detector import detect_concerns
 
-    ckpt = _load_ckpt(course_key, "concerns") if resume else None
+    ckpt = _load_ckpt(run_key, "concerns") if resume else None
     if ckpt:
         # Merge concern flags back into coding_records
         concern_map = {c["student_id"]: c["concerns"] for c in ckpt["records"]}
@@ -376,7 +401,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
 
         timing["concerns"] = round(time.time() - t0, 2)
         concern_count = sum(len(r.concerns) for r in coding_records)
-        _save_ckpt(course_key, "concerns", {
+        _save_ckpt(run_key, "concerns", {
             "records": [{"student_id": r.student_id,
                          "concerns": [c.model_dump() for c in r.concerns]}
                         for r in coding_records],
@@ -388,7 +413,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
     from insights.theme_generator import generate_themes
     from insights.models import ThemeSet
 
-    ckpt = _load_ckpt(course_key, "themes") if resume else None
+    ckpt = _load_ckpt(run_key, "themes") if resume else None
     if ckpt:
         theme_set = ThemeSet.model_validate(ckpt["theme_set"])
         timing["themes"] = ckpt["timing"]
@@ -404,7 +429,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
             assignment_name=cfg["assignment_name"],
         )
         timing["themes"] = round(time.time() - t0, 2)
-        _save_ckpt(course_key, "themes", {
+        _save_ckpt(run_key, "themes", {
             "theme_set": json.loads(theme_set.model_dump_json()),
             "timing": timing["themes"],
         })
@@ -416,7 +441,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
     from insights.theme_generator import surface_outliers
     from insights.models import OutlierReport
 
-    ckpt = _load_ckpt(course_key, "outliers") if resume else None
+    ckpt = _load_ckpt(run_key, "outliers") if resume else None
     if ckpt:
         outlier_report = OutlierReport.model_validate(ckpt["outlier_report"])
         timing["outliers"] = ckpt["timing"]
@@ -434,7 +459,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
             assignment_name=cfg["assignment_name"],
         )
         timing["outliers"] = round(time.time() - t0, 2)
-        _save_ckpt(course_key, "outliers", {
+        _save_ckpt(run_key, "outliers", {
             "outlier_report": json.loads(outlier_report.model_dump_json()),
             "timing": timing["outliers"],
         })
@@ -445,7 +470,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
     from insights.synthesizer import synthesize
     from insights.models import SynthesisReport
 
-    ckpt = _load_ckpt(course_key, "synthesis") if resume else None
+    ckpt = _load_ckpt(run_key, "synthesis") if resume else None
     if ckpt:
         synthesis = SynthesisReport.model_validate(ckpt["synthesis"])
         timing["synthesis"] = ckpt["timing"]
@@ -465,7 +490,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
             teacher_context=cfg["teacher_context"],
         )
         timing["synthesis"] = round(time.time() - t0, 2)
-        _save_ckpt(course_key, "synthesis", {
+        _save_ckpt(run_key, "synthesis", {
             "synthesis": json.loads(synthesis.model_dump_json()),
             "timing": timing["synthesis"],
         })
@@ -474,7 +499,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
     # ── Stage 7: Draft feedback ──
     from insights.feedback_drafter import FeedbackDrafter
 
-    ckpt = _load_ckpt(course_key, "feedback") if resume else None
+    ckpt = _load_ckpt(run_key, "feedback") if resume else None
     if ckpt:
         feedback_rows = ckpt["rows"]
         timing["feedback"] = ckpt["timing"]
@@ -508,7 +533,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
                 print(f"  Drafted {i+1}/{total}")
 
         timing["feedback"] = round(time.time() - t0, 2)
-        _save_ckpt(course_key, "feedback", {
+        _save_ckpt(run_key, "feedback", {
             "rows": feedback_rows,
             "timing": timing["feedback"],
         })
@@ -619,9 +644,12 @@ def main():
     parser.add_argument("--small-batch", type=int, default=0,
                         help="Limit to N students (for quick testing)")
     parser.add_argument("--backend", default="ollama",
-                        choices=["ollama", "sonnet", "opus", "qwen3-cloud", "deepseek-cloud"],
+                        choices=["ollama", "sonnet", "opus", "qwen3-cloud", "deepseek-cloud",
+                                 "openai-compat"],
                         help="LLM backend: ollama (local 8B), sonnet, opus, "
-                             "qwen3-cloud (480B via Ollama), deepseek-cloud (671B via Ollama)")
+                             "qwen3-cloud (480B via Ollama), deepseek-cloud (671B via Ollama), "
+                             "openai-compat (any OpenAI-compatible API via env vars: "
+                             "CLOUD_API_URL, CLOUD_API_KEY, CLOUD_MODEL)")
     parser.add_argument("--tier", default=None,
                         choices=["lightweight", "medium", "deep_thinking"],
                         help="Override prompt tier (default: auto-detect from backend)")
@@ -671,6 +699,28 @@ def main():
         )
         output_suffix = output_suffix or "_deepseek"
         tier_override = tier_override or "medium"
+    elif args.backend == "openai-compat":
+        # Generic OpenAI-compatible backend for any cloud provider
+        # (Groq, Together.ai, OpenRouter, etc.)
+        # Set env vars: CLOUD_API_URL, CLOUD_API_KEY, CLOUD_MODEL
+        cloud_url = os.environ.get("CLOUD_API_URL", "")
+        cloud_key = os.environ.get("CLOUD_API_KEY", "")
+        cloud_model = os.environ.get("CLOUD_MODEL", "")
+        if not all([cloud_url, cloud_key, cloud_model]):
+            print("ERROR: --backend openai-compat requires env vars: "
+                  "CLOUD_API_URL, CLOUD_API_KEY, CLOUD_MODEL")
+            sys.exit(1)
+        backend_override = BackendConfig(
+            name="cloud",
+            model=cloud_model,
+            base_url=cloud_url,
+            api_key=cloud_key,
+            api_format="openai",
+        )
+        # Use model name slug as suffix if not set
+        model_slug = cloud_model.split("/")[-1].split(":")[0].lower()
+        output_suffix = output_suffix or f"_{model_slug}"
+        tier_override = tier_override or "medium"
 
     all_timing = {}
 
@@ -678,8 +728,9 @@ def main():
                else [args.course])
 
     for course_key in courses:
+        run_key = f"{course_key}{output_suffix}" if output_suffix else course_key
         if args.no_resume:
-            _clear_checkpoints(course_key)
+            _clear_checkpoints(run_key)
         try:
             timing = run_pipeline(
                 course_key,
@@ -691,11 +742,11 @@ def main():
             )
             all_timing[course_key] = timing
             # Clear checkpoints on success — run is complete
-            _clear_checkpoints(course_key)
+            _clear_checkpoints(run_key)
         except Exception as e:
             log.exception(f"Pipeline failed for {course_key}: {e}")
             all_timing[course_key] = {"error": str(e)}
-            print(f"\n  ⚠ Checkpoints preserved in {CHECKPOINTS_DIR}/{course_key}_*.json")
+            print(f"\n  ⚠ Checkpoints preserved in {CHECKPOINTS_DIR}/{run_key}_*.json")
             print(f"    Re-run without --no-resume to pick up from last completed stage.")
 
     # Save timing report

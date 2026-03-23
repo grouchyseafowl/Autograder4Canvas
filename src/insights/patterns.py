@@ -12,7 +12,7 @@ model bias toward flagging passionate critique).
 """
 
 import re
-from typing import Dict, List, Tuple
+from typing import Dict, List, NamedTuple, Optional, Tuple
 
 # ---------------------------------------------------------------------------
 # Keyword pattern dictionary
@@ -283,3 +283,159 @@ def match_all_patterns(text: str) -> Dict[str, int]:
         if matches:
             hits[name] = len(matches)
     return hits
+
+
+# ---------------------------------------------------------------------------
+# Sentiment reliability / suppression layer
+# ---------------------------------------------------------------------------
+# AAVE (African American Vernacular English) lexical markers.
+# Presence suggests VADER scores are unreliable — VADER was trained
+# predominantly on standard written English and systematically misreads
+# AAVE sentiment (Blodgett & O'Connor, 2017; Blodgett et al., EMNLP 2017).
+# These markers are linguistic features of a dialect, NOT errors.
+_AAVE_MARKERS: re.Pattern = re.compile(
+    r"\b("
+    r"finna|tryna|ima|imma|"                           # modal/aspect contractions
+    r"ain'?t|"                                          # AAVE general negation
+    r"deadass|lowkey|highkey|"                          # truth/intensity markers
+    r"fr\s+fr|no\s+cap|on\s+god|"                      # truth verification phrases
+    r"fasho|"                                           # for sure
+    r"bruh|"                                            # address term
+    r"y'?all|"                                          # 2nd-person plural — very reliable AAVE/Southern marker
+    r"they\s+was|we\s+was|you\s+was|"                  # copula variation
+    r"(?:he|she|they|we|y'?all)\s+be\b|"               # habitual be — syntactic AAVE marker
+    r"he\s+don'?t|she\s+don'?t|they\s+don'?t|"        # 3rd-person singular don't
+    r"done\s+told|done\s+said|done\s+went|"            # AAVE completive done (original)
+    r"done\s+(?:knew|seen|ran|got|came|lost|left|finished)"  # completive done (expanded irregular forms)
+    r")",
+    re.IGNORECASE,
+)
+
+_AAVE_SUPPRESS_THRESHOLD = 2   # ≥ 2 distinct AAVE markers → suppressed
+_AAVE_CAUTION_THRESHOLD = 1    # 1 AAVE marker → low (caveat)
+_SHORT_SUBMISSION_WORDS = 80   # < 80 words → suppressed (sample too small)
+_LOW_VOCAB_OVERLAP = 0.10      # assignment_connection vocab overlap below this → low
+
+
+class SentimentReliabilityResult(NamedTuple):
+    """Output of assess_sentiment_reliability().
+
+    Tiers
+    -----
+    high      — score is plausible; pass through to prompt unchanged.
+    low       — score may be unreliable; include with explicit caveat.
+    suppressed — score is not shown; LLM instructed to read register
+                 directly from text.
+    """
+    tier: str               # "high" | "low" | "suppressed"
+    caveat: str             # explanation for low/suppressed (empty for high)
+    triggers: List[str]     # which conditions fired (diagnostic, not shown to LLM)
+
+
+def assess_sentiment_reliability(
+    text: str,
+    word_count: int,
+    *,
+    was_translated: bool = False,
+    was_transcribed: bool = False,
+    assignment_connection_overlap: Optional[float] = None,
+    compound_score: float = 0.0,
+) -> SentimentReliabilityResult:
+    """Assess whether the emotional register signal is reliable for this submission.
+
+    Suppression is non-negotiable for ESL and AAVE writers.  A biased baseline
+    score shown to the LLM without caveat constitutes a harm — it anchors
+    the model toward a false reading.
+
+    Parameters
+    ----------
+    text : str
+        Submission text (used for AAVE marker detection).
+    word_count : int
+        Submission word count.
+    was_translated : bool
+        True if the submission was translated from another language (ESL proxy).
+    was_transcribed : bool
+        True if the submission was transcribed from audio.  Sentiment models
+        trained on written text misread spoken register (disfluencies, hedges,
+        fragmentation). This is a data-quality concern, not demographic bias —
+        triggers soft caution rather than hard suppression.
+    assignment_connection_overlap : float or None
+        Vocabulary overlap score (0.0–1.0) from AssignmentConnectionScore.
+        None if assignment connection was not computed.
+    compound_score : float
+        Raw compound score from the sentiment model (-1.0 to 1.0).
+
+    Returns
+    -------
+    SentimentReliabilityResult with tier, caveat, and trigger list.
+    """
+    triggers: List[str] = []
+
+    # --- Hard suppression checks (any one → tier: suppressed) ---
+
+    # Too short: sample size insufficient for any sentiment signal
+    if word_count < _SHORT_SUBMISSION_WORDS:
+        triggers.append(f"short_submission({word_count}_words)")
+
+    # ESL: translated submission + non-trivial compound score
+    # Sentiment models trained on standard English systematically
+    # penalise translated writing patterns as more negative.
+    if was_translated and abs(compound_score) > 0.1:
+        triggers.append("esl_translated_with_nontrivial_score")
+
+    # AAVE: count distinct marker matches
+    aave_matches = _AAVE_MARKERS.findall(text)
+    distinct_aave = len(set(m.strip().lower() for m in aave_matches))
+    if distinct_aave >= _AAVE_SUPPRESS_THRESHOLD:
+        triggers.append(f"aave_markers({distinct_aave})")
+
+    if triggers:
+        # Any hard-suppression trigger fires → suppressed
+        suppression_reason = " / ".join(triggers)
+        return SentimentReliabilityResult(
+            tier="suppressed",
+            caveat=(
+                f"Emotional register score withheld ({suppression_reason}). "
+                "Bias risk: score unreliable for this submission. "
+                "Read affective tone directly from the student's text."
+            ),
+            triggers=triggers,
+        )
+
+    # --- Soft caution checks (any one → tier: low) ---
+    soft_triggers: List[str] = []
+
+    # Single AAVE marker (caution, not full suppression)
+    if distinct_aave == _AAVE_CAUTION_THRESHOLD:
+        soft_triggers.append(f"aave_marker({distinct_aave})")
+
+    # Low vocabulary overlap: student may be engaging through personal/cultural
+    # frame rather than assignment vocabulary.  Score may not reflect topic engagement.
+    if (
+        assignment_connection_overlap is not None
+        and assignment_connection_overlap < _LOW_VOCAB_OVERLAP
+    ):
+        soft_triggers.append(
+            f"low_assignment_connection({assignment_connection_overlap:.2f})"
+        )
+
+    # Oral transcription: sentiment models trained on written text misread spoken
+    # register — disfluencies, hedging, non-linear structure all skew the score.
+    # This is a data-quality concern (not demographic bias) → soft caution only.
+    if was_transcribed:
+        soft_triggers.append("oral_transcription")
+
+    if soft_triggers:
+        caveat_reason = " / ".join(soft_triggers)
+        return SentimentReliabilityResult(
+            tier="low",
+            caveat=(
+                f"[CAUTION — {caveat_reason}] "
+                "Emotional register score may not reflect this student's actual affect. "
+                "Treat as a weak signal only."
+            ),
+            triggers=soft_triggers,
+        )
+
+    return SentimentReliabilityResult(tier="high", caveat="", triggers=[])

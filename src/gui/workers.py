@@ -1921,6 +1921,7 @@ class InsightsWorker(CancellableWorker):
         analysis_lens: Optional[dict] = None,
         teacher_interests: Optional[list] = None,
         settings: Optional[dict] = None,
+        course_profile_id: str = "default",
         parent=None,
     ):
         super().__init__(api, parent)
@@ -1937,6 +1938,7 @@ class InsightsWorker(CancellableWorker):
         self._analysis_lens = analysis_lens
         self._teacher_interests = teacher_interests
         self._settings = settings or {}
+        self._course_profile_id = course_profile_id
 
     def run(self) -> None:
         try:
@@ -1970,6 +1972,7 @@ class InsightsWorker(CancellableWorker):
                 teacher_interests=self._teacher_interests,
                 progress_callback=_progress,
                 result_callback=_result,
+                course_profile_id=self._course_profile_id,
             )
 
             if run_id:
@@ -2178,6 +2181,7 @@ class BatchInsightsWorker(CancellableWorker):
         analysis_lens: Optional[dict] = None,
         teacher_interests: Optional[list] = None,
         settings: Optional[dict] = None,
+        course_profile_id: str = "default",
         parent=None,
     ):
         super().__init__(api, parent)
@@ -2190,6 +2194,7 @@ class BatchInsightsWorker(CancellableWorker):
         self._analysis_lens = analysis_lens
         self._teacher_interests = teacher_interests
         self._settings = settings or {}
+        self._course_profile_id = course_profile_id
 
     def run(self) -> None:
         completed_ids = []
@@ -2256,6 +2261,7 @@ class BatchInsightsWorker(CancellableWorker):
                     teacher_interests=self._teacher_interests,
                     progress_callback=_progress,
                     result_callback=_result,
+                    course_profile_id=self._course_profile_id,
                 )
 
                 if run_id:

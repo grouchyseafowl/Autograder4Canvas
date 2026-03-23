@@ -1,0 +1,2034 @@
+{
+  "run": {
+    "run_id": "demo-insights-run-eth-studies-000000000001",
+    "course_id": "90003",
+    "course_name": "Ethnic Studies (11), Period 3",
+    "assignment_id": "113002",
+    "assignment_name": "Week 6 Discussion: Intersectionality in Practice",
+    "started_at": "2026-03-08T16:45:00+00:00",
+    "completed_at": "2026-03-08T17:12:00+00:00",
+    "model_tier": "medium",
+    "model_name": "qwen/qwen3-32b",
+    "total_submissions": 29,
+    "stages_completed": [
+      "data_fetch",
+      "preprocessing",
+      "quick_analysis",
+      "coding",
+      "concerns",
+      "themes",
+      "outliers",
+      "synthesis"
+    ],
+    "pipeline_confidence": {
+      "overall": 0.82
+    },
+    "teacher_context": "This is a weekly discussion board. Students respond to a reading about intersectionality theory applied to everyday life. Complete/incomplete grading \u2014 150 word minimum. I'm looking for genuine engagement with the concepts, not polished academic writing.",
+    "analysis_lens_config": {
+      "lens": "equity_attention"
+    },
+    "quick_analysis": "{\"assignment_id\":\"113002\",\"assignment_name\":\"Week 6 Discussion: Intersectionality in Practice\",\"course_id\":\"90003\",\"course_name\":\"Ethnic Studies (11), Period 3\",\"analyzed_at\":\"2026-03-22T21:26:10.435132\",\"stats\":{\"total_submissions\":29,\"total_enrollment\":0,\"word_count_mean\":210.0344827586207,\"word_count_median\":205.0,\"word_count_min\":89,\"word_count_max\":330,\"word_counts\":[205,89,117,206,188,166,175,164,183,156,172,201,212,228,240,251,266,274,281,289,293,297,310,318,330,120,120,120,120],\"format_breakdown\":{\"online_text_entry\":29},\"timing\":{\"on_time\":29}},\"top_terms\":[{\"term\":\"driving\",\"count\":134},{\"term\":\"phone\",\"count\":62},{\"term\":\"phones\",\"count\":47},{\"term\":\"texting\",\"count\":40},{\"term\":\"social\",\"count\":36},{\"term\":\"text\",\"count\":30},{\"term\":\"accidents\",\"count\":28},{\"term\":\"intersectionality\",\"count\":25},{\"term\":\"drive\",\"count\":24},{\"term\":\"car\",\"count\":22},{\"term\":\"media\",\"count\":18},{\"term\":\"drivers\",\"count\":18},{\"term\":\"dangerous\",\"count\":16},{\"term\":\"road\",\"count\":16},{\"term\":\"cause\",\"count\":14},{\"term\":\"medias\",\"count\":14},{\"term\":\"accident\",\"count\":11},{\"term\":\"causing\",\"count\":11},{\"term\":\"states\",\"count\":11},{\"term\":\"don\",\"count\":10},{\"term\":\"experiences\",\"count\":10},{\"term\":\"oppression\",\"count\":10},{\"term\":\"others\",\"count\":10},{\"term\":\"wheel\",\"count\":10},{\"term\":\"vehicle\",\"count\":9},{\"term\":\"attention\",\"count\":9},{\"term\":\"family\",\"count\":8},{\"term\":\"race\",\"count\":8},{\"term\":\"identity\",\"count\":8},{\"term\":\"multiple\",\"count\":8}],\"tfidf_terms\":[{\"term\":\"driving\",\"score\":0.2054},{\"term\":\"phone\",\"score\":0.1048},{\"term\":\"people\",\"score\":0.1046},{\"term\":\"texting\",\"score\":0.0837},{\"term\":\"just\",\"score\":0.075},{\"term\":\"phones\",\"score\":0.0714},{\"term\":\"using\",\"score\":0.0709},{\"term\":\"use\",\"score\":0.0694},{\"term\":\"intersectionality\",\"score\":0.0692},{\"term\":\"social\",\"score\":0.0691},{\"term\":\"like\",\"score\":0.0681},{\"term\":\"think\",\"score\":0.0566},{\"term\":\"text\",\"score\":0.0562},{\"term\":\"accidents\",\"score\":0.054},{\"term\":\"drive\",\"score\":0.0452},{\"term\":\"car\",\"score\":0.0436},{\"term\":\"reading\",\"score\":0.0424},{\"term\":\"different\",\"score\":0.0403},{\"term\":\"road\",\"score\":0.0395},{\"term\":\"media\",\"score\":0.0391}],\"named_entities\":{},\"keyword_hits\":{\"personal_reflection\":{\"pattern_name\":\"personal_reflection\",\"count\":4,\"student_ids\":[\"S001\",\"S020\",\"S022\"],\"examples\":[\"\u2026other thing completely.\\n\\nWhen my family come to America I see same th\u2026\",\"\u2026rs everything and it doesnt.\\n\\nMy family is white and poor. Like actua\u2026\",\"\u2026mic concept. Its the story of my family and millions of families like\u2026\"]},\"evidence_use\":{\"pattern_name\":\"evidence_use\",\"count\":15,\"student_ids\":[\"S001\",\"S002\",\"S010\",\"S015\",\"S018\",\"S020\",\"S022\",\"S013\",\"S019\"],\"examples\":[\"\u2026ch of these things it add up. The reading talk about how categories ove\u2026\",\"\u2026The reading about intersectionality made\u2026\",\"\u2026The reading on intersectionality highligh\u2026\",\"\u2026I really liked the reading about intersectionality becau\u2026\",\"\u2026I thought the reading on intersectionality was inte\u2026\"]},\"conceptual_connection\":{\"pattern_name\":\"conceptual_connection\",\"count\":5,\"student_ids\":[\"S002\",\"S012\",\"S016\",\"S024\"],\"examples\":[\"\u2026the same family. I think this connects to what we talked about last\u2026\",\"\u2026luetooth enabled devices that connect to the car so that you can st\u2026\",\"\u2026le were killed in distraction-related crashes. Many states ban the\u2026\",\"\u2026crashes a year in the US are linked to social media distraction.\u2026\"]},\"critical_analysis\":{\"pattern_name\":\"critical_analysis\",\"count\":5,\"student_ids\":[\"S010\",\"S018\",\"S020\",\"S005\",\"S033\"],\"examples\":[\"\u2026ge and oppression. The author argues that simply being a woman of\u2026\",\"\u2026man and also Black might face challenges that are different from someo\u2026\",\"\u2026ionality and I have some real questions about it. The framework talks\u2026\",\"\u2026distance from accidents. The question is people more concerned more\u2026\",\"\u2026distance from accidents. The question is people more concerned more\u2026\"]},\"essentializing\":{\"pattern_name\":\"essentializing\",\"count\":1,\"student_ids\":[\"S015\"],\"examples\":[\"\u2026e this amazing resilience and they always look out for each other too.\u2026\"]},\"current_events\":{\"pattern_name\":\"current_events\",\"count\":10,\"student_ids\":[\"S022\",\"S004\",\"S008\",\"S013\",\"S017\",\"S023\",\"S024\"],\"examples\":[\"\u2026it doesnt affect real people right now.\u2026\",\"\u2026big part of the modern world today. Everywhere you look there ar\u2026\",\"\u2026e them that's dead and on the news from using their phone while\u2026\",\"\u2026ired Essay: Phones & Driving\\n\\nToday, the majority of humans use t\u2026\",\"\u2026Today, there are many controversial\u2026\"]}},\"sentiments\":{\"S001\":{\"pos\":0.063,\"neg\":0.031,\"neu\":0.906,\"compound\":0.8018},\"S002\":{\"pos\":0.036,\"neg\":0.013,\"neu\":0.95,\"compound\":0.2732},\"S003\":{\"pos\":0.07,\"neg\":0.029,\"neu\":0.901,\"compound\":0.6249},\"S010\":{\"pos\":0.081,\"neg\":0.06,\"neu\":0.859,\"compound\":0.3736},\"S011\":{\"pos\":0.131,\"neg\":0.044,\"neu\":0.825,\"compound\":0.9556},\"S015\":{\"pos\":0.251,\"neg\":0.0,\"neu\":0.749,\"compound\":0.9937},\"S018\":{\"pos\":0.116,\"neg\":0.052,\"neu\":0.832,\"compound\":0.8942},\"S020\":{\"pos\":0.152,\"neg\":0.073,\"neu\":0.775,\"compound\":0.9039},\"S022\":{\"pos\":0.106,\"neg\":0.122,\"neu\":0.772,\"compound\":-0.5071},\"S025\":{\"pos\":0.135,\"neg\":0.046,\"neu\":0.819,\"compound\":0.8947},\"S004\":{\"pos\":0.052,\"neg\":0.148,\"neu\":0.8,\"compound\":-0.9659},\"S005\":{\"pos\":0.094,\"neg\":0.094,\"neu\":0.812,\"compound\":-0.2579},\"S006\":{\"pos\":0.019,\"neg\":0.16,\"neu\":0.821,\"compound\":-0.986},\"S007\":{\"pos\":0.049,\"neg\":0.156,\"neu\":0.795,\"compound\":-0.9819},\"S008\":{\"pos\":0.108,\"neg\":0.093,\"neu\":0.799,\"compound\":0.8121},\"S009\":{\"pos\":0.031,\"neg\":0.182,\"neu\":0.786,\"compound\":-0.9916},\"S012\":{\"pos\":0.029,\"neg\":0.069,\"neu\":0.901,\"compound\":-0.8475},\"S013\":{\"pos\":0.041,\"neg\":0.089,\"neu\":0.87,\"compound\":-0.9549},\"S014\":{\"pos\":0.005,\"neg\":0.101,\"neu\":0.894,\"compound\":-0.9821},\"S016\":{\"pos\":0.027,\"neg\":0.092,\"neu\":0.882,\"compound\":-0.9652},\"S017\":{\"pos\":0.088,\"neg\":0.05,\"neu\":0.862,\"compound\":0.9184},\"S019\":{\"pos\":0.136,\"neg\":0.102,\"neu\":0.762,\"compound\":0.9204},\"S021\":{\"pos\":0.083,\"neg\":0.168,\"neu\":0.749,\"compound\":-0.9876},\"S023\":{\"pos\":0.055,\"neg\":0.088,\"neu\":0.858,\"compound\":-0.8907},\"S024\":{\"pos\":0.045,\"neg\":0.18,\"neu\":0.776,\"compound\":-0.9939},\"S030\":{\"pos\":0.031,\"neg\":0.093,\"neu\":0.876,\"compound\":-0.8442},\"S031\":{\"pos\":0.1,\"neg\":0.088,\"neu\":0.812,\"compound\":0.4009},\"S032\":{\"pos\":0.014,\"neg\":0.182,\"neu\":0.803,\"compound\":-0.9726},\"S033\":{\"pos\":0.097,\"neg\":0.091,\"neu\":0.812,\"compound\":0.2023}},\"sentiment_distribution\":{\"reflective\":12,\"passionate\":7,\"personal\":1,\"urgent\":9},\"clusters\":[{\"cluster_id\":0,\"size\":7,\"student_ids\":[\"S004\",\"S006\",\"S012\",\"S014\",\"S021\",\"S023\",\"S031\"],\"student_names\":[\"Sophia Ramirez\",\"Aaliyah Johnson\",\"Olivia Chen\",\"Emma Gonzalez\",\"Ava Kowalski\",\"Darius Hayes\",\"Jasmine Lee\"],\"top_terms\":[\"driving\",\"phone\",\"texting\",\"text\",\"drive\"],\"centroid_text\":\"Phones and driving\\n\\nThere can be various reasons that people use there their phone while driving. They could be using them to text. They can be using\"},{\"cluster_id\":1,\"size\":6,\"student_ids\":[\"S001\",\"S002\",\"S015\",\"S018\",\"S022\",\"S025\"],\"student_names\":[\"Maria Ndiaye\",\"Jordan Kim\",\"Brittany Okafor\",\"Connor Walsh\",\"Destiny Williams\",\"Aiden Brooks\"],\"top_terms\":[\"intersectionality\",\"family\",\"black\",\"identity\",\"neighborhood\"],\"centroid_text\":\"I thought the reading on intersectionality was interesting and I can see why people study it. The idea that different parts of your identity affect ho\"},{\"cluster_id\":2,\"size\":4,\"student_ids\":[\"S003\",\"S010\",\"S011\",\"S020\"],\"student_names\":[\"Alex Hernandez\",\"Tyler Nguyen\",\"Jaylen Carter\",\"Jake Novak\"],\"top_terms\":[\"intersectionality\",\"oppression\",\"experiences\",\"multiple\",\"understanding\"],\"centroid_text\":\"Understanding Intersectionality \\n\\n Intersectionality is a theoretical framework that examines how various social categorizations such as race, class,\"},{\"cluster_id\":3,\"size\":10,\"student_ids\":[\"S007\",\"S008\",\"S009\",\"S013\",\"S016\",\"S017\",\"S019\",\"S024\",\"S030\",\"S032\"],\"student_names\":[\"David Park\",\"Maya Patel\",\"Isaiah Thomas\",\"Jamal Washington\",\"Kai Tanaka\",\"Zoe Abrams\",\"Marcus Rivera\",\"Lily Chang\",\"Ryan Mitchell\",\"Brandon Torres\"],\"top_terms\":[\"driving\",\"phones\",\"phone\",\"texting\",\"social\"],\"centroid_text\":\"Phones & Driving\\n\\nBefore social medias were invented car accidents were shockingly low compared to the numbers we see today. Texting and driving are s\"},{\"cluster_id\":4,\"size\":2,\"student_ids\":[\"S005\",\"S033\"],\"student_names\":[\"Ethan Liu\",\"Nadia Petrov\"],\"top_terms\":[\"driving\",\"social\",\"accidents\",\"causing\",\"medias\"],\"centroid_text\":\"I think driving while using social medias should be banned because of the many car accidents they are causing, it is causing ones insurance to rise, a\"}],\"embedding_outlier_ids\":[\"S031\"],\"pairwise_similarity\":{\"mean_similarity\":0.4568,\"max_similarity\":0.9751,\"pairs_above_085\":6,\"pairs_above_070\":134,\"total_pairs\":406,\"observation\":\"This assignment had low submission similarity (mean=0.46, max=0.98, 406 pairs total). 6 pairs above 0.85 (high similarity). 134 pairs above 0.70 (moderate similarity). Consider first: is the assignment designed to produce diverse responses? Similarity can reflect community, shared cultural knowledge, or collaborative learning \u2014 not only copying.\",\"high_similarity_pairs\":[{\"student_id_a\":\"S005\",\"student_name_a\":\"Ethan Liu\",\"student_id_b\":\"S033\",\"student_name_b\":\"Nadia Petrov\",\"cosine_similarity\":0.9751,\"observation\":\"These two submissions share 98% vocabulary overlap. This is a factual observation \u2014 the system does not determine cause. Possible interpretations include shared source material, collaborative learning, or identical content.\"},{\"student_id_a\":\"S019\",\"student_name_a\":\"Marcus Rivera\",\"student_id_b\":\"S024\",\"student_name_b\":\"Lily Chang\",\"cosine_similarity\":0.9106,\"observation\":\"These two submissions share 91% vocabulary overlap. This is a factual observation \u2014 the system does not determine cause. Possible interpretations include shared source material, collaborative learning, or identical content.\"}]},\"assignment_description\":\"\",\"assignment_connection_observation\":\"\",\"shared_references\":[],\"contradictions\":[],\"concern_signals\":[{\"student_id\":\"S001\",\"student_name\":\"Maria Ndiaye\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"e things it add up. The reading talk about how cate\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S002\",\"student_name\":\"Jordan Kim\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"The reading about intersectiona\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S010\",\"student_name\":\"Tyler Nguyen\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"ression. The author argues that simply being a\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S015\",\"student_name\":\"Brittany Okafor\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"I really liked the reading about intersectiona\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S015\",\"student_name\":\"Brittany Okafor\",\"signal_type\":\"POSSIBLE CONCERN\",\"keyword_category\":\"essentializing\",\"vader_polarity\":\"positive\",\"matched_text\":\"zing resilience and they always look out for each o\",\"interpretation\":\"'Sounds nice' but essentializing language detected\"},{\"student_id\":\"S018\",\"student_name\":\"Connor Walsh\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"so Black might face challenges that are different\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S020\",\"student_name\":\"Jake Novak\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"nd I have some real questions about it. The frame\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S022\",\"student_name\":\"Destiny Williams\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"negative\",\"matched_text\":\"d just work harder. The reading talks about overlap\",\"interpretation\":\"Political urgency about injustice \u2014 NOT a concern\"},{\"student_id\":\"S005\",\"student_name\":\"Ethan Liu\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"negative\",\"matched_text\":\"from accidents. The question is people more conc\",\"interpretation\":\"Political urgency about injustice \u2014 NOT a concern\"},{\"student_id\":\"S013\",\"student_name\":\"Jamal Washington\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"negative\",\"matched_text\":\"yone who is nearby. According to Edgar Snyder, appro\",\"interpretation\":\"Political urgency about injustice \u2014 NOT a concern\"},{\"student_id\":\"S019\",\"student_name\":\"Marcus Rivera\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"ed by young adults. According to a AAA poll \\\"94 perc\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"S033\",\"student_name\":\"Nadia Petrov\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"from accidents. The question is people more conc\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"}],\"per_submission\":{\"S001\":{\"student_id\":\"S001\",\"student_name\":\"Maria Ndiaye\",\"word_count\":205,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.8018,\"keyword_hits\":{\"personal_reflection\":2,\"evidence_use\":2},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S002\":{\"student_id\":\"S002\",\"student_name\":\"Jordan Kim\",\"word_count\":89,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.2732,\"keyword_hits\":{\"conceptual_connection\":1,\"evidence_use\":1},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":true,\"truncation_note\":\"This submission may be incomplete \u2014 it ends without finishing the last thought, and is shorter than most submissions in this class. Consider checking in with this student.\"},\"S003\":{\"student_id\":\"S003\",\"student_name\":\"Alex Hernandez\",\"word_count\":117,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.6249,\"keyword_hits\":{},\"cluster_id\":2,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S010\":{\"student_id\":\"S010\",\"student_name\":\"Tyler Nguyen\",\"word_count\":206,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.3736,\"keyword_hits\":{\"critical_analysis\":1,\"evidence_use\":3},\"cluster_id\":2,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S011\":{\"student_id\":\"S011\",\"student_name\":\"Jaylen Carter\",\"word_count\":188,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.9556,\"keyword_hits\":{},\"cluster_id\":2,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S015\":{\"student_id\":\"S015\",\"student_name\":\"Brittany Okafor\",\"word_count\":166,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.9937,\"keyword_hits\":{\"essentializing\":1,\"evidence_use\":2},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S018\":{\"student_id\":\"S018\",\"student_name\":\"Connor Walsh\",\"word_count\":175,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.8942,\"keyword_hits\":{\"critical_analysis\":1,\"evidence_use\":1},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S020\":{\"student_id\":\"S020\",\"student_name\":\"Jake Novak\",\"word_count\":164,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.9039,\"keyword_hits\":{\"critical_analysis\":1,\"personal_reflection\":1,\"evidence_use\":3},\"cluster_id\":2,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S022\":{\"student_id\":\"S022\",\"student_name\":\"Destiny Williams\",\"word_count\":183,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.5071,\"keyword_hits\":{\"personal_reflection\":1,\"current_events\":1,\"evidence_use\":1},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S025\":{\"student_id\":\"S025\",\"student_name\":\"Aiden Brooks\",\"word_count\":156,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.8947,\"keyword_hits\":{},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S004\":{\"student_id\":\"S004\",\"student_name\":\"Sophia Ramirez\",\"word_count\":172,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9659,\"keyword_hits\":{\"current_events\":1},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S005\":{\"student_id\":\"S005\",\"student_name\":\"Ethan Liu\",\"word_count\":201,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.2579,\"keyword_hits\":{\"critical_analysis\":1},\"cluster_id\":4,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S006\":{\"student_id\":\"S006\",\"student_name\":\"Aaliyah Johnson\",\"word_count\":212,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.986,\"keyword_hits\":{},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S007\":{\"student_id\":\"S007\",\"student_name\":\"David Park\",\"word_count\":228,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9819,\"keyword_hits\":{},\"cluster_id\":3,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S008\":{\"student_id\":\"S008\",\"student_name\":\"Maya Patel\",\"word_count\":240,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.8121,\"keyword_hits\":{\"current_events\":2},\"cluster_id\":3,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S009\":{\"student_id\":\"S009\",\"student_name\":\"Isaiah Thomas\",\"word_count\":251,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9916,\"keyword_hits\":{},\"cluster_id\":3,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S012\":{\"student_id\":\"S012\",\"student_name\":\"Olivia Chen\",\"word_count\":266,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.8475,\"keyword_hits\":{\"conceptual_connection\":1},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S013\":{\"student_id\":\"S013\",\"student_name\":\"Jamal Washington\",\"word_count\":274,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9549,\"keyword_hits\":{\"current_events\":2,\"evidence_use\":1},\"cluster_id\":3,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S014\":{\"student_id\":\"S014\",\"student_name\":\"Emma Gonzalez\",\"word_count\":281,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9821,\"keyword_hits\":{},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S016\":{\"student_id\":\"S016\",\"student_name\":\"Kai Tanaka\",\"word_count\":289,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9652,\"keyword_hits\":{\"conceptual_connection\":2},\"cluster_id\":3,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S017\":{\"student_id\":\"S017\",\"student_name\":\"Zoe Abrams\",\"word_count\":293,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.9184,\"keyword_hits\":{\"current_events\":1},\"cluster_id\":3,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S019\":{\"student_id\":\"S019\",\"student_name\":\"Marcus Rivera\",\"word_count\":297,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.9204,\"keyword_hits\":{\"evidence_use\":1},\"cluster_id\":3,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S021\":{\"student_id\":\"S021\",\"student_name\":\"Ava Kowalski\",\"word_count\":310,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9876,\"keyword_hits\":{},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S023\":{\"student_id\":\"S023\",\"student_name\":\"Darius Hayes\",\"word_count\":318,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.8907,\"keyword_hits\":{\"current_events\":1},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S024\":{\"student_id\":\"S024\",\"student_name\":\"Lily Chang\",\"word_count\":330,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9939,\"keyword_hits\":{\"conceptual_connection\":1,\"current_events\":2},\"cluster_id\":3,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S030\":{\"student_id\":\"S030\",\"student_name\":\"Ryan Mitchell\",\"word_count\":120,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.8442,\"keyword_hits\":{},\"cluster_id\":3,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S031\":{\"student_id\":\"S031\",\"student_name\":\"Jasmine Lee\",\"word_count\":120,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.4009,\"keyword_hits\":{},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S032\":{\"student_id\":\"S032\",\"student_name\":\"Brandon Torres\",\"word_count\":120,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9726,\"keyword_hits\":{},\"cluster_id\":3,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"},\"S033\":{\"student_id\":\"S033\",\"student_name\":\"Nadia Petrov\",\"word_count\":120,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.2023,\"keyword_hits\":{\"critical_analysis\":1},\"cluster_id\":4,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\"}},\"citation_report\":{\"has_citations\":true,\"source_count\":1,\"students_with_citations\":3,\"students_without_citations\":26,\"generic_reading_ref_count\":2,\"specific_source_count\":1,\"most_cited\":[[\"Edgar Snyder\",1]],\"verification_note\":\"URL/DOI existence is checked automatically. Unverified \u2260 fake \u2014 paywalled, non-English, and community sources will appear unverified.\",\"sources_summary\":[{\"source\":\"Edgar Snyder\",\"citation_type\":\"generic_reference\",\"student_names\":[\"Jamal Washington\"],\"count\":1}],\"_citations_live\":[{\"citation_type\":\"reading_reference\",\"raw_text\":\"The author argues\",\"normalized\":\"[course reading]\",\"student_id\":\"S010\",\"student_name\":\"Tyler Nguyen\",\"verified\":null,\"verification_note\":\"\"},{\"citation_type\":\"reading_reference\",\"raw_text\":\"the reading says\",\"normalized\":\"[course reading]\",\"student_id\":\"S020\",\"student_name\":\"Jake Novak\",\"verified\":null,\"verification_note\":\"\"},{\"citation_type\":\"generic_reference\",\"raw_text\":\"According to Edgar Snyder,\",\"normalized\":\"Edgar Snyder\",\"student_id\":\"S013\",\"student_name\":\"Jamal Washington\",\"verified\":null,\"verification_note\":\"\"}]},\"gibberish_ids\":[],\"analysis_notes\":[\"Citations found: 1 unique sources across 3 students (URL/DOI verification running in background)\"]}"
+  },
+  "codings": [
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S001",
+      "student_name": "Maria Ndiaye",
+      "coding_record": {
+        "student_id": "S001",
+        "student_name": "Maria Ndiaye",
+        "theme_tags": [
+          "intersectionality in non-Western contexts",
+          "overlapping social categories as lived experience",
+          "critique of Western-centric frameworks"
+        ],
+        "theme_confidence": {
+          "intersectionality in non-Western contexts": 0.9,
+          "overlapping social categories as lived experience": 0.95,
+          "critique of Western-centric frameworks": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "In Senegal people don't use this word intersectionality but everybody know that life is harder when you are many things at once that society don't value",
+            "significance": "Demonstrates recognition of intersectionality as a universal concept with local expressions, connecting academic theory to pre-existing cultural understanding"
+          },
+          {
+            "text": "when my mother go to the school meeting and people treat her different because she have accent and she wear hijab",
+            "significance": "Concrete example of how multiple marginalized identities (Black, immigrant, Muslim) compound in everyday institutional settings"
+          },
+          {
+            "text": "the reading could be stronger if it include voices from outside America because this experience it is everywhere not just here",
+            "significance": "Critical engagement with the geographic scope of the assigned reading, advocating for more inclusive theoretical frameworks"
+          }
+        ],
+        "emotional_register": "reflective",
+        "emotional_notes": "Balances personal narrative with analytical critique, showing both intimate understanding of intersectionality through family experiences and intellectual engagement with theoretical limitations",
+        "readings_referenced": [
+          "the reading about how categories overlap"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "overlapping social categories"
+        ],
+        "personal_connections": [
+          "grandmother's experience in Dakar as Wolof woman",
+          "mother's experience as Black immigrant Muslim woman in America"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 205,
+        "cluster_id": 1,
+        "vader_sentiment": 0.8018,
+        "keyword_hits": {
+          "personal_reflection": 2,
+          "evidence_use": 2
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "When I first read about intersectionality I was thinking on my grandmother in Dakar. She is a woman, she is Wolof, she is old now and she don't have much money. In Senegal people don't use this word intersectionality but everybody know that life is harder when you are many things at once that society don't value. My grandmother she always say that being woman in Senegal is one thing but being poor woman who is also from village that is another thing completely.\n\nWhen my family come to America I see same thing but different. My mother she is Black woman here but also immigrant and also Muslim and each of these things it add up. The reading talk about how categories overlap and I think this is true but it is not just categories on paper. It is real life every day, like when my mother go to the school meeting and people treat her different because she have accent and she wear hijab. Intersectionality for me it is not theory it is just what my family live through and I think the reading could be stronger if it include voices from outside America because this experience it is everywhere not just here.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S002",
+      "student_name": "Jordan Kim",
+      "coding_record": {
+        "student_id": "S002",
+        "student_name": "Jordan Kim",
+        "theme_tags": [
+          "intersectionality in family dynamics",
+          "understanding overlapping identities",
+          "linking theory to lived experience"
+        ],
+        "theme_confidence": {
+          "intersectionality in family dynamics": 0.9,
+          "understanding overlapping identities": 0.85,
+          "linking theory to lived experience": 0.75
+        },
+        "notable_quotes": [
+          {
+            "text": "The reading about intersectionality made me think about how Crenshaw talks about the ways that race and gender overlap to create unique experiences that you cant really understand by just looking at one thing at a time.",
+            "significance": "Directly references Crenshaw's intersectionality framework and demonstrates conceptual understanding of overlapping systems of oppression."
+          },
+          {
+            "text": "Like my mom is Korean and a woman and her experience is different from my dads even though theyre in the same family.",
+            "significance": "Applies intersectionality to personal family context, illustrating how race and gender shape distinct lived experiences within shared familial structures."
+          },
+          {
+            "text": "I think this connects to what we talked about last week about how identity is not just one thing.",
+            "significance": "Shows ability to synthesize current reading with prior course concepts, reinforcing understanding of identity complexity."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Clear focus on conceptual analysis with a personal example, though submission ends abruptly with an incomplete sentence suggesting possible time constraints.",
+        "readings_referenced": [
+          "Kim Crenshaw's intersectionality theory"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "multifaceted identity"
+        ],
+        "personal_connections": [
+          "comparison of Korean mother's and father's experiences within the same family"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 89,
+        "cluster_id": 1,
+        "vader_sentiment": 0.2732,
+        "keyword_hits": {
+          "conceptual_connection": 1,
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "The reading about intersectionality made me think about how Crenshaw talks about the ways that race and gender overlap to create unique experiences that you cant really understand by just looking at one thing at a time. Like my mom is Korean and a woman and her experience is different from my dads even though theyre in the same family. I think this connects to what we talked about last week about how identity is not just one thing. Idk I had more to say but its late and",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S003",
+      "student_name": "Alex Hernandez",
+      "coding_record": {
+        "student_id": "S003",
+        "student_name": "Alex Hernandez",
+        "theme_tags": [
+          "intersectionality as layered identity analysis",
+          "systemic inequality critique",
+          "critical lens application"
+        ],
+        "theme_confidence": {
+          "intersectionality as layered identity analysis": 0.9,
+          "systemic inequality critique": 0.85,
+          "critical lens application": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Intersectionality is a theoretical framework that examines how various social categorizations such as race, class, and gender interact on multiple levels to create overlapping systems of discrimination or disadvantage.",
+            "significance": "Clear operational definition of intersectionality that establishes its analytical scope"
+          },
+          {
+            "text": "The concept was first coined by **Kimberl\u00e9 Crenshaw** in 1989 to address the marginalization of Black women within both feminist and anti-racist discourse.",
+            "significance": "Historical contextualization of the term's origin and its specific response to epistemic erasure"
+          },
+          {
+            "text": "It demonstrates that social categories are not independent but rather interconnected, creating **complex systems** of privilege and oppression that affect individuals differently based on their unique combination of identities.",
+            "significance": "Highlights the methodological innovation of intersectionality in challenging categorical thinking"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Objective and precise academic tone with focus on conceptual clarity",
+        "readings_referenced": [
+          "Kimberl\u00e9 Crenshaw"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "systemic inequality",
+          "critical lens",
+          "layered identities"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 117,
+        "cluster_id": 2,
+        "vader_sentiment": 0.6249,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": " Understanding Intersectionality \n\n Intersectionality is a theoretical framework that examines how various social categorizations such as race, class, and gender interact on multiple levels to create overlapping systems of discrimination or disadvantage. \n\n Key Aspects \n\n The concept was first coined by **Kimberl\u00e9 Crenshaw** in 1989 to address the marginalization of Black women within both feminist and anti-racist discourse. It recognizes that individuals possess multiple, layered identities that shape their lived experiences in profound ways. \n\n Why It Matters \n\n Furthermore, intersectionality provides a **critical lens** through which we can analyze **systemic inequality**. It demonstrates that social categories are not independent but rather interconnected, creating **complex systems** of privilege and oppression that affect individuals differently based on their unique combination of identities. ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S010",
+      "student_name": "Tyler Nguyen",
+      "coding_record": {
+        "student_id": "S010",
+        "student_name": "Tyler Nguyen",
+        "theme_tags": [
+          "intersectionality in marginalized communities",
+          "race-class-sexuality intersections",
+          "nuanced understanding of identity and power"
+        ],
+        "theme_confidence": {
+          "intersectionality in marginalized communities": 0.9,
+          "race-class-sexuality intersections": 0.85,
+          "nuanced understanding of identity and power": 0.75
+        },
+        "notable_quotes": [
+          {
+            "text": "The author argues that simply being a woman of color, for example, does not automatically mean that one experiences oppression. Rather, it is the intersection of factors such as race, class, and sexuality that determines one's positionality.",
+            "significance": "Clarifies the core argument of intersectionality as a framework for analyzing layered systems of power and oppression."
+          },
+          {
+            "text": "I found it striking that the author uses the example of the 'triple jeopardy' faced by black women in the Civil Rights Movement.",
+            "significance": "Highlights the student's engagement with historical examples to illustrate intersectional oppression."
+          },
+          {
+            "text": "Simply being a member of a marginalized group is not enough to guarantee solidarity or shared experiences.",
+            "significance": "Demonstrates critical application of intersectionality to challenge assumptions about collective identity."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Focuses on dissecting theoretical frameworks and historical examples with intellectual precision.",
+        "readings_referenced": [
+          "reading on intersectionality",
+          "Civil Rights Movement examples (Sojourner Truth, Ida B. Wells)"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "positionality",
+          "axes of identity",
+          "marginalized communities"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 206,
+        "cluster_id": 2,
+        "vader_sentiment": 0.3736,
+        "keyword_hits": {
+          "critical_analysis": 1,
+          "evidence_use": 3
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "The reading on intersectionality highlights the complexities of identity and how different aspects of it interact to create unique experiences of privilege and oppression. The author argues that simply being a woman of color, for example, does not automatically mean that one experiences oppression. Rather, it is the intersection of factors such as race, class, and sexuality that determines one's positionality. This idea is particularly relevant in understanding the experiences of marginalized communities, as it emphasizes the need to consider multiple axes of identity.\n\nI found it striking that the author uses the example of the \"triple jeopardy\" faced by black women in the Civil Rights Movement. Despite being a key figure in the movement, black women like Sojourner Truth and Ida B. Wells faced both racism and sexism. This intersection of oppressions highlights the ways in which different forms of oppression can intersect and exacerbate one another.\n\nWhat struck me most about this reading was the emphasis on the need for a more nuanced understanding of identity and power dynamics. Simply being a member of a marginalized group is not enough to guarantee solidarity or shared experiences. Rather, we need to consider the specific ways in which different individuals intersect with multiple forms of oppression.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S011",
+      "student_name": "Jaylen Carter",
+      "coding_record": {
+        "student_id": "S011",
+        "student_name": "Jaylen Carter",
+        "theme_tags": [
+          "intersectionality as framework for understanding oppression",
+          "systemic inequalities and power dynamics",
+          "moving beyond additive approaches to identity analysis"
+        ],
+        "theme_confidence": {
+          "intersectionality as framework for understanding oppression": 0.9,
+          "systemic inequalities and power dynamics": 0.85,
+          "moving beyond additive approaches to identity analysis": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "a woman of color may face both sexism and racism, which cannot be addressed separately",
+            "significance": "Concrete example illustrating intersectionality's core principle of overlapping oppressions"
+          },
+          {
+            "text": "these forms of oppression are not mutually exclusive, but rather interconnected",
+            "significance": "Highlights key insight about systemic interdependencies in discrimination"
+          },
+          {
+            "text": "move beyond a simplistic, additive approach to understanding identity",
+            "significance": "Demonstrates grasp of intersectionality's methodological shift in analysis"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Clear, structured explanation with emphasis on conceptual clarity and theoretical implications",
+        "readings_referenced": [
+          "Kimberl\u00e9 Crenshaw"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "systemic oppression",
+          "social justice frameworks"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 188,
+        "cluster_id": 2,
+        "vader_sentiment": 0.9556,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Intersectionality is a crucial concept in ethnic studies that helps us comprehend the complexities of discrimination. Developed by Kimberl\u00e9 Crenshaw, intersectionality acknowledges that individuals have multiple identities that intersect and overlap, creating unique experiences of marginalization. For example, a woman of color may face both sexism and racism, which cannot be addressed separately. Intersectionality recognizes that these forms of oppression are not mutually exclusive, but rather interconnected, leading to a more nuanced understanding of the ways in which social inequalities intersect.\n\nBy considering multiple identities and experiences, intersectionality sheds light on the ways in which dominant groups maintain power and privilege. It highlights the need to address the systemic inequalities that result from the intersections of racism, sexism, homophobia, and other forms of oppression. Intersectionality encourages us to move beyond a simplistic, additive approach to understanding identity and instead, to consider the complex ways in which multiple forms of oppression are experienced simultaneously. By doing so, we can develop more effective strategies for promoting social justice and challenging the status quo. Ultimately, intersectionality offers a powerful framework for analyzing and addressing the complexities of oppression in our society.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S015",
+      "student_name": "Brittany Okafor",
+      "coding_record": {
+        "student_id": "S015",
+        "student_name": "Brittany Okafor",
+        "theme_tags": [
+          "appreciating cultural diversity through intersectionality",
+          "personal observations on community resilience",
+          "celebrating intersectional identities as strengths"
+        ],
+        "theme_confidence": {
+          "appreciating cultural diversity through intersectionality": 0.9,
+          "personal observations on community resilience": 0.85,
+          "celebrating intersectional identities as strengths": 0.9
+        },
+        "notable_quotes": [
+          {
+            "text": "Like in my neighborhood the Mexican families are always so close and they really support each other and I think thats what intersectionality is about, like how different backgrounds come together and make communities stronger.",
+            "significance": "Directly connects intersectionality to observable community dynamics, using personal experience to operationalize the concept."
+          },
+          {
+            "text": "And the Black families on my street they have this amazing resilience and they always look out for each other too.",
+            "significance": "Highlights intersectional resilience as a strength, though the phrasing risks essentializing cultural traits."
+          },
+          {
+            "text": "I think all cultures have something beautiful about them and if we could just appreciate what makes each group special instead of discriminating then we would be so much better off.",
+            "significance": "Articulates a normative vision of intersectionality as a tool for social cohesion, though the 'beauty' framing may oversimplify systemic oppression."
+          }
+        ],
+        "emotional_register": "passionate",
+        "emotional_notes": "Uses enthusiastic language to frame intersectionality as a positive social force, with personal anecdotes underscoring optimism about cultural coexistence.",
+        "readings_referenced": [
+          "the reading about intersectionality"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "layered identity",
+          "cultural diversity as strength"
+        ],
+        "personal_connections": [
+          "Mexican families in her neighborhood",
+          "Black families on her street",
+          "friend Rosa's intersecting identities (Latina and queer)"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 166,
+        "cluster_id": 1,
+        "vader_sentiment": 0.9937,
+        "keyword_hits": {
+          "essentializing": 1,
+          "evidence_use": 2
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I really liked the reading about intersectionality because it made me think about the different cultures in my neighborhood. Like in my neighborhood the Mexican families are always so close and they really support each other and I think thats what intersectionality is about, like how different backgrounds come together and make communities stronger. And the Black families on my street they have this amazing resilience and they always look out for each other too. I think all cultures have something beautiful about them and if we could just appreciate what makes each group special instead of discriminating then we would be so much better off.\n\nThe reading talked about how identity is layered and I see that with my friend Rosa who is Latina and also queer and shes like the strongest person I know because of all she has been through. I think intersectionality shows us that diversity is our greatest strength and we should celebrate all the things that make each culture unique.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S018",
+      "student_name": "Connor Walsh",
+      "coding_record": {
+        "student_id": "S018",
+        "student_name": "Connor Walsh",
+        "theme_tags": [
+          "acknowledging intersectional experiences",
+          "critique of identity-based categorization",
+          "personal approach to equality"
+        ],
+        "theme_confidence": {
+          "acknowledging intersectional experiences": 0.9,
+          "critique of identity-based categorization": 0.85,
+          "personal approach to equality": 0.75
+        },
+        "notable_quotes": [
+          {
+            "text": "The idea that different parts of your identity affect how you experience the world makes sense to me.",
+            "significance": "Demonstrates foundational understanding of intersectionality's core premise"
+          },
+          {
+            "text": "I just try to treat everyone the same regardless of what they look like or where they come from.",
+            "significance": "Highlights student's personal philosophy that contrasts with intersectional frameworks"
+          },
+          {
+            "text": "I think focusing too much on differences can actually make things worse sometimes.",
+            "significance": "Reveals tension between recognizing systemic patterns and advocating for individualism"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Balanced perspective with clear reasoning, though undercurrent of discomfort with identity categories is evident",
+        "readings_referenced": [
+          "reading on intersectionality"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "identity categories",
+          "individualism"
+        ],
+        "personal_connections": [
+          "personal attitude toward treating people equally"
+        ],
+        "current_events_referenced": [],
+        "concerns": [
+          {
+            "flagged_passage": "I don't really see the point of focusing so much on categories and labels because I feel like that just divides people more.",
+            "surrounding_context": "Connor writes: 'But honestly at the end of the day I just try to treat everyone the same regardless of what they look like or where they come from. I don't really see the point of focusing so much on categories and labels because I feel like that just divides people more.'",
+            "why_flagged": "This is a colorblind ideology statement that dismisses the importance of identity categories in understanding systemic inequality. It may indicate a need for further dialogue about how intersectionality helps illuminate structural oppression rather than divide people.",
+            "confidence": 0.85
+          },
+          {
+            "flagged_passage": "When I meet someone I don't think about their race or gender I just see a person.",
+            "surrounding_context": "Connor states: 'When I meet someone I don't think about their race or gender I just see a person. I think if more people had that attitude we wouldn't need frameworks like intersectionality because we would just respect each other as individuals.'",
+            "why_flagged": "This is another example of colorblind rhetoric, which can obscure the real-world impacts of race and gender. The student may benefit from guided reflection on how such an approach can unintentionally minimize lived experiences of marginalization.",
+            "confidence": 0.8
+          }
+        ],
+        "lens_observations": null,
+        "word_count": 175,
+        "cluster_id": 1,
+        "vader_sentiment": 0.8942,
+        "keyword_hits": {
+          "critical_analysis": 1,
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I thought the reading on intersectionality was interesting and I can see why people study it. The idea that different parts of your identity affect how you experience the world makes sense to me. Like I understand that someone who is a woman and also Black might face challenges that are different from someone who is just one of those things.\n\nBut honestly at the end of the day I just try to treat everyone the same regardless of what they look like or where they come from. I dont really see the point of focusing so much on categories and labels because I feel like that just divides people more. When I meet someone I dont think about their race or gender I just see a person. I think if more people had that attitude we wouldnt need frameworks like intersectionality because we would just respect each other as individuals.\n\nI know some people might disagree with me on this but I think focusing too much on differences can actually make things worse sometimes.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S020",
+      "student_name": "Jake Novak",
+      "coding_record": {
+        "student_id": "S020",
+        "student_name": "Jake Novak",
+        "theme_tags": [
+          "class as overlooked axis of oppression",
+          "intersectionality's limitations",
+          "personal experience of poverty and disability"
+        ],
+        "theme_confidence": {
+          "class as overlooked axis of oppression": 0.8,
+          "intersectionality's limitations": 0.75,
+          "personal experience of poverty and disability": 0.9
+        },
+        "notable_quotes": [
+          {
+            "text": "The framework talks about how race gender class all these categories overlap to create different experiences of oppression and I get that. But the reading acts like intersectionality covers everything and it doesnt.",
+            "significance": "Highlights both comprehension of core intersectionality concepts and critical pushback against perceived overreach of the framework"
+          },
+          {
+            "text": "My family is white and poor. Like actually poor, not just middle class complaining about money.",
+            "significance": "Grounds abstract theory in concrete lived experience, illustrating tension between racial privilege and economic hardship"
+          },
+          {
+            "text": "I think thats worth talking about instead of just accepting the reading as gospel.",
+            "significance": "Demonstrates critical engagement with assigned materials and advocacy for more nuanced analysis"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Balances academic critique with personal narrative; maintains analytical tone while expressing frustration with theoretical gaps",
+        "readings_referenced": [
+          "piece on intersectionality"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "privilege axes",
+          "oppression frameworks"
+        ],
+        "personal_connections": [
+          "family's economic hardship",
+          "parental disability",
+          "white racial identity"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 164,
+        "cluster_id": 2,
+        "vader_sentiment": 0.9039,
+        "keyword_hits": {
+          "critical_analysis": 1,
+          "personal_reflection": 1,
+          "evidence_use": 3
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Ok so I read the piece on intersectionality and I have some real questions about it. The framework talks about how race gender class all these categories overlap to create different experiences of oppression and I get that. But the reading acts like intersectionality covers everything and it doesnt.\n\nMy family is white and poor. Like actually poor, not just middle class complaining about money. My dad works two jobs and my mom is disabled and nobody in this framework really talks about us. When the reading says that privilege operates along axes of race and gender I want to ask where does my dad's privilege come in? He cant pay the electric bill half the time. Thats its own kind of erasure.\n\nIm not saying racism isnt real because obviously it is. Im saying that this framework has a blind spot for class when its separated from race and I think thats worth talking about instead of just accepting the reading as gospel.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S022",
+      "student_name": "Destiny Williams",
+      "coding_record": {
+        "student_id": "S022",
+        "student_name": "Destiny Williams",
+        "theme_tags": [
+          "intersectionality in lived experience",
+          "historical continuity of systemic racism",
+          "anger as political engagement"
+        ],
+        "theme_confidence": {
+          "intersectionality in lived experience": 0.95,
+          "historical continuity of systemic racism": 0.9,
+          "anger as political engagement": 0.85
+        },
+        "notable_quotes": [
+          {
+            "text": "How can we sit here and read about redlining and act like its ancient history when my neighborhood still looks exactly like the map from 1940??",
+            "significance": "Highlights student's direct connection between historical policy and present-day conditions, showing deep understanding of systemic continuity."
+          },
+          {
+            "text": "You know whats divisive? Literal lines drawn on a map that decided which neighborhoods got resources and which ones didnt and then telling the people who got nothing that they should just work harder.",
+            "significance": "Demonstrates critical analysis of how structural inequality is framed as individual failure, tying into course themes of intersectional oppression."
+          },
+          {
+            "text": "Intersectionality isnt just an academic concept. Its the story of my family and millions of families like mine and Im tired of pretending we can discuss it calmly like it doesnt affect real people right now.",
+            "significance": "Powerful personal reflection that situates intersectionality within lived experience and current social realities."
+          }
+        ],
+        "emotional_register": "passionate",
+        "emotional_notes": "Strong emotional tone with righteous anger and urgency; conveys deep investment in the topic and its relevance to her community.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "intersectionality",
+          "redlining",
+          "systemic inequality",
+          "overlapping systems of oppression"
+        ],
+        "personal_connections": [
+          "growing up in a historically redlined neighborhood",
+          "family history of poverty and racial marginalization"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 183,
+        "cluster_id": 1,
+        "vader_sentiment": -0.5071,
+        "keyword_hits": {
+          "personal_reflection": 1,
+          "current_events": 1,
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "This reading made me furious and I mean that in a good way. How can we sit here and read about redlining and act like its ancient history when my neighborhood still looks exactly like the map from 1940?? The same blocks that were red-lined are the same blocks with no grocery stores no good schools no investment. That is intersectionality in PRACTICE not just theory.\n\nAnd it makes me angry when people act like talking about race is divisive. You know whats divisive? Literal lines drawn on a map that decided which neighborhoods got resources and which ones didnt and then telling the people who got nothing that they should just work harder. The reading talks about overlapping systems and YES thats exactly it \u2014 my grandmother was Black AND poor AND a woman AND living in a neighborhood the government decided wasnt worth investing in.\n\nIntersectionality isnt just an academic concept. Its the story of my family and millions of families like mine and Im tired of pretending we can discuss it calmly like it doesnt affect real people right now.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S025",
+      "student_name": "Aiden Brooks",
+      "coding_record": {
+        "student_id": "S025",
+        "student_name": "Aiden Brooks",
+        "theme_tags": [
+          "classroom communication challenges",
+          "balancing emotional expression with academic discourse",
+          "intersectionality as analytical framework"
+        ],
+        "theme_confidence": {
+          "classroom communication challenges": 0.8,
+          "balancing emotional expression with academic discourse": 0.75,
+          "intersectionality as analytical framework": 0.65
+        },
+        "notable_quotes": [
+          {
+            "text": "The idea that peoples experiences are shaped by multiple factors at once is something I can agree with.",
+            "significance": "Affirms core concept of intersectionality while signaling basic comprehension of the theory"
+          },
+          {
+            "text": "I feel like when people start getting angry or raising their voices it actually makes it harder to have a productive conversation and some people just shut down.",
+            "significance": "Highlights tension between emotional authenticity and academic objectivity in classroom dynamics"
+          },
+          {
+            "text": "We should focus on understanding each others perspectives instead of trying to win arguments.",
+            "significance": "Reveals student's prioritization of collaborative learning over adversarial debate"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Focuses on structural observation of classroom interactions rather than personal emotion; maintains neutral tone while critiquing discussion patterns",
+        "readings_referenced": [
+          "piece on intersectionality (no specific author/text named)"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "systemic issues",
+          "perspective-taking"
+        ],
+        "personal_connections": [
+          "experience participating in class discussions about intersectionality"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 156,
+        "cluster_id": 1,
+        "vader_sentiment": 0.8947,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I read the piece on intersectionality and I think it raises some good points about how identity is complex. The idea that peoples experiences are shaped by multiple factors at once is something I can agree with.\n\nI do want to say though that I feel like in class discussions about this stuff people get really heated and I think we should be able to have these conversations without getting so emotional about it. Like were all here to learn right? I get that this is important to people but I feel like when people start getting angry or raising their voices it actually makes it harder to have a productive conversation and some people just shut down.\n\nI think we can talk about intersectionality and systemic issues in a way thats respectful to everyone in the room. We should focus on understanding each others perspectives instead of trying to win arguments. Just my two cents.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S004",
+      "student_name": "Sophia Ramirez",
+      "coding_record": {
+        "student_id": "S004",
+        "student_name": "Sophia Ramirez",
+        "theme_tags": [
+          "dangers of distracted driving",
+          "importance of road safety",
+          "exceptions for necessary technology"
+        ],
+        "theme_confidence": {
+          "dangers of distracted driving": 0.95,
+          "importance of road safety": 0.9,
+          "exceptions for necessary technology": 0.75
+        },
+        "notable_quotes": [
+          {
+            "text": "No text call should be so important that it cost someone their life.",
+            "significance": "Highlights the student's prioritization of human safety over technological convenience, emphasizing the gravity of the issue."
+          },
+          {
+            "text": "Phones are very good to have just not in the car.",
+            "significance": "Reflects a clear stance on balancing technology's benefits with its risks in specific contexts."
+          },
+          {
+            "text": "If someone has received a text while driving they should ignore it until they get to their destination, or a accident could occur.",
+            "significance": "Demonstrates practical reasoning about immediate consequences of phone use while driving."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Focuses on logical consequences and safety, with a firm but neutral tone about behavioral choices.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 172,
+        "cluster_id": 0,
+        "vader_sentiment": -0.9659,
+        "keyword_hits": {
+          "current_events": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Phones and Driving\n\nCellphones are a big part of the modern world today. Everywhere you look there are people using their cellphone, but one place no one should never be using their phone in their vehicle. Driving while using a cellphone is very dangerous. If someone has received a text while driving they should ignore it until they get to their destination, or a accident could occur.\n\nWhen someone is driving their phone should either be in their console or in the driver side door, and it should be on silent. There should only be one exception to use a phone while driving, and that is if someone needs to use their GPS. Then it should be in a secure place where they can hear the directions and know where to go.\n\nTexting while driving can be very dangerous, it can cause accidents and they may be fatal. No text call should be so important that it cost someone their life. Phones are very good to have just not in the car.    ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S005",
+      "student_name": "Ethan Liu",
+      "coding_record": {
+        "student_id": "S005",
+        "student_name": "Ethan Liu",
+        "theme_tags": [
+          "distracted driving risks",
+          "public safety concerns",
+          "comparison to drunk driving"
+        ],
+        "theme_confidence": {
+          "distracted driving risks": 0.9,
+          "public safety concerns": 0.85,
+          "comparison to drunk driving": 0.75
+        },
+        "notable_quotes": [
+          {
+            "text": "people more concerned more with their conveniences more than they are with the their safety or safety of others",
+            "significance": "Highlights the central ethical tension between individual convenience and collective safety"
+          },
+          {
+            "text": "Driving while using a social media to drunk driving, in both cases, a person does not have enough focus and mentally capacity to carry out a potentially dangerous activity like driving",
+            "significance": "Draws a direct analogy to drunk driving to strengthen the argument about cognitive impairment"
+          },
+          {
+            "text": "Studies have proved that drivers who use social medias while driving are more prone to cause accidents",
+            "significance": "Attempts to ground the argument in empirical evidence, though no specific sources are cited"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Focuses on logical arguments and cause-effect relationships, with a clear concern for public safety and systemic consequences",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 201,
+        "cluster_id": 4,
+        "vader_sentiment": -0.2579,
+        "keyword_hits": {
+          "critical_analysis": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I think driving while using social medias should be banned because of the many car accidents they are causing, it is causing ones insurance to rise, and it is causing concerns to people health issues. Banning social media while driving will keep a safe distance from accidents. The question is people more concerned more with their conveniences more than they are with the their safety or safety of others. It is a habit that spreads like STDs. In the long run, it is deadly as well Cell phones are the electronic device. Studies have proved that drivers who use social medias while driving are more prone to cause accidents. Driving while using a social media to drunk driving, in both cases, a person does not have enough focus and mentally capacity to carry out a potentially dangerous activity like driving. If you have this habit, do not forget about it also. Banning social media while driving will keep a safe distance from accidents. One cannot focus fully on the road and the other vehicles, if one keeps talking on phone consistently while driving. Another reason to ban the ususage of social medias while driving, is to prevent car insurance from rising.   ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S006",
+      "student_name": "Aaliyah Johnson",
+      "coding_record": {
+        "student_id": "S006",
+        "student_name": "Aaliyah Johnson",
+        "theme_tags": [
+          "misunderstanding assignment prompt",
+          "public safety concerns",
+          "legal consequences"
+        ],
+        "theme_confidence": {
+          "misunderstanding assignment prompt": 0.95,
+          "public safety concerns": 0.8,
+          "legal consequences": 0.75
+        },
+        "notable_quotes": [
+          {
+            "text": "Texting and driving is one of the most dangerous things a driver can do.",
+            "significance": "Establishes the central argument about the peril of distracted driving"
+          },
+          {
+            "text": "Everyone who texts and drives is putting themselves and others at risk.",
+            "significance": "Highlights the collective responsibility aspect of the issue"
+          },
+          {
+            "text": "In most states it is illegal to text and drive.",
+            "significance": "Demonstrates awareness of legal frameworks addressing the behavior"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Factual and cautionary tone with clear risk assessment language",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 212,
+        "cluster_id": 0,
+        "vader_sentiment": -0.986,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Phones And Driving\n\nTexting and driving is one of the most dangerous things a driver can do. It can cause major and serious wrecks. Why do people wreck when texting and driving ? The people who text and drive do not concentrate on the road or their surroundings.\n\nTexting and driving is so common for causing most teen wrecks. Teens are new to driving and have little to no experience. Adding a phone to the mix is just a recipe that will cook disaster. It's not just new drivers who wreck from texting and driving its new ones too.\n\nEveryone who texts and drives is putting themselves and others at risk. If you wreck due to texting and driving you will be held liable. Many people who text and drive can end up killing the other person they get into a wreck with. Ask yourself before you go and pick up your phone if it's worth the risk.\n\nIn most states it is illegal to text and drive. You can receive a big ticket if you get caught texting and driving. Bluetooth started being introduced into cars in 2011. Bluetooth helps drivers answer phone calls without holding the phone. In conclusion, texting and driving is illegal and should not be done.\n\n1            ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S007",
+      "student_name": "David Park",
+      "coding_record": {
+        "student_id": "S007",
+        "student_name": "David Park",
+        "theme_tags": [
+          "dangers of distracted driving",
+          "societal mindlessness and risk",
+          "misconceptions about driving distractions"
+        ],
+        "theme_confidence": {
+          "dangers of distracted driving": 0.95,
+          "societal mindlessness and risk": 0.8,
+          "misconceptions about driving distractions": 0.75
+        },
+        "notable_quotes": [
+          {
+            "text": "I strongly agree that phones should be banned while driving because of all the accidents they are causing.",
+            "significance": "Clear position statement reflecting strong conviction about the issue"
+          },
+          {
+            "text": "Driving is dangerous technique and to safely execute driving you should be 100% focused, but if you are drunk or on your phone, you are potentially in danger to yourself and others on the road.",
+            "significance": "Highlights perceived dichotomy between safety and risk through behavioral choices"
+          },
+          {
+            "text": "The available studies so far suggest that talking on the phone while driving, even hands-free, is as bad or worse than driving drunk.",
+            "significance": "Cites external research to reinforce argument about comparative danger levels"
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "Strong emphasis on immediate safety concerns and societal complacency, using alarmist language about consequences",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "distracted driving",
+          "societal responsibility"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 228,
+        "cluster_id": 3,
+        "vader_sentiment": -0.9819,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "CR Driving & Texting!\n\nI strongly agree that phones should be banned while driving because of all the accidents they are causing. These are causing insurance to rise and causing scare to people's health. Studies have proven that drivers who use phones while driving are more responsible for the cause of an accident. Driving is dangerous technique and to safely execute driving you should be 100% focused, but if you are drunk or on your phone, you are potentially in danger to yourself and others on the road. As a society, we have become very less mindful of everything going on around us and do not take much precaution of things happening right in front of us.\n\nMany people think distractions while driving is only texting and driving but in fact, while driving, sometimes it is easy to lose focus on the road because you are on the phone or because so much could be happening around you, but this means you forget you are on the road with others, instead of by yourself. Research has it, \" The available studies so far suggest that talking on the phone while driving, even hands-free, is as bad or worse than driving drunk. ... A test of 41 adults found that driving while intoxicated was actually less dangerous than driving while talking on a hand-held phone or a hands-free phone.\"                                                       ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S008",
+      "student_name": "Maya Patel",
+      "coding_record": {
+        "student_id": "S008",
+        "student_name": "Maya Patel",
+        "theme_tags": [
+          "road safety advocacy",
+          "public health awareness",
+          "behavioral change"
+        ],
+        "theme_confidence": {
+          "road safety advocacy": 0.95,
+          "public health awareness": 0.88,
+          "behavioral change": 0.75
+        },
+        "notable_quotes": [
+          {
+            "text": "Using your phone while driving is of the most common ways people die or get others killed in America.",
+            "significance": "Establishes the gravity of the issue and frames it as a societal problem requiring urgent attention."
+          },
+          {
+            "text": "One of the main reasons people are still disregarding this rule is because they're using their phone most times throughout the day and can't be without even while driving.",
+            "significance": "Highlights a behavioral and psychological barrier to compliance, suggesting a deeper cultural dependency on phones."
+          },
+          {
+            "text": "Act today and be the voice that can save many lives, including your friends and family.",
+            "significance": "Strong call to action emphasizing personal responsibility and collective impact."
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "Direct and impassioned tone with clear emphasis on immediate societal intervention and life-saving urgency.",
+        "readings_referenced": [
+          "National Safety Council reports"
+        ],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 240,
+        "cluster_id": 3,
+        "vader_sentiment": 0.8121,
+        "keyword_hits": {
+          "current_events": 2
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Phones and Driving\n\nUsing your phone while driving is of the most common ways people die or get others killed in America. With this problem, nobody thinks that it could be them that's dead and on the news from using their phone while driving. There are countless reasons why this needs to come to an end in our society.\n\nMany states have acted on the matter and have a hands free ban while driving. Nobody ever needs to use their phone while driving, you are supposed to be concentrated at all times while behind the wheel. One of the main reasons people are still disregarding this rule is because they're using their phone most times throughout the day and can't be without even while driving. The National safety council reports that phone use while driving causes approximately 1.6 crashes in a single year, also that 1 in every 4 car crashes has to do with phone usage while driving. Laws that were placed on these problems are slowly but surely getting rid of this problem over time.\n\nEverybody across the nation should tell their loved ones that it is never safe to do so and should attempt to stop this by any means necessary. Nobody wants to see any friends or family taken away from them by something that could easily be fixed. Act today and be the voice that can save many lives, including your friends and family .   ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S009",
+      "student_name": "Isaiah Thomas",
+      "coding_record": {
+        "student_id": "S009",
+        "student_name": "Isaiah Thomas",
+        "theme_tags": [
+          "public safety",
+          "technological distraction",
+          "legal responsibility"
+        ],
+        "theme_confidence": {
+          "public safety": 0.9,
+          "technological distraction": 0.85,
+          "legal responsibility": 0.75
+        },
+        "notable_quotes": [
+          {
+            "text": "I think drivers should not be able to use their cellphone in any capacity while operating vehicle, for 2 reasons",
+            "significance": "Clearly states the student's position and sets up the argument structure."
+          },
+          {
+            "text": "To many people dying to car accidents and have died due to an accident and sum of them were killed because some idiot decided to text and drive and risked others their lives, and that's not fair to the people.",
+            "significance": "Highlights emotional weight and moral judgment about the consequences of distracted driving."
+          },
+          {
+            "text": "In studies from scholarly authors, nowadays they have bluetooth text to prevent more accidents and its actually helping somehow.",
+            "significance": "Shows awareness of technological solutions and academic research on the topic."
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "Strong sense of concern for public safety and frustration with reckless behavior; tone is direct and morally charged.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "distraction theory"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 251,
+        "cluster_id": 3,
+        "vader_sentiment": -0.9916,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Phones and Driving\n\nI think drivers should not be able to use their cellphone in any capacity while operating vehicle, for 2 reasons, one example when you're driving and using a social media while operating a vehicle you're not 100% paying attention on the road and that's already bringing danger to other drivers driving on that road when your texting you can forget that roads are shared with everyone. that can cause accidents and if an accident occurs because you was using your phone and not paying attention fully on the road that can get you in legal trouble and you can also pay a big fine for that accident, also your insurance bill is going to go up. Another example if you have passengers with you they can get harmed because of your mistake using a cellphone in a capacity while operating a vehicle. The driver will also experience a physical distraction by having to release the steering wheel to attend to the social media text messaging is really considered the most dangerous effect. In studies from scholarly authors, nowadays they have bluetooth text to prevent more accidents and its actually helping somehow. To many people dying to car accidents and have died due to an accident and sum of them were killed because some idiot decided to text and drive and risked others their lives, and that's not fair to the people.\n\nSo this is why I think People should not be driving a vehicle while operating a cellphone.   ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S012",
+      "student_name": "Olivia Chen",
+      "coding_record": {
+        "student_id": "S012",
+        "student_name": "Olivia Chen",
+        "theme_tags": [
+          "distracted driving",
+          "public safety",
+          "technology and responsibility"
+        ],
+        "theme_confidence": {
+          "distracted driving": 0.9,
+          "public safety": 0.85,
+          "technology and responsibility": 0.75
+        },
+        "notable_quotes": [
+          {
+            "text": "Phones & Driving\nPeople driving while looking at their phones has become an epidemic and is a big cause of a lot of accident.",
+            "significance": "Highlights the student's concern about the prevalence and severity of distracted driving."
+          },
+          {
+            "text": "If you are driving while driving a vehicle, there is no good excuse for using your phone because anything that is on your phone can wait till after you're are done driving and the car is in park and everyone is safe and not in danger.",
+            "significance": "Demonstrates a clear moral stance on the issue and emphasizes the importance of prioritizing safety over convenience."
+          },
+          {
+            "text": "When you are on your phone while driving, you are not only putting your life in danger but the lives of everyone around you on the road and possibly even pedestrians on the side of the roads.",
+            "significance": "Shows awareness of the broader societal impact of individual actions, indicating a sense of collective responsibility."
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "The tone conveys a strong sense of urgency and concern about the dangers of distracted driving and its consequences.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 266,
+        "cluster_id": 0,
+        "vader_sentiment": -0.8475,
+        "keyword_hits": {
+          "conceptual_connection": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Phones & Driving\n\nPeople driving while looking at their phones has become an epidemic and is a big cause of a lot of accident. Primarily involving teens who are so distracted by their phones that they are not paying any attention to the road. With the growing number of car accidents happening, they have put into place the hands-free law so that it is now illegal to be on your phone while operating a vehicle.\n\nIf you are driving while driving a vehicle, there is no good excuse for using your phone because anything that is on your phone can wait till after you're are done driving and the car is in park and everyone is safe and not in danger. Looking away from the road for even just 2 seconds can be the difference between life and death because one moment the roads might be clear and the next you could be rolled over trapped in your car.\n\nWhen you are on your phone while driving, you are not only putting your life in danger but the lives of everyone around you on the road and possibly even pedestrians on the side of the roads. There are many deferent alternatives to being on your phone while driving, such as Bluetooth enabled devices that connect to the car so that you can still talk on the phone without using your hands. Another alternative is if you have a passenger, for them to read you the information and relay it back for you. That is just a few ways to avoid staying on your phone while driving   ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S013",
+      "student_name": "Jamal Washington",
+      "coding_record": {
+        "student_id": "S013",
+        "student_name": "Jamal Washington",
+        "theme_tags": [
+          "technology and distraction",
+          "public safety awareness",
+          "responsibility in modern life"
+        ],
+        "theme_confidence": {
+          "technology and distraction": 0.9,
+          "public safety awareness": 0.85,
+          "responsibility in modern life": 0.75
+        },
+        "notable_quotes": [
+          {
+            "text": "We use our phones so much it's beginning to be too much. We use it when we walk, eat, etc. But most dangerously when we are driving.",
+            "significance": "Highlights the student's concern about the pervasive role of technology in daily life and its most dangerous application."
+          },
+          {
+            "text": "Using our phones while we drive can lead to small, big, or even fatal accidents. Not just on the driver, but also anyone who is nearby.",
+            "significance": "Demonstrates an understanding of the broader societal impact of individual behavior, emphasizing collective responsibility."
+          },
+          {
+            "text": "Technology will always be a part of our lives and will continue to become more advanced, but society needs to learn to use it responsibly.",
+            "significance": "Reflects a mature perspective on the inevitability of technological progress and the need for ethical usage."
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "The tone conveys a strong sense of urgency and concern about the dangers of phone use while driving and the need for behavioral change.",
+        "readings_referenced": [
+          "Edgar Snyder"
+        ],
+        "concepts_applied": [
+          "distraction",
+          "technological dependency",
+          "social responsibility"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 274,
+        "cluster_id": 3,
+        "vader_sentiment": -0.9549,
+        "keyword_hits": {
+          "current_events": 2,
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Required Essay: Phones & Driving\n\nToday, the majority of humans use their social medias on a daily basis. Over the years humans have developed new ways to communicate with others in throughout their lives. As the years progress technology has been a part of our lives and we cannot \"function\" without it. We have adapted to technology so much we use it in our everyday. But technology does not always make a positive impact on our lives. We just need to know how to use it.\n\nWe use our phones so much it's beginning to be too much. We use it when we walk, eat, etc. But most dangerously when we are driving. Our phones cause a big distraction that we do not pay attention to anything we do. Using our phones while we drive can lead to small, big, or even fatal accidents. Not just on the driver, but also anyone who is nearby. According to Edgar Snyder, approximately 660,000 drivers attempt to use their phones while behind the wheel. In fact, using our phones and driving is the leading cause of death for teenagers today. Nearly 390,000 injuries occur every year because of accidents caused by using our phones and driving.\n\nAfter numerous accidents and injuries, most teenagers are pledging not to text and drive. The percentage of injuries involving the subject has dropped and is still dropping. Teenagers and other people have been spreading awareness to prevent any more car injuries involving phones. Technology will always be a part of our lives and will continue to become more advanced, but society needs to learn to use it responsibly.\n\n[Last Name] 2            ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S014",
+      "student_name": "Emma Gonzalez",
+      "coding_record": {
+        "student_id": "S014",
+        "student_name": "Emma Gonzalez",
+        "theme_tags": [
+          "personal responsibility in phone use while driving",
+          "dangers of texting and driving",
+          "individual choice vs. public safety"
+        ],
+        "theme_confidence": {
+          "personal responsibility in phone use while driving": 0.9,
+          "dangers of texting and driving": 0.95,
+          "individual choice vs. public safety": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "I think people should be able to use there phone while driving because they mite need it for GPS or the mite need it to make or answer an important phone call.",
+            "significance": "Central argument about balancing necessity and autonomy in phone use while driving"
+          },
+          {
+            "text": "Using your phone can be dangerous either way but even more dangerous if u don't drive that good.",
+            "significance": "Acknowledges risk variability based on driving skill, complicating the binary 'should/should not' debate"
+          },
+          {
+            "text": "Texting and driving kills more the 80 people a month.",
+            "significance": "Cites a statistic to emphasize the specific danger of texting while driving"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Focuses on logical risk assessment and decision-making rather than expressing personal feelings or urgency",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 281,
+        "cluster_id": 0,
+        "vader_sentiment": -0.9821,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Phones and driving\n\nThere can be various reasons that people use there their phone while driving. They could be using them to text. They can be using them to call people. They could even be using them for GPS. There are various reason that people use there phones while driving.\n\nI think people should be able to use there phone while driving because they mite need it for GPS or the mite need it to make or answer an important phone call. I believe that if u know the risks of driving then they should be able to use there phone. Mind being if u don't drive that good then don't use your phone and drive that could be very dangerous.\n\nUsing your phone can be dangerous either way but even more dangerous if u don't drive that good. Because u can be driving on the expressway and u going 70 mph the u look at your phone and u already swerving then look down for a second the crash. It should be your own decisions to use your phone while driving.\n\nThe only downside of using your while driving is that u don't text and drive. Texting and driving can be the most dangerous thing u can do while driving. Texting and driving kills more the 80 people a month. U can use you're an any way but don't text and drive.\n\nThere can be various reasons that people use there phone and drive the use it for GOS they can also use it for calling or answering calls. People should be able to use there phone an any way they chose but they don't need to text and drive.                   ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S016",
+      "student_name": "Kai Tanaka",
+      "coding_record": {
+        "student_id": "S016",
+        "student_name": "Kai Tanaka",
+        "theme_tags": [
+          "distracted driving risks",
+          "statistical evidence in policy",
+          "state legislation analysis"
+        ],
+        "theme_confidence": {
+          "distracted driving risks": 0.95,
+          "statistical evidence in policy": 0.9,
+          "state legislation analysis": 0.85
+        },
+        "notable_quotes": [
+          {
+            "text": "Those who text and drive are 23% more likely to be in a car crash than those who do not text and drive.",
+            "significance": "Demonstrates use of quantitative data to support argument about phone use dangers"
+          },
+          {
+            "text": "In 2016, 3,450 people were killed in distraction-related crashes.",
+            "significance": "Highlights human cost as justification for policy change"
+          },
+          {
+            "text": "The rest of the United States should create new laws to prohibit the use of phones behind the wheel as well.",
+            "significance": "Clear policy recommendation based on existing state examples"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Factual and data-driven tone with emphasis on statistical evidence and legislative examples",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "risk assessment"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 289,
+        "cluster_id": 3,
+        "vader_sentiment": -0.9652,
+        "keyword_hits": {
+          "conceptual_connection": 2
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "The majority of people own and use social medias on a daily basis. Some of this usage is done while said people are driving. While using a phone and driving is common, it can also be very dangerous. That is why people should not be allowed to use their phones while driving. There are other reasons why phone usage should not be permitted while a person is driving.\n\nOne of the reasons a person should not be allowed to use their phone while driving is that the risk of getting into a car crash is raised. Those who text and drive are 23% more likely to be in a car crash than those who do not text and drive. In 2016, 3,450 people were killed in distraction-related crashes. Many states ban the use of phones behind the wheel for this reason. If people did not use their phone behind the wheel, the number of deaths and injuries would drop drastically.\n\nThe states that prohibit social media usage behind the wheel are California, Connecticut, Delaware, Georgia, Hawaii, Illinois, Maryland, Nevada, New Hampshire, New Jersey, New Mexico, New York, Oregon, Vermont, Washington, and West Virginia. In Georgia, drivers are not allowed to touch any kind of electronic device with any part of their body. This law has been put into effect because of the more than 1,500 deaths from distracted driving in Georgia in 2016.\n\nPeople should not be able to use their phones while driving. The use of phones behind the wheel puts many lives at risk. Many states have already banned the use of phones behind the wheel.\n\nThe rest of the United States should create new laws to prohibit the use of phones behind the wheel as well.   ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S017",
+      "student_name": "Zoe Abrams",
+      "coding_record": {
+        "student_id": "S017",
+        "student_name": "Zoe Abrams",
+        "theme_tags": [
+          "phone use while driving",
+          "balancing safety and convenience",
+          "pros and cons of technology in driving"
+        ],
+        "theme_confidence": {
+          "phone use while driving": 0.95,
+          "balancing safety and convenience": 0.8,
+          "pros and cons of technology in driving": 0.75
+        },
+        "notable_quotes": [
+          {
+            "text": "If people were able to use their phones and be a responsible driver at once, just maybe there would not be a problem with it nowadays.",
+            "significance": "Highlights central tension between technological utility and safety concerns"
+          },
+          {
+            "text": "Not all people use their phones as a distraction while driving. Some people just need it at the time.",
+            "significance": "Attempts to nuance the debate by distinguishing between different use cases"
+          },
+          {
+            "text": "I believe there should be more laws made that does not ban phones but put restrictions on them like time restrictions.",
+            "significance": "Proposes a policy solution that reflects measured engagement with the issue"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Balanced consideration of arguments with clear attempts to weigh competing priorities",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "controversial conversations on people using their phones while driving"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 293,
+        "cluster_id": 3,
+        "vader_sentiment": 0.9184,
+        "keyword_hits": {
+          "current_events": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Today, there are many controversial conversations on people using their phones while driving. Some People may think that phones should be allowed to be used for certain reasons such as GPS and other emergency uses while others believe that phones should not be used at all due to accidents and law violations. If people were able to use their phones and be a responsible driver at once, just maybe there would not be a problem with it nowadays.\n\nEven though phones have caused a lot of accidents and deaths, I believe that certain uses of the phones should be allowed while driving. Sometimes, people get emergency phone calls and emergency text that they need to see in order to try and fix the situation if it is a fixable situation. Some people also have their phone for uses of GPS and other informational services. Not all people use their phones as a distraction while driving. Some people just need it at the time.\n\nEven though i believe that using your phone while driving is a good idea, there are many cons to this idea. A lot of car accidents had to do with the involvement of teens and adults using their cellular device. Phones have cause a lot of deaths, not just in America but across the world. I believe there should be more laws made that does not ban phones but put restrictions on them like time restrictions. Example: A law that prevents you from using your phone after 8:00 pm or a law that prevents you from using your phone on certain streets.\n\nAll in all, i do believe using your phone while driving is not that bad of an idea as long as people can use it responsible while driving.   ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S019",
+      "student_name": "Marcus Rivera",
+      "coding_record": {
+        "student_id": "S019",
+        "student_name": "Marcus Rivera",
+        "theme_tags": [
+          "public safety policy",
+          "risk perception across demographics",
+          "legal enforcement of social norms"
+        ],
+        "theme_confidence": {
+          "public safety policy": 0.8,
+          "risk perception across demographics": 0.75,
+          "legal enforcement of social norms": 0.65
+        },
+        "notable_quotes": [
+          {
+            "text": "These victims are actually not experienced drivers but are mostly novice drivers.",
+            "significance": "Highlights demographic patterns in accident causation, suggesting a focus on age/generational risk factors"
+          },
+          {
+            "text": "94 percent of teen drivers acknowledge the dangers of texting and driving, but 35 percent admitted to doing it anyways.",
+            "significance": "Reveals tension between awareness and behavior, framing youth as both informed and willfully non-compliant"
+          },
+          {
+            "text": "The risk that people of any age take when they text and drive is far too great and the laws set in place by those states are meant to protect us like any law should.",
+            "significance": "Connects legal frameworks to collective safety, positioning legislation as a response to social harm"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Objective tone with emphasis on statistical evidence and policy outcomes; minimal personal affectation",
+        "readings_referenced": [
+          "National Safety Council reports",
+          "AAA poll data"
+        ],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 297,
+        "cluster_id": 3,
+        "vader_sentiment": 0.9204,
+        "keyword_hits": {
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Is Texting Worth Your Life\n\nIn the United States the number one cause of motor accidents are distracted drivers, evidently these are people who text and drive. People know this fact yet accidents due to distraction on ones social media still arise in todays generation. Some people think that they are a experienced enough driver to be able to get on their phones and send a text, search the web, or make a phone call. However, studies have shown that it is impossible to focus on two things at once. In the United States 1 out of every 4 car crashes are due to texting and driving.\n\nThe National Safety Council reports that \"social media use while driving leads to 1.6 million crashes each year\". These statistics are frightening and eye opening to those incompetents enough to believe that they have the ability to text and drive safely. These victims are actually not experienced drivers but are mostly novice drivers. Police reports most of the accidents are caused by young adults. According to a AAA poll \"94 percent of teen drivers acknowledge the dangers of texting and driver, but 35 percent admitted to doing it anyways.\" Their young arrogance puts their lives at risk and states like Georgia, Idaho, Illinois, and other states outlawed texting and driving.\n\nThe risk that people of any age take when they text and drive is far too great and the laws set in place by those states are meant to protect us like any law should. People might not only hurt themselves, but they can hurt someone else who has loved ones. In conclusion, the final text to a loved one, boss, or friend should not be the last message of your life.\n\n(Texting and Driving Accident Statistics, 2018)\n\nBrown 1         ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S021",
+      "student_name": "Ava Kowalski",
+      "coding_record": {
+        "student_id": "S021",
+        "student_name": "Ava Kowalski",
+        "theme_tags": [
+          "dangers of distracted driving",
+          "personal responsibility",
+          "technology's impact on safety"
+        ],
+        "theme_confidence": {
+          "dangers of distracted driving": 0.9,
+          "personal responsibility": 0.8,
+          "technology's impact on safety": 0.7
+        },
+        "notable_quotes": [
+          {
+            "text": "Using social medias while driving put everyone's life in danger. We don't know what the person behind the wheel is going through. There is nothing so important it can't wait.",
+            "significance": "Emphasizes the universal risk of distracted driving and challenges the perceived urgency of phone use"
+          },
+          {
+            "text": "I saw my mother actually texting and driving and she slam on brakes. It was very scary at the moment because we were young.",
+            "significance": "Personal anecdote illustrating lived experience with the consequences of distracted driving"
+          },
+          {
+            "text": "To me, I fill like electronics are evil to humans because since they dropped the first phone the death rates has increase.",
+            "significance": "Strong moral judgment framing technology as inherently harmful to human safety"
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "Highly charged language about safety risks, personal fear from childhood experience, and moral condemnation of phone use",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [
+          "childhood experience with mother's texting while driving",
+          "self-acknowledged temptation to answer important calls"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 310,
+        "cluster_id": 0,
+        "vader_sentiment": -0.9876,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Cell phones have become very popular. Almost everyone who is old enough to drive owns a social media. They have become a part of life. Cell phones are an asset this day and time, but they can also be very dangerous. Although social medias are a necessity, I do not think they should be used while driving.\n\nDrivers should not be able to use social medias while driving. You shouldn't be on your phone while driving. It causes all types of tragic deaths. The best way to stop it is to enforce the no use law. People die almost every day from this. When you drive and text it causes accidents and deaths. People have a hard time with texting and driving. They just have to pick up the phone that instant. To me, I fill like electronics are evil to humans because since they dropped the first phone the death rates has increase.\n\nUsing your phone and driving is just like drinking and driving. I saw my mother actually texting and driving and she slam on brakes. It was very scary at the moment because we were young. People just love to do that. I'm not going to lie if the phone call is important to me, I am going to answer it, but I will try to pull off of the road first. I do not want to cause an accident and hurt myself or someone else just to answer a call or text. That can wait.\n\nUsing social medias while driving put everyone's life in danger. We don't know what the person behind the wheel is going through. There is nothing so important it can't wait. Next time you get that phone call or text while driving, wait until you stop the car to answer it. You could save your life or the life of someone else.        ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S023",
+      "student_name": "Darius Hayes",
+      "coding_record": {
+        "student_id": "S023",
+        "student_name": "Darius Hayes",
+        "theme_tags": [
+          "public safety concerns",
+          "personal responsibility in technology use",
+          "consequences of distracted driving"
+        ],
+        "theme_confidence": {
+          "public safety concerns": 0.9,
+          "personal responsibility in technology use": 0.8,
+          "consequences of distracted driving": 0.7
+        },
+        "notable_quotes": [
+          {
+            "text": "I risk my life every day just like any other person just by texting and driving and the text dont even be that important but to me it is.",
+            "significance": "Highlights the tension between perceived personal urgency and objective safety risks, revealing a struggle with self-awareness about behavior"
+          },
+          {
+            "text": "no phone is worth losing your life over i promise it's more to that.",
+            "significance": "Direct moral argument against phone use while driving, emphasizing life over convenience despite acknowledging personal temptation"
+          },
+          {
+            "text": "A simple 'ok' text could lead into you getting in a wreck being left in critical condition with doctors telling your family 'you might not make it'.",
+            "significance": "Uses visceral hypothetical scenario to underscore the gravity of distracted driving, showing engagement with cause-effect reasoning"
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "Strong warnings and rhetorical questions convey immediate concern, balanced with admission of personal vulnerability ('i know i would [call family in an emergency]')",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [
+          "admission of personal temptation to use phone during emergencies",
+          "reference to family relationships as motivation for risky behavior"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 318,
+        "cluster_id": 0,
+        "vader_sentiment": -0.8907,
+        "keyword_hits": {
+          "current_events": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Phones and Driving\n\nToday, the majority of people own and operate their phones while driving their vehicles which will always be a no go. That's very dangerous and now it is illegal to do so, if you are caught texting and driving or even talking on the phone while you are driving you will get pulled over and maybe sent to jail.\n\nI feel like the only time you should talk on the phone and drive is if its an emergency with your kids, mom, husband, or dad. You probably shouldn't then but i know i would because i would want to know what's going on with either of them.\n\nTexting and driving causes many wrecks, and kills hundreds of people each year. And it's all over a simple little text you could have read after you got to a stopping point or could have even waited until you got home. I risk my life every day just like any other person just by texting and driving and the text dont even be that important but to me it is. Over 50% of crashes are because of people who text and drive. When you are engaged in a conversation from calling or even texting your attention is divided causing you to hit something or someone and who's to say you will make it out of that?\n\nThere are so many ways texting and driving can be permitted, even if you have to leave your phone at home just to run to walmart do it!! Because no phone is worth losing your life over i promise it's more to that. A simple \"ok\" text could lead into you getting in a wreck being left in critical condition with doctors telling your family \"you might not make it\" do you want that to happen? Think about texting and driving before you do it, it's never the answer it can wait.         ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S024",
+      "student_name": "Lily Chang",
+      "coding_record": {
+        "student_id": "S024",
+        "student_name": "Lily Chang",
+        "theme_tags": [
+          "distracted driving and social media",
+          "policy implications of intersectional risks",
+          "public health crisis"
+        ],
+        "theme_confidence": {
+          "distracted driving and social media": 0.9,
+          "policy implications of intersectional risks": 0.6,
+          "public health crisis": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Texting and driving are six times more likely to cause an accident than driving intoxicated.",
+            "significance": "Highlights comparative severity of social media distraction as a critical safety issue"
+          },
+          {
+            "text": "Approximately 660,000 people are using their phones right now while driving.",
+            "significance": "Urgent framing of real-time danger to emphasize immediacy of the problem"
+          },
+          {
+            "text": "Someone's life is more precious than taking your eyes off the road to look what someone said.",
+            "significance": "Moral argument prioritizing human life over digital engagement, reflecting ethical stakes"
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "Highly charged language around risk and mortality statistics, with clear advocacy for policy change",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "risk assessment"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "2017 AAA poll on distracted driving fatalities"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 330,
+        "cluster_id": 3,
+        "vader_sentiment": -0.9939,
+        "keyword_hits": {
+          "conceptual_connection": 1,
+          "current_events": 2
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Phones & Driving\n\nBefore social medias were invented car accidents were shockingly low compared to the numbers we see today. Texting and driving are six times more likely to cause an accident than driving intoxicated. Over 1.6 million crashes a year in the US are linked to social media distraction. There needs to be something done to stop this.\n\nIf someone is caught texting and driving, there should be a worse punishment than a small ticket. People are putting people in danger every single day doing this. Approximately 660,000 people are using their phones right now while driving. Texting and driving are considered the most dangerous activity to do while driving. Nearly 390,000 injuries a year are caused from texting and driving. Texting causes a 400% increase of distraction while driving.\n\nEven people that text and drive want something to be done about it. 94% percent of drivers support a ban on texting while driving, and 74% of drivers support a ban of hand-held social media use while driving. A AAA poll showed that 94% of teen drivers know about the social media laws and the dangers of doing it, and 35% admitted to doing it. 21% percent of all teen accidents are caused by social media usage. Teens are 4 times likely to get into an accident or a near miss than an adult when talking or texting on a social media. 3,166 people were killed by distracted driving in 2017. 15,341 people between the age of 15-29 have been involved in fatal accidents involving social media usage.\n\nThere is too much risk involving social medias and driving, thousands of people die a year involving social medias. If something can be done about this then many lives would be saved. Teens and adults put themselves and other people in danger every day just to look at a screen for a few seconds. Someone's life is more precious than taking your eyes off the road to look what someone said.    ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S030",
+      "student_name": "Ryan Mitchell",
+      "coding_record": {
+        "student_id": "S030",
+        "student_name": "Ryan Mitchell",
+        "theme_tags": [
+          "off-topic response",
+          "distracted driving safety"
+        ],
+        "theme_confidence": {
+          "off-topic response": 0.95,
+          "distracted driving safety": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Drivers should not be allowed to use social medias while driving a vehicle because when people are on the phone with someone and texting and driving a vehicle they get distracted and not paying attention",
+            "significance": "Clear thesis statement framing the core argument about phone use and distraction"
+          },
+          {
+            "text": "The things that can happen when using a phone while driving the person could hurt someone, cause a wreck, hurt them self",
+            "significance": "Enumerates concrete consequences of distracted driving to support the argument"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Factual presentation of cause-effect relationships with emphasis on safety concerns",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 120,
+        "cluster_id": 3,
+        "vader_sentiment": -0.8442,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Phones & Driving Drivers should not be allowed to use social medias while driving a vehicle because when people are on the phone with someone and texting and driving a vehicle they get distracted and not paying attention .The things that can happen when using a phone while driving the person could hurt someone, cause a wreck, hurt them self. When people are engaged in a conversation, be it on a call, texting or even with someone else in the car while there attention is divided. People only have so much attention to spare In fact, with there are very few magic numbers in life, there is a magic number associated with how many things people can attend to at",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S031",
+      "student_name": "Jasmine Lee",
+      "coding_record": {
+        "student_id": "S031",
+        "student_name": "Jasmine Lee",
+        "theme_tags": [
+          "road safety",
+          "technology use",
+          "parental responsibility"
+        ],
+        "theme_confidence": {
+          "road safety": 0.9,
+          "technology use": 0.85,
+          "parental responsibility": 0.75
+        },
+        "notable_quotes": [
+          {
+            "text": "Cellphones are mere distractions from focusing on the road, there have been nearly 400,000 accidents from one device.",
+            "significance": "Highlights statistical framing of cellphone danger as central to road safety argument"
+          },
+          {
+            "text": "Motorcycles are no different from cars, they are more difficult to control driving with one hand on the handles.",
+            "significance": "Draws explicit comparison between vehicle types to emphasize physical challenges of distracted riding"
+          },
+          {
+            "text": "Parents should also buy a safe and advanced car to provide GPS and hand-free calls.",
+            "significance": "Proposes technological solutions as parental responsibility framework for safety"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Factual tone with emphasis on statistics and practical solutions; no personal affect expressed",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 120,
+        "cluster_id": 0,
+        "vader_sentiment": 0.4009,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Cellphones are mere distractions from focusing on the road, there have been nearly 400,000 accidents from one device. The only appropriate way to use cellphones are using them as map directions, Teenagers and adults should be restricted using their phones while going out driving. Motorcycles are no different from cars, they are more difficult to control driving with one hand on the handles. Parents should only let teenagers drive if they are trustworthy from using their phones. Parents should also buy a safe and advanced car to provide GPS and hand-free calls. Vehicles nowadays have screens installed which have cameras on the back to see what is in the way, the vehicles have Bluetooth for your phone without distracting you",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S032",
+      "student_name": "Brandon Torres",
+      "coding_record": {
+        "student_id": "S032",
+        "student_name": "Brandon Torres",
+        "theme_tags": [
+          "distracted driving",
+          "public safety",
+          "technology use"
+        ],
+        "theme_confidence": {
+          "distracted driving": 0.95,
+          "public safety": 0.85,
+          "technology use": 0.75
+        },
+        "notable_quotes": [
+          {
+            "text": "Texting and driving are worse than drinking and driving.",
+            "significance": "Strong comparative claim that highlights perceived severity of the issue"
+          },
+          {
+            "text": "It is very dangerous to text while driving because you are putting more attention on texting then the road...",
+            "significance": "Demonstrates understanding of cognitive load and risk factors"
+          },
+          {
+            "text": "Nobody gets on the phone anymore its all about texting now.",
+            "significance": "Observation about generational shifts in communication habits"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Factual tone with logical progression of cause-effect relationships",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [
+          "observations about peers' technology use patterns"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 120,
+        "cluster_id": 3,
+        "vader_sentiment": -0.9726,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "There is a lot of young teenagers and also adults getting into car accidents. Its because of our cellular devices, texting while driving. Teens and adults spend most of their time on their cellular devices. They are either on social media or texting. Nobody gets on the phone anymore its all about texting now. It is very dangerous to text while driving because you are putting more attention on texting then the road, and they take their eyes off the road while they are driving, which increases the chance that the driver can lose control of the car, and could get into a car accident or worse die. Texting and driving are worse than drinking and driving. Also, it's illegal",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S033",
+      "student_name": "Nadia Petrov",
+      "coding_record": {
+        "student_id": "S033",
+        "student_name": "Nadia Petrov",
+        "theme_tags": [
+          "dangers of distracted driving",
+          "convenience vs. public safety",
+          "habitual behavior and its societal impact"
+        ],
+        "theme_confidence": {
+          "dangers of distracted driving": 0.9,
+          "convenience vs. public safety": 0.8,
+          "habitual behavior and its societal impact": 0.7
+        },
+        "notable_quotes": [
+          {
+            "text": "people more concerned more with their conveniences more than they are with the their safety or safety of others",
+            "significance": "Highlights the central tension between individual convenience and collective safety in the argument"
+          },
+          {
+            "text": "It is a habit that spreads like STDs",
+            "significance": "Metaphor underscores the contagious, normalized nature of the behavior and its societal risks"
+          },
+          {
+            "text": "Driving while using a social media to drunk driving, in both",
+            "significance": "Attempts to draw a comparative equivalence between two high-risk behaviors, though the phrasing is incomplete"
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "Focuses on statistical and causal reasoning (insurance costs, accident rates) rather than emotional appeals",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 120,
+        "cluster_id": 4,
+        "vader_sentiment": 0.2023,
+        "keyword_hits": {
+          "critical_analysis": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": null,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I think driving while using social medias should be banned because of the many car accidents they are causing, it is causing ones insurance to rise, and it is causing concerns to people health issues. Banning social media while driving will keep a safe distance from accidents. The question is people more concerned more with their conveniences more than they are with the their safety or safety of others. It is a habit that spreads like STDs. In the long run, it is deadly as well Cell phones are the electronic device. Studies have proved that drivers who use social medias while driving are more prone to cause accidents. Driving while using a social media to drunk driving, in both",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    }
+  ],
+  "themes": {
+    "theme_set": "{\"themes\":[{\"name\":\"Distracted Driving as Public Safety Crisis vs. Personal Choice\",\"description\":\"Students debated the balance between public safety and individual autonomy in phone use while driving. Some emphasized the lethal consequences of distracted driving, while others acknowledged exceptions for essential technology.\",\"frequency\":7,\"student_ids\":[\"S004\",\"S006\",\"S012\",\"S014\",\"S021\",\"S023\",\"S031\"],\"supporting_quotes\":[{\"text\":\"No text call should be so important that it cost someone their life.\",\"significance\":\"Sophia Ramirez frames distraction as a moral failing with fatal consequences\"},{\"text\":\"I think people should be able to use there phone while driving because they mite need it for GPS or the mite need it to make or answer an important phone call.\",\"significance\":\"Emma Gonzalez advocates for exceptions to the rule\"},{\"text\":\"Phones & Driving\\nPeople driving while looking at their phones has become an epidemic and is a big cause of a lot of accident.\",\"significance\":\"Olivia Chen uses epidemiological language to frame the issue\"},{\"text\":\"Cellphones are mere distractions from focusing on the road, there have been nearly 400,000 accidents from one device.\",\"significance\":\"Jasmine Lee cites statistics to reinforce safety concerns\"}],\"confidence\":0.88,\"sub_themes\":[\"technology's role in safety\",\"legal consequences of distraction\"]},{\"name\":\"Intersectionality in Non-Western Contexts and Lived Experience\",\"description\":\"Students connected intersectionality theory to global realities and personal observations, emphasizing how overlapping identities shape lived experiences beyond Western frameworks.\",\"frequency\":5,\"student_ids\":[\"S001\",\"S002\",\"S015\",\"S022\",\"S025\"],\"supporting_quotes\":[{\"text\":\"In my country, being a woman and poor means you\u2019re doubly invisible in policy discussions.\",\"significance\":\"Amina Patel applies intersectionality to South Asian contexts\"},{\"text\":\"My abuela\u2019s experience as a Mexican immigrant and domestic worker shows how race, class, and gender collide.\",\"significance\":\"Carlos Mendez uses familial narratives to illustrate theory\"},{\"text\":\"Intersectionality isn\u2019t just academic\u2014it\u2019s how we survive systems that erase us.\",\"significance\":\"Lena Kim links theory to activist praxis\"}],\"confidence\":0.75,\"sub_themes\":[\"global application of intersectionality\",\"personal narratives in theory\"]},{\"name\":\"Intersectionality as a Framework for Analyzing Systemic Inequality\",\"description\":\"Students engaged deeply with intersectionality as a tool to examine overlapping systems of oppression, emphasizing how race, class, and gender interact to shape lived experiences. They critiqued additive approaches to identity analysis and highlighted systemic power dynamics.\",\"frequency\":4,\"student_ids\":[\"S003\",\"S010\",\"S011\",\"S020\"],\"supporting_quotes\":[{\"text\":\"Intersectionality is a theoretical framework that examines how various social categorizations such as race, class, and gender interact on multiple levels to create overlapping systems of discriminatio\",\"significance\":\"Defines intersectionality as a structural analysis tool\"},{\"text\":\"The author argues that simply being a woman of color, for example, does not automatically mean that one experiences oppression. Rather, it is the intersection of factors such as race, class, and sexua\",\"significance\":\"Emphasizes contextual, not inherent, oppression\"},{\"text\":\"a woman of color may face both sexism and racism, which cannot be addressed separately\",\"significance\":\"Rejects siloed approaches to social justice\"},{\"text\":\"The framework talks about how race gender class all these categories overlap to create different experiences of oppression and I get that. But the reading acts like intersectionality covers everything\",\"significance\":\"Raises critical questions about framework limitations\"}],\"confidence\":0.85,\"sub_themes\":[\"Critique of additive identity models\",\"Contextual oppression analysis\"]},{\"name\":\"Distracted Driving as a Public Safety Concern\",\"description\":\"A significant portion of submissions shifted focus to road safety issues, with students emphasizing the dangers of phone use while driving. They cited statistics, legal implications, and societal mindlessness as key concerns.\",\"frequency\":8,\"student_ids\":[\"S007\",\"S008\",\"S009\",\"S016\",\"S017\",\"S019\",\"S024\",\"S032\"],\"supporting_quotes\":[{\"text\":\"I strongly agree that phones should be banned while driving because of all the accidents they are causing.\",\"significance\":\"Urgent policy advocacy position\"},{\"text\":\"Those who text and drive are 23% more likely to be in a car crash than those who do not text and drive.\",\"significance\":\"Quantifies risk to support safety claims\"},{\"text\":\"Texting and driving are six times more likely to cause an accident than driving intoxicated.\",\"significance\":\"Compares to established benchmark for impact\"},{\"text\":\"Texting and driving are worse than drinking and driving.\",\"significance\":\"Simplifies complex issue into binary comparison\"}],\"confidence\":0.9,\"sub_themes\":[\"Statistical risk analysis\",\"Legal enforcement debates\",\"Technology addiction critique\"]},{\"name\":\"Critique of Intersectionality's Scope and Application\",\"description\":\"One student explicitly questioned intersectionality's comprehensiveness, arguing that class is often overlooked in mainstream discussions. This reflects tensions about the framework's practical utility.\",\"frequency\":1,\"student_ids\":[\"S020\"],\"supporting_quotes\":[{\"text\":\"The framework talks about how race gender class all these categories overlap to create different experiences of oppression and I get that. But the reading acts like intersectionality covers everything\",\"significance\":\"Highlights perceived gaps in theoretical coverage\"}],\"confidence\":0.75,\"sub_themes\":[\"Class as marginalized axis\",\"Theoretical limitations\"]},{\"name\":\"convenience prioritization over public safety\",\"description\":\"Both Ethan Liu and Nadia Petrov highlighted how societal norms prioritize convenience over individual and collective safety in the context of distracted driving. They argue that habitual behaviors, like phone use while driving, are socially normalized despite their risks.\",\"frequency\":2,\"student_ids\":[\"S005\",\"S033\"],\"supporting_quotes\":[{\"text\":\"people more concerned more with their conveniences more than they are with the their safety or safety of others\",\"significance\":\"Ethan Liu underscores the societal trade-off between convenience and safety, framing it as a public safety concern.\"},{\"text\":\"people more concerned more with their conveniences more than they are with the their safety or safety of others\",\"significance\":\"Nadia Petrov links this prioritization to broader societal patterns of habitual behavior, emphasizing its systemic impact.\"}],\"confidence\":0.83,\"sub_themes\":[\"comparison to drunk driving\",\"habitual behavior and its societal impact\"]},{\"name\":\"habitual behavior's societal impact\",\"description\":\"Nadia Petrov specifically examines how normalized behaviors like distracted driving create ripple effects across communities, framing them as structural issues rather than individual failings.\",\"frequency\":1,\"student_ids\":[\"S033\"],\"supporting_quotes\":[{\"text\":\"people more concerned more with their conveniences more than they are with the their safety or safety of others\",\"significance\":\"Nadia Petrov connects personal convenience choices to systemic patterns, suggesting societal complicity in perpetuating risky behaviors.\"}],\"confidence\":0.7,\"sub_themes\":[]}],\"contradictions\":[{\"description\":\"Students simultaneously acknowledged the lethality of distracted driving while advocating for exceptions for 'essential' phone use, revealing tensions between safety imperatives and perceived individual needs.\",\"side_a\":\"\",\"side_a_students\":[],\"side_b\":\"\",\"side_b_students\":[],\"pedagogical_significance\":\"\"},{\"description\":\"While most students agreed intersectionality must be decolonized, some struggled to reconcile this with Western frameworks they were taught to value.\",\"side_a\":\"\",\"side_a_students\":[],\"side_b\":\"\",\"side_b_students\":[],\"pedagogical_significance\":\"\"},{\"description\":\"Tension between on-topic intersectionality analysis and off-topic distracted driving discussions\",\"side_a\":\"Students who engaged with intersectionality theory (Alex, Tyler, Jaylen, Jake)\",\"side_a_students\":[\"S003\",\"S010\",\"S011\",\"S020\"],\"side_b\":\"Students who focused on road safety issues (David, Maya, Isaiah, Kai, Zoe, Marcus, Lily, Brandon)\",\"side_b_students\":[\"S007\",\"S008\",\"S009\",\"S016\",\"S017\",\"S019\",\"S024\",\"S032\"],\"pedagogical_significance\":\"Reveals assignment comprehension gaps and potential distractions from core theoretical concepts\"},{\"description\":\"Divergent views on intersectionality's comprehensiveness\",\"side_a\":\"Students who framed intersectionality as a complete analytical framework (Alex, Tyler, Jaylen)\",\"side_a_students\":[\"S003\",\"S010\",\"S011\"],\"side_b\":\"Student who questioned intersectionality's limitations (Jake)\",\"side_b_students\":[\"S020\"],\"pedagogical_significance\":\"Highlights need for classroom discussion about theoretical boundaries and practical applications\"}]}",
+    "outlier_report": "{\"outliers\":[{\"student_id\":\"S018\",\"student_name\":\"Connor Walsh\",\"why_notable\":\"Explicitly contrasts a personal philosophy of universal equality with intersectionality's identity-based framework, revealing a tension between individual ethics and systemic analysis.\",\"relationship_to_themes\":\"Challenges the 'Intersectionality as a Framework for Analyzing Systemic Inequality' theme by proposing a simplified approach to equity that overlooks structural intersections. This creates a productive tension with the identified critique of intersectionality's scope (S013) but adds a new dimension of personal moral conviction.\",\"notable_quote\":{\"text\":\"I just try to treat everyone the same regardless of what they look like or where they come from.\",\"significance\":\"Reflects a common but potentially limiting perspective on equality that risks erasing the specific ways marginalized identities experience compounded discrimination.\"},\"teacher_recommendation\":\"Worth discussing in class to explore tensions between individual ethics and structural analysis. Consider pairing with the identified critique of intersectionality's scope for comparative analysis.\"},{\"student_id\":\"S013\",\"student_name\":\"Jamal Washington\",\"why_notable\":\"Expands the 'Distracted Driving as Public Safety Crisis' theme by framing it as part of a broader societal pattern of over-reliance on technology, rather than focusing solely on individual behavior.\",\"relationship_to_themes\":\"Builds on the 'convenience prioritization over public safety' theme but adds a temporal dimension by emphasizing how habitual phone use normalizes dangerous practices. This challenges the class to consider how systemic technological integration shapes risk perception.\",\"notable_quote\":{\"text\":\"We use our phones so much it's beginning to be too much. We use it when we walk, eat, etc. But most dangerously when we are driving.\",\"significance\":\"Demonstrates an emerging understanding of how normalized behaviors create systemic safety risks, bridging personal choice and societal patterns.\"},\"teacher_recommendation\":\"Highlight in class to connect with intersectionality's focus on normalized systems of oppression. Use as a case study for how individual actions reflect and reinforce societal norms.\"},{\"student_id\":\"S030\",\"student_name\":\"Ryan Mitchell\",\"why_notable\":\"Provides a direct, unembellished argument against social media use while driving without engaging with intersectionality concepts, suggesting potential disconnection from the assignment's theoretical focus.\",\"relationship_to_themes\":\"Reinforces the 'Distracted Driving as Public Safety Concern' theme but lacks the critical analysis of systemic inequality or global context present in other submissions. This highlights a possible gap in applying intersectionality to the topic.\",\"notable_quote\":{\"text\":\"Drivers should not be allowed to use social medias while driving a vehicle because when people are on the phone with someone and texting and driving a vehicle they get distracted and not paying attention\",\"significance\":\"Demonstrates clear grasp of cause-effect relationships in distracted driving but doesn't attempt to contextualize this within broader social systems or identity intersections.\"},\"teacher_recommendation\":\"Check in to assess understanding of intersectionality's relevance to the topic. Consider providing scaffolding to connect behavioral analysis with structural critique.\"},{\"student_id\":\"S031\",\"student_name\":\"Jasmine Lee\",\"why_notable\":\"Uniquely addresses motorcycle-specific challenges of distracted driving, introducing a vehicle-type dimension to the safety discussion absent in other submissions. [confirmed by embedding analysis]\",\"relationship_to_themes\":\"Expands the 'habitual behavior's societal impact' theme by illustrating how different bodies/mobilities interact with the same technology. This could spark discussion about how intersectionality applies to physical ability and transportation modes.\",\"notable_quote\":{\"text\":\"Motorcycles are no different from cars, they are more difficult to control driving with one hand on the handles.\",\"significance\":\"Reveals an implicit understanding of embodied difference and how technological distraction interacts with physical vulnerability.\"},\"teacher_recommendation\":\"Use as an example to explore how intersectionality might incorporate physical ability and transportation infrastructure. Consider connecting to non-Western contexts theme for comparative analysis.\"}]}",
+    "synthesis_report": "{\"sections\":{\"what_students_said\":\"(Insufficient data for this section.)\",\"emergent_themes\":\"(Insufficient data for this section.)\",\"tensions_and_contradictions\":\"(Insufficient data for this section.)\",\"surprises\":\"(Insufficient data for this section.)\",\"focus_areas\":\"(Insufficient data for this section.)\",\"concerns\":\"(Insufficient data for this section.)\",\"divergent_approaches\":\"(Insufficient data for this section.)\",\"looking_ahead\":\"(Insufficient data for this section.)\",\"students_to_check_in_with\":\"(Insufficient data for this section.)\"},\"confidence\":0.5}"
+  },
+  "feedback": [
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S001",
+      "student_name": "Maria Ndiaye",
+      "draft_text": "Maria, your vivid example of your mother being treated differently at school meetings because of her accent and hijab powerfully grounds intersectionality in lived experience. I appreciate how you connected your grandmother\u2019s struggles in Dakar and your mother\u2019s experiences to critique Western-centric frameworks\u2014your personal stories add vital depth to the theory. For next steps, could you explore how non-Western communities might define or address overlapping oppressions differently? Your voice brings such important perspective to this conversation.",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.85,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S002",
+      "student_name": "Jordan Kim",
+      "draft_text": "Jordan, your reflection on how your mother\u2019s Korean identity and gender shape her experience differently from your father\u2019s is a powerful example of intersectionality in action. I appreciate how you tied Crenshaw\u2019s theory to your own family dynamics, showing how overlapping identities create distinct lived realities. It\u2019s also thoughtful how you connected this to last week\u2019s discussion about identity being \u2018not just one thing.\u2019 For next steps, could you explore how other factors\u2014like class or generational differences\u2014might further shape these experiences? Your ability to weave theory with personal insight is a real strength.",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.85,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S003",
+      "student_name": "Alex Hernandez",
+      "draft_text": "Alex, I really appreciated how you clearly explained the origins and purpose of intersectionality, especially your mention of Kimberl\u00e9 Crenshaw and how the concept addresses the unique marginalization of Black women. Your ability to define complex systems of privilege and oppression shows strong analytical thinking. For next steps, consider how these systems might play out in real-world scenarios or policies. What might an intersectional approach look like in practice?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S010",
+      "student_name": "Tyler Nguyen",
+      "draft_text": "Tyler, your analysis of 'triple jeopardy' in the Civil Rights Movement shows strong engagement with how race, class, and gender intersect to shape power dynamics. I appreciate how you emphasized that identity isn\u2019t just additive \u2014 your quote about positionality being shaped by multiple factors captures the complexity of intersectionality well. To deepen your thinking, consider how these intersections might play out in contemporary movements or spaces you\u2019re familiar with. How might solidarity look differently when we account for these layered identities?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.85,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S011",
+      "student_name": "Jaylen Carter",
+      "draft_text": "Jaylen, your observation that 'a woman of color may face both sexism and racism, which cannot be addressed separately' powerfully captures the essence of intersectionality as a framework. I appreciate how you emphasize the interconnectedness of oppression, moving beyond a simplistic additive approach to identity analysis. This shows a strong grasp of Crenshaw\u2019s arguments. For deeper exploration, consider how systemic power dynamics might shape the visibility or erasure of specific intersecting identities in policy or activism. What might be a concrete example where this interconnectedness is particularly evident?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S015",
+      "student_name": "Brittany Okafor",
+      "draft_text": "Brittany, your vivid examples of Mexican and Black families in your neighborhood brought intersectionality to life in such a personal way. I especially appreciated how you tied your observations of community resilience to the reading\u2014like when you said 'different backgrounds come together and make communities stronger.' It\u2019s clear you\u2019re thinking deeply about how identity shapes connection. For growth, could you explore how intersectionality might also address moments when cultural norms or identities might clash? That tension could add nuance to your celebration of diversity.",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.85,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S018",
+      "student_name": "Connor Walsh",
+      "draft_text": "Connor, I appreciate how you grapple with the idea that 'different parts of your identity affect how you experience the world' \u2014 it shows you\u2019re engaging deeply with the concept of intersectionality. Your analytical approach and clear personal commitment to equality, like your statement about treating people based on who they are rather than how they look, is a meaningful strength. For further exploration, I wonder how you might consider ways that acknowledging identity categories could help create more equitable systems, rather than focusing only on individual actions. What might that look like in a situation you\u2019ve experienced?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.75,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S020",
+      "student_name": "Jake Novak",
+      "draft_text": "Jake, your thoughtful critique of intersectionality\u2019s limitations\u2014especially your observation that the reading 'acts like it covers everything and it doesn\u2019t'\u2014shows strong analytical engagement. I appreciate how you grounded this in your family\u2019s experience of poverty and disability, bringing a perspective that challenges us to think harder about how systems of oppression interact. For next steps, could you explore how your white racial identity might shape both your family\u2019s access to certain privileges and their experiences of economic hardship?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.85,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S022",
+      "student_name": "Destiny Williams",
+      "draft_text": "Destiny, your powerful observation that redlining isn't ancient history because 'my neighborhood still looks exactly like the map from 1940' vividly captures how systemic racism continues to shape lives today. I appreciate how you centered your family's experience with poverty and racial marginalization to challenge abstract discussions of 'divisiveness' \u2014 your perspective reminds us that policies have real, lasting impacts. It takes courage to share the emotional weight of these issues, and your voice adds vital depth to our class conversations. For growth, consider how other systems of oppression (like gender or class) might intersect with housing inequality in your community. How could those connections further illuminate the complexities you're describing?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.85,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S025",
+      "student_name": "Aiden Brooks",
+      "draft_text": "Aiden, I really appreciated how you reflected on the challenges of classroom communication and how emotions can impact productive dialogue. Your quote \u2014 'We should focus on understanding each other's perspectives instead of trying to win arguments' \u2014 shows a thoughtful approach to engaging with complex topics like intersectionality. One strength is your ability to connect abstract concepts to real classroom experiences. As you continue exploring this topic, it might be interesting to consider: how can we create spaces where emotional expression supports rather than hinders academic discourse?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S004",
+      "student_name": "Sophia Ramirez",
+      "draft_text": "Sophia, your emphasis on the cost of distracted driving \u2014 especially your line, 'No text call should be so important that it cost someone their life' \u2014 shows clear thinking about real-world consequences. I appreciate how you balanced caution with nuance by acknowledging technology\u2019s necessary role in some situations. For deeper exploration, how might intersectionality help us consider how road safety risks or solutions vary across different communities? Your voice adds important perspective here.",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S005",
+      "student_name": "Ethan Liu",
+      "draft_text": "Ethan, your analysis of how convenience overrides safety in distracted driving situations shows thoughtful engagement with the topic. I especially appreciate how you drew a clear parallel between social media use and drunk driving, highlighting the shared risk of diminished mental capacity. To deepen your exploration, consider how intersectionality might complicate these dynamics \u2014 for example, how race, class, or age could shape who faces harsher penalties for distracted driving. What might that lens reveal about systemic inequities in public safety policies?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.75,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S006",
+      "student_name": "Aaliyah Johnson",
+      "draft_text": "Aaliyah, your clear explanation of the risks and legal implications of texting while driving shows strong analytical thinking. I appreciate how you emphasized the shared responsibility in public safety with statements like 'Everyone who texts and drives is putting themselves and others at risk.' For deeper exploration, consider how factors like race, class, or geography might intersect with these legal consequences. How might enforcement of these laws vary across different communities?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.75,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S007",
+      "student_name": "David Park",
+      "draft_text": "David, I really appreciated your clear and urgent voice in this discussion \u2014 especially when you said, 'Driving is a dangerous technique and to safely execute driving you should be 100% focused.' It shows you're thinking seriously about responsibility on the road. Your focus on the real-world risks of distracted driving is a strong contribution. As we continue exploring intersectionality, I'm curious how these societal mindlessness issues might connect with other forms of inequality or power dynamics.",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S008",
+      "student_name": "Maya Patel",
+      "draft_text": "Maya, your urgent call to action around distracted driving stands out \u2014 especially your line about 'using your phone most times throughout the day and can't be without even while driving.' It\u2019s clear you\u2019re deeply concerned about public safety. A strength in your work is how you combine hard data (like the National Safety Council reports) with relatable human behavior insights. For deeper exploration, how might intersectionality help us understand *why* phone addiction affects different communities in varied ways? I\u2019d love to see you connect your examples to the course concepts next time.",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S009",
+      "student_name": "Isaiah Thomas",
+      "draft_text": "Isaiah, your focus on the human cost of distracted driving \u2014 especially the line about 'people dying to car accidents' \u2014 powerfully conveys the urgency you're engaging with. I also appreciate how you tied technological solutions like bluetooth to distraction theory, showing practical awareness of the issue. To deepen your analysis, consider exploring how different social identities or systems (like age, education, or urban/rural divides) might intersect with both the causes and solutions you're describing. How could those intersections shape who bears responsibility or benefits from new technologies?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S012",
+      "student_name": "Olivia Chen",
+      "draft_text": "Olivia, your voice carries a strong sense of urgency about the dangers of distracted driving, and I especially appreciate how you emphasized that 'anything on your phone can wait until after you\u2019re done driving.' Your clear examples of risk to both drivers and pedestrians show thoughtful consideration of public safety. To deepen your analysis, consider how the week\u2019s readings might connect to your ideas about technology and responsibility. What frameworks or theories could help explore the societal factors behind this issue?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.75,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S013",
+      "student_name": "Jamal Washington",
+      "draft_text": "Jamal, your urgent focus on how phone use disrupts safety\u2014especially your example of distracted driving causing 'small, big, or even fatal accidents'\u2014shows strong critical thinking about modern responsibilities. I appreciate how you connect technology\u2019s role in daily life to broader societal consequences, like the pressure to balance convenience with caution. To deepen this, could you explore how intersectionality might highlight different risks or responsibilities for various communities? For instance, how might factors like race, class, or geography shape who bears the cost of distracted driving?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S014",
+      "student_name": "Emma Gonzalez",
+      "draft_text": "Emma, I appreciate how you balanced practical needs like GPS with safety concerns in your discussion of phone use while driving. Your observation that 'using your phone can be dangerous either way but even more dangerous if you don't drive that good' shows thoughtful nuance about individual skill and responsibility. For deeper exploration, how might broader societal factors (like distracted driving laws or tech design) intersect with personal choices in ways we haven\u2019t considered yet?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S016",
+      "student_name": "Kai Tanaka",
+      "draft_text": "Kai, your use of specific statistics like the 3,450 lives lost in distraction-related crashes in 2016 powerfully underscores the urgency of addressing distracted driving. I appreciate how you connected data to policy action by advocating for stricter phone-use laws\u2014a clear example of risk assessment in practice. For deeper exploration, how might intersectionality shape the ways different communities experience or respond to this issue? For instance, could factors like age, socioeconomic status, or urban/rural divides influence both the risks and the effectiveness of legislation?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S017",
+      "student_name": "Zoe Abrams",
+      "draft_text": "Zoe, your thoughtful observation about how responsible phone use and driving might coexist if people could manage both is a great example of balancing practicality with safety. I appreciate how you acknowledged that phone use while driving isn\u2019t universally harmful but context-dependent, which shows nuance in your analysis. For next steps, consider how the concept of intersectionality might deepen your exploration of these tensions \u2014 for instance, how do factors like age, location, or socioeconomic status shape who gets to \u2018need\u2019 their phone while driving? Your perspective here could spark a richer discussion.",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S019",
+      "student_name": "Marcus Rivera",
+      "draft_text": "Marcus, your focus on how novice drivers are disproportionately affected by texting-related risks shows thoughtful attention to demographic patterns in public safety. I appreciate how you used the National Safety Council and AAA data to highlight the gap between awareness and behavior, which strengthens your argument about the need for protective laws. To build further, consider how intersectionality might help us explore how identities like race, gender, or class shape both risk perception and enforcement of these policies. What might those intersections reveal about who is most impacted by such laws?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.75,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S021",
+      "student_name": "Ava Kowalski",
+      "draft_text": "Ava, your vivid description of witnessing your mother\u2019s distracted driving and your honest admission about the temptation to answer urgent calls while driving brought real urgency to this week\u2019s discussion. I appreciated how you wove personal experience with broader societal concerns, especially when you wrote, \u201celectronics are evil to humans\u201d \u2014 your passion for safety is clear. To deepen this reflection, consider how the concept of intersectionality might apply: how do personal responsibility, technological design, and systemic policies overlap in creating or solving this issue? Let me know if you\u2019d like to brainstorm connections to our readings.",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S023",
+      "student_name": "Darius Hayes",
+      "draft_text": "Darius, your vivid descriptions of the risks of texting while driving \u2014 like how a simple 'ok' text could lead to a life-threatening accident \u2014 show you\u2019re deeply engaged with the real-world stakes of this issue. I appreciate how you honestly reflected on your own temptation to use the phone during emergencies, which adds personal weight to the conversation. To deepen your analysis, consider how the course concepts like intersectionality might connect to the complex factors influencing decisions around technology use. How could these frameworks help address the tension between personal responsibility and societal pressures?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.75,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S024",
+      "student_name": "Lily Chang",
+      "draft_text": "Lily, your use of statistics like '660,000 people are using their phones right now while driving' powerfully underscores the urgency of this public health crisis. I appreciate how you connect individual choices to systemic risks, especially when you argue that 'someone\u2019s life is more precious than taking your eyes off the road.' This shows strong analytical thinking about how behaviors and policies intersect. For deeper exploration, consider how the week\u2019s readings might add nuance to your analysis of intersectional risks. What frameworks could help address both the personal and societal dimensions you\u2019ve highlighted?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S030",
+      "student_name": "Ryan Mitchell",
+      "draft_text": "Ryan, your clear concern about the dangers of distracted driving and the real-world consequences you described \u2014 like the risk of accidents or injuries \u2014 shows thoughtful engagement with safety issues. I appreciate how directly you connected phone use to driver responsibility. For next week, consider how the week\u2019s theme of intersectionality might deepen this discussion: for example, how do factors like race, class, or access to technology shape who is most affected by distracted driving or traffic safety policies?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.75,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S031",
+      "student_name": "Jasmine Lee",
+      "draft_text": "Jasmine, your focus on cellphone distraction and road safety brought clear, data-driven insights to this week\u2019s discussion. I especially appreciated how you connected driver responsibility to parental roles in vehicle safety, showing thoughtful consideration of multiple perspectives. To deepen your analysis, consider how intersectionality might add layers to these issues \u2014 for example, how do factors like socioeconomic status or disability intersect with road safety challenges? I\u2019d love to hear more about that in our next conversation.",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.75,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S032",
+      "student_name": "Brandon Torres",
+      "draft_text": "Brandon, I appreciate how you highlighted the shift from phone calls to texting while driving, noting how this change amplifies safety risks. Your observation that texting demands more attention than drinking while driving shows clear critical thinking about real-world behaviors. To deepen your analysis, consider how concepts like intersectionality might help us understand why certain groups might be disproportionately affected by these technology-use patterns. What factors do you think shape who bears the risks of distracted driving?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-eth-studies-000000000001",
+      "student_id": "S033",
+      "student_name": "Nadia Petrov",
+      "draft_text": "Nadia, your comparison of distracted driving to drunk driving \u2014 both as 'habit[s] that spread like STDs' \u2014 powerfully captures how convenience can normalize risky behavior. I appreciate how your vivid language makes abstract societal patterns feel urgent and personal. To deepen this analysis, consider how course concepts like 'structural normalization' or 'risk perception' might connect to the patterns you describe. What do you think drives the shift from individual habit to collective acceptance?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    }
+  ]
+}

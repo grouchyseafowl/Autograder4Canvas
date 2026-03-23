@@ -426,6 +426,8 @@ class MainWindow(QMainWindow):
             api=self._api, store=self._insights_store, demo_mode=self._demo_mode
         )
         self._insights_panel.paused_count_changed.connect(self._btn_prior.set_badge)
+        # Trigger initial badge state now that the connection is live
+        self._insights_panel._refresh_incomplete_notice()
 
         # ── Page 3: Review (Grading Results + AIC + Insights) ─────────────
         from gui.panels.review_panel import ReviewPanel

@@ -11,7 +11,7 @@ Concern detection is ALWAYS separate (see concern_detector.py).
 
 import json
 import logging
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from insights.llm_backend import BackendConfig, parse_json_response, send_text
 from insights.models import (
@@ -19,11 +19,12 @@ from insights.models import (
     QuoteRecord,
     SubmissionCodingRecord,
 )
-from insights.patterns import classify_vader_polarity
+from insights.patterns import assess_sentiment_reliability, classify_vader_polarity
 from insights.prompts import (
     ANALYSIS_LENS_PROMPT_FRAGMENT,
     CODING_FULL_PROMPT,
     COMPREHENSION_PROMPT,
+    DEEPENING_PROMPT,
     INTEREST_AREAS_FRAGMENT,
     INTERPRETATION_PROMPT,
     JSON_REPAIR_PROMPT,
@@ -125,18 +126,24 @@ def _validate_concepts(concepts: list, submission_text: str) -> list:
             validated.append(concept)
             continue
 
-        # Check 2: Token overlap — at least half the concept's content
-        # words appear in the submission
+        # Check 2: Token overlap — strict majority of the concept's content
+        # words appear in the submission.  "> 0.5" (not ">= 0.5") means a
+        # two-token concept like "cellular activity" requires BOTH tokens
+        # present, preventing false validation when a single shared term
+        # is a cross-domain homograph (e.g. "cellular" in "cellular device"
+        # validating the biology concept "cellular activity").
         overlap = len(concept_tokens & sub_tokens)
-        if overlap / len(concept_tokens) >= 0.5:
+        if overlap / len(concept_tokens) > 0.5:
             validated.append(concept)
             continue
 
         # Check 3: Stem overlap — catches partial references like
-        # "intersectional" for the concept "intersectionality"
+        # "intersectional" for the concept "intersectionality".
+        # Same strict-majority rule: more than half the concept stems
+        # must appear to avoid single-stem false cognates.
         stems = {t[:6] for t in concept_tokens if len(t) > 3}
         sub_stems = {t[:6] for t in sub_tokens if len(t) > 3}
-        if stems & sub_stems:
+        if stems and len(stems & sub_stems) / len(stems) > 0.5:
             validated.append(concept)
             continue
 
@@ -147,6 +154,65 @@ def _validate_concepts(concepts: list, submission_text: str) -> list:
         )
 
     return validated
+
+
+def code_deepening(
+    *,
+    submission_text: str,
+    student_name: str,
+    student_id: str,
+    coding_record: "SubmissionCodingRecord",
+    primary_concern: object,
+    backend: BackendConfig,
+) -> dict:
+    """Deepening pass for flagged submissions (experimental, Stage 4b).
+
+    Runs ONLY when a concern flag exists for this student. Asks the 8B to:
+      1. Name the rhetorical strategy precisely
+      2. Reconsider emotional register given the concern context
+      3. Surface theme tags in tension with the concern
+
+    Returns a dict with keys: rhetorical_strategy, revised_register,
+    register_change_reason, theme_tensions.
+    Returns empty dict on any failure — pipeline must never crash here.
+
+    Equity note: righteous anger about structural injustice is APPROPRIATE
+    engagement. The concern detector already protects it — if no concern was
+    flagged, this pass never runs for that student.
+    """
+    flagged_passage = getattr(primary_concern, "flagged_passage", "") or ""
+    why_flagged = getattr(primary_concern, "why_flagged", "") or ""
+    current_register = coding_record.emotional_register or "unassigned"
+    theme_tags_str = (
+        ", ".join(coding_record.theme_tags) if coding_record.theme_tags else "none"
+    )
+    coding_summary = (
+        f"Theme tags: {theme_tags_str}\n"
+        f"Emotional register: {current_register}\n"
+        f"Emotional notes: {coding_record.emotional_notes or 'none'}\n"
+        f"Personal connections: "
+        f"{', '.join(coding_record.personal_connections[:2]) if coding_record.personal_connections else 'none'}"
+    )
+
+    try:
+        prompt = DEEPENING_PROMPT.format(
+            student_name=student_name,
+            coding_summary=coding_summary,
+            flagged_passage=flagged_passage[:400],
+            why_flagged=why_flagged[:300],
+            submission_text=submission_text[:2000],
+            current_register=current_register,
+            theme_tags_str=theme_tags_str,
+        )
+        raw = send_text(backend, prompt, SYSTEM_PROMPT, max_tokens=600)
+        parsed = parse_json_response(raw)
+        if "_parse_error" in parsed:
+            log.warning("Deepening pass JSON parse failed for %s", student_name)
+            return {}
+        return parsed
+    except Exception as e:
+        log.warning("Deepening pass failed for %s: %s", student_name, e)
+        return {}
 
 
 def code_submission(
@@ -177,14 +243,62 @@ def code_submission(
     lens_fragment = _build_lens_fragment(analysis_lens)
     interests_text = _build_interests_fragment(teacher_interests)
 
+    # Assess reliability — ESL/AAVE/short/transcribed submissions suppress or caveat.
+    # Suppression is non-negotiable: biased anchoring harms equity.
+    word_count_for_reliability = len(submission_text.split())
+    _ac = quick_summary.assignment_connection if quick_summary else None
+    reliability = assess_sentiment_reliability(
+        submission_text,
+        word_count=word_count_for_reliability,
+        was_translated=quick_summary.was_translated if quick_summary else False,
+        was_transcribed=quick_summary.was_transcribed if quick_summary else False,
+        assignment_connection_overlap=_ac.vocabulary_overlap if _ac else None,
+        compound_score=vader_compound,
+    )
+    # Build concise display strings for the prompt — NOT the full diagnostic caveat.
+    # The caveat text on SentimentReliabilityResult is for logging; the prompt
+    # needs a clean, short instruction the LLM can act on.
+    trigger_summary = ", ".join(reliability.triggers)
+    if reliability.tier == "suppressed":
+        display_compound: object = "[SUPPRESSED]"
+        display_polarity: str = f"score withheld ({trigger_summary}) — read tone directly from text"
+        # Guard: the signal matrix was computed from the same biased score.
+        # Prepend a reliability note so the LLM doesn't anchor on spurious
+        # disengagement / compliance signals derived from the withheld score.
+        signal_ctx = (
+            f"[Signal matrix reliability note: same bias risk applies ({trigger_summary}) "
+            f"— treat matrix signals as weak context only]\n{signal_ctx}"
+        )
+    elif reliability.tier == "low":
+        display_compound = f"{vader_compound:.3f}"
+        display_polarity = f"{vader_polarity} [weak signal: {trigger_summary}]"
+    else:
+        display_compound = f"{vader_compound:.3f}"
+        display_polarity = vader_polarity
+
+    # GoEmotions top-3 enrichment — only surface when score is not suppressed
+    # and the richer model was actually used.  Empty string when VADER fallback
+    # or when score is withheld (would contradict the suppression instruction).
+    _backend = quick_summary.sentiment_backend if quick_summary else ""
+    _emotions_dict = quick_summary.emotions if quick_summary else {}
+    if _backend == "go_emotions" and reliability.tier != "suppressed" and _emotions_dict:
+        _top3 = sorted(_emotions_dict.items(), key=lambda kv: kv[1], reverse=True)[:3]
+        top_emotions_str = (
+            "\n  Named emotions: "
+            + ", ".join(f"{label} ({score:.2f})" for label, score in _top3)
+        )
+    else:
+        top_emotions_str = ""
+
     if tier == "lightweight":
         record = _code_lightweight(
             submission_text=submission_text,
             student_id=student_id,
             student_name=student_name,
             assignment_prompt=assignment_prompt,
-            vader_compound=vader_compound,
-            vader_polarity=vader_polarity,
+            vader_compound=display_compound,
+            vader_polarity=display_polarity,
+            top_emotions=top_emotions_str,
             keyword_hits=keyword_hits,
             cluster_id=cluster_id,
             signal_ctx=signal_ctx,
@@ -199,8 +313,9 @@ def code_submission(
             student_id=student_id,
             student_name=student_name,
             assignment_prompt=assignment_prompt,
-            vader_compound=vader_compound,
-            vader_polarity=vader_polarity,
+            vader_compound=display_compound,
+            vader_polarity=display_polarity,
+            top_emotions=top_emotions_str,
             keyword_hits=keyword_hits,
             cluster_id=cluster_id,
             signal_ctx=signal_ctx,
@@ -215,7 +330,8 @@ def code_submission(
     record.student_id = student_id
     record.student_name = student_name
     record.word_count = len(submission_text.split())
-    record.vader_sentiment = vader_compound
+    record.emotional_register_score = vader_compound
+    record.sentiment_reliability = reliability.tier
     if quick_summary:
         record.cluster_id = quick_summary.cluster_id
         record.keyword_hits = quick_summary.keyword_hits
@@ -229,8 +345,9 @@ def _code_lightweight(
     student_id: str,
     student_name: str,
     assignment_prompt: str,
-    vader_compound: float,
+    vader_compound: Any,
     vader_polarity: str,
+    top_emotions: str = "",
     keyword_hits: str,
     cluster_id: str,
     signal_ctx: str,
@@ -247,6 +364,7 @@ def _code_lightweight(
         assignment_prompt=assignment_prompt,
         vader_compound=vader_compound,
         vader_polarity=vader_polarity,
+        top_emotions=top_emotions,
         keyword_hits=keyword_hits,
         cluster_id=cluster_id,
         signal_matrix_context=signal_ctx,
@@ -317,8 +435,9 @@ def _code_full(
     student_id: str,
     student_name: str,
     assignment_prompt: str,
-    vader_compound: float,
+    vader_compound: Any,
     vader_polarity: str,
+    top_emotions: str = "",
     keyword_hits: str,
     cluster_id: str,
     signal_ctx: str,
@@ -336,6 +455,7 @@ def _code_full(
         teacher_interests=interests_text,
         vader_compound=vader_compound,
         vader_polarity=vader_polarity,
+        top_emotions=top_emotions,
         keyword_hits=keyword_hits,
         cluster_id=cluster_id,
         signal_matrix_context=signal_ctx,

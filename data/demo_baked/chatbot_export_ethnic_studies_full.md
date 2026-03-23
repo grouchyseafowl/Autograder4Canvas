@@ -25,10 +25,10 @@ processing with Ollama keeps all student data on your computer.
 
 ---
 
-# Assignment Analysis: Week 6 Discussion: Intersectionality in Practice
-**Course:** Ethnic Studies (11), Period 3  
+# Assignment Analysis: Week 4 Reflection: Intersectionality in Your Life
+**Course:** Ethnic Studies  
 **Submissions:** 29  
-**Exported:** 2026-03-21 19:46  
+**Exported:** 2026-03-22 13:30  
 
 ## Instructions for AI
 
@@ -36,14 +36,14 @@ You are helping a teacher understand what their students said this week.
 Below are all student submissions for one assignment. Please analyze them
 and produce a structured analytical report.
 
-**Assignment:** Week 6 Discussion: Intersectionality in Practice
-**Course:** Ethnic Studies (11), Period 3
+**Assignment:** Week 4 Reflection: Intersectionality in Your Life
+**Course:** Ethnic Studies
 **Total submissions:** 29
 
-**Teacher's context:** This is a weekly discussion board. Students respond to a reading about intersectionality theory applied to everyday life. Complete/incomplete grading — 150 word minimum. I'm looking for genuine engagement with the concepts, not polished academic writing.
+**Teacher's context:** Week 4, first reflection assignment after introducing intersectionality frameworks.
 
 
-**Teacher's priorities:** (1) student engagement with theory, (2) personal connections, (3) critical thinking
+**Teacher's priorities:** (1) personal connections to course material, (2) emotional register, (3) who is struggling, (4) who has strong analytical voice
 
 
 

@@ -1,0 +1,1517 @@
+{
+  "run": {
+    "run_id": "demo-insights-run-bio-lab-0000000000001",
+    "course_id": "90005",
+    "course_name": "Biology, Period 6",
+    "assignment_id": "115001",
+    "assignment_name": "Lab Reflection: Cell Respiration",
+    "started_at": "2026-03-08T16:45:00+00:00",
+    "completed_at": "2026-03-08T17:12:00+00:00",
+    "model_tier": "lightweight",
+    "model_name": "mlx-community/Qwen2.5-7B-Instruct-4bit",
+    "total_submissions": 25,
+    "stages_completed": [
+      "data_fetch",
+      "preprocessing",
+      "quick_analysis",
+      "coding",
+      "concerns",
+      "themes",
+      "outliers",
+      "synthesis"
+    ],
+    "pipeline_confidence": {
+      "overall": 0.82
+    },
+    "teacher_context": "Lab reflection for the cell respiration experiment. Students measured CO2 output under different conditions and are asked to reflect on what the data showed them. Complete/incomplete, 100 word minimum.",
+    "analysis_lens_config": {
+      "lens": "equity_attention"
+    },
+    "quick_analysis": "{\"assignment_id\":\"115001\",\"assignment_name\":\"Lab Reflection: Cell Respiration\",\"course_id\":\"90005\",\"course_name\":\"Biology, Period 6\",\"analyzed_at\":\"2026-03-22T19:40:03.278868\",\"stats\":{\"total_submissions\":25,\"total_enrollment\":0,\"word_count_mean\":248.84,\"word_count_median\":249.0,\"word_count_min\":222,\"word_count_max\":272,\"word_counts\":[222,222,227,228,230,232,234,245,240,240,246,249,259,249,250,261,255,257,269,266,266,266,267,269,272],\"format_breakdown\":{\"online_text_entry\":25},\"timing\":{\"on_time\":25}},\"top_terms\":[{\"term\":\"driving\",\"count\":153},{\"term\":\"phone\",\"count\":106},{\"term\":\"phones\",\"count\":78},{\"term\":\"cell\",\"count\":48},{\"term\":\"road\",\"count\":43},{\"term\":\"car\",\"count\":36},{\"term\":\"texting\",\"count\":34},{\"term\":\"text\",\"count\":32},{\"term\":\"drive\",\"count\":25},{\"term\":\"vehicle\",\"count\":24},{\"term\":\"drivers\",\"count\":21},{\"term\":\"attention\",\"count\":21},{\"term\":\"accidents\",\"count\":20},{\"term\":\"accident\",\"count\":17},{\"term\":\"dangerous\",\"count\":17},{\"term\":\"crashes\",\"count\":16},{\"term\":\"problem\",\"count\":15},{\"term\":\"danger\",\"count\":15},{\"term\":\"don\",\"count\":13},{\"term\":\"cause\",\"count\":13},{\"term\":\"operating\",\"count\":12},{\"term\":\"caused\",\"count\":12},{\"term\":\"safe\",\"count\":11},{\"term\":\"hands\",\"count\":11},{\"term\":\"risk\",\"count\":11},{\"term\":\"driver\",\"count\":10},{\"term\":\"states\",\"count\":9},{\"term\":\"distraction\",\"count\":9},{\"term\":\"distracted\",\"count\":9},{\"term\":\"reasons\",\"count\":9}],\"tfidf_terms\":[{\"term\":\"phones\",\"score\":0.151},{\"term\":\"cell\",\"score\":0.1161},{\"term\":\"road\",\"score\":0.1054},{\"term\":\"use\",\"score\":0.0913},{\"term\":\"texting\",\"score\":0.0814},{\"term\":\"car\",\"score\":0.0757},{\"term\":\"text\",\"score\":0.0727},{\"term\":\"using\",\"score\":0.0705},{\"term\":\"drive\",\"score\":0.0664},{\"term\":\"life\",\"score\":0.0659},{\"term\":\"attention\",\"score\":0.0606},{\"term\":\"vehicle\",\"score\":0.0584},{\"term\":\"accidents\",\"score\":0.0547},{\"term\":\"problem\",\"score\":0.054},{\"term\":\"think\",\"score\":0.0533},{\"term\":\"just\",\"score\":0.0514},{\"term\":\"drivers\",\"score\":0.0512},{\"term\":\"accident\",\"score\":0.0506},{\"term\":\"dangerous\",\"score\":0.0504},{\"term\":\"crashes\",\"score\":0.0491}],\"named_entities\":{},\"keyword_hits\":{\"evidence_use\":{\"pattern_name\":\"evidence_use\",\"count\":3,\"student_ids\":[\"B002\",\"B021\"],\"examples\":[\"\u2026es while operating a vehicle. According to the article \\\"Cellphone Use Wh\u2026\",\"\u2026se cell phones while driving. According to research cell phones are lead\u2026\"]},\"current_events\":{\"pattern_name\":\"current_events\",\"count\":7,\"student_ids\":[\"B005\",\"B010\",\"B011\",\"B015\",\"B024\"],\"examples\":[\"\u2026ncreasing in the county. With today's technology cars will now al\u2026\",\"\u2026e them that's dead and on the news from using their phone while\u2026\",\"\u2026ve become a important item in today's society.\\n\\nThere have been p\u2026\",\"\u2026he problem with social issues today is the fact of text messaging\u2026\",\"\u2026he lowest recorded numbers in recent history. The National Safety\u2026\"]},\"distress_markers\":{\"pattern_name\":\"distress_markers\",\"count\":1,\"student_ids\":[\"B008\"],\"examples\":[\"\u2026f the road which is extremely unsafe this should be reason enough\u2026\"]},\"conceptual_connection\":{\"pattern_name\":\"conceptual_connection\",\"count\":5,\"student_ids\":[\"B015\",\"B020\",\"B022\",\"B024\"],\"examples\":[\"\u2026lephone conversation. This is similar to driving while you are drun\u2026\",\"\u2026luetooth enabled devices that connect to the car so that you can st\u2026\",\"\u2026luetooth enabled devices that connect to the car so that you can st\u2026\",\"\u2026ed in 2018 alone due to phone related car crashes. 15,341 drivers a\u2026\"]}},\"sentiments\":{\"B001\":{\"pos\":0.064,\"neg\":0.084,\"neu\":0.852,\"compound\":-0.7932},\"B002\":{\"pos\":0.074,\"neg\":0.071,\"neu\":0.856,\"compound\":-0.3111},\"B003\":{\"pos\":0.044,\"neg\":0.127,\"neu\":0.828,\"compound\":-0.9517},\"B004\":{\"pos\":0.049,\"neg\":0.156,\"neu\":0.795,\"compound\":-0.9819},\"B005\":{\"pos\":0.023,\"neg\":0.061,\"neu\":0.916,\"compound\":-0.9211},\"B006\":{\"pos\":0.028,\"neg\":0.125,\"neu\":0.847,\"compound\":-0.969},\"B007\":{\"pos\":0.013,\"neg\":0.08,\"neu\":0.907,\"compound\":-0.9295},\"B008\":{\"pos\":0.074,\"neg\":0.016,\"neu\":0.91,\"compound\":0.9427},\"B009\":{\"pos\":0.108,\"neg\":0.136,\"neu\":0.756,\"compound\":-0.797},\"B010\":{\"pos\":0.108,\"neg\":0.093,\"neu\":0.799,\"compound\":0.8121},\"B011\":{\"pos\":0.093,\"neg\":0.034,\"neu\":0.873,\"compound\":0.9413},\"B012\":{\"pos\":0.065,\"neg\":0.027,\"neu\":0.909,\"compound\":0.8381},\"B013\":{\"pos\":0.048,\"neg\":0.109,\"neu\":0.843,\"compound\":-0.9627},\"B014\":{\"pos\":0.054,\"neg\":0.189,\"neu\":0.756,\"compound\":-0.9896},\"B015\":{\"pos\":0.056,\"neg\":0.115,\"neu\":0.829,\"compound\":-0.9235},\"B016\":{\"pos\":0.03,\"neg\":0.176,\"neu\":0.794,\"compound\":-0.9916},\"B017\":{\"pos\":0.036,\"neg\":0.11,\"neu\":0.854,\"compound\":-0.9628},\"B018\":{\"pos\":0.04,\"neg\":0.145,\"neu\":0.815,\"compound\":-0.9862},\"B019\":{\"pos\":0.059,\"neg\":0.156,\"neu\":0.785,\"compound\":-0.9806},\"B020\":{\"pos\":0.029,\"neg\":0.069,\"neu\":0.901,\"compound\":-0.8475},\"B021\":{\"pos\":0.095,\"neg\":0.144,\"neu\":0.761,\"compound\":-0.9492},\"B022\":{\"pos\":0.029,\"neg\":0.069,\"neu\":0.901,\"compound\":-0.8475},\"B023\":{\"pos\":0.076,\"neg\":0.195,\"neu\":0.729,\"compound\":-0.9873},\"B024\":{\"pos\":0.06,\"neg\":0.144,\"neu\":0.796,\"compound\":-0.9741},\"B025\":{\"pos\":0.024,\"neg\":0.102,\"neu\":0.874,\"compound\":-0.9751}},\"sentiment_distribution\":{\"urgent\":15,\"passionate\":6,\"reflective\":4},\"clusters\":[{\"cluster_id\":0,\"size\":3,\"student_ids\":[\"B001\",\"B011\",\"B012\"],\"student_names\":[\"Sarah Kim\",\"Tanya Patel\",\"Matt Stevenson\"],\"top_terms\":[\"cell\",\"phones\",\"driving\",\"phone\",\"car\"],\"centroid_text\":\"Cell phones have become very popular over the past few years because almost everyone who drives has one. Cell phones are use in cars more than there s\"},{\"cluster_id\":1,\"size\":14,\"student_ids\":[\"B002\",\"B003\",\"B004\",\"B005\",\"B007\",\"B008\",\"B010\",\"B015\",\"B016\",\"B017\",\"B018\",\"B021\",\"B024\",\"B025\"],\"student_names\":[\"James Cooper\",\"Alicia Moreno\",\"Derek Chang\",\"Nicole Rivera\",\"Fatima Al-Hassan\",\"Chris Nakamura\",\"Luis Fernandez\",\"Grace Lin\",\"Daniel Murphy\",\"Samantha Cruz\",\"Tyler Brown\",\"Jessica Nguyen\",\"Omar Diaz\",\"Emily Watson\"],\"top_terms\":[\"driving\",\"phone\",\"phones\",\"texting\",\"cell\"],\"centroid_text\":\"Phones and Driving\\n\\nCell phones are a big part of people's lives, most people need their phones with them at all times. The use of cell phones have to\"},{\"cluster_id\":2,\"size\":1,\"student_ids\":[\"B023\"],\"student_names\":[\"Brittany Hall\"],\"top_terms\":[\"problem\",\"age\",\"funeral\",\"text\",\"accidents\"],\"centroid_text\":\"Simply because someone feels like they must respond to a text immediately is why many of the accidents occur and most of the time this lead to a vehic\"},{\"cluster_id\":3,\"size\":1,\"student_ids\":[\"B014\"],\"student_names\":[\"Andre Williams\"],\"top_terms\":[\"phones\",\"driving\",\"terrible\",\"occupied\",\"phone\"],\"centroid_text\":\"Phones and driving\\n\\nPhones and driving is a terrible idea due to the amount of injury and danger it brings. Driving while occupied on the phone is a t\"},{\"cluster_id\":4,\"size\":6,\"student_ids\":[\"B006\",\"B009\",\"B013\",\"B019\",\"B020\",\"B022\"],\"student_names\":[\"Kevin O'Brien\",\"Hannah Jacobs\",\"Diana Okafor\",\"Aisha Mohammed\",\"Ryan Kowalski\",\"Michael Sato\"],\"top_terms\":[\"phone\",\"driving\",\"road\",\"phones\",\"car\"],\"centroid_text\":\"Phones & Driving\\n\\nPeople driving while looking at their phones has become an epidemic and is a big cause of a lot of accident. Primarily involving tee\"}],\"embedding_outlier_ids\":[],\"pairwise_similarity\":{\"mean_similarity\":0.7442,\"max_similarity\":1.0,\"pairs_above_085\":20,\"pairs_above_070\":229,\"total_pairs\":300,\"observation\":\"This assignment had high submission similarity (mean=0.74, max=1.00, 300 pairs total). 20 pairs above 0.85 (high similarity). 229 pairs above 0.70 (moderate similarity). Consider first: is the assignment designed to produce diverse responses? Similarity can reflect community, shared cultural knowledge, or collaborative learning \u2014 not only copying.\"},\"shared_references\":[{\"reference\":\"Phones and Driving\\n\\nBased\",\"student_ids\":[\"B013\",\"B016\"],\"count\":2},{\"reference\":\"Phones & Driving\\n\\nPeople\",\"student_ids\":[\"B020\",\"B022\"],\"count\":2}],\"contradictions\":[],\"concern_signals\":[{\"student_id\":\"B002\",\"student_name\":\"James Cooper\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"negative\",\"matched_text\":\"perating a vehicle. According to the article \\\"Cellph\",\"interpretation\":\"Political urgency about injustice \u2014 NOT a concern\"},{\"student_id\":\"B008\",\"student_name\":\"Chris Nakamura\",\"signal_type\":\"VERIFY\",\"keyword_category\":\"distress\",\"vader_polarity\":\"positive\",\"matched_text\":\"which is extremely unsafe this should be reas\",\"interpretation\":\"Unlikely combination \u2014 verify context\"},{\"student_id\":\"B021\",\"student_name\":\"Jessica Nguyen\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"negative\",\"matched_text\":\"ones while driving. According to research cell phone\",\"interpretation\":\"Political urgency about injustice \u2014 NOT a concern\"}],\"per_submission\":{\"B001\":{\"student_id\":\"B001\",\"student_name\":\"Sarah Kim\",\"word_count\":222,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.7932,\"keyword_hits\":{},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B002\":{\"student_id\":\"B002\",\"student_name\":\"James Cooper\",\"word_count\":222,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.3111,\"keyword_hits\":{\"evidence_use\":2},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B003\":{\"student_id\":\"B003\",\"student_name\":\"Alicia Moreno\",\"word_count\":227,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9517,\"keyword_hits\":{},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B004\":{\"student_id\":\"B004\",\"student_name\":\"Derek Chang\",\"word_count\":228,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9819,\"keyword_hits\":{},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B005\":{\"student_id\":\"B005\",\"student_name\":\"Nicole Rivera\",\"word_count\":230,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9211,\"keyword_hits\":{\"current_events\":2},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B006\":{\"student_id\":\"B006\",\"student_name\":\"Kevin O'Brien\",\"word_count\":232,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.969,\"keyword_hits\":{},\"cluster_id\":4,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B007\":{\"student_id\":\"B007\",\"student_name\":\"Fatima Al-Hassan\",\"word_count\":234,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9295,\"keyword_hits\":{},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B008\":{\"student_id\":\"B008\",\"student_name\":\"Chris Nakamura\",\"word_count\":245,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.9427,\"keyword_hits\":{\"distress_markers\":1},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B009\":{\"student_id\":\"B009\",\"student_name\":\"Hannah Jacobs\",\"word_count\":240,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.797,\"keyword_hits\":{},\"cluster_id\":4,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B010\":{\"student_id\":\"B010\",\"student_name\":\"Luis Fernandez\",\"word_count\":240,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.8121,\"keyword_hits\":{\"current_events\":2},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B011\":{\"student_id\":\"B011\",\"student_name\":\"Tanya Patel\",\"word_count\":246,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.9413,\"keyword_hits\":{\"current_events\":1},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B012\":{\"student_id\":\"B012\",\"student_name\":\"Matt Stevenson\",\"word_count\":249,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.8381,\"keyword_hits\":{},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B013\":{\"student_id\":\"B013\",\"student_name\":\"Diana Okafor\",\"word_count\":259,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9627,\"keyword_hits\":{},\"cluster_id\":4,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B014\":{\"student_id\":\"B014\",\"student_name\":\"Andre Williams\",\"word_count\":249,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9896,\"keyword_hits\":{},\"cluster_id\":3,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B015\":{\"student_id\":\"B015\",\"student_name\":\"Grace Lin\",\"word_count\":250,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9235,\"keyword_hits\":{\"conceptual_connection\":1,\"current_events\":1},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B016\":{\"student_id\":\"B016\",\"student_name\":\"Daniel Murphy\",\"word_count\":261,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9916,\"keyword_hits\":{},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B017\":{\"student_id\":\"B017\",\"student_name\":\"Samantha Cruz\",\"word_count\":255,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9628,\"keyword_hits\":{},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B018\":{\"student_id\":\"B018\",\"student_name\":\"Tyler Brown\",\"word_count\":257,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9862,\"keyword_hits\":{},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B019\":{\"student_id\":\"B019\",\"student_name\":\"Aisha Mohammed\",\"word_count\":269,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9806,\"keyword_hits\":{},\"cluster_id\":4,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B020\":{\"student_id\":\"B020\",\"student_name\":\"Ryan Kowalski\",\"word_count\":266,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.8475,\"keyword_hits\":{\"conceptual_connection\":1},\"cluster_id\":4,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B021\":{\"student_id\":\"B021\",\"student_name\":\"Jessica Nguyen\",\"word_count\":266,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9492,\"keyword_hits\":{\"evidence_use\":1},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B022\":{\"student_id\":\"B022\",\"student_name\":\"Michael Sato\",\"word_count\":266,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.8475,\"keyword_hits\":{\"conceptual_connection\":1},\"cluster_id\":4,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B023\":{\"student_id\":\"B023\",\"student_name\":\"Brittany Hall\",\"word_count\":267,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9873,\"keyword_hits\":{},\"cluster_id\":2,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B024\":{\"student_id\":\"B024\",\"student_name\":\"Omar Diaz\",\"word_count\":269,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9741,\"keyword_hits\":{\"conceptual_connection\":2,\"current_events\":1},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"},\"B025\":{\"student_id\":\"B025\",\"student_name\":\"Emily Watson\",\"word_count\":272,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9751,\"keyword_hits\":{},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\"}},\"citation_report\":{\"has_citations\":true,\"source_count\":3,\"students_with_citations\":2,\"students_without_citations\":23,\"generic_reading_ref_count\":0,\"specific_source_count\":3,\"most_cited\":[[\"the National Safety Council\",1],[\"Cellphone Use While Driving Statistics and Texting and Driving Facts\",1],[\"research cell phones are leading factors\",1]],\"verification_note\":\"URL/DOI existence is checked automatically. Unverified \u2260 fake \u2014 paywalled, non-English, and community sources will appear unverified.\",\"sources_summary\":[{\"source\":\"the National Safety Council\",\"citation_type\":\"generic_reference\",\"student_names\":[\"James Cooper\"],\"count\":1},{\"source\":\"Cellphone Use While Driving Statistics and Texting and Driving Facts\",\"citation_type\":\"quoted_title\",\"student_names\":[\"James Cooper\"],\"count\":1},{\"source\":\"research cell phones are leading factors\",\"citation_type\":\"generic_reference\",\"student_names\":[\"Jessica Nguyen\"],\"count\":1}],\"_citations_live\":[{\"citation_type\":\"generic_reference\",\"raw_text\":\"according to the National Safety Council,\",\"normalized\":\"the National Safety Council\",\"student_id\":\"B002\",\"student_name\":\"James Cooper\",\"verified\":null,\"verification_note\":\"\"},{\"citation_type\":\"quoted_title\",\"raw_text\":\"\\\"Cellphone Use While Driving Statistics and Texting and Driving Facts\\\"\",\"normalized\":\"Cellphone Use While Driving Statistics and Texting and Driving Facts\",\"student_id\":\"B002\",\"student_name\":\"James Cooper\",\"verified\":null,\"verification_note\":\"\"},{\"citation_type\":\"generic_reference\",\"raw_text\":\"According to research cell phones are leading factors that\",\"normalized\":\"research cell phones are leading factors\",\"student_id\":\"B021\",\"student_name\":\"Jessica Nguyen\",\"verified\":null,\"verification_note\":\"\"}]},\"gibberish_ids\":[],\"analysis_notes\":[\"Citations found: 3 unique sources across 2 students (URL/DOI verification running in background)\"]}"
+  },
+  "codings": [
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B001",
+      "student_name": "Sarah Kim",
+      "coding_record": {
+        "student_id": "B001",
+        "student_name": "Sarah Kim",
+        "theme_tags": [
+          "addressing a social issue",
+          "analyzing solutions to a problem"
+        ],
+        "theme_confidence": {
+          "addressing a social issue": 0.9,
+          "analyzing solutions to a problem": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Even though that is a solution you should still never touch you phone while operating a vehicle.",
+            "significance": "Emphasizes the importance of not using the phone at all, despite having a Bluetooth radio."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student provides a logical analysis of the issue and potential solutions, maintaining a neutral tone throughout the submission.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "cell phones while driving",
+          "accidents in the US"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 222,
+        "cluster_id": 0,
+        "vader_sentiment": -0.7932,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Cell phones are a big issue while driving. Lots of accidents have happened in the past because of people being on their cell phones while driving. The main people that do text or play on their phones while driving are teenagers. There are many ways of solving this problem, but I am only going to be talking about one way to solve it.\n\nOne way that we can solve this problem is we can put blue tooth radios in our cars so that if someone calls you there would be a way to answer your phone without picking it up. Most of the newer cars have a Bluetooth radio in them so you don't have to buy one. Although older model cars don't have them you can buy them and install them. Over half of the accidents in the us happen because of people being or checking their phones.\n\nAlthough it is never okay to use your phone while driving Based on what we observed, I think that if you solved that problem by getting a radio. If you have a Bluetooth radio, then there should be less of a chance of you getting in an accident because you would be on your phone less. Even though that is a solution you should still never touch you phone while operating a vehicle.    ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B002",
+      "student_name": "James Cooper",
+      "coding_record": {
+        "student_id": "B002",
+        "student_name": "James Cooper",
+        "theme_tags": [
+          "analyzing statistical evidence",
+          "emphasizing safety concerns"
+        ],
+        "theme_confidence": {
+          "analyzing statistical evidence": 0.9,
+          "emphasizing safety concerns": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "According to the article 'Cellphone Use While Driving Statistics and Texting and Driving Facts' states that according to the National Safety Council, 1.2 million car crashes in 2013 involved drivers talking on the phone, and at least 341,000 involved text messaging.",
+            "significance": "James is using statistical evidence to support his argument about the dangers of cellphone use while driving."
+          },
+          {
+            "text": "So for that exact reason, many states implemented the law to not text while driving or you will get a big, fine ticket just for the safe of other people.",
+            "significance": "James emphasizes the importance of safety laws to protect drivers, passengers, and other road users."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "James presents statistical evidence and safety concerns in a logical and structured manner without expressing strong emotion, focusing on the facts and their implications.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "cell respiration",
+          "distraction"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "Cellphone Use While Driving Statistics and Texting and Driving Facts"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 222,
+        "cluster_id": 1,
+        "vader_sentiment": -0.3111,
+        "keyword_hits": {
+          "evidence_use": 2
+        },
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Phones and Driving\n\nShould drivers be able to use cellphones in any capacity while operating a vehicle? The data suggests that drivers should not be able to use their cellphones while operating a vehicle. According to the article \"Cellphone Use While Driving Statistics and Texting and Driving Facts\" states that according to the National Safety Council, 1.2 million car crashes in 2013 involved drivers talking on the phone, and at least 341,000 involved text messaging. \"Talking or texting while driving or checking social media posts takes eyes off the brain off the task of driving\":\n\nstates a message that phones has become a distraction to the human brain, but not only distracting the human brain, but is also becoming a habit to human beings.\n\nDistraction has become a huge part in car crashes and people's injuries. Cellphones has become an important component to many human routines. Therefore, it doesn't come to a surprise or a shocked moment that gadgets such as cellphones, tablets, or any other technology devices are ambiguous. Phones not only put the driver in danger, but also other people such as passengers and the other driver in danger.\n\nSo for that exact reason, many states implemented the law to not text while driving or you will get a big, fine ticket just for the safe of other people .                                                                                                                           ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B003",
+      "student_name": "Alicia Moreno",
+      "coding_record": {
+        "student_id": "B003",
+        "student_name": "Alicia Moreno",
+        "theme_tags": [
+          "discussing personal impact of cell phone use",
+          "statistical evidence"
+        ],
+        "theme_confidence": {
+          "discussing personal impact of cell phone use": 0.7,
+          "statistical evidence": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Using a cellular device while driving a vehicle is dangerous to your life and other innocent lives around.",
+            "significance": "Emphasizes the personal and societal risks associated with using cell phones while driving."
+          },
+          {
+            "text": "Studies show that drivers on there phones are the cause of about 6 percent of accidents in the U.S. Killing about 2,600 and injuring 330,000 people each year.",
+            "significance": "Highlights the significant impact of cell phone use on driving safety and the number of accidents it causes."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student presents statistical evidence and personal reflections on the dangers of cell phone use while driving, maintaining an analytical tone without strong emotional expression.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "2010",
+          "14 states that have banned the use of cell phones while driving"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 227,
+        "cluster_id": 1,
+        "vader_sentiment": -0.9517,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Phones and Driving\n\nCell phones are a big part of people's lives, most people need their phones with them at all times. The use of cell phones have took a toll on many people lives. Phones are definitely a distraction to people especially when they are driving. Using a cellular device while driving a vehicle is dangerous to your life and other innocent lives around.\n\nSince 2010, there have been 14 states that have banned the use of cell phones while driving. Driving while using your phone can cause the driver to forget to turn on blinkers or maybe watch for people merging lanes. Studies show that drivers on there phones are the cause of about 6 percent of accidents in the U.S. Killing about 2,600 and injuring 330,000 people each year.\n\nResearchers also say that the cost of accidents caused by use of cellphones is about $43 billion. So not only is the use of cell phones while driving a vehicle dangerous, it also costs billions due to the accidents it causes.\n\nPeople often think that just texting and driving is dangerous, but some researchers say that talking on the phone can be just as dangerous if not more than texting while driving. Using your phone while driving is dangerous and illegal, it can wait it's better to be safe, don't use your phone while driving.      ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B004",
+      "student_name": "Derek Chang",
+      "coding_record": {
+        "student_id": "B004",
+        "student_name": "Derek Chang",
+        "theme_tags": [
+          "expressing concern about public safety",
+          "citing research to support argument"
+        ],
+        "theme_confidence": {
+          "expressing concern about public safety": 0.9,
+          "citing research to support argument": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "These are causing insurance to rise and causing scare to people's health.",
+            "significance": "Expresses concern about the impact of distracted driving on public safety and insurance costs."
+          },
+          {
+            "text": "Research has it, 'The available studies so far suggest that talking on the phone while driving, even hands-free, is as bad or worse than driving drunk.'",
+            "significance": "Cites research to support the argument that using a phone while driving is a significant safety hazard."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student presents their argument in a structured and analytical manner, using research to support their claims without expressing strong personal emotion.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "insurance rates rising",
+          "drunk driving",
+          "texting and driving"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 228,
+        "cluster_id": 1,
+        "vader_sentiment": -0.9819,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "CR Driving & Texting!\n\nI strongly agree that phones should be banned while driving because of all the accidents they are causing. These are causing insurance to rise and causing scare to people's health. Studies have proven that drivers who use phones while driving are more responsible for the cause of an accident. Driving is dangerous technique and to safely execute driving you should be 100% focused, but if you are drunk or on your phone, you are potentially in danger to yourself and others on the road. As a society, we have become very less mindful of everything going on around us and do not take much precaution of things happening right in front of us.\n\nMany people think distractions while driving is only texting and driving but in fact, while driving, sometimes it is easy to lose focus on the road because you are on the phone or because so much could be happening around you, but this means you forget you are on the road with others, instead of by yourself. Research has it, \" The available studies so far suggest that talking on the phone while driving, even hands-free, is as bad or worse than driving drunk. ... A test of 41 adults found that driving while intoxicated was actually less dangerous than driving while talking on a hand-held phone or a hands-free phone.\"                                                       ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B005",
+      "student_name": "Nicole Rivera",
+      "coding_record": {
+        "student_id": "B005",
+        "student_name": "Nicole Rivera",
+        "theme_tags": [
+          "concern for public safety",
+          "personal observation of distracted driving"
+        ],
+        "theme_confidence": {
+          "concern for public safety": 0.9,
+          "personal observation of distracted driving": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "And hit the car she was in and caused a wrecked leaving one dead and two injured all because that person was texting while he was driving.",
+            "significance": "Illustrates the severe consequences of distracted driving and the impact on others' lives."
+          },
+          {
+            "text": "Even today neighborhoods are have kids getting hit on the side of the road just because your not watch the road, but instead texting while your driving.",
+            "significance": "Highlights the ongoing danger of distracted driving and its frequency in everyday life."
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "The student expresses a strong sense of urgency about the dangers of distracted driving, using personal observations and real-life examples to highlight the issue.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "Gwinnett County law",
+          "kids getting hit on the side of the road",
+          "sign with gifts all because someone was texting on their cell phones"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 230,
+        "cluster_id": 1,
+        "vader_sentiment": -0.9211,
+        "keyword_hits": {
+          "current_events": 2
+        },
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Phones and Driving\n\nPeople shouldn't use their phones while driving because now people are getting killed by people driving while using their phones. Over the years drivers haven,t been paying attention to the road ever since social media have been created.\n\nSo now Gwinnett County made a law so that drives can't use their phone to prevent death rate from increasing in the county. With today's technology cars will now allow you to call people through the car's bluetooth settings. And if we need a gps we can also input on the cars gps. Even though you can do all of this stuff now you still need to watch where you're going and the speed limit so you don't risk other people's lives because of how fast your driving.\n\nEven today neighborhoods are have kids getting hit on the side of the road just because your not watch the road, but instead texting while your driving. I even watch people look at their phones even if nobody's around you can still injure you and the passengers in the vehicle. Done the street on my way to my uncle's house there's a sign with gifts all because someone was texting on their cell phones. And hit the car she was in and caused a wrecked leaving one dead and two injured all because that person was texting while he was driving.   ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B006",
+      "student_name": "Kevin O'Brien",
+      "coding_record": {
+        "student_id": "B006",
+        "student_name": "Kevin O'Brien",
+        "theme_tags": [
+          "emphasizing safety and responsibility",
+          "consequences of distracted driving"
+        ],
+        "theme_confidence": {
+          "emphasizing safety and responsibility": 0.9,
+          "consequences of distracted driving": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Driving while being on the phone is very dangerous. No one should be operating a vehicle and using technology.",
+            "significance": "Emphasizes the dangers of distracted driving and the importance of safety."
+          },
+          {
+            "text": "You never know when that day will be. You can never be certain on what will happen. That's why you should always be safe and not do it.",
+            "significance": "Highlights the unpredictability of accidents and the need for constant vigilance."
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "The student uses strong language and personal anecdotes to emphasize the urgency of the issue, highlighting the potential for severe consequences of distracted driving.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 232,
+        "cluster_id": 4,
+        "vader_sentiment": -0.969,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Driving while on the phone\n\nDriving while being on the phone is very dangerous. No one should be operating a vehicle and using technology. It can ruin your life. People don't think before they do stuff and it doesn't always end good. You might think you can pay attention to the road and drive at the same time, but you never know until its too late. Many wrecks have been caused by people texting and driving. You could look up at the road one second too late and take someone's life.\n\nMost teens are addicted to their phone and right when it buzzes, they grab it and check it. They can't even drive without them. You could swerve while on your phone, stop too late, or never see the person walking. Just like that someone's hurt and its your fault. Driving is a serious thing. You don't have to just worry about your life but the other peoples on the road's life too. Not everyone can see the same thing, so all your attention needs to be on the road.\n\nThat's why you shouldn't drive and be on your phone. Its very dangerous and can take someone's life. You never know when that day will be. You can never be certain on what will happen. That's why you should always be safe and not do it. Think before you take someone's life.      ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B007",
+      "student_name": "Fatima Al-Hassan",
+      "coding_record": {
+        "student_id": "B007",
+        "student_name": "Fatima Al-Hassan",
+        "theme_tags": [
+          "importance of safety",
+          "consequences of distractions"
+        ],
+        "theme_confidence": {
+          "importance of safety": 0.9,
+          "consequences of distractions": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Drivers should not be allowed to use cell phones while driving. They should not because it is a distraction, and the call or text can wait.",
+            "significance": "Emphasizes the importance of focusing on driving and the safety implications of distractions."
+          },
+          {
+            "text": "In addition this leads to my next reason. Cell phones are a distraction. They are a distraction because if you get a notification you're going to look for your phone. You can look down for 1 second and anything can happen.",
+            "significance": "Highlights the immediate risks associated with distractions while driving."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student presents a logical argument with clear examples and no overt emotional language, focusing on the safety and risks associated with distractions while driving.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "cell respiration",
+          "distraction"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "drivers using cell phones while driving"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 234,
+        "cluster_id": 1,
+        "vader_sentiment": -0.9295,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "In the world we live in, everyone has a cell phone. Drivers should not be allowed to use cell phones while driving. They should not because it is a distraction, and the call or text can wait.\n\nThe call or text can wait because you have to take your eyes off the road to answer or reply. Many times when you're texting and driving you misspell words and then you have to go back and correct it. So therefore when you go back and correct it your eyes are still off the road. This also means you are risking your life and someone else's life by being on the phone . In addition this leads to my next reason.\n\nCell phones are a distraction. They are a distraction because if you get a notification you're going to look for your phone. You can look down for 1 second and anything can happen. Also when people talk on the phone they are distracted. They have a tendency to look ways that they aren't supposed to and they drive crazy.\n\nIn conclusion drivers should not be allowed to use cell phones while driving. It is a distraction and the call or text can wait. Remember when you drive you have to drive for yourself and drive for others too. So try to avoid texting or answering and call while driving especially if it's just a friend.   ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B008",
+      "student_name": "Chris Nakamura",
+      "coding_record": {
+        "student_id": "B008",
+        "student_name": "Chris Nakamura",
+        "theme_tags": [
+          "applying concepts to real-world issues",
+          "supporting a specific law"
+        ],
+        "theme_confidence": {
+          "applying concepts to real-world issues": 0.9,
+          "supporting a specific law": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Based on what we observed, I think the only way you should be able to use your phone and drive is if your handsfree using it. Calling and music should be the only thing you should be able to do.",
+            "significance": "Reflects the student's application of observed data to real-world driving safety."
+          },
+          {
+            "text": "Georgia has passed a law stating your phone can not be touching you when in your vehicle. You may not even make a phone call unless your car has the hands-free option. I honestly think this is the perfect for people.",
+            "significance": "Indicates the student's support for a specific law and its potential benefits."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student presents a logical argument based on observations and supports a specific law, maintaining an analytical tone without strong emotional expression.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "cell respiration",
+          "road safety"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "Georgia's law on phone use while driving"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 245,
+        "cluster_id": 1,
+        "vader_sentiment": 0.9427,
+        "keyword_hits": {
+          "distress_markers": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Phones and Driving\n\nCellphones are becoming some people's addiction to the point they risk there life just to text. Based on what we observed, I think the only way you should be able to use your phone and drive is if your handsfree using it. Calling and music should be the only thing you should be able to do. There is no excuse to risk your life or anyone else's life just for a text message.\n\nPeople are way too caught in their phone that they need to put it up when they drive. Georgia has passed a law stating your phone can not be touching you when in your vehicle. You may not even make a phone call unless your car has the hands-free option. I honestly think this is the perfect for people. It helps control people and make roads safer.\n\nThe data suggests you should be able to listen to your music on your phone when driving and even make calls, but texting should be off limits. You have to look at your phone to long and take your eyes off the road which is extremely unsafe this should be reason enough not to do such things.\n\nIn conclusion, its simple to not text and drive because you're safer you could just listen to your music or if you really need to tell someone something you could just make a call to them instead and be a whole lot easier and safer.   ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B009",
+      "student_name": "Hannah Jacobs",
+      "coding_record": {
+        "student_id": "B009",
+        "student_name": "Hannah Jacobs",
+        "theme_tags": [
+          "emphasizing personal impact",
+          "statistical evidence"
+        ],
+        "theme_confidence": {
+          "emphasizing personal impact": 0.9,
+          "statistical evidence": 0.7
+        },
+        "notable_quotes": [
+          {
+            "text": "Fatal injury or death is one reason. You are in a big metal vehicle in which case, can crash. When crashed, multiple things could happen to you. Burning, crushed, stabbed is few of the things that can injure, or kill you.",
+            "significance": "Illustrates the severe consequences of driving while using a phone, highlighting the physical dangers involved."
+          },
+          {
+            "text": "Lastly, is hurting your family and friends. Say you're a father and your wife calls you. You have your best friend in the next seat and your kid in the back. Out of nowhere, a truck comes and you t-bone into the truck. Your kid has a brokn rib and your best friend is dead. Do you really want that to happen?",
+            "significance": "Emphasizes the personal impact of accidents, showing how one's actions can affect loved ones and friends."
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "The student uses emotionally charged scenarios to emphasize the importance of not using phones while driving, highlighting the urgency of the issue.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "25% of car crashes involve driving while using phones"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 240,
+        "cluster_id": 4,
+        "vader_sentiment": -0.797,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Phones and Driving\n\nIn the day of age, 25% of car crashes involve driving while using phones. That is a huge number and already 1 reason why you shouldn't drive while using a phone. I will give you some reasons why you shouldn't drive with phones.\n\nFatal injury or death is one reason. You are in a big metal vehicle in which case, can crash. When crashed, multiple things could happen to you. Burning, crushed, stabbed is few of the things that can injure, or kill you. Your not affecting youself, but affecting people who probably got hit while you crashed. You might have or had killed them.\n\nAnother is jail time or bieng sued. If you had hit a person, another car, or property damage, you can get arrested for that. The fine cost could go up to 500,000$ and a jail time for a minimum of 2 years.\n\nLastly, is hurting your family and friends. Say you're a father and your wife calls you. You have your best friend in the next seat and your kid in the back. Out of nowhere, a truck comes and you t-bone into the truck. Your kid has a brokin rib and your best friend is dead. Do you really want that to happen?\n\nMorale of this essay is, never go on your phone when you drive. Don't answer texts, don't answer the phone, and don't look up things on the internet.   ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B010",
+      "student_name": "Luis Fernandez",
+      "coding_record": {
+        "student_id": "B010",
+        "student_name": "Luis Fernandez",
+        "theme_tags": [
+          "public safety advocacy",
+          "statistical evidence"
+        ],
+        "theme_confidence": {
+          "public safety advocacy": 0.9,
+          "statistical evidence": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Using your phone while driving is of the most common ways people die or get others killed in America.",
+            "significance": "Highlights the severity and commonality of the issue of phone use while driving."
+          },
+          {
+            "text": "Act today and be the voice that can save many lives, including your friends and family.",
+            "significance": "Encourages immediate action and personal responsibility to prevent accidents."
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "The student uses strong, urgent language to emphasize the importance of the issue and calls for immediate action, reflecting a sense of urgency.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "National safety council reports",
+          "1.6 crashes in a single year",
+          "1 in every 4 car crashes has to do with phone usage while driving"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 240,
+        "cluster_id": 1,
+        "vader_sentiment": 0.8121,
+        "keyword_hits": {
+          "current_events": 2
+        },
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Phones and Driving\n\nUsing your phone while driving is of the most common ways people die or get others killed in America. With this problem, nobody thinks that it could be them that's dead and on the news from using their phone while driving. There are countless reasons why this needs to come to an end in our society.\n\nMany states have acted on the matter and have a hands free ban while driving. Nobody ever needs to use their phone while driving, you are supposed to be concentrated at all times while behind the wheel. One of the main reasons people are still disregarding this rule is because they're using their phone most times throughout the day and can't be without even while driving. The National safety council reports that phone use while driving causes approximately 1.6 crashes in a single year, also that 1 in every 4 car crashes has to do with phone usage while driving. Laws that were placed on these problems are slowly but surely getting rid of this problem over time.\n\nEverybody across the nation should tell their loved ones that it is never safe to do so and should attempt to stop this by any means necessary. Nobody wants to see any friends or family taken away from them by something that could easily be fixed. Act today and be the voice that can save many lives, including your friends and family .   ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B011",
+      "student_name": "Tanya Patel",
+      "coding_record": {
+        "student_id": "B011",
+        "student_name": "Tanya Patel",
+        "theme_tags": [
+          "analyzing risks of distracted driving",
+          "balancing benefits and risks"
+        ],
+        "theme_confidence": {
+          "analyzing risks of distracted driving": 0.9,
+          "balancing benefits and risks": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Driving while using cell phones can make the driver less focused, not only on the road but to your surroundings.",
+            "significance": "Highlights the impact of cell phone use on driving focus and safety."
+          },
+          {
+            "text": "Even though cell phones can provide a driver with options on their experience while riding. Being able to listen to different types and styles of music. Also making sure you are going to the proper destination. It should not be used to the point where it can take you attention off the road.",
+            "significance": "Emphasizes the balance between the benefits and risks of using cell phones while driving."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student provides a balanced analysis of the risks and benefits of using cell phones while driving, without expressing strong emotional reactions.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "cell respiration",
+          "reaction time",
+          "distracted driving"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 246,
+        "cluster_id": 0,
+        "vader_sentiment": 0.9413,
+        "keyword_hits": {
+          "current_events": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Cell phones have become a important item in today's society.\n\nThere have been people who use this item excessively, especially while they drive.\n\nDriving while using cell phones can make the driver less focused, not only on the road but to your surroundings.\n\nNot paying full attention can also slow down your reaction time.\n\nWhen it comes to cell phones and driving I support the use of them with moderation (use when parked).\n\nCell phones can benefit the driver in many ways.\n\nThey can be used as a gps.\n\nIt helps people who are driving alone and can't get someone else to use a paper map.\n\nA phone can be a source of entertainment too.\n\nFor those who enjoy songs or podcast that are not normally on the radio.\n\nMost drivers can be distracted by cell phones.\n\nOne example is if their phone falls out of the vehicle mount. This action will tempt them to pick it up causing their attention to be taken off of the road which can lead to a car crash.\n\nAnother would be holding a conversation with someone one the phone.\n\nFinally sending or reading a text message.\n\nEven though cell phones can provide a driver with options on their experience while riding.\n\nBeing able to listen to different types and styles of music.\n\nAlso making sure you are going to the proper destination.\n\nIt should not be used to the point where it can take you attention off the rode.         ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B012",
+      "student_name": "Matt Stevenson",
+      "coding_record": {
+        "student_id": "B012",
+        "student_name": "Matt Stevenson",
+        "theme_tags": [
+          "concern for public safety",
+          "critique of cell phone use while driving"
+        ],
+        "theme_confidence": {
+          "concern for public safety": 0.9,
+          "critique of cell phone use while driving": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Cell phones make a huge different in the car then not in the car and people should juss forget about them till there done driving.",
+            "significance": "Emphasizes the impact of cell phone use on driving safety and advocates for their use only when not driving."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student presents a clear and logical argument against cell phone use while driving, focusing on safety and responsibility, without expressing strong emotional distress.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "car crashes caused by cell phones"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 249,
+        "cluster_id": 0,
+        "vader_sentiment": 0.8381,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Cell phones have become very popular over the past few years because almost everyone who drives has one. Cell phones are use in cars more than there suppose to. In my opinion you shouldn't be able to use cell phones in a car and heres why.\n\n1 reason drivers should not be able to use a cell phone is because they want pay attention to the road and they could hit another car or even a person. Also if drivers don't use a cell phone why there driving they can make it to there destination safe and they can get on it when there done driving. Drivers who use cell phones put a lot of people in danger cause there not checking there surroundings and pay more attention to there phone then the road.\n\nA lot of car crashes are caused by cell phones because people are always on them. Also when people are driving they should put there phone on do not disturbe or in driving safety mode until there out the car. If drivers did that there would be less crashes and we wouldn't have to worry about cell phones.\n\nThere would be less crashes if people didn't have a cell phone in a car because the driver would be focused not only on the road but focused on there surroundings to. Cell phones make a huge different in the car then not in the car and people should juss forget about them till there done driving.    ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B013",
+      "student_name": "Diana Okafor",
+      "coding_record": {
+        "student_id": "B013",
+        "student_name": "Diana Okafor",
+        "theme_tags": [
+          "arguing for responsible phone use",
+          "summarizing observed behaviors"
+        ],
+        "theme_confidence": {
+          "arguing for responsible phone use": 0.9,
+          "summarizing observed behaviors": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "If that person is responsible and can pay attention while driving and looking at their phone once in a while then it should be fine.",
+            "significance": "Reflects the student's belief in the responsible use of phones while driving."
+          },
+          {
+            "text": "These are some of the reasons Based on what we observed, I think people should be allowed to use their phones while driving and some of the reasons and risk of using your phone while driving.",
+            "significance": "Summarizes the student's argument for allowing phone use while driving, highlighting both benefits and risks."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student presents a balanced argument with specific examples and reasons, maintaining an analytical tone without strong emotional expression.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 259,
+        "cluster_id": 4,
+        "vader_sentiment": -0.9627,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Phones and Driving\n\nBased on what we observed, I think that people should be able to use their phones while driving even though it's dangerous. If that person is responsible and can pay attention while driving and looking at their phone once in a while then it should be fine.\n\nPhones are a key part of our life, we use it for everything we need but some people can't be away from their phone for a minute and that can be a problem if there driving people. They could get in a car cash a severely injure someone and also put there life at risk or maybe even kill someone. As long as that person is responsible and can pay attention to the road while on their phone it shouldn't be a problem.\n\nWhat if there's something really important that you need to handle on your phone and your on the road you can drive and handle your business at the same time instead of waiting until later where you might forget about it later and what if you get a phone call or a text from someone and its important and you can't answer or text them later.\n\nThese are some of the reasons Based on what we observed, I think people should be allowed to you use their phones while driving and some of the reasons and risk of using your phone while driving. I don't think it should be illegal because that's too much because you never know what people got going on these days.\n\n1            ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B014",
+      "student_name": "Andre Williams",
+      "coding_record": {
+        "student_id": "B014",
+        "student_name": "Andre Williams",
+        "theme_tags": [
+          "concern about public safety",
+          "statistical evidence"
+        ],
+        "theme_confidence": {
+          "concern about public safety": 0.9,
+          "statistical evidence": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Phones and driving is a terrible idea due to the amount of injury and danger it brings.",
+            "significance": "Highlights the student's concern about the dangers of distracted driving."
+          },
+          {
+            "text": "And i can guarantee you that insurance won't be on your side in that situation.",
+            "significance": "Emphasizes the student's belief that personal responsibility is more important than insurance coverage."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student presents a logical argument with statistical evidence and personal insights, maintaining a neutral tone throughout the submission.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [
+          "texting and driving"
+        ],
+        "current_events_referenced": [
+          "2016 cell phone accidents statistics"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 249,
+        "cluster_id": 3,
+        "vader_sentiment": -0.9896,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Phones and driving\n\nPhones and driving is a terrible idea due to the amount of injury and danger it brings. Driving while occupied on the phone is a threat to yourself and others because your multitasking. This can cause risk because when your focusing on 2 things you may get distracted and forget about the other. If i am texting and driving and i glance down to read a text paragraph thats 3-7 seconds my eyes are off the road. Thats 3-7 seconds of disaster waiting to strike. All someone has to do is get over while im no looking or a light turn red then boom disaster strikes. And i can guarantee you that insurance won't be on your side in that situation.\n\nIn 2016 cell phones were responsible for 421,000 accidents around the united states alone. That's the equivalent of 5 dallas cowboy stadiums full. Out of that number 253 were fatal accidents. This was all in one year. The studies are evident occupied driving is a terrible and destructive habit that americans are responsible for starting. On average the american spends 24 hours week on their phones. Thats a day out of every week spent glued to a virtual reality.\n\nSo in conclusion i feel like phones should definitely be kept away from the river at all cost when on the road or behind the wheel in general.\n\nIt's too dangerous, too risky and more times than not whatever is on your phone can wait.\n\n1            ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B015",
+      "student_name": "Grace Lin",
+      "coding_record": {
+        "student_id": "B015",
+        "student_name": "Grace Lin",
+        "theme_tags": [
+          "analyzing risks of distracted driving",
+          "legal and social implications of phone use"
+        ],
+        "theme_confidence": {
+          "analyzing risks of distracted driving": 0.9,
+          "legal and social implications of phone use": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Using a mobile phone while driving can cause a fatal accident.",
+            "significance": "Emphasizes the serious consequences of distracted driving."
+          },
+          {
+            "text": "There are more incidents of speaking on the phone than text messages, but this may be due to the fact that the the phone is widely used (compared to text messages).",
+            "significance": "Considers the prevalence of phone use as a factor in the number of incidents."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student provides a logical analysis of the risks and implications of using mobile phones while driving, without expressing strong personal emotion.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "text messaging and driving",
+          "using a mobile phone while driving"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 250,
+        "cluster_id": 1,
+        "vader_sentiment": -0.9235,
+        "keyword_hits": {
+          "conceptual_connection": 1,
+          "current_events": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "`As people separate from their phones, most people use their phones during driving. It is very important to talk and talk on the phone while driving. Using a mobile phone while driving can cause a fatal accident. There are several reasons why you need to ban phones during driving, such as sending a text message, making a phone call, using a mobile electronic device. There are many dangers when using mobile phones while driving.\n\nYou should not speak with your mobile phone while driving. You will be distracted by telephone conversation. This is similar to driving while you are drunk. If you talk on the phone while driving, the reaction may be delayed if accidental driving hazards occur. Or you will never feel danger until too late. More and more research shows the danger of distracting, and hands free phones do not seem to bring much improvement, if any. There are more incidents of speaking on the phone than text messages, but this may be due to the fact that the the phone is widely used (compared to text messages).\n\nThe problem with social issues today is the fact of text messaging an driving. When it comes to text messaging, you want to immediately notify you when you know your phone. It is very important to silence your phone while in safe driving. It affects only one person, and it also affects people around you. Because of the adverse impacts caused by many accidents, text messages and driving are illegal.         ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B016",
+      "student_name": "Daniel Murphy",
+      "coding_record": {
+        "student_id": "B016",
+        "student_name": "Daniel Murphy",
+        "theme_tags": [
+          "analyzing risks of distracted driving",
+          "expressing moral stance against distracted driving"
+        ],
+        "theme_confidence": {
+          "analyzing risks of distracted driving": 0.9,
+          "expressing moral stance against distracted driving": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "In studies from scholarly authors, nowadays they have bluetooth text to prevent more accidents and its actually helping somehow.",
+            "significance": "Daniel is acknowledging the existence of solutions to the problem of distracted driving but also notes that they are not fully effective."
+          },
+          {
+            "text": "To many people dying to car accidents and have died to because some idiot decided to text and drive and risked others their lives, and that's not fair to the people.",
+            "significance": "Daniel expresses a strong moral stance against distracted driving, emphasizing the harm it causes to others."
+          }
+        ],
+        "emotional_register": "passionate",
+        "emotional_notes": "Daniel's writing reflects a strong emotional response to the issue of distracted driving, driven by a sense of fairness and concern for others' safety.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "studies from scholarly authors",
+          "bluetooth text to prevent more accidents"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 261,
+        "cluster_id": 1,
+        "vader_sentiment": -0.9916,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Phones and Driving\n\nBased on what we observed, I think drivers should not be able to use their cellphone in any capacity while operating vehicle, for 2 reasons, one example when you're driving and using a cell phone while operating a vehicle you're not 100% paying attention on the road and that's already bringing danger to other drivers driving on that road when your texting you can forget that roads are shared with everyone. that can cause accidents and if an accident occurs because you was using your phone and not paying attention fully on the road that can get you in legal trouble and you can also pay a big fine for that accident, also your insurance bill is going to go up. Another example if you have passengers with you they can get harmed because of your mistake using a cellphone in a capacity while operating a vehicle. The driver will also experience a physical distraction by having to release the steering wheel to attend to the cell phone text messaging is really considered the most dangerous effect. In studies from scholarly authors, nowadays they have bluetooth text to prevent more accidents and its actually helping somehow. To many people dying to car accidents and have died due to an accident and sum of them were killed because some idiot decided to text and drive and risked others their lives, and that's not fair to the people.\n\nSo this is why Based on what we observed, I think People should not be driving a vehicle while operating a cellphone.   ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B017",
+      "student_name": "Samantha Cruz",
+      "coding_record": {
+        "student_id": "B017",
+        "student_name": "Samantha Cruz",
+        "theme_tags": [
+          "concern about driving safety",
+          "impact of cannabis on driving"
+        ],
+        "theme_confidence": {
+          "concern about driving safety": 0.9,
+          "impact of cannabis on driving": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "There have been an incredible amount of car accident caused by using cell phones while driving.",
+            "significance": "Highlights the student's concern about the prevalence of cell phone-related accidents."
+          },
+          {
+            "text": "Because cannabis slows down your reaction is decreased by 21%.",
+            "significance": "Emphasizes the impact of cannabis on driving safety."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student presents facts and statistics in a matter-of-fact manner, highlighting concerns about driving safety without expressing strong emotion.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "cell respiration",
+          "reaction time",
+          "driving laws"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [
+          {
+            "flagged_passage": "37 of the brain is distracted by a cellphone.",
+            "surrounding_context": "The student wrote: 'Craig hospital says '37 of the brain is distracted by a cellphone. ' Here are some helpful way to stay focus at all time when you driving. Try to talk to the person you see texting and driving to put down the phone while driving to ensure that every passenger is safe.14 % of people say they seen their parents on the phone. It has been studies to see who is more likely to get in an accident caused by texting. The studies have shown women are more likely to text and drive opposed to men drinking and driving. There are new apps for the phone that can stop all call and texts.",
+            "why_flagged": "The student is making a generalization about a specific group (women) being more likely to text and drive, which could be seen as essentializing. The teacher may want to discuss the importance of avoiding stereotypes and generalizations.",
+            "confidence": 0.8
+          }
+        ],
+        "lens_observations": null,
+        "word_count": 255,
+        "cluster_id": 1,
+        "vader_sentiment": -0.9628,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "There have been an incredible amount of car accident caused by using cell phones while driving. There are about 421,000 people injured in 2017 by an accident caused by people that are described by people that are desecrated by looking at their phone. 1 out of 4 car accident is caused by texting and driving. So in response for the accident with a cellphone the data made new driving laws. In California there is now a law that states you cannot smoke and drive and also edibles even the passenger. Sometime people have different reaction time.\n\nBecause cannabis slows down your reaction is decreased by 21%.\n\nHere are some helpful way to stay focus at all time when you driving. Try to talk to the person you see texting and driving to put down the phone while driving to ensure that every passenger is safe.14 % of people say they seen their parents on the phone. It has been studies to see who is more likely to get in an accident caused by texting. The studies have shown women are more likely to text and drive opposed to men drinking and driving. There are new apps for the phone that can stop all call and texts.\n\nThere are new laws that the data have made to put fear in people that like to use their mobile phone while driving.\n\nSo that people can stop creating a problem for drivers that use protective driving.\n\nCraig hospital says '37 of the brain is distracted by a cellphone.                            ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B018",
+      "student_name": "Tyler Brown",
+      "coding_record": {
+        "student_id": "B018",
+        "student_name": "Tyler Brown",
+        "theme_tags": [
+          "connecting personal experience to public safety",
+          "acknowledging societal norms"
+        ],
+        "theme_confidence": {
+          "connecting personal experience to public safety": 0.9,
+          "acknowledging societal norms": 0.7
+        },
+        "notable_quotes": [
+          {
+            "text": "Everyone knows that texting and driving is a terrible idea, but only a few people seem to understand why.",
+            "significance": "Highlights the disconnect between common knowledge and actual understanding of the risks involved."
+          },
+          {
+            "text": "Drivers should never use their phone while driving. On your phone can really cause you to swerve off and on the road leading you to be in the other persons lane.",
+            "significance": "Emphasizes the physical consequences of distracted driving and the potential for accidents."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student provides a clear and logical argument about the dangers of texting while driving, supported by personal experience and observations of societal behavior.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [
+          "personal experience with texting and driving"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 257,
+        "cluster_id": 1,
+        "vader_sentiment": -0.9862,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Everyone knows that texting and driving is a terrible idea, but only a few people seem to understand why. Using cellphones while driving is never a good mix for anyone. The generation now don't know the meaning of texting and driving. There are bad wrecks happening while driving and texting on the road. Drivers should never use their phone while driving. On your phone can really cause you to swerve off and on the road leading you to be in the other persons lane. Taking your eyes off the road has obvious disadvantages and it degrades our attention.\n\n90% of car crashes is mostly the drivers fault, they mostly use the excuse of \"recognition error\". When you are in a divided conversation your attention is in different places like the road, a person in the car with you, or a phone call. All those distractions only one should mainly have your attention which i suggest be the road, and us as human we only have a little of attention to spare. Texting on a phone while driving can make you react more slowly to what your main focus should be on. We also feel immune to the risks of other people. Many of us have a lot of experience making bad decisions and suffering the consequences. It feels reasonable to infer that we are able to text and drive safely but some people may chose not to thinking they can do them all in any way. Remember the real reason why it's terrible to text and drive.                              ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B019",
+      "student_name": "Aisha Mohammed",
+      "coding_record": {
+        "student_id": "B019",
+        "student_name": "Aisha Mohammed",
+        "theme_tags": [
+          "dangers of distracted driving",
+          "personal safety",
+          "impact on others"
+        ],
+        "theme_confidence": {
+          "dangers of distracted driving": 0.9,
+          "personal safety": 0.7,
+          "impact on others": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Driving while using your phone is distracting you from what's on the road. The only focus you should be worrying about is from getting point A to point B safety.",
+            "significance": "Emphasizes the importance of focusing on driving safety and the dangers of distractions."
+          },
+          {
+            "text": "Which is why it is not safe to use cellphone while driving because you are jeopardizing other people safety just because you can't follow the rules and pay attention to the road.",
+            "significance": "Highlights the risks of distracted driving and the impact on others."
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "The student's writing conveys a sense of urgency and concern about the risks of distracted driving, emphasizing the importance of safety on the road.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "cell respiration",
+          "distracted driving"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 269,
+        "cluster_id": 4,
+        "vader_sentiment": -0.9806,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Driving while using a cell phone is dangerous in many ways. It can lead to many accidents. Which is why The data suggests that it should be prohibited to use your phone while driving. You are risky your life and could put others in danger.\n\nDriving while using your phone is distracting you from what's on the road. The only focus you should be worrying about is from getting point A to point B safety. All your attention should be on the road because you never know what going to happen. The unexpected might happen like a child ran in front the car and you hit them by accident but you did not know because you were so busy looking at your phone. Which is why you should your eye on the road at all time and look at your surrounding.\n\nUsing your cell phone while driving, you are not only putting your self at danger, but also you are putting other people on the road safety at risk. Your careless behavior going to cost someone else safety at risk. Which is why it is not safe to use cellphone while driving because you are jeopardizing other people safety just because you can't follow the rules and pay attention to the road.\n\nThese are all the reasons why Based on what we observed, I think that you should not use your phone while driving. It could lead to more than one person being hurt and could kill someone. Which the safer thing to do for now is stop using your phone until it to late and end up dead.      ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B020",
+      "student_name": "Ryan Kowalski",
+      "coding_record": {
+        "student_id": "B020",
+        "student_name": "Ryan Kowalski",
+        "theme_tags": [
+          "analyzing societal issues",
+          "legal measures for safety"
+        ],
+        "theme_confidence": {
+          "analyzing societal issues": 0.9,
+          "legal measures for safety": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Looking away from the road for even just 2 seconds can be the difference between life and death because one moment the roads might be clear and the next you could be rolled over trapped in your car.",
+            "significance": "Emphasizes the severe consequences of distracted driving and the importance of safety."
+          },
+          {
+            "text": "With the growing number of car accidents happening, they have put into place the hands-free law so that it is now illegal to be on your phone while operating a vehicle.",
+            "significance": "Highlights the legal measures taken to address the issue of distracted driving."
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "The student expresses a strong sense of urgency about the dangers of distracted driving and the importance of safety, using quotes that emphasize the severity of the issue.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "hands-free law",
+          "car accidents involving teens using phones while driving"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 266,
+        "cluster_id": 4,
+        "vader_sentiment": -0.8475,
+        "keyword_hits": {
+          "conceptual_connection": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Phones & Driving\n\nPeople driving while looking at their phones has become an epidemic and is a big cause of a lot of accident. Primarily involving teens who are so distracted by their phones that they are not paying any attention to the road. With the growing number of car accidents happening, they have put into place the hands-free law so that it is now illegal to be on your phone while operating a vehicle.\n\nIf you are driving while driving a vehicle, there is no good excuse for using your phone because anything that is on your phone can wait till after you're are done driving and the car is in park and everyone is safe and not in danger. Looking away from the road for even just 2 seconds can be the difference between life and death because one moment the roads might be clear and the next you could be rolled over trapped in your car.\n\nWhen you are on your phone while driving, you are not only putting your life in danger but the lives of everyone around you on the road and possibly even pedestrians on the side of the roads. There are many deferent alternatives to being on your phone while driving, such as Bluetooth enabled devices that connect to the car so that you can still talk on the phone without using your hands. Another alternative is if you have a passenger, for them to read you the information and relay it back for you. That is just a few ways to avoid staying on your phone while driving.   ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B021",
+      "student_name": "Jessica Nguyen",
+      "coding_record": {
+        "student_id": "B021",
+        "student_name": "Jessica Nguyen",
+        "theme_tags": [
+          "connecting theory to personal experiences",
+          "acknowledging risks and consequences"
+        ],
+        "theme_confidence": {
+          "connecting theory to personal experiences": 0.8,
+          "acknowledging risks and consequences": 0.7
+        },
+        "notable_quotes": [
+          {
+            "text": "When we think of cell phones we think of a device that we can't live without. A cell phone is something so essential to our lives that when we use them we tune everything else out.",
+            "significance": "Illustrates the deep integration of cell phones into daily life and the potential for distraction."
+          },
+          {
+            "text": "Despite a danger, people still use cell phones because they want to be always available and keep in touch with other people.",
+            "significance": "Highlights the conflict between personal convenience and safety risks."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student presents a clear and logical argument about the dangers of cell phone use while driving, supported by personal observations and research, without expressing strong emotional reactions.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "cell respiration",
+          "cell phone use while driving"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "cell phone use while driving accidents"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 266,
+        "cluster_id": 1,
+        "vader_sentiment": -0.9492,
+        "keyword_hits": {
+          "evidence_use": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Phones and Driving\n\nWhen we think of cell phones we think of a device that we can't live without. A cell phone is something so essential to our lives that when we use them we tune everything else out. We constantly stay on our cellphones to distract us from the problems that are happening in the real world. We use our phones everywhere we go but we never watch our surroundings. When driving it is important to know your surrounding but when you're distracted by messages and phone calls and social media it puts the passengers and your life at risk\n\nEveryday people die in car accidents because they use cell phones while driving. According to research cell phones are leading factors that cause accidents. Studies show that a cell phone put drivers at four times greater risk of a crash. Despite a danger, people still use cell phones because they want to be always available and keep in touch with other people. Also, they think that hands-free set is safe because they can drive using two hands. Moreover, they use arguments that cell phones are necessary for emergency situations. Although some people support using cell phones while driving, there is evidence that they are dangerous and people should avoid talking while driving.\n\nYes, people should enjoy their rights to talk, text, snap, and all the uses of their phones just not while they're in their car. It is people's responsibility to not incur their own and other people's lives. If people don't give up cell-phones the number of fatalities on the roads will still increase.     ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B022",
+      "student_name": "Michael Sato",
+      "coding_record": {
+        "student_id": "B022",
+        "student_name": "Michael Sato",
+        "theme_tags": [
+          "discussing current events",
+          "analyzing risks"
+        ],
+        "theme_confidence": {
+          "discussing current events": 0.9,
+          "analyzing risks": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "Primarily involving teens who are so distracted by their phones that they are not paying any attention to the road.",
+            "significance": "Highlights the distraction of teens and the lack of attention to driving."
+          },
+          {
+            "text": "Looking away from the road for even just 2 seconds can be the difference between life and death because one moment the roads might be clear and the next you could be rolled over trapped in your car.",
+            "significance": "Emphasizes the severe consequences of distracted driving."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student provides a factual analysis of the risks associated with distracted driving, using clear and concise language without expressing strong emotion.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "teens driving while looking at their phones",
+          "hands-free law"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 266,
+        "cluster_id": 4,
+        "vader_sentiment": -0.8475,
+        "keyword_hits": {
+          "conceptual_connection": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Phones & Driving\n\nPeople driving while looking at their phones has become an epidemic and is a big cause of a lot of accident. Primarily involving teens who are so distracted by their phones that they are not paying any attention to the road. With the growing number of car accidents happening, they have put into place the hands-free law so that it is now illegal to be on your phone while operating a vehicle.\n\nIf you are driving while driving a vehicle, there is no good excuse for using your phone because anything that is on your phone can wait till after you're are done driving and the car is in park and everyone is safe and not in danger. Looking away from the road for even just 2 seconds can be the difference between life and death because one moment the roads might be clear and the next you could be rolled over trapped in your car.\n\nWhen you are on your phone while driving, you are not only putting your life in danger but the lives of everyone around you on the road and possibly even pedestrians on the side of the roads. There are many deferent alternatives to being on your phone while driving, such as Bluetooth enabled devices that connect to the car so that you can still talk on the phone without using your hands. Another alternative is if you have a passenger, for them to read you the information and relay it back for you. That is just a few ways to avoid staying on your phone while driving   ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B023",
+      "student_name": "Brittany Hall",
+      "coding_record": {
+        "student_id": "B023",
+        "student_name": "Brittany Hall",
+        "theme_tags": [
+          "causal relationships",
+          "irony in social issues"
+        ],
+        "theme_confidence": {
+          "causal relationships": 0.8,
+          "irony in social issues": 0.7
+        },
+        "notable_quotes": [
+          {
+            "text": "Simply because someone feels like they must respond to a text immediately is why many of the accidents occur and most of the time this lead to a vehicular accident that can result in death.",
+            "significance": "Highlights the direct cause-and-effect relationship between texting and driving accidents."
+          },
+          {
+            "text": "The reason I say that the law enforcement benefit from the problem would have to be because this is an example of exactly what it is that they try so hard to avoid.",
+            "significance": "Points out the irony of law enforcement benefiting from the problem they are trying to prevent."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The submission is primarily focused on analyzing the cause-and-effect relationship between texting and driving accidents, as well as pointing out the irony of law enforcement benefiting from the problem they are trying to prevent. The tone is analytical rather than emotionally charged.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "texting while driving",
+          "accidents",
+          "fatalities"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 267,
+        "cluster_id": 2,
+        "vader_sentiment": -0.9873,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Simply because someone feels like they must respond to a text immediately is why many of the accidents occur and most of the time this lead to a vehicular accident that can result in death. The biggest age group affected by this problem would have to be teens aging from 16 up to adults aging around 30. In the end, no one benefits from this problem other than the law enforcement team who has worked so hard to stress the importance of no texting while driving and funeral homes that are being paid for burial expenses. The reason I say that the law enforcement benefit from the problem would have to be because this is an example of exactly what it is that they try so hard to avoid. Funeral homes benefit because most of these cases end in a tragic accident that allow the funeral home to prepare a home going ceremony. The importance of texting while driving should be addressed to anyone obtaining a valid driver's license and can operate a vehicle. This particular proposal should develop a direct impact on life because it gives people a chance to see what can happen if a person continue to text and drive. People really need to understand how easily it is take the life of someone else or even themselves. And most of the time in many cases relating to this particular problem, it is always is the age groups ranging from 16 years of age to 30 years of age. I wish that this problem can get resolved quickly to avoid many accidents and death.    ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B024",
+      "student_name": "Omar Diaz",
+      "coding_record": {
+        "student_id": "B024",
+        "student_name": "Omar Diaz",
+        "theme_tags": [
+          "analyzing statistics",
+          "concern for public safety"
+        ],
+        "theme_confidence": {
+          "analyzing statistics": 0.8,
+          "concern for public safety": 0.7
+        },
+        "notable_quotes": [
+          {
+            "text": "Cell phone use behind the wheel reduces the amount of brain activity associated with driving 37 percent.",
+            "significance": "Illustrates the impact of cell phone use on driving safety by quantifying the reduction in brain activity."
+          },
+          {
+            "text": "More than a quarter of U.S adults admit to texting while behind the wheel.",
+            "significance": "Highlights the widespread nature of the problem, suggesting it is not limited to just teenagers."
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "The student expresses a strong sense of urgency about the issue of texting and driving, using statistics to highlight the problem and emphasizing the need for action.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "cell respiration",
+          "cellular activity"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "texting and driving statistics"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 269,
+        "cluster_id": 1,
+        "vader_sentiment": -0.9741,
+        "keyword_hits": {
+          "conceptual_connection": 2,
+          "current_events": 1
+        },
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Texting and driving has been a growing problem for years now. People should not be allowed to use cellular devices and drive at the same time. 3,637 people died in 2018 alone due to phone related car crashes. 15,341 drivers aged 15-29 were involved in fatal crashes due to distraction or cell phone use. Driving in itself is already dangerous and risky but then you put the additional risk of unneeded distractions it makes it more dangerous.\n\n3,637 people died in 2018 alone because of phone related accidents.\n\nBelieve it or not this is one of the lowest recorded numbers in recent history. The National Safety council reports that cell phone use while driving leads to 1.6 million crashes each year. 1 out of 4 crashes in the United States is caused by texting and driving. Cell phone uses behind the wheel reduces the amount of brain activity associated with driving 37 percent.\n\nIt's not just teens who text and drive. Adults are just as likely to text message while driving as teenagers.\n\nMore than a quarter of U.S adults admit to texting while behind the wheel. At any age, texting and operating a motor vehicle has been found to dramatically increase the chances of an accident. Adults 18-33 are the most likely to admit they text while they drive (59 percent) compared with age groups 34-45 (50 percent) and 46-64 (29 percent).\n\nIn conclusion, most car crashes have been caused by texting and driving. Many people have died by texting and driving proved by statistics. Not only do teens do it but adults are also proven by statistics.      ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B025",
+      "student_name": "Emily Watson",
+      "coding_record": {
+        "student_id": "B025",
+        "student_name": "Emily Watson",
+        "theme_tags": [
+          "distracted driving risks",
+          "statistical evidence"
+        ],
+        "theme_confidence": {
+          "distracted driving risks": 0.9,
+          "statistical evidence": 0.8
+        },
+        "notable_quotes": [
+          {
+            "text": "A person is 23 times more likely to have a motor vehicle crash while sending a text message, than if they were only driving.",
+            "significance": "Highlights the significant risk associated with texting while driving."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "The student presents facts and statistics in a matter-of-fact manner without expressing strong emotion, focusing on the risks and consequences of distracted driving.",
+        "readings_referenced": [],
+        "concepts_applied": [],
+        "personal_connections": [],
+        "current_events_referenced": [
+          "1.6 million crashes are caused because of texting and driving"
+        ],
+        "concerns": [],
+        "lens_observations": null,
+        "word_count": 272,
+        "cluster_id": 1,
+        "vader_sentiment": -0.9751,
+        "keyword_hits": {},
+        "preprocessing": null,
+        "draft_feedback": null
+      },
+      "submission_text": "Phones & Driving\n\nCell phones have become very popular over the past few years. Cell phones are now starting to be a part of life using everyday technology to do a lot of stuff. Paring this and driving is not a good combination, why you shouldn't do it and how it effects people.\n\nDrivers should not use a cell phone while operating a vehicle. For example, It is extremely dangerous because people who do this are putting more attention in texting, and they take their eyes off the road while they are driving, which increases the chance that the driver can lose the control of the vehicle, and could cause a crash or even in a worst-case could kill them self or other people.\n\nReports have that 1.6 million crashes are caused because of texting and driving. There are a lot of other reasons why not to do it to. First of you must set an example towards the passengers that are in your car rather it be your kids or you friends. Secondly its illegal in a lot of places but Texas is one of the only seven states that have yet to completely ban texting and driving. Lastly and the one that gets told a lot is that your eyes are taken off the road, A person is 23 times more likely to have a motor vehicle crash while sending a text message, than if they were only driving. That number towers over the other activities associated with distracted driving.\n\nIn conclusion you should never texting and driving it is the most leading cause of death within motor vehicle crashes.    ",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    }
+  ],
+  "themes": {
+    "theme_set": "{\"themes\":[{\"name\":\"analyzing risks of distracted driving\",\"description\":\"Students discussed the dangers of using cell phones while driving, emphasizing the impact on focus and safety.\",\"frequency\":3,\"student_ids\":[\"B001\",\"B011\",\"B012\"],\"supporting_quotes\":[{\"text\":\"Driving while using cell phones can make the driver less focused, not only on the road but to your surroundings.\",\"significance\":\"Highlights the multifaceted risks of distracted driving.\"},{\"text\":\"Cell phones make a huge different in the car then not in the car and people should juss forget about them till there done driving.\",\"significance\":\"Stresses the importance of cell phone use cessation while driving.\"},{\"text\":\"Even though that is a solution you should still never touch you phone while operating a vehicle.\",\"significance\":\"Emphasizes the critical nature of avoiding distractions while driving.\"}],\"confidence\":0.9,\"sub_themes\":[]},{\"name\":\"concern for public safety\",\"description\":\"Students expressed a strong concern for public safety, advocating for stricter regulations on cell phone use while driving.\",\"frequency\":3,\"student_ids\":[\"B001\",\"B011\",\"B012\"],\"supporting_quotes\":[{\"text\":\"Even though that is a solution you should still never touch you phone while operating a vehicle.\",\"significance\":\"Reflects a deep concern for public safety and personal responsibility.\"},{\"text\":\"Driving while using cell phones can make the driver less focused, not only on the road but to your surroundings.\",\"significance\":\"Illustrates the broader impact of distracted driving on public safety.\"},{\"text\":\"Cell phones make a huge different in the car then not in the car and people should juss forget about them till there done driving.\",\"significance\":\"Stresses the need for personal and societal vigilance to ensure safety.\"}],\"confidence\":0.9,\"sub_themes\":[]},{\"name\":\"critique of cell phone use while driving\",\"description\":\"Students critiqued the use of cell phones while driving, highlighting the negative impacts on driving performance and safety.\",\"frequency\":3,\"student_ids\":[\"B001\",\"B011\",\"B012\"],\"supporting_quotes\":[{\"text\":\"Even though that is a solution you should still never touch you phone while operating a vehicle.\",\"significance\":\"Demonstrates a strong stance against cell phone use while driving.\"},{\"text\":\"Driving while using cell phones can make the driver less focused, not only on the road but to your surroundings.\",\"significance\":\"Points out the distraction caused by cell phone use while driving.\"},{\"text\":\"Cell phones make a huge different in the car then not in the car and people should juss forget about them till there done driving.\",\"significance\":\"Emphasizes the need to avoid cell phone use while driving to maintain focus and safety.\"}],\"confidence\":0.9,\"sub_themes\":[]},{\"name\":\"concern for public safety\",\"description\":\"Multiple students emphasized the dangers of using cell phones while driving, citing both personal observations and statistical evidence.\",\"frequency\":4,\"student_ids\":[\"B002\",\"B003\",\"B004\",\"B005\"],\"supporting_quotes\":[{\"text\":\"According to the article 'Cellphone Use While Driving Statistics and Texting and Driving Facts' states that according to the National Safety Council, 1.2 million car crashes in 2013 involved drivers using cell phones.\",\"significance\":\"Provides statistical evidence to support the dangers of distracted driving.\"},{\"text\":\"Using a cellular device while driving a vehicle is dangerous to your life and other innocent lives around.\",\"significance\":\"Expresses personal concern for the safety of others.\"},{\"text\":\"These are causing insurance to rise and causing scare to people's health.\",\"significance\":\"Highlights the broader impact of distracted driving on society.\"},{\"text\":\"And hit the car she was in and caused a wreck leaving one dead and two injured all because that person was texting while he was driving.\",\"significance\":\"Shares a personal anecdote to illustrate the severity of the issue.\"}],\"confidence\":0.85,\"sub_themes\":[\"statistical evidence\",\"personal observations\"]},{\"name\":\"importance of safety\",\"description\":\"Students discussed the importance of safety, particularly in the context of cell phone use while driving, emphasizing the need for caution.\",\"frequency\":4,\"student_ids\":[\"B002\",\"B003\",\"B005\",\"B007\"],\"supporting_quotes\":[{\"text\":\"According to the article 'Cellphone Use While Driving Statistics and Texting and Driving Facts' states that according to the National Safety Council, 1.2 million car crashes in 2013 involved drivers using cell phones.\",\"significance\":\"Provides statistical evidence to support the dangers of distracted driving.\"},{\"text\":\"Using a cellular device while driving a vehicle is dangerous to your life and other innocent lives around.\",\"significance\":\"Expresses personal concern for the safety of others.\"},{\"text\":\"These are causing insurance to rise and causing scare to people's health.\",\"significance\":\"Highlights the broader impact of distracted driving on society.\"},{\"text\":\"And hit the car she was in and caused a wreck leaving one dead and two injured all because that person was texting while he was driving.\",\"significance\":\"Shares a personal anecdote to illustrate the severity of the issue.\"}],\"confidence\":0.85,\"sub_themes\":[\"statistical evidence\",\"personal observations\"]},{\"name\":\"analyzing risks of distracted driving\",\"description\":\"Students are deeply concerned about the dangers of using cell phones while driving, citing both statistical evidence and personal risks.\",\"frequency\":4,\"student_ids\":[\"B008\",\"B010\",\"B015\",\"B016\"],\"supporting_quotes\":[{\"text\":\"Using a mobile phone while driving can cause a fatal accident.\",\"significance\":\"Directly links cell phone use to serious accidents.\"},{\"text\":\"In studies from scholarly authors, nowadays they have bluetooth text to prevent more accidents and its actually helping somehow.\",\"significance\":\"Emphasizes the effectiveness of technology in reducing accidents.\"},{\"text\":\"Using your phone while driving is of the most common ways people die or get others killed in America.\",\"significance\":\"Highlights the severity of the issue.\"},{\"text\":\"There have been an incredible amount of car accident caused by using cell phones while driving.\",\"significance\":\"Stresses the frequency and impact of accidents.\"}],\"confidence\":0.9,\"sub_themes\":[\"statistical evidence\",\"personal risks\"]},{\"name\":\"expressing moral stance against distracted driving\",\"description\":\"Students are passionate about advocating for safer driving practices, emphasizing the moral and ethical implications of using cell phones while driving.\",\"frequency\":2,\"student_ids\":[\"B016\",\"B017\"],\"supporting_quotes\":[{\"text\":\"In studies from scholarly authors, nowadays they have bluetooth text to prevent more accidents and its actually helping somehow.\",\"significance\":\"Supports the idea of using technology to prevent accidents.\"},{\"text\":\"There have been an incredible amount of car accident caused by using cell phones while driving.\",\"significance\":\"Stresses the frequency and impact of accidents.\"}],\"confidence\":0.8,\"sub_themes\":[\"advocating for safer driving\",\"technology as a solution\"]},{\"name\":\"public safety advocacy\",\"description\":\"Students are advocating for public safety by highlighting the dangers of using cell phones while driving, emphasizing the need for stricter laws and regulations.\",\"frequency\":2,\"student_ids\":[\"B008\",\"B010\"],\"supporting_quotes\":[{\"text\":\"Based on what we observed, I think the only way you should be able to use your phone and drive is if your handsfree using it. Calling and music should be the only thing you should be able to do.\",\"significance\":\"Proposes specific regulations for using phones while driving.\"},{\"text\":\"Using your phone while driving is of the most common ways people die or get others killed in America.\",\"significance\":\"Emphasizes the severity of the issue.\"}],\"confidence\":0.9,\"sub_themes\":[\"hand-free regulations\",\"public safety\"]},{\"name\":\"connecting personal experience to public safety\",\"description\":\"Several students drew connections between their personal experiences and the risks of distracted driving, emphasizing the importance of public safety.\",\"frequency\":2,\"student_ids\":[\"B018\",\"B025\"],\"supporting_quotes\":[{\"text\":\"Everyone knows that texting and driving is a terrible idea, but only a few people seem to understand why.\",\"significance\":\"Illustrates the gap between awareness and action.\"},{\"text\":\"A person is 23 times more likely to have a motor vehicle crash while sending a text message, than if they were only driving.\",\"significance\":\"Quantifies the risk, highlighting the urgency of the issue.\"}],\"confidence\":0.85,\"sub_themes\":[]},{\"name\":\"analyzing statistics\",\"description\":\"Students used statistical evidence to support their arguments about the dangers of distracted driving, demonstrating a strong grasp of the subject matter.\",\"frequency\":2,\"student_ids\":[\"B024\",\"B025\"],\"supporting_quotes\":[{\"text\":\"Cell phone use behind the wheel reduces the amount of brain activity associated with driving 37 percent.\",\"significance\":\"Provides a concrete example of the cognitive impact of distracted driving.\"},{\"text\":\"A person is 23 times more likely to have a motor vehicle crash while sending a text message, than if they were only driving.\",\"significance\":\"Uses a compelling statistic to illustrate the risk.\"}],\"confidence\":0.85,\"sub_themes\":[]},{\"name\":\"acknowledging risks and consequences\",\"description\":\"Students recognized the risks and consequences of distracted driving, emphasizing the importance of personal responsibility and public safety.\",\"frequency\":2,\"student_ids\":[\"B021\",\"B025\"],\"supporting_quotes\":[{\"text\":\"When we think of cell phones we think of a device that we can't live without. A cell phone is something so essential to our lives that when we use them we tune everything else out.\",\"significance\":\"Highlights the psychological aspect of distracted driving.\"},{\"text\":\"A person is 23 times more likely to have a motor vehicle crash while sending a text message, than if they were only driving.\",\"significance\":\"Uses a compelling statistic to illustrate the risk.\"}],\"confidence\":0.8,\"sub_themes\":[]},{\"name\":\"concern about public safety\",\"description\":\"Both students expressed significant concern about the dangers of using phones while driving, highlighting the high risk of injury and death.\",\"frequency\":2,\"student_ids\":[\"B014\",\"B023\"],\"supporting_quotes\":[{\"text\":\"Phones and driving is a terrible idea due to the amount of injury and danger it brings.\",\"significance\":\"Andre Williams emphasizes the severity of the issue.\"},{\"text\":\"Simply because someone feels like they must respond to a text immediately is why many of the accidents occur and most of the time this lead to a vehicular accident that can result in death.\",\"significance\":\"Brittany Hall points out the root cause of accidents.\"}],\"confidence\":0.85,\"sub_themes\":[]},{\"name\":\"causal relationships\",\"description\":\"Students identified causal relationships between distracted driving and accidents, emphasizing the direct link between phone use and vehicular accidents.\",\"frequency\":2,\"student_ids\":[\"B014\",\"B023\"],\"supporting_quotes\":[{\"text\":\"Simply because someone feels like they must respond to a text immediately is why many of the accidents occur and most of the time this lead to a vehicular accident that can result in death.\",\"significance\":\"Brittany Hall explains the causal relationship between phone use and accidents.\"},{\"text\":\"Phones and driving is a terrible idea due to the amount of injury and danger it brings.\",\"significance\":\"Andre Williams highlights the consequences of distracted driving.\"}],\"confidence\":0.8,\"sub_themes\":[]},{\"name\":\"dangers of distracted driving\",\"description\":\"Students emphasized the severe risks of driving while using a phone, including personal injury and death.\",\"frequency\":5,\"student_ids\":[\"Kevin O'Brien\",\"Hannah Jacobs\",\"Aisha Mohammed\",\"Ryan Kowalski\"],\"supporting_quotes\":[{\"text\":\"Driving while being on the phone is very dangerous. No one should be operating a vehicle and using technology.\",\"significance\":\"Directly states the dangers of distracted driving.\"},{\"text\":\"Fatal injury or death is one reason. You are in a big metal vehicle in which case, can crash. When crashed, multiple things could happen to you. Burning, crushed, stabbed is few of the things that can\",\"significance\":\"Describes the potential consequences of a car crash.\"},{\"text\":\"Driving while using your phone is distracting you from what's on the road. The only focus you should be worrying about is from getting point A to point B safety.\",\"significance\":\"Stresses the importance of safety while driving.\"},{\"text\":\"Looking away from the road for even just 2 seconds can be the difference between life and death because one moment the roads might be clear and the next you could be rolled over trapped in your car.\",\"significance\":\"Highlights the critical nature of attention while driving.\"}],\"confidence\":0.9,\"sub_themes\":[\"personal safety\",\"public safety\"]},{\"name\":\"responsible phone use\",\"description\":\"Students argued for responsible phone use while driving, suggesting that it should be used only when necessary.\",\"frequency\":3,\"student_ids\":[\"Kevin O'Brien\",\"Diana Okafor\",\"Ryan Kowalski\"],\"supporting_quotes\":[{\"text\":\"Driving while being on the phone is very dangerous. No one should be operating a vehicle and using technology.\",\"significance\":\"Stresses the importance of safety over convenience.\"},{\"text\":\"If that person is responsible and can pay attention while driving and looking at their phone once in a while then it should be fine.\",\"significance\":\"Offers a balanced view on responsible phone use.\"},{\"text\":\"Looking away from the road for even just 2 seconds can be the difference between life and death because one moment the roads might be clear and the next you could be rolled over trapped in your car.\",\"significance\":\"Emphasizes the critical nature of attention while driving.\"}],\"confidence\":0.8,\"sub_themes\":[\"personal responsibility\",\"public responsibility\"]},{\"name\":\"statistical evidence\",\"description\":\"Some students used statistical evidence to support their arguments about the dangers of distracted driving.\",\"frequency\":2,\"student_ids\":[\"Hannah Jacobs\",\"Ryan Kowalski\"],\"supporting_quotes\":[{\"text\":\"Fatal injury or death is one reason. You are in a big metal vehicle in which case, can crash. When crashed, multiple things could happen to you. Burning, crushed, stabbed is few of the things that can\",\"significance\":\"Describes the potential consequences of a car crash.\"},{\"text\":\"Looking away from the road for even just 2 seconds can be the difference between life and death because one moment the roads might be clear and the next you could be rolled over trapped in your car.\",\"significance\":\"Highlights the critical nature of attention while driving.\"}],\"confidence\":0.7,\"sub_themes\":[\"personal safety\",\"public safety\"]},{\"name\":\"discussing current events\",\"description\":\"Michael Sato brought up a current event related to distracted driving, highlighting the risks of cell phone use.\",\"frequency\":1,\"student_ids\":[\"Michael Sato\"],\"supporting_quotes\":[{\"text\":\"Primarily involving teens who are so distracted by their phones that they are not paying any attention to the road.\",\"significance\":\"Illustrates the real-world application of cell respiration concepts to a pressing issue.\"}],\"confidence\":0.9,\"sub_themes\":[]}],\"contradictions\":[{\"description\":\"The tension between the need for safety and the convenience of cell phone use while driving.\",\"side_a\":\"Strong emphasis on safety and the dangers of distracted driving.\",\"side_a_students\":[\"B001\",\"B011\",\"B012\"],\"side_b\":\"Acknowledgment of the benefits of cell phone use while driving, such as navigation and emergency calls.\",\"side_b_students\":[],\"pedagogical_significance\":\"This tension highlights the need for a balanced approach to understanding the risks and benefits of cell phone use while driving, and the importance of critical thinking in evaluating these factors.\"},{\"description\":\"Some students are advocating for stricter laws to prevent accidents, while others are discussing the effectiveness of technology in reducing accidents.\",\"side_a\":\"Advocating for stricter laws to prevent accidents\",\"side_a_students\":[\"B008\",\"B010\"],\"side_b\":\"Discussing the effectiveness of technology in reducing accidents\",\"side_b_students\":[\"B016\"],\"pedagogical_significance\":\"This tension highlights the ongoing debate about the best approach to reducing distracted driving, which can be a valuable discussion point for the class.\"},{\"description\":\"Some students emphasized the importance of personal responsibility, while others focused on the broader societal norms that contribute to distracted driving.\",\"side_a\":\"personal responsibility\",\"side_a_students\":[\"B018\"],\"side_b\":\"broader societal norms\",\"side_b_students\":[\"B021\"],\"pedagogical_significance\":\"This tension highlights the need for a multifaceted approach to addressing distracted driving, involving both individual behavior and societal change.\"},{\"description\":\"The tension between the students' differing views on the severity of the issue.\",\"side_a\":\"Andre Williams sees the issue as a clear and present danger, emphasizing the high risk of injury and death.\",\"side_a_students\":[\"B014\"],\"side_b\":\"Brittany Hall focuses on the psychological aspect of the issue, highlighting the pressure to respond to texts immediately as a cause of accidents.\",\"side_b_students\":[\"B023\"],\"pedagogical_significance\":\"This tension highlights the need for a nuanced understanding of the issue, recognizing both the physical dangers and the psychological pressures that contribute to distracted driving.\"},{\"description\":\"Contradiction between the need for safety and the convenience of using a phone while driving.\",\"side_a\":\"Safety over convenience\",\"side_a_students\":[\"Kevin O'Brien\",\"Hannah Jacobs\",\"Ryan Kowalski\"],\"side_b\":\"Convenience over safety\",\"side_b_students\":[\"Diana Okafor\"],\"pedagogical_significance\":\"This tension highlights the ethical and practical dilemmas students face in balancing personal safety with the need for convenience.\"},{\"description\":\"The tension between analyzing risks and discussing current events.\",\"side_a\":\"Analyzing risks\",\"side_a_students\":[\"Michael Sato\"],\"side_b\":\"Discussing current events\",\"side_b_students\":[\"Michael Sato\"],\"pedagogical_significance\":\"This tension highlights the importance of balancing theoretical knowledge with real-world applications and current issues.\"}]}",
+    "outlier_report": "{\"outliers\":[{\"student_id\":\"B006\",\"student_name\":\"Kevin O'Brien\",\"why_notable\":\"Kevin emphasizes the unpredictability of accidents and the need for constant vigilance, which is a unique perspective not widely discussed in the submissions.\",\"relationship_to_themes\":\"His emphasis on the unpredictability of accidents challenges the theme of analyzing risks of distracted driving by highlighting the importance of constant safety awareness, not just statistical risks.\",\"notable_quote\":{\"text\":\"You never know when that day will be. You can never be certain on what will happen. That's why you should always be safe and not do it.\",\"significance\":\"This quote underscores the importance of constant safety awareness and vigilance, which is a unique perspective not widely discussed in the submissions.\"},\"teacher_recommendation\":\"Highlight in class, as it offers a unique perspective on the importance of constant safety awareness.\"},{\"student_id\":\"B013\",\"student_name\":\"Diana Okafor\",\"why_notable\":\"Diana argues for responsible phone use while driving, which challenges the predominant theme of the dangers of distracted driving by suggesting that responsible use can be safe.\",\"relationship_to_themes\":\"Her argument for responsible phone use challenges the theme of the dangers of distracted driving by suggesting that with responsible use, phone use while driving can be safe, which is a unique perspective not widely discussed in the submissions.\",\"notable_quote\":{\"text\":\"If that person is responsible and can pay attention while driving and looking at their phone once in a while then it should be fine.\",\"significance\":\"This quote reflects Diana's belief in the responsible use of phones while driving, which is a unique perspective not widely discussed in the submissions.\"},\"teacher_recommendation\":\"Check in with Diana to understand her perspective and consider discussing it in class to challenge the dominant narrative.\"},{\"student_id\":\"B020\",\"student_name\":\"Ryan Kowalski\",\"why_notable\":\"Ryan analyzes the societal issue of distracted driving and the effectiveness of legal measures, which is a broader perspective not widely discussed in the submissions.\",\"relationship_to_themes\":\"His analysis of societal issues and legal measures challenges the theme of analyzing risks of distracted driving by providing a broader context of the issue, which is a unique perspective not widely discussed in the submissions.\",\"notable_quote\":{\"text\":\"With the growing number of car accidents happening, they have put into place the hands-free law so that it is now illegal to be on your phone while operating a vehicle.\",\"significance\":\"This quote highlights the effectiveness of legal measures in addressing the issue of distracted driving, which is a unique perspective not widely discussed in the submissions.\"},\"teacher_recommendation\":\"Highlight in class, as it offers a broader perspective on the issue of distracted driving and the effectiveness of legal measures.\"}]}",
+    "synthesis_report": "{\"sections\":{\"what_students_said\":\"The students are primarily concerned with the dangers of distracted driving, with a strong emphasis on safety over convenience. Many students advocate for stricter laws and responsible phone use. For example, Andre Williams states, 'Driving while being on the phone is very dangerous. No one should be operating a vehicle while distracted.' The reflections are urgent and passionate, with a clear focus on public safety. The biggest win is the consistent recognition of the risks associated with distracted driving.\",\"emergent_themes\":\"The most prominent themes are the dangers of distracted driving and the need for safety. Students like Brittany Hall highlight the psychological aspect of the issue, saying, 'Simply because someone feels like they must respond to a text immediately is why accidents happen.' Other students, such as Kevin O'Brien, emphasize the unpredictability of accidents, noting, 'You never know when that day will be. You can never be certain on what will happen.' The theme of responsible phone use is also significant, with Diana Okafor arguing, 'If that person is responsible and can pay attention while driving and looking at their phone, then it is okay.'\",\"tensions_and_contradictions\":\"There are several tensions and contradictions. The primary tension is between the need for safety and the convenience of cell phone use while driving. For example, Side A, represented by students like Andre Williams, emphasizes safety over convenience, while Side B, represented by Diana Okafor, argues for responsible phone use. Another tension is between advocating for stricter laws and discussing the effectiveness of technology. Side A, like Brittany Hall, advocates for stricter laws, while Side B, like Kevin O'Brien, discusses the effectiveness of technology. These tensions are pedagogically productive and highlight the complexity of the issue.\",\"surprises\":\"There are a few surprising submissions that do not align with the primary themes of the lab reflection. For example, Kevin O'Brien emphasizes the unpredictability of accidents and the need for constant vigilance: 'You never know when that day will be. You can never be certain on what will happen. ' Diana Okafor argues for responsible phone use while driving, which challenges the predominant theme of the dangers of distracted driving: 'If that person is responsible and can pay attention while driving and looking at their phone, then it is okay. ' Ryan Kowalski analyzes the societal issue of distracted driving and the effectiveness of legal measures, which is a unique perspective: 'With the growing number of car accidents happening, they have put into place the laws to prevent them.'\",\"focus_areas\":\"The teacher should focus on the themes of analyzing risks of distracted driving and the importance of safety. The majority of students are discussing the dangers of using cell phones while driving and advocating for safety. For example, Andre Williams emphasizes the high risk of injury and death: 'Driving while being on the phone is very dangerous. No one should be operating a vehicle while distracted. ' Brittany Hall focuses on the psychological aspect of the issue: 'The pressure to respond to texts immediately is a cause of accidents.'\",\"concerns\":\"There are a few concern flags that require individual teacher review. Samantha Cruz makes a generalization about a specific group: '37 of the brain is distracted by a cellphone....' This statement is flagged as a potential issue. The teacher should verify the accuracy of this claim and ensure it does not perpetuate stereotypes. The flagged passage is: '37 of the brain is distracted by a cellphone....' The teacher should review this statement to ensure it is based on credible evidence and does not make broad, unsupported claims.\",\"divergent_approaches\":\"Students approached the topic of cell respiration with a range of perspectives, reflecting both personal experiences and analytical insights. Many students emphasized the dangers of distracted driving, with some advocating for stricter laws and others highlighting the psychological pressures of constant connectivity. For example, Andre Williams stated, 'Andre Williams sees the issue as a clear and present danger, emphasizing the high risk of injury and death.' Diana Okafor, on the other hand, focused on responsible phone use, arguing, 'If that person is responsible and can pay attention while driving and looking at their phone, it should be okay.' This diversity of viewpoints suggests a rich discussion for the class, with opportunities for students to engage with each other's perspectives.\",\"looking_ahead\":\"The class is ready to delve deeper into the topic of cell respiration, with a strong foundation of understanding the risks of distracted driving. The teacher can build on the students' passion and urgency by connecting the biological concepts of cell respiration to the physiological impacts of distracted driving. For instance, students can explore how the brain's reduced activity during cell phone use affects driving performance. This will help them see the direct link between the biological process and the real-world implications.\",\"students_to_check_in_with\":\"There are a few students whose reflections warrant a check-in. Samantha Cruz made a generalization about a specific group, which could be a concern. The teacher should discuss the importance of avoiding stereotypes and generalizations. Additionally, Kevin O'Brien's reflection on the unpredictability of accidents and the need for constant vigilance is a unique perspective that could benefit from a deeper discussion. Diana Okafor's focus on responsible phone use challenges the predominant theme and could be a valuable point of discussion. Ryan Kowalski's analysis of the societal issue of distracted driving and the effectiveness of legal measures provides a broader context that the teacher can use to facilitate a more nuanced understanding of the topic.\"},\"confidence\":0.5}"
+  },
+  "feedback": [
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B001",
+      "student_name": "Sarah Kim",
+      "draft_text": "Sarah, your insight about never touching your phone while operating a vehicle really stood out. It shows you're thinking critically about safety. For next week, I'm curious: how do you think the principles of cell respiration might apply to the energy management in a vehicle?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B002",
+      "student_name": "James Cooper",
+      "draft_text": "James Cooper, I noticed you emphasized the importance of safety by referencing the statistics on cell phone use while driving. Your analysis of the risks associated with distractions is clear and well-supported. For your next reflection, I'm curious about how you might apply the concept of cell respiration to explain why distractions are so dangerous in a biological context. Keep up the great work!",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B003",
+      "student_name": "Alicia Moreno",
+      "draft_text": "Alicia Moreno, your analysis of the dangers of using cell phones while driving, supported by statistical evidence, really stood out. You made a compelling point about the impact of cell phone use on road safety. For your next reflection, I'm curious about how you might explore the personal stories behind these statistics. How do you think individual experiences could add to the broader conversation on cell phone use and safety?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B004",
+      "student_name": "Derek Chang",
+      "draft_text": "Derek Chang, your analysis of the risks associated with cell phone use while driving, citing research to support your argument, really shines. You made a compelling point about the dangers of distracted driving. For your next assignment, I'm curious about how you might explore the impact of hands-free technology on safety. How do you think it compares to traditional handheld use?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B005",
+      "student_name": "Nicole Rivera",
+      "draft_text": "Nicole Rivera, your concern for public safety and personal observations about distracted driving are incredibly powerful. You shared a specific example that really brought the issue to life. For next week, I'm curious: how might you explore the impact of distracted driving beyond personal stories, perhaps by looking at broader statistics or trends?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B006",
+      "student_name": "Kevin O'Brien",
+      "draft_text": "Kevin O'Brien, your reflections on the dangers of distracted driving are urgent and compelling. You make a strong point about the unpredictability of accidents, which really drives home the importance of safety. For next week, I'm curious: how might you explore the role of technology in contributing to these risks further?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B007",
+      "student_name": "Fatima Al-Hassan",
+      "draft_text": "Fatima, your reflections on the importance of safety and the dangers of distractions are clear and compelling. You make a strong point about how cell phones can be a significant distraction while driving. For your next reflection, I'm curious: how might you apply the concept of cell respiration to explain why distractions are so harmful?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B008",
+      "student_name": "Chris Nakamura",
+      "draft_text": "Chris, your analysis of the hands-free phone law and its application to road safety really stood out. You made a compelling argument for why the law should be strictly enforced. For your next reflection, I'm curious about how you might apply the concept of cell respiration to explain why using a phone while driving can be dangerous. How does the body's need for oxygen relate to the risks of distracted driving?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B009",
+      "student_name": "Hannah Jacobs",
+      "draft_text": "Hannah, your reflections on the risks of driving and the impact on family are deeply moving. You've really captured the urgency of the topic. For next week, I'm curious: how might you apply the concept of cell respiration to explain the body's response to these risks?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B010",
+      "student_name": "Luis Fernandez",
+      "draft_text": "Luis, your reflection really hit home with the urgency you expressed about using phones while driving. It's clear you care deeply about public safety. For next week, I'm curious: how might you apply the statistical evidence you mentioned to support your advocacy efforts?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B011",
+      "student_name": "Tanya Patel",
+      "draft_text": "Tanya Patel, your analysis of how cell phones can distract drivers while balancing their benefits was insightful. You highlighted the importance of staying focused on the road, which is a key point. For your next reflection, I'm curious about how you might explore the impact of hands-free devices on reaction time and distraction. Keep up the great work!",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B012",
+      "student_name": "Matt Stevenson",
+      "draft_text": "Matt Stevenson, your clear and analytical reflection on cell phone use while driving really stood out. You made a strong point about the impact of cell phones on driving safety. For your next reflection, I'm curious about how you might explore the role of technology in other aspects of daily life. Keep up the great work!",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B013",
+      "student_name": "Diana Okafor",
+      "draft_text": "Diana Okafor, your clear and analytical reflection on phone use while driving really stood out. You provided a thoughtful summary of what you observed and even argued for responsible phone use. For next week, I'm curious: how might you apply these observations to other scenarios beyond driving?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B014",
+      "student_name": "Andre Williams",
+      "draft_text": "Andre, your concern about public safety and the statistical evidence you provided really stood out. You made a compelling argument about the dangers of texting and driving. For next week, I'm curious: how might you explore the impact of other distractions while driving, like eating or using a hands-free device?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B015",
+      "student_name": "Grace Lin",
+      "draft_text": "Grace Lin, your analysis of the risks associated with using a mobile phone while driving, particularly the mention of more incidents of speaking on the phone than text messages, shows a keen eye for detail. For next week, I'm curious about how you might explore the social and legal implications of phone use in more depth. What do you think could be some of the key areas to consider?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B016",
+      "student_name": "Daniel Murphy",
+      "draft_text": "Daniel, your passion for the topic really shines through in your reflection. You make a compelling point about the risks of distracted driving and the importance of preventing accidents. For next week, I'm curious: how might you explore the effectiveness of Bluetooth text features in more detail?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B017",
+      "student_name": "Samantha Cruz",
+      "draft_text": "Samantha, your analysis of how cannabis impacts driving reaction times is thorough and well-supported with specific data. You've clearly done your research. For your next assignment, I'm curious about how you might explore the impact of other substances on driving safety. How do you think they compare to cannabis?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B018",
+      "student_name": "Tyler Brown",
+      "draft_text": "Tyler, your insight about texting and driving really stood out to me. You made a clear connection between personal experience and public safety, which is exactly what this assignment was about. For next week, I'm curious: how might the concept of cell respiration be related to the energy used while driving and texting?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B019",
+      "student_name": "Aisha Mohammed",
+      "draft_text": "Aisha Mohammed, your reflections on the dangers of distracted driving are urgent and compelling. You make a strong point about the importance of focusing on safety while driving. For your next reflection, I'm curious about how you might explore the impact of cell respiration on the body's ability to function safely while driving. Keep up the great work!",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B020",
+      "student_name": "Ryan Kowalski",
+      "draft_text": "Ryan, your quote about looking away from the road for just 2 seconds being the difference between life and death really hit home. It shows a deep understanding of the risks involved. For next week, I'm curious: how do you think technology could play a role in reducing these risks?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B021",
+      "student_name": "Jessica Nguyen",
+      "draft_text": "Jessica, your quote about cell phones really stood out to me: 'When we think of cell phones we think of a device that we can't live without. A cell phone is something so essential to our lives that when we use them we tune everything else out.' Your analytical perspective on how cell phones can distract us from other important tasks is very insightful. For next week, I'm curious: how do you think cell respiration relates to the energy our bodies need to stay focused and avoid distractions?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B022",
+      "student_name": "Michael Sato",
+      "draft_text": "Michael Sato, your analysis of the risks associated with distracted driving, particularly among teens, really stood out. You provided a clear and compelling example of how even a brief distraction can have severe consequences. For your next reflection, I'm curious about how you might explore the role of technology in creating these distractions. How do you think we can balance the benefits of technology with the risks it poses?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B023",
+      "student_name": "Brittany Hall",
+      "draft_text": "Brittany, your analysis of the causal relationships in texting while driving and the irony in how law enforcement might benefit from the problem you identified is insightful. You clearly thought deeply about the implications of these issues. For next week, I'm curious: how might you explore the perspectives of those directly affected by these accidents in your reflection?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B024",
+      "student_name": "Omar Diaz",
+      "draft_text": "Omar Diaz, your analysis of cell phone use behind the wheel and the reduction in brain activity associated with driving is really insightful. You've clearly done your research. For next week, I'm curious about how you might explore the cellular activity in more detail, perhaps by looking at the specific processes involved in cell respiration during driving tasks. This could add a deeper layer to your reflection.",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    },
+    {
+      "run_id": "demo-insights-run-bio-lab-0000000000001",
+      "student_id": "B025",
+      "student_name": "Emily Watson",
+      "draft_text": "Emily, your quote about the increased risk of a motor vehicle crash when texting while driving really stood out to me. It's a powerful statistic that clearly conveys the dangers of distracted driving. For your next reflection, I'm curious: how might you apply this concept to other areas of life or study?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.8,
+      "posted_at": null
+    }
+  ]
+}

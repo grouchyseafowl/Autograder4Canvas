@@ -435,13 +435,70 @@ def _meta_synthesize(
 
 
 def _manual_merge(theme_sets: List[ThemeSet]) -> ThemeSet:
-    """Fallback: combine theme sets without LLM synthesis."""
-    all_themes = []
+    """Fallback: combine theme sets with token-overlap deduplication.
+
+    When LLM meta-synthesis times out, each cluster group independently
+    generated themes — producing near-identical names like "concern for
+    public safety" (freq 3) and "concern about public safety" (freq 4)
+    side by side.  This non-LLM pass collapses near-duplicates by token
+    overlap so the fallback produces coherent output without adding LLM
+    latency.
+
+    Two themes are treated as duplicates when their content-word Jaccard
+    similarity is ≥ 0.5.  The merged theme keeps the higher-frequency
+    name and combines student_ids.
+    """
+    import re as _re
+
+    def _name_tokens(name: str) -> set:
+        # Skip function words that add noise — prepositions, articles, aux verbs
+        stop = {"a", "an", "the", "of", "and", "or", "in", "for", "to",
+                "with", "on", "by", "at", "is", "are", "its", "their",
+                "about", "from", "that", "this", "which", "against"}
+        return {t for t in _re.findall(r"[a-z]{3,}", name.lower()) if t not in stop}
+
+    def _are_duplicates(a_name: str, b_name: str) -> bool:
+        a_toks = _name_tokens(a_name)
+        b_toks = _name_tokens(b_name)
+        if not a_toks or not b_toks:
+            return False
+        # Jaccard similarity: symmetric, avoids false merges when a short
+        # theme shares incidental terms with a longer, distinct theme.
+        overlap = len(a_toks & b_toks)
+        union = len(a_toks | b_toks)
+        return overlap / union >= 0.5
+
+    # Collect all themes from all groups
+    all_raw = []
     all_contradictions = []
     for ts in theme_sets:
-        all_themes.extend(ts.themes)
+        all_raw.extend(ts.themes)
         all_contradictions.extend(ts.contradictions)
-    return ThemeSet(themes=all_themes, contradictions=all_contradictions)
+
+    # Greedy dedup: iterate and merge near-duplicates into a representative
+    merged: List = []
+    for theme in all_raw:
+        matched = False
+        for rep in merged:
+            if _are_duplicates(rep.name, theme.name):
+                # Keep the higher-frequency name; union student_ids
+                if theme.frequency > rep.frequency:
+                    rep.name = theme.name
+                    rep.description = theme.description
+                rep.frequency += theme.frequency
+                existing_ids = set(rep.student_ids)
+                rep.student_ids = rep.student_ids + [
+                    sid for sid in theme.student_ids if sid not in existing_ids
+                ]
+                matched = True
+                break
+        if not matched:
+            merged.append(theme)
+
+    # Sort by frequency descending so teachers see the most common themes first
+    merged.sort(key=lambda t: t.frequency, reverse=True)
+
+    return ThemeSet(themes=merged, contradictions=all_contradictions)
 
 
 # ---------------------------------------------------------------------------

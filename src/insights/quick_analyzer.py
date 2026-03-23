@@ -11,10 +11,10 @@ Components:
   3. TF-IDF distinctive terms (scikit-learn)
   4. Named entity extraction (spaCy en_core_web_sm)
   5. Keyword pattern matching (INSIGHT_PATTERNS)
-  6. VADER sentiment per submission
+  6. Emotional register scoring (GoEmotions; falls back to VADER)
   7. Embedding-based clustering (sentence-transformers + k-means/HDBSCAN)
   8. Cross-submission shared reference detection
-  9. VADER+keyword signal matrix concern pre-screening
+  9. Emotional register + keyword signal matrix concern pre-screening
 
 Each component degrades gracefully if its library is unavailable.
 """
@@ -208,8 +208,8 @@ class QuickAnalyzer:
         self._progress("Matching keyword patterns...")
         result.keyword_hits = self._keyword_hits(texts, meta)
 
-        self._progress("Computing sentiment...")
-        result.sentiments, result.sentiment_distribution = self._vader_sentiment(texts, meta)
+        self._progress("Computing emotional register...")
+        result.sentiments, result.sentiment_distribution = self._compute_emotional_register(texts, meta)
 
         self._progress("Clustering submissions...")
         result.clusters, result.embedding_outlier_ids, _embeddings, _embed_sids = (
@@ -317,6 +317,10 @@ class QuickAnalyzer:
             log.warning("Citation analysis failed: %s", e)
 
         # Build per-submission summaries
+        # Compute class median word count for truncation detection
+        _all_wcs = [len(body.split()) for body in texts.values()]
+        _class_median_wc = statistics.median(_all_wcs) if _all_wcs else 0.0
+
         for sid, body in texts.items():
             wc = len(body.split())
             sub_meta = meta.get(sid, {})
@@ -325,10 +329,16 @@ class QuickAnalyzer:
                 if sid in cl.student_ids:
                     cluster_id = cl.cluster_id
                     break
-            vader_compound = result.sentiments.get(sid, {}).get("compound", 0.0)
+            _sentiment_data = result.sentiments.get(sid, {})
+            vader_compound = _sentiment_data.get("compound", 0.0)
+            _emotions = _sentiment_data.get("emotions", {})
+            _sentiment_backend = _sentiment_data.get("reliability", "")
             kw_hits = match_all_patterns(body)
             # Reuse gibberish result from the early gate pass
             gib = gibberish_results.get(sid)
+
+            # Truncation detection (non-LLM heuristic)
+            _is_trunc, _trunc_note = self._is_possibly_truncated(body, wc, _class_median_wc)
 
             result.per_submission[sid] = PerSubmissionSummary(
                 student_id=sid,
@@ -336,6 +346,8 @@ class QuickAnalyzer:
                 word_count=wc,
                 submission_type=sub_meta.get("submission_type") or "unknown",
                 vader_compound=vader_compound,
+                emotions=_emotions,
+                sentiment_backend=_sentiment_backend,
                 keyword_hits=kw_hits,
                 cluster_id=cluster_id,
                 was_translated=sub_meta.get("was_translated", False),
@@ -344,6 +356,8 @@ class QuickAnalyzer:
                 gibberish_reason=gib.reason if gib else "",
                 gibberish_detail=gib.detail if gib else "",
                 assignment_connection=_connection_scores.get(sid),
+                is_possibly_truncated=_is_trunc,
+                truncation_note=_trunc_note,
             )
 
         return result
@@ -391,6 +405,60 @@ class QuickAnalyzer:
             format_breakdown=dict(format_counts),
             timing=dict(timing_counts),
         )
+
+    # ------------------------------------------------------------------
+    # Truncation detection (non-LLM heuristic)
+    # ------------------------------------------------------------------
+
+    def _is_possibly_truncated(self, text: str, word_count: int, class_median_words: float) -> tuple[bool, str]:
+        """Non-LLM heuristic: detect submissions that may have been cut off mid-thought.
+
+        Equity note: frames as care ("consider checking in"), never as failure.
+        ESL students and neurodivergent writers may have non-standard endings —
+        require multiple signals, not just missing terminal punctuation.
+        """
+        stripped = text.strip()
+        if not stripped:
+            return False, ""
+
+        signals = []
+
+        # Signal 1: ends without terminal punctuation
+        last_chars = stripped[-3:] if len(stripped) >= 3 else stripped
+        if not re.search(r'[.?!"\')\]]', last_chars):
+            signals.append("no_terminal_punct")
+
+        # Signal 2: ends with trailing conjunction/preposition
+        last_word = stripped.split()[-1].lower().rstrip('.,;:') if stripped.split() else ""
+        trailing_words = {"and", "but", "that", "because", "with", "or", "so", "when", "if", "the", "a", "an"}
+        if last_word in trailing_words:
+            signals.append("trailing_conjunction")
+
+        # Signal 3: explicit acknowledgment of incompleteness
+        incomplete_phrases = ["i had more", "ran out of", "didn't finish", "will finish later", "more to say"]
+        text_lower = stripped.lower()
+        if any(phrase in text_lower for phrase in incomplete_phrases):
+            signals.append("explicit_incomplete")
+
+        # Signal 4: significantly shorter than class median
+        below_median = class_median_words > 0 and word_count < (class_median_words * 0.5)
+        if below_median:
+            signals.append("below_median")
+
+        # Require: explicit_incomplete OR (no_terminal_punct AND one other signal)
+        is_truncated = (
+            "explicit_incomplete" in signals
+            or ("no_terminal_punct" in signals and "trailing_conjunction" in signals)
+            or ("no_terminal_punct" in signals and "below_median" in signals)
+        )
+
+        if is_truncated:
+            note = ("This submission may be incomplete — it ends without finishing the last thought"
+                    + (", and is shorter than most submissions in this class" if below_median else "")
+                    + ". Consider checking in with this student.")
+            return True, note
+
+        return False, ""
 
     # ------------------------------------------------------------------
     # 2. Word frequency
@@ -519,7 +587,7 @@ class QuickAnalyzer:
         }
 
     # ------------------------------------------------------------------
-    # 6. VADER sentiment
+    # 6. Emotional register scoring (GoEmotions, falls back to VADER)
     # ------------------------------------------------------------------
 
     # Submission types where word_count=0 means "unreadable file", not
@@ -528,50 +596,76 @@ class QuickAnalyzer:
     # extract text from their file.
     _FILE_SUBMISSION_TYPES = frozenset({"online_upload", "media_recording"})
 
-    def _vader_sentiment(
+    # GoEmotions label groupings (Demszky et al., 2020).
+    # Used to derive a VADER-compatible compound score and pos/neg/neu floats.
+    _GE_POSITIVE = frozenset({
+        "admiration", "amusement", "approval", "caring", "desire",
+        "excitement", "gratitude", "joy", "love", "optimism", "pride", "relief",
+    })
+    _GE_NEGATIVE = frozenset({
+        "anger", "annoyance", "disappointment", "disapproval", "disgust",
+        "embarrassment", "fear", "grief", "nervousness", "remorse", "sadness",
+    })
+    # Remaining labels (confusion, curiosity, neutral, realization, surprise) → neutral
+
+    # Token budget: RoBERTa-base max is 512 tokens (~400 words).
+    # Truncate to keep the most informative part (first + last thirds).
+    _GE_MAX_CHARS = 1200
+
+    def _ge_truncate(self, text: str) -> str:
+        """Truncate text to fit GoEmotions token budget."""
+        if len(text) <= self._GE_MAX_CHARS:
+            return text
+        half = self._GE_MAX_CHARS // 2
+        return text[:half] + " … " + text[-half:]
+
+    def _compute_emotional_register(
         self, texts: Dict[str, str], meta: Dict[str, Dict]
     ) -> Tuple[Dict[str, Dict[str, float]], Dict[str, int]]:
-        try:
-            from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-        except ImportError:
-            log.info("vaderSentiment not available — skipping sentiment")
-            return {}, {}
+        """Compute emotional register scores using GoEmotions.
 
-        analyzer = SentimentIntensityAnalyzer()
+        Primary backend: SamLowe/roberta-base-go_emotions via HuggingFace
+        transformers.  Falls back to vaderSentiment if transformers is
+        unavailable or the model cannot be loaded.
+
+        Output per submission (all downstream .get("compound") calls work):
+          compound   : float [-1, 1]  positive_mass − negative_mass
+          pos        : float  sum of positive-valence emotion probabilities
+          neg        : float  sum of negative-valence emotion probabilities
+          neu        : float  sum of neutral/ambiguous emotion probabilities
+          emotions   : dict[str, float]  full GoEmotions label→score map
+          reliability: str  "go_emotions" | "vader" | "none"
+        """
         sentiments: Dict[str, Dict[str, float]] = {}
         register_counts: Dict[str, int] = Counter()
 
+        score_fn = self._build_emotion_scorer()
+
         for sid, body in texts.items():
-            scores = analyzer.polarity_scores(body)
-            sentiments[sid] = {
-                "pos": scores["pos"],
-                "neg": scores["neg"],
-                "neu": scores["neu"],
-                "compound": scores["compound"],
-            }
+            scores = score_fn(body)
+            sentiments[sid] = scores
 
             wc = len(body.split())
             sub_type = (meta.get(sid, {}).get("submission_type") or "").lower()
 
-            # File uploads / media recordings with no extractable text
-            # should be excluded from the sentiment register distribution
-            # entirely — VADER on an empty string is meaningless.
+            # File uploads / media recordings with no extractable text:
+            # exclude from register distribution entirely.
             if wc == 0 and sub_type in self._FILE_SUBMISSION_TYPES:
                 continue
 
-            # Classify emotional register
             compound = scores["compound"]
+            pos = scores["pos"]
+            neu = scores["neu"]
+
+            # Classify emotional register — same logic as before so
+            # downstream consumers see no behavioural change.
             if wc < 50 and abs(compound) < 0.2:
                 register = "perfunctory"
-            elif compound >= 0.3 and scores["pos"] > 0.15:
+            elif compound >= 0.3 and pos > 0.15:
                 register = "passionate"
             elif compound <= -0.3:
-                # Negative VADER may be topic-driven (colonialism, racism,
-                # genocide, etc.) rather than student distress.  Check for
-                # engagement markers: if the student also shows critical
-                # analysis, conceptual connections, evidence use, or
-                # personal reflection, the negativity comes from the
-                # *subject matter*, not emotional crisis.
+                # Negative score may be topic-driven (colonialism, racism,
+                # genocide) rather than personal distress.  Check engagement.
                 _engagement_patterns = (
                     "critical_analysis",
                     "conceptual_connection",
@@ -587,15 +681,120 @@ class QuickAnalyzer:
                     register = "passionate"
                 else:
                     register = "urgent"
-            elif abs(compound) < 0.15 and scores["neu"] > 0.7:
+            elif abs(compound) < 0.15 and neu > 0.7:
                 register = "analytical"
-            elif scores["pos"] > 0.1 and "my " in body.lower():
+            elif pos > 0.1 and "my " in body.lower():
                 register = "personal"
             else:
                 register = "reflective"
             register_counts[register] += 1
 
         return sentiments, dict(register_counts)
+
+    def _build_emotion_scorer(self):
+        """Return a callable text → scores dict.
+
+        Tries GoEmotions first; falls back to VADER on any failure.
+        Result is cached on the instance so the model loads only once.
+        """
+        if hasattr(self, "_emotion_scorer_cache"):
+            return self._emotion_scorer_cache
+
+        scorer = self._try_go_emotions_scorer()
+        if scorer is None:
+            scorer = self._try_vader_scorer()
+        if scorer is None:
+            scorer = self._null_scorer
+
+        self._emotion_scorer_cache = scorer
+        return scorer
+
+    def _try_go_emotions_scorer(self):
+        """Build a GoEmotions scorer; return None on any import/load failure."""
+        try:
+            from transformers import pipeline as hf_pipeline
+        except ImportError:
+            log.info("transformers not available — GoEmotions scorer unavailable")
+            return None
+
+        try:
+            pipe = hf_pipeline(
+                "text-classification",
+                model="SamLowe/roberta-base-go_emotions",
+                top_k=None,
+                truncation=True,
+                max_length=512,
+            )
+            log.info("GoEmotions scorer loaded (SamLowe/roberta-base-go_emotions)")
+        except Exception as e:
+            log.info("GoEmotions model load failed (%s) — falling back to VADER", e)
+            return None
+
+        pos_labels = self._GE_POSITIVE
+        neg_labels = self._GE_NEGATIVE
+
+        def _score(text: str) -> Dict[str, float]:
+            truncated = self._ge_truncate(text)
+            try:
+                raw = pipe(truncated)
+            except Exception as exc:
+                log.debug("GoEmotions inference failed: %s", exc)
+                return self._null_scorer(text)
+            # raw is [[{label, score}, ...]] (top_k=None gives all labels)
+            label_scores = raw[0] if raw else []
+            emotions: Dict[str, float] = {
+                item["label"]: round(item["score"], 4) for item in label_scores
+            }
+            pos = sum(v for k, v in emotions.items() if k in pos_labels)
+            neg_mass = sum(v for k, v in emotions.items() if k in neg_labels)
+            neu_mass = sum(v for k, v in emotions.items() if k not in pos_labels and k not in neg_labels)
+            compound = max(-1.0, min(1.0, pos - neg_mass))
+            return {
+                "compound": round(compound, 4),
+                "pos": round(pos, 4),
+                "neg": round(neg_mass, 4),
+                "neu": round(neu_mass, 4),
+                "emotions": emotions,
+                "reliability": "go_emotions",
+            }
+
+        return _score
+
+    def _try_vader_scorer(self):
+        """Build a VADER scorer; return None on import failure."""
+        try:
+            from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+        except ImportError:
+            log.info("vaderSentiment not available — sentiment scoring disabled")
+            return None
+
+        analyzer = SentimentIntensityAnalyzer()
+        log.info("Emotional register: using VADER fallback (GoEmotions unavailable)")
+
+        def _score(text: str) -> Dict[str, float]:
+            s = analyzer.polarity_scores(text)
+            return {
+                "compound": s["compound"],
+                "pos": s["pos"],
+                "neg": s["neg"],
+                "neu": s["neu"],
+                "emotions": {},
+                "reliability": "vader",
+            }
+
+        return _score
+
+    @staticmethod
+    def _null_scorer(text: str) -> Dict[str, float]:  # noqa: ARG004
+        """Zero scores when no backend is available."""
+        return {
+            "compound": 0.0,
+            "pos": 0.0,
+            "neg": 0.0,
+            "neu": 1.0,
+            "emotions": {},
+            "reliability": "none",
+        }
 
     # ------------------------------------------------------------------
     # 7. Embedding-based clustering

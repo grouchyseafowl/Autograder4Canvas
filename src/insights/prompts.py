@@ -51,8 +51,9 @@ understand what the student is saying.
 STUDENT: {student_name}
 ASSIGNMENT PROMPT: {assignment_prompt}
 
-NON-LLM ANALYSIS (context for you):
-- VADER sentiment: {vader_compound} ({vader_polarity})
+NON-LLM ANALYSIS (grounding context — verify against the text):
+- Emotional register signal: {vader_compound} ({vader_polarity}){top_emotions} ⚠ Signal misreads AAVE, ESL writing,
+  and righteous anger — treat as rough signal only, not ground truth.
 - Keyword hits: {keyword_hits}
 - Embedding cluster: {cluster_id}
 {signal_matrix_context}
@@ -144,8 +145,9 @@ You are helping a teacher understand what this student is thinking.
 STUDENT: {student_name}
 ASSIGNMENT PROMPT: {assignment_prompt}
 {teacher_interests}
-NON-LLM ANALYSIS (context for you):
-- VADER sentiment: {vader_compound} ({vader_polarity})
+PRE-COMPUTED SIGNALS (floor — your analysis should go beyond these):
+- Emotional register signal: {vader_compound} ({vader_polarity}){top_emotions} ⚠ Signal misreads AAVE, ESL writing,
+  and righteous anger. Your emotional_register judgment supersedes this score.
 - Keyword hits: {keyword_hits}
 - Embedding cluster: {cluster_id}
 {signal_matrix_context}
@@ -178,6 +180,10 @@ RULES:
 generic ("engagement")
 - If unsure, leave fields as empty lists — don't invent content
 - Select up to 3 notable quotes that best capture their thinking
+- The pre-computed signals are a floor. Surface patterns, tensions, and insights \
+the keyword taxonomy and sentiment scores cannot capture — unexpected connections, \
+rhetorical moves, cultural knowledge, structural critique
+- Emotional register signal is a rough baseline only. Your reading of the text supersedes it
 {lens_fragment}
 EXAMPLE (different student and assignment):
 {{
@@ -334,7 +340,123 @@ flag this.
 EXAMPLE of what is NOT a concern (passionate engagement):
 "The system of white supremacy in this country makes me furious. How can \
 we read about redlining and NOT be angry?" — This is appropriate engagement. \
-Do NOT flag this."""
+Do NOT flag this.
+
+EXAMPLE of what IS a concern (scientific-sounding essentialism):
+{{
+  "concerns": [
+    {{
+      "flagged_passage": "certain populations are just genetically predisposed to these health outcomes",
+      "surrounding_context": "In a reflection on health disparities, the student wrote: 'I think certain populations are just genetically predisposed to these health outcomes. It's not really about access or racism, it's biology.'",
+      "why_flagged": "Biological essentialism — attributes health disparities to genetics rather than engaging with structural determinants (housing, pollution, food access, insurance, provider bias). Teacher may want to direct student to evidence on social determinants.",
+      "confidence": 0.8
+    }}
+  ]
+}}
+
+EXAMPLE of what IS a concern (pathologizing cultural practices):
+{{
+  "concerns": [
+    {{
+      "flagged_passage": "that kind of parenting would be considered neglect in our culture",
+      "surrounding_context": "Responding to a case study on child development, the student wrote: 'The family's approach to discipline seems really unhealthy. That kind of parenting would be considered neglect in our culture. I think the child clearly has attachment issues because of it.'",
+      "why_flagged": "Pathologizes a cultural parenting practice using Western diagnostic frameworks as universal norm. Student also diagnoses a child from surface description. Teacher may want to discuss cultural context in developmental assessment.",
+      "confidence": 0.7
+    }}
+  ]
+}}
+
+EXAMPLE of what is NOT a concern (community health knowledge):
+A nursing student writes: "My grandmother always used teas and remedios for \
+everything, and honestly some of the pharmacology we're learning makes me \
+think she wasn't wrong. My family doesn't trust hospitals because of how \
+they treated my tío." — This student is integrating community health knowledge \
+with clinical learning and naming a rational response to medical mistreatment. \
+Do NOT flag this.
+
+EXAMPLE of what is NOT a concern (lived expertise in a studied context):
+A psychology student writes: "As someone who is autistic, I find it really \
+frustrating that the textbook frames ASD as a list of deficits. My brain \
+works differently, not worse." — This student is contributing expertise from \
+lived experience and challenging the medical model. Do NOT flag this."""
+
+# ---------------------------------------------------------------------------
+# Deepening pass (Stage 4b — flagged students only, experimental)
+# ---------------------------------------------------------------------------
+# Runs ONLY when a concern was flagged in Stage 5. Asks the 8B to:
+#   1. Name the rhetorical strategy precisely (not just repeat the concern category)
+#   2. Reconsider emotional register given the concern context
+#   3. Surface theme tags that may be in tension with the concern
+#
+# Design constraints:
+#   - Righteous anger about injustice must NOT be reframed as "defensive" or "uncomfortable"
+#     The concern detector already protects this — if no concern was flagged, this pass
+#     never runs for that student.
+#   - "Passionate" for Destiny Williams is correct — she has no concern flag.
+#   - Analysis is for the teacher, not a verdict on the student.
+#   - Only revise register with specific textual evidence.
+
+DEEPENING_PROMPT = """\
+You have already analyzed {student_name}'s submission. A concern was flagged. \
+Now reconsider the coding in light of that concern.
+
+ORIGINAL CODING (what you found in Stage 1):
+{coding_summary}
+
+CONCERN FLAGGED:
+Passage: "{flagged_passage}"
+Why flagged: {why_flagged}
+
+SUBMISSION TEXT:
+---
+{submission_text}
+---
+
+Three questions:
+
+1. RHETORICAL STRATEGY — What is this student doing with language?
+   Name the move precisely. Not just the concern category ("colorblind framing"), \
+but the specific rhetorical move the student is making.
+   Examples of named moves:
+   - "invokes personal respect for all people to sidestep structural analysis"
+   - "celebrates cultural diversity while assigning fixed traits to groups"
+   - "acknowledges historical injustice then frames it as resolved to avoid present analysis"
+   - "uses open-mindedness language ('I don't see race') to resist a structural lens"
+   - "tone-polices by reframing structural anger as unproductive emotion"
+   - "challenges the framework's scope without dismissing it entirely"
+
+2. EMOTIONAL REGISTER — Is "{current_register}" accurate given the concern?
+   Smaller models sometimes assign "analytical" or "passionate" when the concern \
+context suggests a more precise register.
+   Available registers: analytical, passionate, personal, urgent, reflective, \
+disengaged, defensive, confused, uncomfortable
+   Only revise if you can point to specific language in the submission \
+that supports the change. Many registers are correct even with a concern — \
+"defensive" and "analytical" are very different, and getting it wrong \
+misrepresents the student.
+
+3. THEME TENSIONS — Are any of these theme tags in tension with the flagged concern?
+   Current theme tags: {theme_tags_str}
+   A tension exists when a theme tag appears to celebrate or validate the same \
+behavior the concern flagged — for example, "celebrating cultural diversity" as \
+a theme tag alongside a concern about essentializing language.
+
+Respond with JSON:
+{{
+  "rhetorical_strategy": "one precise sentence describing the student's rhetorical move",
+  "revised_register": "{current_register}",
+  "register_change_reason": "",
+  "theme_tensions": []
+}}
+
+RULES:
+- If "{current_register}" is still accurate, keep it — do not change just because \
+a concern was flagged. Concerned students can still be "analytical."
+- If you revise the register, register_change_reason must contain the specific \
+language from the submission that supports the change.
+- theme_tensions contains only the exact theme tag strings from the list above \
+that validate the flagged behavior. Empty list if none do.
+- No moralistic language. This analysis is for the teacher's professional judgment."""
 
 # ---------------------------------------------------------------------------
 # Theme generation
@@ -679,6 +801,214 @@ TEACHER'S PRIORITIES: {interests_summary}"""
 
 PROFILE_FRAGMENT = """\
 {profile_fragment}"""
+
+# ---------------------------------------------------------------------------
+# Guided Synthesis Chain (A6) — 4 scoped calls, each answering ONE question
+#
+# Design principles:
+#   - ONE question per call — not open-ended synthesis
+#   - Student names in LOCAL calls only — NEVER in cloud calls
+#   - Do NOT suggest exercises or teaching strategies — the teacher designs response
+#   - Surface tensions as productive, not as problems
+#   - Partial results are valid (#CRIP_TIME)
+#   - Righteous anger about injustice is APPROPRIATE engagement, not a concern
+# ---------------------------------------------------------------------------
+
+SYNTHESIS_CONCERN_PROMPT = """\
+These students were flagged for teacher attention after an engagement analysis:
+
+{flagged_students_block}
+
+What patterns do you see among these concerns? Note BOTH commonalities AND \
+important differences — do NOT force them into one category if the distinctions \
+are pedagogically meaningful. Jake's class-based critique is NOT the same \
+pattern as Connor's colorblindness even if both "challenge the framework."
+
+Do NOT suggest teaching strategies or exercises — the teacher designs the \
+pedagogical response. Your job is to describe the diagnostic picture.
+
+Respond with JSON:
+{{
+  "patterns": [
+    {{
+      "description": "What this group of students has in common (be specific)",
+      "student_names": ["name1", "name2"]
+    }}
+  ],
+  "key_differences": [
+    "Important distinction between students that should NOT be collapsed into one pattern"
+  ]
+}}
+
+If all students share one pattern with no meaningful differences, \
+key_differences may be an empty list. But preserve real distinctions.
+
+EXAMPLE:
+{{
+  "patterns": [
+    {{
+      "description": "Both students resist engaging with a structural lens, \
+though through different moves — one uses colorblind framing, one uses \
+meritocracy framing",
+      "student_names": ["Connor Walsh", "Aiden Park"]
+    }}
+  ],
+  "key_differences": [
+    "Connor's colorblindness ('I don't see race') and Aiden's meritocracy framing \
+('everyone can succeed') look similar but the teacher should engage them differently — \
+Connor is denying race exists, Aiden accepts it exists but denies its structural effects"
+  ]
+}}"""
+
+SYNTHESIS_HIGHLIGHT_PROMPT = """\
+These students showed strong engagement with the material in this assignment:
+
+{strong_students_block}
+
+What do these students demonstrate? What specific analytical moves or \
+connections are they making? Be specific — "strong engagement" is not \
+enough. Name the intellectual work.
+
+Do NOT suggest how the teacher should use these students' work — do NOT \
+recommend singling out students to share or present. Your job is to \
+describe what these students are doing intellectually so the teacher \
+can design structural opportunities.
+
+Respond with JSON:
+{{
+  "highlights": [
+    {{
+      "description": "What specific intellectual move or connection this student is making",
+      "student_names": ["name1"]
+    }}
+  ]
+}}
+
+Group students together only if they are genuinely making the same move. \
+Different entries from the same discipline area may look similar but be \
+meaningfully distinct.
+
+EXAMPLE:
+{{
+  "highlights": [
+    {{
+      "description": "Maria Ndiaye is applying transnational framing — \
+connecting the course concepts to her own cross-border family experience \
+in a way that extends the theoretical framework beyond US-centric examples",
+      "student_names": ["Maria Ndiaye"]
+    }},
+    {{
+      "description": "Destiny Williams and Jake Novak are both using \
+structural analysis but from opposite directions — Destiny centers lived \
+geography, Jake interrogates framework scope",
+      "student_names": ["Destiny Williams", "Jake Novak"]
+    }}
+  ]
+}}"""
+
+SYNTHESIS_TENSION_PROMPT = """\
+An engagement analysis found these patterns in a class assignment:
+
+CONCERN PATTERNS:
+{concern_patterns_block}
+
+ENGAGEMENT HIGHLIGHTS:
+{highlight_patterns_block}
+
+What tensions or contrasts do you see between these groups? Where do \
+students' perspectives diverge in ways the teacher should be aware of?
+
+IMPORTANT: These tensions may be productive — disagreement and divergence \
+in a classroom are often where learning happens. "The tension is the \
+pedagogy." Do NOT frame divergence as a problem to resolve. Surface it \
+as something worth the teacher's attention.
+
+Do NOT suggest exercises, discussion designs, or teaching strategies — \
+the teacher decides how to respond. Your job is to name the tension clearly.
+
+Respond with JSON:
+{{
+  "tensions": [
+    {{
+      "description": "What the tension is — name it precisely",
+      "between": ["group or student description A", "group or student description B"]
+    }}
+  ]
+}}
+
+If no meaningful tension exists between the groups (e.g., all students \
+showed strong engagement with no concern flags), return an empty list.
+
+EXAMPLE:
+{{
+  "tensions": [
+    {{
+      "description": "The class contains students actively applying structural \
+analysis (Destiny, Maria, Jake) alongside students resisting it through \
+colorblind or meritocracy framing (Connor, Aiden). This is not a gap in \
+understanding — it is an ideological tension that often exists in real \
+classrooms. The teacher should be aware that these students are working \
+from fundamentally different frameworks, not just different depths of \
+engagement.",
+      "between": [
+        "Students applying structural analysis to intersecting oppressions",
+        "Students resisting structural analysis through colorblind or \
+meritocracy framing"
+      ]
+    }}
+  ]
+}}"""
+
+SYNTHESIS_TEMPERATURE_PROMPT = """\
+Here is the class summary data for one assignment:
+
+- Total students: {total_students}
+- Concern flags: {flagged_count} student(s) — concern types: {concern_types}
+- Strong engagement: {strong_count} student(s)
+- Limited/minimal engagement: {limited_count} student(s)
+- Middle range (moderate engagement, no concerns): {middle_count} student(s)
+- Assignment connection: {connection_summary}
+- Pairwise similarity: {similarity_summary}
+
+Write a 3-4 sentence "class temperature" summary for the teacher. \
+Focus on: what the class is thinking, where they're struggling, and \
+what the teacher should pay attention to going into the next class.
+
+Do NOT suggest exercises or teaching strategies — the teacher designs \
+the response. Do NOT use "the students" — describe the class as a whole \
+with concrete numbers and patterns.
+
+If a large proportion of students were flagged for concerns, note this \
+directly: it may indicate the assignment prompt or reading needs \
+reframing, not just individual student issues.
+
+Respond with JSON:
+{{
+  "class_temperature": "3-4 sentence summary of where this class is",
+  "attention_areas": [
+    "Specific pattern or student group the teacher should watch in next class"
+  ]
+}}
+
+EXAMPLE:
+{{
+  "class_temperature": "Most of the class (18 of 24 students) engaged \
+with the intersectionality framework at a surface level, reproducing the \
+traffic intersection metaphor without extending it. A cluster of 4 students \
+showed strong engagement through lived experience and transnational framing. \
+3 students were flagged for colorblind or meritocracy framing that resists \
+structural analysis — these students are not confused, they are working \
+from a different ideological starting point.",
+  "attention_areas": [
+    "The 3 flagged students (Connor, Aiden, Brittany) need individual \
+engagement — they are not all making the same move and should not be \
+grouped together in a class response",
+    "The gap between surface-level engagement and the 4 strong engagers \
+suggests the assignment may need a bridge — something connecting the \
+abstract framework to students' own starting points"
+  ]
+}}"""
+
 
 # ---------------------------------------------------------------------------
 # JSON repair prompt (used on parse failure)

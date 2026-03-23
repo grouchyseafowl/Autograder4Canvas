@@ -380,3 +380,500 @@ Document-level cosine at 0.90 catches near-verbatim copying. But the emerging pa
 Steering feedback away from validating colorblindness is good pedagogy. But how far should the system go in shaping what a teacher says to a student? The system provides drafts, never final text — the teacher decides. But the drafting LLM IS making pedagogical choices: it's deciding what to validate and what to redirect. This is inherently a values-laden process, and the system should be transparent about whose values are encoded. (#FEMINIST_TECHNOSCIENCE)
 
 **For now**: Pass concern content to feedback drafter with clear guidance. The teacher reviews and edits all drafts before sending.
+
+---
+
+## Section 5: 8B Capability Assessment — What Can Distributed Intelligence Achieve?
+
+> The handoff asks: "What specific interpretive moves does Opus make that 8B doesn't? Which could be approximated through multi-pass strategies or non-LLM augmentation? Which are genuinely beyond 8B?"
+
+### What the 8B Pipeline Already Does Well
+
+Based on the 10 hand-crafted students (the methodologically clean subset):
+
+1. **Content coding accuracy**: Theme tags for Maria Ndiaye, Destiny Williams, Jake Novak, and Connor Walsh are accurate and specific. "Critiquing intersectionality framework" for Jake is excellent — it names the intellectual move precisely.
+
+2. **Concern detection with equity awareness**: Correctly flags essentializing (Brittany, 0.8), colorblindness (Connor, 0.85), tone policing (Aiden, 0.85). Correctly does NOT flag righteous anger (Destiny) or legitimate critique (Jake). This is the pipeline's strongest capability — it gets the pedagogically sensitive calls right.
+
+3. **ESL protection**: Maria Ndiaye's non-native English patterns are not flagged as concerns. Her transnational perspective is captured as analytical strength. (#COMMUNITY_CULTURAL_WEALTH)
+
+4. **Quote selection**: Notable quotes extracted from submissions accurately capture the student's strongest moments.
+
+### Interpretive Moves Opus Makes That 8B Does Not
+
+| Opus Move | Example | 8B Equivalent | Gap Type |
+|-----------|---------|---------------|----------|
+| **Naming rhetorical strategies** | "Uses respect language to dismiss structural analysis" (Connor) | "Colorblind claim" (flags the behavior but doesn't name the rhetorical tactic) | Characterization depth |
+| **Evaluating intellectual quality** | "Identifies a genuine framework limitation" (Jake) | "Critiquing intersectionality framework" (describes the move but doesn't evaluate it) | Evaluative judgment |
+| **Detecting engagement absence** | "Surface-level... no personal connection" (Tyler) | "Engaging with intersectionality" (coded the vocabulary, missed the absence) | Engagement assessment |
+| **Emotional register precision** | "Confused" (Brittany), "Defensive" (Aiden) | "Passionate" (Brittany), "Analytical" (Aiden) — less pedagogically useful | Register calibration |
+| **Pedagogical significance** | "This tension IS the pedagogy" (Connor vs. Destiny) | Does not surface cross-student tensions | Synthesis |
+| **Connecting to scholarship** | "Transnational feminism" (Maria) | Does not name broader scholarly connections | Scholarly context |
+
+### What Could Be Approximated Through Mycorrhizal Architecture
+
+The mycorrhizal model (distributed 8B calls with inter-stage data flow) can close some of these gaps through architecture rather than model size:
+
+**1. Engagement absence detection → Non-LLM augmentation**
+The AIC already computes engagement dimensions (personal_connection, intellectual_work, course_engagement, etc.). Wiring these into pipeline records would surface Tyler/Jaylen's disengagement without requiring the 8B to detect it. This is the highest-impact mycorrhizal fix that doesn't require a bigger model.
+
+**2. Self-consistency checking → Post-validation pass**
+Theme tags contradicting concerns (Brittany: "celebrating cultural diversity" + "essentializing language") can be caught by a simple post-validation: if a concern is flagged, check whether theme tags validate the flagged behavior. This is a non-LLM rule, not a model capability.
+
+**3. Incomplete submission detection → Non-LLM heuristic**
+Jordan Kim's truncation ("Idk I had more to say but its late and") is detectable by: (a) last sentence lacks terminal punctuation, (b) word count well below class median, (c) trailing conjunction or incomplete phrase. No LLM needed.
+
+**4. Cross-student tension surfacing → Multi-pass synthesis**
+The 8B can't spontaneously identify that Connor's colorblindness contradicts Destiny's structural analysis. But a targeted synthesis prompt — "Given these two students' positions on [topic], describe the tension between them" — could produce this with guided multi-pass calls. The mycorrhizal model's power is in ORCHESTRATION: each 8B call does small, scoped work; the pipeline composes these into emergent insight.
+
+**5. Register calibration → Prompt refinement**
+The 8B's register vocabulary ("analytical," "passionate") could be sharpened by providing richer register options in the coding prompt and by passing concern signals as context. If the concern detector flags tone policing, the coder could receive: "This student has been flagged for tone policing — is 'analytical' really the right register, or is 'defensive' or 'uncomfortable' more precise?" This is a mycorrhizal link: Stage 5 output informing Stage 4 interpretation.
+
+**6. Coding hallucination prevention → Inter-stage data flow (IMPLEMENTED)**
+The assignment connection score now flows into coding prompts. When vocabulary overlap is low, the 8B receives: "Code what the student ACTUALLY wrote about." This is the architecture compensating for the 8B's tendency to hallucinate assignment concepts.
+
+### What Is Genuinely Beyond 8B, Even With Distributed Intelligence
+
+**1. Evaluative judgment about intellectual quality**: Opus can say Jake's class-based critique "identifies a genuine framework limitation." This requires understanding the intersectionality framework well enough to evaluate whether the critique has merit. An 8B model doesn't have the depth of domain knowledge to make this call. The pipeline should surface the critique (which it does well) and let the teacher evaluate its quality.
+
+**2. Connecting to broader scholarship**: Opus connects Maria's work to "transnational feminism." This requires knowledge of scholarly traditions that 8B models don't reliably hold. The pipeline can capture what Maria wrote; it can't place it in scholarly context. This is acceptable — scholarly contextualization is the teacher's expertise, not the system's.
+
+**3. Spontaneous pedagogical synthesis**: Opus produces "What to do Monday morning" narratives that connect individual student patterns to class-level teaching strategies. This requires holding 29 students' patterns simultaneously and reasoning about pedagogical implications. The 8B synthesis stage attempted this (3/9 sections completed) but the quality was low and it crashed. A multi-pass approach could improve reliability but the interpretive depth of a single Opus pass is unlikely to be matched.
+
+**4. Nuanced register characterization**: Even with prompt refinement, 8B models tend toward a limited register vocabulary. The difference between "passionate" and "urgent" or between "analytical" and "defensive" requires subtle social-emotional reasoning that smaller models struggle with. Prompt refinement can help (providing more options) but won't fully close the gap.
+
+### The Optimization Target
+
+The handoff asks: "Does it catch the structural patterns that help a teacher know what to do Monday morning?"
+
+The 7 things a teacher needs to know:
+
+| Need | 8B Pipeline Status | Mycorrhizal Fix? |
+|------|-------------------|-----------------|
+| 1. Wrong-assignment submissions | NOW DETECTABLE (assignment connection scoring) | Yes — non-LLM |
+| 2. Maria's exceptional work | DETECTED (accurate coding + no false flags) | Already works |
+| 3. Connor/Aiden resisting framework | DETECTED (concern signals accurate) | Already works |
+| 4. Brittany's essentializing | DETECTED (concern flagged) | Already works |
+| 5. Jordan may be struggling | NOT DETECTED (truncation not surfaced) | Yes — non-LLM heuristic |
+| 6. Near-identical/low-engagement responses | NOW DETECTABLE (pair surfacing + engagement absence) | Yes — AIC integration |
+| 7. Zero personal connection (Tyler, Jaylen) | NOT DETECTED by pipeline (AIC detects it) | Yes — wire AIC into pipeline |
+
+**5 of 7 are working or now implemented. Items 5 and 7 are fixable through non-LLM mechanisms (truncation detection, AIC-pipeline integration) — no bigger model needed.**
+
+The 8B pipeline, with mycorrhizal architecture, can catch the structural patterns a teacher needs. It cannot match Opus on interpretive prose, evaluative judgment, or scholarly contextualization. But those aren't what the teacher needs from a batch processing tool — they're what the teacher brings to the conversation the tool starts.
+
+---
+
+## Section 6: Cross-Model Pipeline Comparison
+
+> **Added 2026-03-22.** Ethnic Studies corpus (29 submissions) run through the same pipeline
+> with four different LLM backends. All share identical pre-LLM stages (Quick Analysis:
+> sentiment, keywords, clusters, embeddings, pairwise similarity, truncation detection).
+> Only LLM-dependent stages (coding, concerns, themes, outliers, synthesis, feedback) differ.
+
+### 6.1 Models Tested
+
+| Model | Backend | Param Count | Status |
+|-------|---------|-------------|--------|
+| **MLX 8B** (llama3.1:8b) | Ollama local | 8B | Complete (with timeout artifacts) |
+| **DeepSeek** (deepseek-chat) | OpenRouter API | 671B MoE | Complete |
+| **Qwen3-32B** (qwen/qwen3-32b) | OpenRouter API | 32B | Complete |
+| **Llama-70B** | OpenRouter API | 70B | Failed (401 auth error) |
+| **Gemini Flash 1.5** | OpenRouter API | — | Failed (404 endpoint not found) |
+| **Claude Sonnet** | Anthropic API | — | Failed (auth not configured) |
+
+### 6.2 Theme Consolidation
+
+Theme quality is the clearest differentiator between models. The same 29 submissions produce wildly different theme structures:
+
+| Metric | MLX 8B | DeepSeek 671B | Qwen3-32B |
+|--------|--------|---------------|-----------|
+| Total themes | 30 | 12 | 7 |
+| LLM-generated themes | 18 | 12 | 7 |
+| Fallback themes (LLM timed out) | 12 | 0 | 0 |
+| Driving themes | ~12 (6 LLM + 0 fallback on driving) | 6 | 4 (2 near-duplicates) |
+| Intersectionality themes | ~6 LLM + 12 fallback | 3 | 3 |
+| Meta/cross-topic themes | 0 | 1 (classroom dialogue) | 0 |
+| Ethan/Nadia pair themes | 1 | 3 ⚠️ | 1 |
+| Avg confidence | ~0.55 (dragged down by 0.3 fallbacks) | 0.89 | 0.82 |
+| Contradictions surfaced | 6 (shallow) | 4 (deep, well-attributed) | 4 (2 shallow incl. 1 hallucinated, 2 substantive) |
+
+**DeepSeek** produces the best theme structure overall but has a significant artifact problem: 3 of 12 themes (25%) are about the Ethan Liu / Nadia Petrov pair ("framing public safety as a moral trade-off with convenience," "using analogies to critique social harms," "register of urgency in discussing intersectional harms"). Since both students derive from `daigt_00011` (a data construction artifact — see Section 1.2), DeepSeek is over-investing in a pair that doesn't represent organic student variation. On a real corpus this wouldn't happen, but it inflates DeepSeek's apparent theme count. **Without the artifact pair, DeepSeek produces 9 substantive themes** — still the best consolidation.
+
+Where DeepSeek genuinely excels: it correctly separates "urgent advocacy" (moral framing, theme 7) from "analytical approaches" (statistical framing, theme 8) within the driving submissions, and distinguishes "applying intersectionality to lived experience" (theme 2) from "defining intersectionality as theory" (theme 5). Its contradictions section is the strongest — it identifies the lived-urgency vs. academic-detachment tension and names Destiny vs. Aiden/Connor as the pedagogically productive axis.
+
+**Qwen3-32B** is more consolidated at 7 themes but has two problems. First, themes 1 and 4 are near-duplicates ("Distracted Driving as Public Safety Crisis vs. Personal Choice" and "Distracted Driving as a Public Safety Concern") — effectively 6 distinct themes. Second, and more critically: **Qwen3 hallucinated student names AND quote text in theme supporting evidence.** Theme 2 ("Intersectionality in Non-Western Contexts") attributes quotes to "Amina Patel," "Carlos Mendez," and "Lena Kim" — students who do not exist in the corpus. "Amina Patel" and "Lena Kim" appear nowhere in the codebase. "Carlos Mendez" exists in `assemble_demo_corpus.py`'s name pool but was not used in this corpus. The theme's student_ids (S001, S002, S015, S022, S025) map to Maria Ndiaye, Jordan Kim, Brittany Okafor, Destiny Williams, and Aiden Brooks respectively.
+
+**Verified**: the quotes themselves are also fabricated — "In my country, being a woman and poor means you're doubly invisible in policy discussions" and "My abuela's experience as a Mexican immigrant and domestic worker shows how race, class, and gender collide" do not appear in any submission in the corpus. Qwen3 invented plausible-sounding intersectionality quotes and attributed them to invented students, while the student_ids point to real students who wrote different things.
+
+**Root cause (architectural, not model-specific)**: The theme generator (`theme_generator.py:128-152`) passes the LLM only a compact JSON per student: name, student_id, theme tags, confidence, emotional register, and **one quote excerpt (max 200 chars)**. The prompt (`prompts.py:506-507`) then asks for "2-4 supporting quotes per theme (verbatim from the records)." With 5 students in a theme cluster × 1 short quote each, the model has ~1000 chars of actual quote material but is asked to produce 2-4 full quotes. This is a **hallucination-inviting prompt design** — the gap between what the model has and what it's asked to produce pressures fabrication. Qwen3-32B is most susceptible (it fabricated both names and quotes), but the vulnerability exists for all models. DeepSeek and 8B stay closer to the actual fragments. **Verified**: spot-checking 5 DeepSeek supporting quotes against the corpus found 4/5 verbatim matches and 1/5 truncated mid-word (the 200-char excerpt limit cut "at one thing at a time" to "at o" — a clipping artifact, not fabrication). DeepSeek does not fabricate quotes; it stays within the material it has and clips when the excerpt runs out. This makes the contrast sharper: same prompt, same data gap, but Qwen3 fabricates entirely while DeepSeek constrains itself to available material. The vulnerability is real but model behavior under it differs dramatically.
+
+The harm remains real regardless of root cause. (#ALGORITHMIC_JUSTICE: if a teacher reads "Amina Patel said X" and tries to follow up, they're acting on fabricated evidence about a student who doesn't exist. If they cross-reference with the student_ids, they'd attribute fabricated words to Maria Ndiaye or Destiny Williams — real students who said different things.)
+
+Qwen3 did surface Connor Walsh as an outlier (not just a concern), correctly naming the colorblind-individualism tension — a genuine strength.
+
+**MLX 8B** fragments badly: 30 themes includes 12 fallbacks from timeouts and heavy redundancy within the LLM-generated set ("risks and consequences of distracted driving" / "distracted driving risks" / "public safety concerns" / "concern about public safety" / "concern for safety" — five themes for one pattern). The intersectionality themes that completed are accurate but the timeouts left the pedagogically important submissions as bare tag-frequency fallbacks with 0.3 confidence and no descriptions.
+
+### 6.3 Concern Detection — NOT Consistent Across Models
+
+Concern detection varies significantly across model sizes. This contradicts an earlier draft of this section that claimed "all equal."
+
+#### Hand-crafted students (methodologically valid):
+
+| Student | Pattern | 8B | DeepSeek | Qwen3-32B |
+|---------|---------|-----|----------|-----------|
+| Brittany Okafor | Essentializing | ✅ (0.8) | ✅ (0.85, 0.9) | ❌ **missed** |
+| Connor Walsh | Colorblind claim | ✅ (0.85) | ✅ (0.85, 0.7) | ✅ (0.85, 0.8) |
+| Aiden Brooks | Tone policing | ✅ (0.8) | ✅ (0.85) | ❌ **missed** |
+| Destiny Williams | Righteous anger (NOT flagged) | ✅ correct | ✅ correct | ✅ correct |
+| Jake Novak | Premise challenge (NOT flagged) | ✅ correct | ✅ correct | ✅ correct |
+| Maria Ndiaye | ESL (NOT flagged) | ✅ correct | ✅ correct | ✅ correct |
+
+**Qwen3 misses 2 of 3 pedagogically important concern flags.** Only Connor Walsh's colorblind claim is caught. Brittany's essentializing and Aiden's tone policing — both correctly flagged by 8B and DeepSeek — are invisible to Qwen3. This means a teacher running Qwen3 would see no signal that Brittany is essentializing or that Aiden is tone-policing. (#TRANSFORMATIVE_JUSTICE: if the system misses the harm, the teacher can't address it.)
+
+**8B and DeepSeek agree on all three hand-crafted concern flags.** DeepSeek additionally splits Brittany into two distinct concerns (essentializing Mexican families *and* essentializing Black families separately) and Connor into two (colorblind ideology *and* dismissal of analytical value). This granularity is useful — it gives the teacher more specific language for the conversation.
+
+**All three models correctly do NOT flag** Destiny (righteous anger), Jake (premise challenge), or Maria (ESL patterns). This is the easier call — the prompt framing and anti-bias post-processing appear to work across model sizes for protecting these students.
+
+#### DAIGT-derived students (methodology-limited — cannot fully validate):
+
+DeepSeek flags 5 additional students from the DAIGT-adapted essays:
+
+| Student | Flag | Methodological Status |
+|---------|------|-----------------------|
+| Ethan Liu (S005) | STD analogy ("a habit that spreads like STDs") | **Legitimate flag** — problematic language exists in text regardless of source |
+| Nadia Petrov (S033) | Same STD analogy | **Legitimate flag** — but the identical text is a `daigt_00011` artifact |
+| Kai Tanaka (S016) | Teen essentializing ("teens who are so distracted") | **Debatable** — common discourse pattern; flagging may be over-sensitive |
+| Emma Gonzalez (S014) | Wrong assignment | **Artifact** — this IS a data construction artifact, not a real classroom pattern |
+| Marcus Rivera (S019) | Youth essentializing ("young arrogance") | **Debatable** — same issue as Kai |
+
+Neither 8B nor Qwen3 flagged any of these. DeepSeek's greater sensitivity catches more, but without real classroom data we can't determine whether this represents better detection or over-flagging.
+
+#### Summary: Concern detection IS model-dependent
+
+The concern detector's prompts provide good framing, but the LLM's interpretive capacity determines whether it recognizes the patterns. 8B catches the clear cases. DeepSeek catches everything and then some. Qwen3 is unreliable — it misses 2 of 3 validated concerns. **This is a significant finding: model size matters for concern detection, and Qwen3 is not adequate for this stage.**
+
+### 6.4 Synthesis Completion
+
+| Section | 8B | DeepSeek | Qwen3-32B |
+|---------|-----|----------|-----------|
+| what_students_said | ✅ (partial) | ❌ insufficient data | ❌ insufficient data |
+| emergent_themes | ✅ (partial) | ❌ | ❌ |
+| tensions_and_contradictions | ✅ (partial) | ❌ | ❌ |
+| surprises | ❌ | ❌ | ❌ |
+| focus_areas | ❌ | ❌ | ❌ |
+| concerns | ❌ | ❌ | ❌ |
+| divergent_approaches | ❌ | ❌ | ❌ |
+| looking_ahead | ❌ | ❌ | ❌ |
+| students_to_check_in_with | ❌ | ❌ | ❌ |
+| **Sections filled** | **3/9** | **0/9** | **0/9** |
+
+**This is the biggest surprise.** DeepSeek and Qwen3 — which outperform 8B on themes — produce *zero* synthesis sections. The 8B at least filled 3 (though partial and mixed-topic). The synthesis stage is failing differently than theme generation: it's not timing out, it's returning "insufficient data" across the board.
+
+**Root cause identified** (not a hypothesis — traced through code):
+
+The failure chain is: `synthesizer.py:_run_synthesis()` (line 277-298) → `parse_json_response()` → the model returns JSON with a structure the parser doesn't expect → `parsed.get("sections", {})` **silently returns an empty dict** → `SynthesisReport(sections={})` → `generate_demo_insights.py` fills in "(Insufficient data for this section.)" placeholders for all 9 required keys.
+
+Three contributing factors:
+
+1. **Silent error handling**: `parsed.get("sections", {})` (line 292) has no logging when the key is missing. The code treats "model returned unexpected JSON structure" the same as "model returned empty sections." There's no way to distinguish these in the output.
+
+2. **Same 4096 max_tokens for all models**: The MEDIUM-tier synthesis asks for all 9 sections in a single response. DeepSeek and Qwen3 may truncate mid-generation or return differently-structured JSON when hitting the token limit. Llama 8B, being instruction-tuned for JSON generation, reliably produces the expected structure even within token constraints.
+
+3. **Single-shot 9-section request**: The prompt passes all themes + outliers + concerns + quick analysis at once and asks for 9 analytical sections in a single JSON response. This works for models specifically trained on structured instruction-following (Llama) but may not work for general-purpose models (DeepSeek, Qwen3) that prioritize natural language fluency over JSON schema compliance.
+
+**This is a fixable bug, not a model limitation.** DeepSeek clearly has the interpretive capacity — its themes and contradictions are excellent. Likely fixes: (a) log the actual model response when sections are empty; (b) increase max_tokens for synthesis on API backends; (c) consider multi-pass synthesis (3 sections per call) for non-Llama backends, as already implemented for 8B reliability.
+
+### 6.5 Feedback Quality
+
+All three models produce usable feedback drafts. Key differences:
+
+**DeepSeek feedback** is the most pedagogically precise. For Maria Ndiaye, it asks "if you were to recommend one story or voice from your family's experience to include in our course materials, what would it be?" — this positions her as a curriculum co-creator, not just a student responding to material. For Jake Novak, it asks how "an intersectional framework that fully centers class" might change understanding — validating his critique while pointing him toward productive engagement.
+
+**Qwen3 feedback** is solid but more formulaic. It hits the right notes (validates, quotes, asks follow-up) but the follow-up questions are more generic ("how might you consider ways that acknowledging identity categories could help create more equitable systems"). Still usable; just less tailored.
+
+**8B feedback** was assessed in Section 3 — accurate quoting but less pedagogical precision.
+
+**Critical note on Connor Walsh feedback across models**: DeepSeek's feedback for Connor redirects toward structural analysis ("what might be gained by examining how those systems operate"). Qwen3's validates his colorblind framing ("your clear personal commitment to equality, like your statement about treating people based on who they are rather than how they look, is a meaningful strength") — this is the feedback-concern contradiction identified in Section 4, Gap 1. Qwen3 did flag Connor's colorblindness as a concern (Section 6.3), but the feedback drafter didn't receive that flag — confirming this is an **architectural issue** (broken mycorrhizal link between concern detector and feedback drafter), not a model issue. The same broken link affects all three models, but DeepSeek's feedback happens to redirect Connor anyway — likely because DeepSeek's interpretive capacity independently recognizes the colorblind move even without receiving the concern flag. 8B and Qwen3 don't have that independent capacity, so they need the architectural fix.
+
+### 6.6 Timing
+
+| Stage | 8B (local) | DeepSeek (API) | Qwen3-32B (API) |
+|-------|------------|----------------|-----------------|
+| Quick Analysis | ~13s | 12s | 14s |
+| Coding (total) | ~2,668s* | 310s | 560s |
+| Concerns | ~3,016s* | 125s | 918s |
+| Themes | ~843s* | 180s | 208s |
+| Outliers | ~68s* | 15s | 14s |
+| Synthesis | ~159s* | 26s | 124s |
+| Feedback | ~2,262s* | 185s | 453s |
+| **Total** | **~150 min*** | **14 min** | **38 min** |
+| **Per student** | **~310s** | **30s** | **80s** |
+
+*8B estimates extrapolated from 3-student pilot timing in `testing_observations.md`. DeepSeek and Qwen3 are actual full-run timings.
+
+DeepSeek is 10x faster than local 8B and produces better output. This has significant implications for the demo — a full 29-student run completes in 14 minutes on DeepSeek vs. ~2.5 hours on local 8B. However: DeepSeek is a cloud API (data leaves the machine), which changes the FERPA calculus entirely.
+
+### 6.7 Which 8B Refinements Apply to Other Backends?
+
+The refinement plan (`docs/refinement_plan.md`) implemented 6 changes (R1-R6) based on 8B testing. Here's which would address the issues found on DeepSeek, Qwen3, and the Gemini handoff path:
+
+| Refinement | Addresses DeepSeek Issue? | Addresses Qwen3 Issue? | Addresses Gemini Handoff Issue? |
+|---|---|---|---|
+| **R1: Assignment Connection** | No — DeepSeek already reflects topic awareness in themes | No — same | Partially — could add statistical backing to Gemini's narrative observation about 19 off-topic submissions |
+| **R2: Feedback-Concern Flow** | **Yes** — same broken mycorrhizal link. DeepSeek's feedback independently redirects Connor (model capacity), but the link is still broken for less obvious cases | **Yes** — Qwen3's Connor feedback validates colorblindness. But limited value since Qwen3 also missed 2/3 concern flags (nothing to flow) | N/A — single-pass, no inter-stage link |
+| **R3: Pair Surfacing** | Already works (same code) | Already works (same code) | Partially — Gemini caught Ethan/Nadia but recommended "academic integrity protocol"; our surfacing uses equity framing |
+| **R4: Hallucination Guard** | Likely unnecessary — DeepSeek didn't hallucinate in coding stage | **Does NOT address Qwen3's hallucination** — the guard validates coding-stage concepts against submission text, but Qwen3's fabrication is in theme-stage quotes/names. Different stage, different hallucination type, needs its own fix | N/A |
+| **R5: Inter-Stage Data Flow** | **Yes** — same architecture; DeepSeek themes/concerns still don't inform feedback drafter | **Yes** — same architecture | N/A — single pass |
+| **R6: Data Models** | Already in effect | Already in effect | N/A |
+
+**Unaddressed problems that need new work:**
+
+1. **Synthesis 0/9 failure (DeepSeek + Qwen3)**: No existing refinement covers this. Root cause: silent `parsed.get("sections", {})` fallback in `synthesizer.py:292` + same 4096 max_tokens for all models. Needs: (a) error logging when sections key missing, (b) increased max_tokens for API backends, (c) consider multi-pass synthesis (3 sections per call) for non-Llama backends.
+
+2. **Theme hallucination — quote fabrication (Qwen3, potentially all models)**: R4 doesn't apply — it guards coding-stage concepts, not theme-stage quotes. Root cause: prompt asks for "2-4 supporting quotes per theme (verbatim)" but only provides 1 quote per student (max 200 chars) via `_records_to_compact_json()`. Needs: either (a) change prompt to only request the quotes already in the input ("select the most relevant quote from each student's record"), or (b) pass more quote material to theme generation, or (c) add post-validation that theme quotes actually appear in the coding records.
+
+3. **Concern detection misses (Qwen3)**: No existing refinement addresses this. The concern detector's prompts weren't changed in the 8B round. Qwen3 missed Brittany (essentializing) and Aiden (tone policing). This could be: (a) model capacity — Qwen3 can't recognize these patterns at the same rate as 8B/DeepSeek, or (b) prompt sensitivity — the concern prompts may need adjustment for non-Llama models. Needs investigation: run the concern detector on just the 3 hand-crafted concern students with Qwen3 and examine the raw LLM response to see whether it's a parsing issue or a recognition issue.
+
+4. **Engagement absence (all backends)**: F1 in the refinement plan (deferred). None of the pipeline backends detect Tyler/Jaylen's disengagement. The Gemini handoff catches it because it sees the full submission text in a single pass and can compare across students. The local pipeline codes content per-student without cross-student engagement comparison.
+
+### 6.8 Llama 70B — Different Corpus, Not Directly Comparable
+
+> **Added 2026-03-22.** The 70B run completed via OpenRouter: 29 students, 1527s total, 52.67s/student.
+> Output at `src/demo_assets/insights_ethnic_studies_llama70b.json`.
+
+**Critical methodology note**: The 70B run processed a **different corpus** than the 8B, DeepSeek, and Qwen3 runs. Between those runs and the 70B run, `data/demo_corpus/ethnic_studies.json` was regenerated:
+
+- The 19 DAIGT driving essays (keyword-swapped, off-topic) are **gone**
+- Replaced with hand-crafted intersectionality submissions: 4 "strong" (S004-S007), 5 "moderate" (S008-S009, S012-S014, S016), 3 "surface" (S017, S019, S021), 3 "lived experience without academic vocabulary" (S023-S024, S026), plus "outside source" (S027), "nonstandard English" (S028), and "neurodivergent writing" (S029)
+- All 29 students now write about intersectionality — no topic-mismatch artifacts
+- Student names changed (S004 was "Sophia Ramirez", now "Priya Venkataraman"; etc.)
+
+This means **the 70B results cannot be directly compared with 8B/DeepSeek/Qwen3 on theme quality, concern detection accuracy, or coding behavior**, because the input data is fundamentally different. The corpus the earlier models struggled with (mixed driving + intersectionality topics, DAIGT artifacts) no longer exists.
+
+What we CAN compare: timing, synthesis completion, structural behavior (hallucination patterns, feedback-concern flow), and the 10 hand-crafted students that are unchanged across both corpora (S001-S003, S010-S011, S015, S018, S020, S022, S025).
+
+#### 6.8.1 What 70B Produced
+
+| Metric | Llama 70B |
+|--------|-----------|
+| Themes | 7 |
+| Fallback themes | 0 |
+| Avg confidence | ~0.81 |
+| Concerns flagged | 3 (Brittany 0.7, Connor 0.7, Aiden 0.8) |
+| Synthesis sections filled | **0/9** (same bug as DeepSeek/Qwen3) |
+| Outliers | 3 |
+| Timing | 1527s total, 52.67s/student |
+
+#### 6.8.2 Concern Detection — All Three Correct
+
+70B correctly flags all three hand-crafted concerns: Brittany (essentializing, 0.7), Connor (colorblind, 0.7), Aiden (tone policing, 0.8). This matches 8B and DeepSeek; the unchanged hand-crafted students allow valid comparison here. 70B joins 8B and DeepSeek in the "3/3" tier, while Qwen3 remains at 1/3.
+
+#### 6.8.3 Connor Walsh Feedback — Independently Redirects
+
+70B's feedback for Connor does NOT validate the colorblind framing. It uses Socratic questioning ("how do you think the experiences of individuals from different backgrounds might be impacted by the approach you described?") to redirect toward structural analysis. Like DeepSeek, 70B independently recognizes the problematic framing even without the concern flag flowing to the feedback drafter (the mycorrhizal link is still broken). This suggests models ≥70B can compensate for the architectural gap through interpretive capacity, while 8B and Qwen3 cannot.
+
+#### 6.8.4 Synthesis — Same 0/9 Bug
+
+70B produces 0/9 synthesis sections, confirming the synthesis failure is **not model-specific**. The `synthesizer.py:292` silent-fallback bug affects all non-8B backends tested (DeepSeek, Qwen3, 70B). This is now the highest-priority pipeline bug — it blocks the most valuable output stage across every API backend.
+
+#### 6.8.5 Timing Comparison (Updated)
+
+| Model | Total | Per Student | Backend |
+|-------|-------|------------|---------|
+| 8B MLX | ~150 min* | ~310s* | Local (Ollama) |
+| Qwen3-32B | 38 min | 80s | Cloud (OpenRouter) |
+| **Llama 70B** | **25 min** | **53s** | **Cloud (OpenRouter)** |
+| DeepSeek 671B | 14 min | 30s | Cloud (OpenRouter) |
+
+*8B extrapolated from pilot. 70B is 4× faster than local 8B with higher quality output on the hand-crafted students. DeepSeek remains fastest.
+
+#### 6.8.6 The New Corpus — Implications for Future Testing
+
+The regenerated corpus resolves the methodology limitations documented in Section 1: no more DAIGT artifacts, no mixed-topic confusion, no `daigt_00011` duplicate pair. All 29 students write about intersectionality. The new patterns (lived experience without academic vocabulary, outside source, nonstandard English, neurodivergent writing) test exactly the equity-critical cases Section 1 identified as untestable: (#LANGUAGE_JUSTICE) students who engage experientially rather than academically, (#NEURODIVERSITY) neurodivergent writing patterns, (#COMMUNITY_CULTURAL_WEALTH) family knowledge as analytical asset without academic framing.
+
+**All future pipeline runs should use the updated corpus.** The 8B/DeepSeek/Qwen3 runs should be re-run on the new corpus for valid cross-model comparison. The current comparison (Sections 6.2-6.7) remains valid as a historical record of methodology-artifact-aware analysis, but its findings about theme consolidation and topic-mismatch handling are no longer the relevant test.
+
+### 6.9 Cross-Model Summary
+
+| Dimension | Best Model | Notes |
+|-----------|-----------|-------|
+| Theme consolidation | DeepSeek | 9 substantive themes (12 total, 3 are Ethan/Nadia artifact) |
+| Concern detection | DeepSeek | 8B adequate (3/3 hand-crafted); Qwen3 unreliable (1/3) |
+| Feedback quality | DeepSeek | Most pedagogically precise, best follow-up questions |
+| Synthesis | None (all fail) | Pipeline wiring issue — needs debugging |
+| Speed | DeepSeek | 14 min total, 30s/student |
+| Privacy | 8B (local) | Only option that keeps data on-machine |
+| Hallucination risk | DeepSeek (lowest) | 8B hallucinated concepts on off-topic essays (old corpus, DAIGT artifact — see Section 1); Qwen3 hallucinated student names and quotes (prompt vulnerability — see Section 6.2) |
+
+**Recommendation**: DeepSeek is the strongest backend for pipeline quality. But the privacy tradeoff (cloud API = student data leaves the machine) means local 8B remains the right default for real classroom use unless the school has an institutional API agreement. The pipeline should support both — quality ceiling for demo/institutional use, privacy floor for individual teacher use.
+
+**Warning on Qwen3-32B**: Two failures surfaced: (1) missing 2 of 3 concern flags, and (2) hallucinating student names and quotes in theme evidence. However, the hallucination (see Section 6.2) is primarily a **prompt design vulnerability** — the theme generator asks for 2-4 quotes while providing only 1 per student. Qwen3 is most susceptible, but the gap exists for all models. Before offering Qwen3 as a backend: (a) fix the theme prompt to only request quotes the model actually has, and (b) investigate whether the concern detection miss is also prompt-related or a genuine model limitation. (#ALGORITHMIC_JUSTICE: the students who bear the cost of hallucinated concern-flag misses are exactly the students whose peers are essentializing or tone-policing them — but the fix may be in our prompts, not just model selection.)
+
+**Nuance on DeepSeek's Ethan/Nadia over-theming**: DeepSeek's 3 themes about the Ethan/Nadia pair are a data construction artifact (both from `daigt_00011`). This inflates DeepSeek's apparent theme quality. On a real corpus with organic student variation, DeepSeek would likely still outperform — but the 12-theme count should be understood as 9 substantive + 3 artifact.
+
+### Findings That Are Methodology Artifacts (Do NOT Try to Fix)
+
+These issues were surfaced by the old corpus's construction, not by pipeline bugs. The updated corpus (S001-S029, all on-topic) eliminates them:
+
+| Finding | Why It's an Artifact | Status After Corpus Update |
+|---------|---------------------|---------------------------|
+| 8B coding hallucination (David Park coded with "intersectionality in practice") | 8B given a driving essay in intersectionality context; tried to bridge the gap | **Moot** — no off-topic essays remain. R4 hallucination guard still good engineering for edge cases. |
+| DeepSeek 3-theme Ethan/Nadia over-representation | Both from `daigt_00011`; 98% vocabulary overlap is construction artifact | **Moot** — Ethan/Nadia pair removed. Pair surfacing (R3) still valid for real similar-submission cases. |
+| 30 themes on 8B (12 fallbacks on intersectionality submissions) | 8B timed out on the pedagogically important submissions; DAIGT submissions completed first | **Needs re-test** — on the new corpus (all on-topic, no DAIGT), 8B theme generation may perform very differently. |
+| "19 off-topic submissions" finding in all pipeline/Gemini analyses | DAIGT essays with keyword swaps, not genuinely off-topic student work | **Eliminated** — new corpus is 100% on-topic. |
+| Assignment connection scores (R1) showing vocabulary mismatch | DAIGT driving essays had no intersectionality vocabulary | **Needs re-test** — new corpus has organic vocabulary variation instead. |
+
+### Findings That ARE Real Pipeline Problems (Fix These)
+
+| Finding | Why It's Real | Affected Backends | Priority |
+|---------|--------------|-------------------|----------|
+| **Synthesis 0/9 on all API backends** | Silent `parsed.get("sections", {})` fallback; same 4096 max_tokens for all models | DeepSeek, Qwen3, 70B | **P0** — blocks most valuable output |
+| **Theme quote fabrication prompt vulnerability** | Asks for 2-4 quotes when only 1 available per student | All (Qwen3 worst, DeepSeek resists) | **P0** — fabricated quotes attributed to real students |
+| **Feedback-concern mycorrhizal break** | Concern content doesn't flow to feedback drafter | All (R2 implemented but not yet in API runs) | **P0** — already fixed in code, needs re-run |
+| **Qwen3 concern detection misses** (2/3) | Model doesn't recognize essentializing or tone policing patterns | Qwen3 only | **P1** — investigate prompt vs. model capacity |
+| **Engagement absence not surfaced** | Pipeline codes content but not absence of engagement | All | **P1** — F1 in refinement plan (AIC integration) |
+
+### Remediation Order
+
+Given the corpus change, the recommended order is:
+
+1. **Fix synthesis bug** (P0 — silent JSON fallback + max_tokens) — this is the highest-value fix because it blocks 9 sections of teacher-facing output on every API backend.
+2. **Fix theme quote prompt** (P0 — change "2-4 supporting quotes" to "select from the quotes provided") — prevents fabrication on all models.
+3. **Re-run all backends on new corpus** — with both fixes applied. This gives us a clean cross-model comparison on methodologically sound data.
+4. **Then** evaluate: do the Section 6.7 refinement recommendations still apply on the new corpus? Some may be moot (R1 assignment connection on all-on-topic corpus is less critical); others persist (R2 feedback-concern flow, R5 inter-stage data).
+
+---
+
+## Section 7: Gemini Pro Handoff — External Benchmark
+
+> **Added 2026-03-22.** Full output in `data/demo_baked/pipeline_handoff_gemini_pro.md`.
+> Gemini Pro (browser chatbot) was given the same 29 submissions via copy-paste and asked
+> to produce a class analysis. This tests what a teacher gets from dropping essays into
+> a commercial chatbot vs. running our pipeline.
+
+### 7.1 What Gemini Pro Produced
+
+A single narrative analysis covering:
+- Executive summary (correctly identifying the 19/29 wrong-file mass upload)
+- 4 emergent themes (Material Reality, Colorblind Pushback, Class Critique, Academic Shield)
+- Tensions section (Destiny vs. Aiden on tone; Connor vs. Maria/Destiny on individualism vs. systems)
+- Surprises (mass upload, Maria's globalizing critique, Jordan's incomplete submission)
+- Concern flags (mass upload logistics, Ethan/Nadia plagiarism, Brittany's essentializing, Connor/Aiden resistance)
+- Students to check in with (Jordan, Jake, Destiny)
+
+Two outputs tested: direct in-chat response and Canvas document export. **Both were identical** — no structural differentiation between formats.
+
+**Methodology note — two limitations**:
+
+First, Gemini was analyzing the same artifact-laden corpus as our pipeline. Its "correct" identification of the 19/29 wrong-file upload is actually Gemini reading a data construction artifact as a real classroom event. Similarly, its Ethan/Nadia plagiarism flag is triggered by a `daigt_00011` duplication artifact, not real student copying. Gemini's analysis of the 10 hand-crafted students is methodologically valid; its handling of the 19 DAIGT-adapted students is conditioned on artifacts it had no way to know about.
+
+Second, **the Gemini input is now documented**: the teacher used the pipeline's built-in chatbot export feature (`src/insights/chatbot_export.py:export_full_analysis()`), which generates a structured markdown document containing: (a) FERPA warning, (b) assignment name and course name, (c) teacher context ("Week 4, first reflection assignment after introducing intersectionality frameworks"), (d) teacher interests (personal connections, emotional register, struggling students, strong analytical voice), (e) a detailed pedagogical framework ("Student work is knowledge production. Multiplicity is generative. Political urgency about injustice is appropriate academic engagement, not a concern."), (f) a structured analysis prompt requesting specific output sections (themes, tensions, surprises, concerns, check-ins), and (g) all 29 submissions with student names, word counts, and full body text. The export file is `data/demo_baked/chatbot_export_ethnic_studies_full.md`.
+
+**This reframes the comparison significantly.** Gemini didn't receive raw submissions — it received a carefully engineered prompt with equity-framed pedagogical instructions, including explicit guidance to NOT flag anger about injustice as a concern and to treat student work as knowledge production. Much of what appears to be Gemini's "native" pedagogical sensitivity (not pathologizing Destiny's anger, framing Connor/Aiden's resistance as productive) may be the export prompt doing the work. Our pipeline encodes this same framing in its stage-specific prompts; the chatbot export makes it explicit in a single document. The comparison is fairer than initially thought — both systems use similar pedagogical framing, just delivered differently (multi-stage prompts vs. single-document prompt).
+
+### 7.2 What Gemini Pro Got Right
+
+**Theme consolidation**: 4 themes is close to optimal for the 10 on-topic submissions. This is comparable to DeepSeek's intersectionality theme count (3 intersectionality-specific themes) — Gemini just ignored the 19 off-topic submissions and focused on the pedagogically meaningful subset.
+
+**Tension identification**: The Destiny-vs-Aiden tension on tone policing and the Connor-vs-Maria/Destiny tension on individualism-vs-systems are the two most pedagogically productive axes in the corpus. Gemini named both, attributed them correctly, and provided pedagogical framing ("a fantastic opportunity to discuss who benefits from 'calm' discourse and whether marginalized people owe the classroom their emotional restraint"). This matches Opus-level interpretive quality.
+
+**Concern calibration**: Correctly identified Brittany's positive essentializing and framed it well ("challenge her to consider how assuming all people of a certain background act the same can be limiting, even if the stereotype is 'positive'"). Handled Connor/Aiden with appropriate nuance ("Do not shut them down. Frame their responses as common societal viewpoints").
+
+**Maria Ndiaye's globalizing critique surfaced**: "I think the reading could be stronger if it include voices from outside America because this experience it is everywhere not just here." Gemini elevated this as a Surprise — correctly identifying it as Maria critiquing the syllabus itself, not just completing the assignment.
+
+**Jordan Kim's incomplete submission caught**: Identified the mid-sentence cutoff and recommended checking in.
+
+### 7.3 What Gemini Pro Got Wrong or Risked
+
+**1. Plagiarism flag on Ethan Liu / Nadia Petrov**
+
+Gemini flagged "nearly identical paragraphs" between Ethan and Nadia and recommended "Follow your school's academic integrity protocol." This is a high-stakes recommendation from thin evidence. In our corpus, the similarity is a data construction artifact (both derive from DAIGT `daigt_00011`). But even with real data, near-identical phrasing in *wrong-file* submissions could indicate shared source material, group work, or a common assignment from another class — not necessarily academic dishonesty. Jumping to "academic integrity protocol" from a single observation, without cross-submission similarity statistics or baseline comparison, is exactly the kind of premature escalation our pipeline is designed to avoid.
+
+Our pipeline approach: surface the pair at ≥0.90 cosine similarity with equity-framed language ("These two submissions share 98% vocabulary overlap. This is a factual observation — the system does not determine cause. Possible interpretations include shared source material, collaborative learning, or identical content."). The teacher decides; the system doesn't recommend a protocol.
+
+**2. Names students freely throughout — no anonymization, no guardrails**
+
+Destiny gets "graduate-level synthesis" praise. Jordan gets flagged for a possibly-concerning cutoff. Brittany gets labeled as an essentializer. These are all reasonable teacher-facing observations, but they're produced by a commercial chatbot with no data governance, no access controls, and no audit trail.
+
+Who controls this data after the chat session? (#INDIGENOUS_DATA_SOVEREIGNTY applied broadly: who controls the data about these students?) The teacher entered student names and writing into Google's infrastructure. Gemini's privacy policy allows training on chat data unless opted out. Student writing is now potentially in Google's training corpus. Our pipeline runs locally by default — student data never leaves the teacher's machine.
+
+**3. No quantitative backing — pure qualitative impression**
+
+Gemini's analysis reads like a thoughtful TA wrote it. But there's nothing underneath it: no sentiment scores, no keyword frequency, no cluster analysis, no embedding similarity, no pairwise comparison. If the teacher wants to compare this assignment against a previous one, or track a student's engagement across the semester, there's nothing to build on. It's a one-shot narrative with no persistence.
+
+**4. Tyler Nguyen and Jaylen Carter — actually caught by Gemini**
+
+**Correction**: An earlier draft claimed Gemini missed Tyler and Jaylen. It did not. Gemini placed both under Theme 4 ("The Academic Shield — Avoiding the Personal") and explicitly noted in Focus Areas: "Personal connections: Totally absent in Alex, Tyler, and Jaylen" and classified their emotional register as "detached/analytical." Gemini correctly identified the engagement absence that our pipeline (on all three backends) fails to surface.
+
+This is a significant finding that complicates the value proposition: Gemini Pro, in a single unstructured pass, detected the engagement absence gap (Section 3, Gap 6) that we identified as a key architectural limitation of our pipeline. Our pipeline codes Tyler as "engaging with intersectionality" (8B) or "defining intersectionality as theory" (DeepSeek) — both technically accurate at the content level but missing the critical absence of personal investment. Gemini cuts through the content to name what's missing.
+
+The pipeline's path to matching this is the AIC integration described in Section 5 — wiring engagement dimensions from the AIC into pipeline records. But until that architectural fix ships, Gemini is more informative about these students than our pipeline is.
+
+**5. No assignment-prompt awareness**
+
+Gemini was given the submissions but not the assignment prompt. It correctly inferred the topic from context. But it had no way to assess vocabulary overlap, assignment connection, or whether the "wrong file" interpretation was the right read. Our pipeline takes the assignment description as input and can compute TF-IDF overlap.
+
+### 7.4 Structural Comparison: Chatbot Export Path vs. Local Pipeline Path
+
+> Note: The chatbot export IS a pipeline feature — `src/insights/chatbot_export.py` generates
+> the structured prompt. The comparison below is between two paths through the same system:
+> the "cloud handoff" path (export → paste → chatbot) and the "local pipeline" path
+> (Ollama/API → multi-stage processing). Both start from the same data and pedagogical framing.
+
+| Dimension | Gemini Pro (chatbot) | Our Pipeline |
+|-----------|---------------------|--------------|
+| **Output format** | Narrative prose | Structured data (JSON) + narrative synthesis |
+| **Theme quality** | 4 well-consolidated themes | 7-30 depending on model (12 optimal on DeepSeek) |
+| **Concern detection** | Manual identification, no confidence scores — but caught all 3 hand-crafted concerns | Systematic with confidence thresholds, equity guards — but model-dependent (Qwen3 missed 2/3) |
+| **Engagement absence** | Detected ("Academic Shield" theme + focus areas) | Not detected by LLM stages; detectable via AIC integration |
+| **Similarity analysis** | Impressionistic ("nearly identical paragraphs") | Cosine similarity with thresholds, equity framing |
+| **Cross-assignment tracking** | None (one-shot) | Persistent store, longitudinal trajectories |
+| **Student data governance** | Cloud-hosted, Google TOS, potential training data | Local by default, no data egress |
+| **Reproducibility** | None (temperature, session state) | Checkpoint system, resume capability |
+| **Time to output** | ~30 seconds (browser) | 14-150 min depending on backend |
+| **Teacher effort** | Copy-paste 29 submissions | Click "Analyze" in GUI |
+| **Customization** | Whatever you put in the prompt | Teacher profile, lens templates, weight system |
+| **Anti-bias guardrails** | None (model's general training) | ESL protection, concern-threshold calibration, equity framing |
+| **Scalability** | One class at a time, manual | Batch processing, checkpoint resume |
+
+### 7.5 What This Tells Us About Our Value Proposition
+
+Gemini Pro produces a *better narrative* than our 8B pipeline in a fraction of the time. If the only question is "what should I know about these essays?", a teacher pasting submissions into a chatbot gets a useful answer. This is the competition we face.
+
+Our pipeline's value is not in the narrative. It's in:
+
+1. **Data stays on-machine.** No student writing enters Google/OpenAI/Anthropic infrastructure unless the teacher explicitly chooses an API backend. For FERPA-conscious schools, this is the entire pitch.
+
+2. **Structured signals underneath the prose.** Sentiment, keywords, clusters, embeddings, pairwise similarity — these persist. The narrative is generated from structured data, not the other way around. A teacher can track patterns across assignments, compare cohorts, notice longitudinal shifts. A chatbot gives you one answer and forgets.
+
+3. **Systematic equity guardrails.** Gemini's plagiarism flag on Ethan/Nadia is the failure mode we're designed to prevent. Our pipeline doesn't jump to "academic integrity protocol" — it surfaces observations with framing that holds open multiple interpretations. The concern detector has calibrated thresholds, ESL protection, and anti-spotlighting design. A chatbot has whatever its training data taught it about fairness.
+
+4. **Teacher profile and lens customization.** A chatbot doesn't know this teacher prioritizes community cultural wealth or that they teach from a critical pedagogy frame. Our pipeline takes a teacher profile and lens templates that shape what gets surfaced and how it's framed.
+
+5. **Reproducibility and auditability.** Checkpoints, resume, structured logs. If a parent asks "why did you flag my child?", the teacher can trace the signal chain. A chatbot conversation may be deleted.
+
+6. **The things a chatbot can't do at all**: truncation detection, assignment-connection scoring, AIC engagement dimensions, population-level similarity analysis, cross-submission embedding clusters. These are non-LLM capabilities that exist because the pipeline has architecture, not just a prompt.
+
+**The honest framing**: Our pipeline doesn't replace the chatbot's prose quality. It adds structure, governance, equity guardrails, and persistence underneath prose that will improve as models improve. The chatbot is a better letter; we're building a better filing cabinet.
+
+**The humbling finding**: Gemini Pro (a browser chatbot with no specialized prompting) outperforms our pipeline in two specific areas:
+
+1. **Concern detection**: Gemini caught all three hand-crafted concern patterns — Brittany's essentializing, Connor's colorblindness, Aiden's tone policing. Our pipeline with Qwen3-32B, running through a carefully designed concern detector with equity-framed prompts, missed 2 of 3. On 8B and DeepSeek we match Gemini's accuracy. But the architecture doesn't compensate for a model that can't recognize the patterns — it just gives false confidence that the patterns were checked.
+
+2. **Engagement absence**: Gemini's "Academic Shield" theme and focus areas explicitly call out Tyler, Jaylen, and Alex for absent personal connection. Our pipeline on all three backends codes their content accurately but doesn't surface the absence. Gemini cut through to the pedagogically important signal — what's *missing* — that our pipeline's content-coding architecture can't yet see.
+
+(#FEMINIST_TECHNOSCIENCE: the structured pipeline encodes an appearance of systematic rigor that masks model-dependent gaps and architectural limitations. A teacher trusting "no concerns flagged" may be less likely to notice Brittany's essentializing than a teacher reading Gemini's narrative, which explicitly names it. A teacher trusting "engaging with intersectionality" for Tyler may not realize the engagement is surface-level. The structure creates confidence; the confidence may not be warranted.)
+
+### 7.6 Implications for the Demo
+
+When pitching to a principal, the question will be: "Why not just use ChatGPT/Gemini?"
+
+The answer is NOT "our analysis is better" — Gemini Pro's narrative is genuinely strong. The answer is:
+
+1. **"Where does that student data go?"** — FERPA compliance is non-negotiable for K-12. Gemini's TOS doesn't guarantee student data isn't used for training.
+2. **"Can you do it again next week?"** — A chatbot gives you one analysis. Our tool tracks patterns across the semester.
+3. **"What if it's wrong about a student?"** — Our system surfaces observations with multiple interpretations and confidence scores. A chatbot gives you a verdict.
+4. **"Can you prove you were fair?"** — Structured signals, equity framing, audit trail. A chatbot conversation vanishes.
+
+These are the arguments that matter to a principal. Not "our themes are better" — they're often not, unless you're running DeepSeek. The structural guarantees are the pitch.

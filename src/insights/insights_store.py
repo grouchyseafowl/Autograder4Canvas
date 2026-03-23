@@ -99,9 +99,17 @@ CREATE TABLE IF NOT EXISTS insights_feedback (
     PRIMARY KEY (run_id, student_id)
 );
 
--- teacher_profiles: persistent teacher analysis profile
+-- teacher_profiles: persistent teacher analysis profile (one per course)
 CREATE TABLE IF NOT EXISTS teacher_profiles (
     profile_id          TEXT PRIMARY KEY,
+    profile_data        TEXT,
+    created_at          TEXT,
+    updated_at          TEXT
+);
+
+-- course_profile_templates: reusable profile snapshots (save/load across semesters)
+CREATE TABLE IF NOT EXISTS course_profile_templates (
+    template_name       TEXT PRIMARY KEY,
     profile_data        TEXT,
     created_at          TEXT,
     updated_at          TEXT
@@ -206,6 +214,29 @@ class InsightsStore:
             self._conn.commit()
         except sqlite3.OperationalError:
             pass  # column already exists
+        self._migrate_v5()
+
+    def _migrate_v5(self) -> None:
+        """Add course_profile_id to runs; create course_profile_templates table."""
+        try:
+            self._conn.execute(
+                "ALTER TABLE insights_runs ADD COLUMN "
+                "course_profile_id TEXT DEFAULT 'default'"
+            )
+            self._conn.commit()
+        except sqlite3.OperationalError:
+            pass  # column already exists
+        self._conn.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS course_profile_templates (
+                template_name   TEXT PRIMARY KEY,
+                profile_data    TEXT,
+                created_at      TEXT,
+                updated_at      TEXT
+            );
+            """
+        )
+        self._conn.commit()
 
     @staticmethod
     def generate_run_id() -> str:
@@ -226,6 +257,7 @@ class InsightsStore:
         total_submissions: int = 0,
         teacher_context: str = "",
         analysis_lens_config: Optional[Dict] = None,
+        course_profile_id: str = "default",
     ) -> None:
         """Create a new analysis run record."""
         self._conn.execute(
@@ -233,8 +265,9 @@ class InsightsStore:
             INSERT INTO insights_runs (
                 run_id, course_id, course_name, assignment_id, assignment_name,
                 started_at, model_tier, model_name, total_submissions,
-                stages_completed, teacher_context, analysis_lens_config
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '[]', ?, ?)
+                stages_completed, teacher_context, analysis_lens_config,
+                course_profile_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '[]', ?, ?, ?)
             ON CONFLICT (run_id) DO UPDATE SET
                 started_at = excluded.started_at,
                 model_tier = excluded.model_tier,
@@ -245,6 +278,7 @@ class InsightsStore:
                 assignment_name, self._now(), model_tier, model_name,
                 total_submissions, teacher_context,
                 self._jd(analysis_lens_config),
+                course_profile_id,
             ),
         )
         self._conn.commit()
@@ -518,6 +552,61 @@ class InsightsStore:
             return json.loads(row["profile_data"])
         except (json.JSONDecodeError, TypeError):
             return None
+
+    def list_profiles(self) -> List[str]:
+        """Return all profile_ids that have been saved."""
+        rows = self._conn.execute(
+            "SELECT profile_id FROM teacher_profiles ORDER BY profile_id"
+        ).fetchall()
+        return [r["profile_id"] for r in rows]
+
+    # ── Course profile templates ────────────────────────────────────────
+
+    def save_profile_template(self, template_name: str, profile_data: Dict) -> None:
+        """Save a profile snapshot as a reusable template."""
+        now = self._now()
+        self._conn.execute(
+            """
+            INSERT INTO course_profile_templates
+                (template_name, profile_data, created_at, updated_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT (template_name) DO UPDATE SET
+                profile_data = excluded.profile_data,
+                updated_at = excluded.updated_at
+            """,
+            (template_name, self._jd(profile_data), now, now),
+        )
+        self._conn.commit()
+
+    def get_profile_template(self, template_name: str) -> Optional[Dict]:
+        """Load a profile template by name."""
+        row = self._conn.execute(
+            "SELECT profile_data FROM course_profile_templates "
+            "WHERE template_name = ?",
+            (template_name,),
+        ).fetchone()
+        if not row or not row["profile_data"]:
+            return None
+        try:
+            return json.loads(row["profile_data"])
+        except (json.JSONDecodeError, TypeError):
+            return None
+
+    def list_profile_templates(self) -> List[str]:
+        """Return all saved template names, alphabetically."""
+        rows = self._conn.execute(
+            "SELECT template_name FROM course_profile_templates "
+            "ORDER BY template_name"
+        ).fetchall()
+        return [r["template_name"] for r in rows]
+
+    def delete_profile_template(self, template_name: str) -> None:
+        """Delete a saved template."""
+        self._conn.execute(
+            "DELETE FROM course_profile_templates WHERE template_name = ?",
+            (template_name,),
+        )
+        self._conn.commit()
 
     def save_calibration(
         self,

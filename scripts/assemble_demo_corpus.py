@@ -10,6 +10,13 @@ Stage 5: Output assembled corpus files
 
 Usage:
     python scripts/assemble_demo_corpus.py [--stage N] [--all]
+
+NOTE: Stage 4 previously used DAIGT-adapted essays for the 19 "normal" corpus
+slots. Those produced off-topic essays with thin keyword substitutions (see
+docs/comparison_analysis.md §1.2). They have been replaced with authentic
+hand-authored replacement submissions loaded from
+data/demo_corpus/replacement_students.json via _build_replacement_students().
+The old DAIGT adaptation functions are retained below but marked deprecated.
 """
 
 import json
@@ -279,48 +286,18 @@ def stage4_assemble_corpus(filtered_essays, aic_results, qa_result):
     hand_crafted = _build_hand_crafted_students()
     print(f"  Hand-crafted {len(hand_crafted)} key students")
 
-    # ── Assemble Ethnic Studies corpus ──
-    ethnic_studies = []
-    student_id_counter = 4  # S001-S003 are hand-crafted, start normal at S004
+    # ── Replacement students (authentic submissions) ──
+    replacement = _build_replacement_students()
+    print(f"  Loaded {len(replacement)} replacement students from replacement_students.json")
 
-    # Add hand-crafted first
+    # ── Assemble Ethnic Studies corpus ──
+    # Order: hand-crafted first, then replacement students (already carry their
+    # own student_ids so no counter arithmetic is needed).
+    ethnic_studies = []
     for hc in hand_crafted:
         if hc.get("course") == "ethnic_studies":
             ethnic_studies.append(hc)
-
-    # IDs reserved by hand-crafted students — skip these
-    reserved_ids = {s["student_id"] for s in hand_crafted}
-    reserved_ids.update({f"S{30+i:03d}" for i in range(4)})  # exhaustion_spike
-
-    # Add normal students (adapted topic references)
-    for i, pick in enumerate(normal_picks):
-        # Skip IDs used by hand-crafted / exhaustion students
-        while f"S{student_id_counter:03d}" in reserved_ids:
-            student_id_counter += 1
-        sid = f"S{student_id_counter:03d}"
-        student_id_counter += 1
-        ethnic_studies.append({
-            "student_id": sid,
-            "student_name": _NORMAL_NAMES[i % len(_NORMAL_NAMES)],
-            "pattern": "normal",
-            "text": _adapt_topic_ethnic_studies(pick["text"]),
-            "word_count": len(_adapt_topic_ethnic_studies(pick["text"]).split()),
-            "source": f"daigt_adapted:{pick['source_id']}",
-            "course": "ethnic_studies",
-        })
-
-    # Add exhaustion_spike students
-    for i, pick in enumerate(exhaust_picks):
-        sid = f"S{30 + i:03d}"
-        ethnic_studies.append({
-            "student_id": sid,
-            "student_name": _EXHAUSTION_NAMES[i],
-            "pattern": "exhaustion_spike",
-            "text": _adapt_topic_ethnic_studies(pick["text"]),
-            "word_count": len(_adapt_topic_ethnic_studies(pick["text"]).split()),
-            "source": f"daigt_shortened:{pick['source_id']}",
-            "course": "ethnic_studies",
-        })
+    ethnic_studies.extend(replacement)
 
     print(f"  Ethnic Studies corpus: {len(ethnic_studies)} students")
 
@@ -357,7 +334,7 @@ def stage4_assemble_corpus(filtered_essays, aic_results, qa_result):
 
 
 # ──────────────────────────────────────────────────────────────
-# Hand-crafted students
+# Hand-crafted students + replacement students
 # ──────────────────────────────────────────────────────────────
 
 def _build_hand_crafted_students():
@@ -635,8 +612,39 @@ def _build_hand_crafted_students():
     return students
 
 
+def _build_replacement_students():
+    """Load the 19 authentic replacement students from replacement_students.json.
+
+    These replace the old DAIGT-adapted essays that produced off-topic text
+    with thin keyword substitutions.  See docs/comparison_analysis.md §1.2.
+
+    Returns a list of student dicts in the same format as
+    _build_hand_crafted_students():
+        student_id, student_name, pattern, course, text, word_count
+    """
+    src = CORPUS_DIR / "replacement_students.json"
+    raw = json.loads(src.read_text())
+    students = []
+    for s in raw["students"]:
+        # Use test_pattern when present, otherwise engagement_category
+        pattern = s.get("test_pattern") or s.get("engagement_category", "normal")
+        students.append({
+            "student_id": s["student_id"],
+            "student_name": s["student_name"],
+            "pattern": pattern,
+            "course": "ethnic_studies",
+            "text": s["submission_text"],
+            "word_count": s.get("word_count", len(s["submission_text"].split())),
+        })
+    return students
+
+
 # ──────────────────────────────────────────────────────────────
-# Topic adaptation helpers
+# --- DEPRECATED: Historical DAIGT adaptation ---
+# These functions were used in the original corpus construction but produced
+# off-topic essays with thin keyword swaps. See docs/comparison_analysis.md
+# Section 1.2 for the methodology audit that identified this problem.
+# Replaced by _build_replacement_students() which loads authentic submissions.
 # ──────────────────────────────────────────────────────────────
 
 def _adapt_topic_ethnic_studies(text):

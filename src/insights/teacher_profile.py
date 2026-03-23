@@ -127,6 +127,109 @@ class TeacherProfileManager:
         self._profile.subject_area = subject
         self._save()
 
+    def add_custom_concern_pattern(self, pattern: str) -> None:
+        """Add a teacher-defined concern pattern.
+
+        pattern is a plain-English description of what to flag:
+          "student makes a factual claim without citing a source"
+          "student attributes behavior to genetics or biology without evidence"
+        """
+        pattern = pattern.strip()
+        if pattern and pattern not in self._profile.custom_concern_patterns:
+            self._profile.custom_concern_patterns.append(pattern)
+            self._append_history("concern_pattern_add", {"pattern": pattern})
+            self._save()
+
+    def remove_custom_concern_pattern(self, pattern: str) -> None:
+        """Remove a teacher-defined concern pattern."""
+        pattern = pattern.strip()
+        if pattern in self._profile.custom_concern_patterns:
+            self._profile.custom_concern_patterns.remove(pattern)
+            self._append_history("concern_pattern_remove", {"pattern": pattern})
+            self._save()
+
+    def disable_default_pattern(self, pattern_label: str) -> None:
+        """Mute a default concern pattern for this course.
+
+        Wellbeing/crisis signals are silently preserved regardless —
+        only pedagogical patterns (essentializing, colorblind, tone
+        policing) should be passed here.
+        """
+        PROTECTED = {"wellbeing", "crisis", "self-harm", "personal distress"}
+        if any(p in pattern_label.lower() for p in PROTECTED):
+            return  # silently refuse to disable safety signals
+        label = pattern_label.strip()
+        if label and label not in self._profile.disabled_default_patterns:
+            self._profile.disabled_default_patterns.append(label)
+            self._append_history("default_pattern_disable", {"pattern": label})
+            self._save()
+
+    def enable_default_pattern(self, pattern_label: str) -> None:
+        """Re-enable a previously muted default pattern."""
+        label = pattern_label.strip()
+        if label in self._profile.disabled_default_patterns:
+            self._profile.disabled_default_patterns.remove(label)
+            self._append_history("default_pattern_enable", {"pattern": label})
+            self._save()
+
+    def add_strength_pattern(self, pattern: str) -> None:
+        """Add a teacher-defined strength pattern to surface in analysis.
+
+        Examples:
+          "student connects course material to community or family knowledge"
+          "student demonstrates translanguaging or multilingual thinking"
+          "student makes an unexpected cross-disciplinary connection"
+        """
+        pattern = pattern.strip()
+        if pattern and pattern not in self._profile.custom_strength_patterns:
+            self._profile.custom_strength_patterns.append(pattern)
+            self._append_history("strength_pattern_add", {"pattern": pattern})
+            self._save()
+
+    def remove_strength_pattern(self, pattern: str) -> None:
+        """Remove a teacher-defined strength pattern."""
+        pattern = pattern.strip()
+        if pattern in self._profile.custom_strength_patterns:
+            self._profile.custom_strength_patterns.remove(pattern)
+            self._append_history("strength_pattern_remove", {"pattern": pattern})
+            self._save()
+
+    # ── Template save / load ───────────────────────────────────────────
+
+    def save_as_template(self, template_name: str) -> None:
+        """Snapshot the current profile as a named reusable template.
+
+        The snapshot includes subject_area, custom patterns, disabled defaults,
+        strengths patterns, theme vocabulary, and interest areas — everything
+        a teacher would want to carry forward to a new semester.
+        Edit history and per-student concern_sensitivity are NOT copied:
+        those are run-specific, not course-design decisions.
+        """
+        snapshot = self._profile.model_dump()
+        # Strip run-specific accumulated data
+        snapshot["concern_sensitivity"] = {}
+        snapshot["edit_history"] = []
+        self._store.save_profile_template(template_name, snapshot)
+
+    @classmethod
+    def fork_from_template(
+        cls,
+        store: "InsightsStore",
+        template_name: str,
+        profile_id: str,
+    ) -> "TeacherProfileManager":
+        """Create (or overwrite) a profile by copying a saved template.
+
+        Returns a TeacherProfileManager loaded with the forked profile.
+        The caller is responsible for confirming overwrite if the profile_id
+        already has data.
+        """
+        template_data = store.get_profile_template(template_name)
+        if template_data:
+            store.save_profile(profile_id, template_data)
+        mgr = cls(store, profile_id)
+        return mgr
+
     def _append_history(self, action: str, details: Dict) -> None:
         self._profile.edit_history.append({
             "action": action,
@@ -169,6 +272,26 @@ class TeacherProfileManager:
                 lines.append(f"  - Low sensitivity (often dismissed): {key}")
         return "\n".join(lines) if len(lines) > 1 else ""
 
+    def get_custom_concern_fragment(self) -> str:
+        """Build a prompt fragment from teacher-defined concern patterns.
+
+        These are injected into the concern detection prompt alongside the
+        default patterns, allowing teachers to define subject-specific flags
+        (e.g. "student claims a group behavior is biological/genetic").
+        The fragment uses subject-agnostic language to avoid terminology
+        that only makes sense in a humanities context.
+        """
+        patterns = self._profile.custom_concern_patterns
+        if not patterns:
+            return ""
+        lines = [
+            "ADDITIONAL CONCERN PATTERNS (defined by this teacher — "
+            "flag these alongside the default patterns above):"
+        ]
+        for p in patterns[:10]:
+            lines.append(f"  - {p}")
+        return "\n".join(lines)
+
     def get_interests_fragment(self) -> str:
         """Build a prompt fragment from teacher interest areas."""
         if not self._profile.interest_areas:
@@ -186,15 +309,63 @@ class TeacherProfileManager:
         from insights.lens_templates import get_equity_fragment
         return get_equity_fragment(self._profile.subject_area)
 
+    def get_concern_framing_fragment(self) -> str:
+        """Return subject-specific concern framing for this teacher's subject.
+
+        Adjusts which default concern patterns are most/least relevant and
+        adds subject-appropriate patterns (e.g. scientific essentialism for
+        biology, historical inevitability for history).
+        """
+        from insights.lens_templates import get_concern_framing_fragment
+        return get_concern_framing_fragment(self._profile.subject_area)
+
+    def get_disabled_defaults_fragment(self) -> str:
+        """Build a prompt fragment suppressing teacher-muted default patterns."""
+        patterns = self._profile.disabled_default_patterns
+        if not patterns:
+            return ""
+        lines = [
+            "THE FOLLOWING DEFAULT CONCERN PATTERNS ARE MUTED FOR THIS COURSE "
+            "(teacher has determined they are not applicable — do not flag these "
+            "unless they cross into wellbeing territory):"
+        ]
+        for p in patterns:
+            lines.append(f"  - {p}")
+        return "\n".join(lines)
+
+    def get_strengths_fragment(self) -> str:
+        """Build a prompt fragment for teacher-defined strength patterns.
+
+        These flow into the coding prompt (not the concern prompt) to ensure
+        the pipeline surfaces positive signals the teacher cares about —
+        community knowledge, code-switching, unexpected connections, etc.
+        """
+        patterns = self._profile.custom_strength_patterns
+        if not patterns:
+            return ""
+        lines = [
+            "STRENGTH PATTERNS TO SURFACE (defined by this teacher — "
+            "note these as positive observations in theme_tags or lens_observations):"
+        ]
+        for p in patterns[:10]:
+            lines.append(f"  - {p}")
+        return "\n".join(lines)
+
     def get_full_profile_fragment(self) -> str:
         """Combine all profile fragments into one block for prompt injection.
 
-        Includes: theme vocabulary, concern calibration, interests, AND
-        equity attention framing for this teacher's subject area.
+        Includes: theme vocabulary, concern calibration, interests, equity
+        attention framing, AND teacher-defined strength patterns.
+        Strength patterns flow into coding prompts as positive surfacing
+        instructions; they are benign noise in concern detection prompts.
         """
         parts = [
             self.get_theme_vocabulary_fragment(),
+            self.get_concern_framing_fragment(),
             self.get_concern_sensitivity_fragment(),
+            self.get_disabled_defaults_fragment(),
+            self.get_custom_concern_fragment(),
+            self.get_strengths_fragment(),
             self.get_interests_fragment(),
             self.get_equity_fragment(),
         ]

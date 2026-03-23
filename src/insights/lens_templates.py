@@ -29,6 +29,10 @@ class LensTemplate:
     equity_attention_framing: str
     # Equity-aware prompt fragment (injected into concern + synthesis prompts)
     equity_prompt_fragment: str
+    # Subject-specific concern framing: adjusts which default patterns are
+    # relevant and adds subject-appropriate patterns.  Empty string = use
+    # the hardcoded defaults unmodified.
+    concern_framing_fragment: str = ""
     # Assignment type sub-templates
     assignment_variants: Dict[str, List[str]] = field(default_factory=dict)
 
@@ -89,6 +93,15 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
                 "Multiplicity of entry points",
             ],
         },
+        concern_framing_fragment=(
+            "CONCERN FRAMING (Ethnic Studies):\n"
+            "All default concern patterns apply with full weight.\n"
+            "ESPECIALLY flag: essentializing language about racial/ethnic groups, "
+            "colorblind claims, tone policing of anger about structural injustice, "
+            "dismissal of lived experience as 'just personal opinion.'\n"
+            "Do NOT flag passion, anger, or grief about injustice — these are "
+            "appropriate engagement, not behavioral concerns."
+        ),
     ),
 
     "social_science": LensTemplate(
@@ -141,6 +154,18 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
                 "Connecting theory to current events",
             ],
         },
+        concern_framing_fragment=(
+            "CONCERN FRAMING (Social Science):\n"
+            "Default patterns apply. Also flag:\n"
+            "- Student presents a demographic correlation as a causal explanation "
+            "('Group X does Y because they are naturally Z')\n"
+            "- Student treats anecdote or single case as proof of a general claim\n"
+            "- Student attributes social behavior to biology or genetics without "
+            "scientific evidence\n"
+            "Essentializing and colorblind framing remain relevant in social "
+            "science contexts — patterns about group behavior, structural "
+            "inequality, and identity deserve scrutiny."
+        ),
     ),
 
     "humanities": LensTemplate(
@@ -192,6 +217,16 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
                 "Productive disagreement",
             ],
         },
+        concern_framing_fragment=(
+            "CONCERN FRAMING (Humanities):\n"
+            "Default patterns apply. Also flag:\n"
+            "- Student presents a single interpretation as the only possible "
+            "reading ('the author definitely meant...', 'this obviously shows...')\n"
+            "- Student dismisses other students' interpretations from their "
+            "cultural or personal perspective as 'wrong' rather than different\n"
+            "Essentializing and colorblind framing apply when students discuss "
+            "characters, authors, or historical figures by identity categories."
+        ),
     ),
 
     "english": LensTemplate(
@@ -242,6 +277,16 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
                 "Cultural and personal grounding",
             ],
         },
+        concern_framing_fragment=(
+            "CONCERN FRAMING (English/Writing):\n"
+            "Default patterns apply. IMPORTANT: Non-standard English, dialect "
+            "features, or code-switching are NOT concerns — they are rhetorical "
+            "choices with deep cultural roots. Only flag language that harms "
+            "other students or essentializes groups, not language that differs "
+            "from dominant academic conventions.\n"
+            "Also flag: student dismisses another writer's voice or style as "
+            "'incorrect' rather than engaging with its choices."
+        ),
     ),
 
     "history": LensTemplate(
@@ -294,6 +339,17 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
                 "Connection to present",
             ],
         },
+        concern_framing_fragment=(
+            "CONCERN FRAMING (History):\n"
+            "Default patterns apply. Also flag:\n"
+            "- Historical inevitability framing ('it was bound to happen', "
+            "'there was no alternative') — this removes human agency and often "
+            "naturalizes conquest, slavery, or genocide\n"
+            "- 'Both sides' framing that treats perpetrators and victims as "
+            "morally equivalent\n"
+            "- Student treats a single source's perspective as objective fact "
+            "without noting whose perspective it represents"
+        ),
     ),
 
     "science": LensTemplate(
@@ -332,7 +388,11 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "whose health outcomes are treated as default. This is sophisticated "
             "scientific thinking.\n"
             "A student who says 'my community doesn't trust doctors' is providing "
-            "data about the social context of science, not expressing ignorance."
+            "data about the social context of science, not expressing ignorance.\n"
+            "When students bring community knowledge traditions — agricultural "
+            "knowledge, ecological observation, traditional navigation, food "
+            "science practices — into dialogue with Western scientific frameworks, "
+            "this is integrative thinking, not anecdote."
         ),
         assignment_variants={
             "lab_report": [
@@ -346,6 +406,350 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
                 "Scientific literacy",
             ],
         },
+        concern_framing_fragment=(
+            "CONCERN FRAMING (Science):\n"
+            "The humanities-specific default patterns (colorblind claims, "
+            "tone policing) are LESS relevant for lab/science work. De-weight "
+            "them unless the assignment explicitly engages with social dimensions "
+            "of science.\n"
+            "INSTEAD, prioritize flagging:\n"
+            "- Student attributes a group's behavior, ability, or outcome to "
+            "biology or genetics without scientific evidence ('women are "
+            "naturally worse at spatial reasoning', 'some races are more "
+            "athletic') — this is scientific-sounding essentialism\n"
+            "- Student presents a correlation from data as direct causation "
+            "without acknowledging confounding factors\n"
+            "- Student claims a result 'proves' a hypothesis rather than "
+            "'supports' or 'is consistent with' it (misuse of scientific language)\n"
+            "- Student dismisses a counterexample or outlier without explanation\n"
+            "Wellbeing signals always apply regardless of subject."
+        ),
+    ),
+
+    "psychology": LensTemplate(
+        key="psychology",
+        display_name="Psychology",
+        description=(
+            "Human behavior, research methods, case analysis, "
+            "clinical awareness, developmental and social dimensions"
+        ),
+        analysis_lens=[
+            "Application of psychological concepts to human behavior",
+            "Research methodology critique and evaluation",
+            "Integration of multiple theoretical perspectives",
+            "Awareness of cultural context in psychological claims",
+            "Distinguishing description from diagnosis",
+        ],
+        default_interests=[
+            "How students apply psychological frameworks to real situations",
+            "Whether students interrogate research design and sample limitations",
+            "How students handle the line between understanding and pathologizing",
+        ],
+        equity_attention_framing=(
+            "Whose behavior is studied and whose is 'normal'? Which communities "
+            "are research subjects vs. researchers? Is 'disorder' located in the "
+            "person or in the mismatch between the person and a world built for "
+            "one way of being? Whose cultural practices get pathologized?"
+        ),
+        equity_prompt_fragment=(
+            "EQUITY ATTENTION (Psychology):\n"
+            "Notice when students from communities historically pathologized by "
+            "psychology — Black, Indigenous, disabled, queer, neurodivergent — "
+            "bring that knowledge into coursework. A student who says 'my community "
+            "doesn't trust therapists' is describing a rational response to historical "
+            "harm, not expressing stigma about mental health.\n"
+            "Surface when students question whose behavior counts as 'normal' and "
+            "whose gets a diagnosis. This is critical thinking about the discipline "
+            "itself, not resistance to learning.\n"
+            "Note when students recognize that most foundational research used "
+            "WEIRD samples (Western, Educated, Industrialized, Rich, Democratic) — "
+            "questioning generalizability is methodological sophistication.\n"
+            "A student describing neurodivergent experience, disability, or mental "
+            "health from the inside is contributing expertise, not oversharing. "
+            "Their relationship to the material is different from someone studying "
+            "it from the outside — both are valid, but the labor is not equal.\n"
+            "When students use culturally specific vocabulary for psychological "
+            "experiences — 'susto,' 'nervios,' 'hikikomori,' concepts that don't "
+            "map cleanly to DSM categories — this is cultural knowledge, not "
+            "imprecise language."
+        ),
+        assignment_variants={
+            "case_study": [
+                "Application of theoretical frameworks to the case",
+                "Consideration of cultural and structural context",
+                "Awareness of diagnostic limitations and power",
+            ],
+            "research_critique": [
+                "Methodology evaluation (sample, design, generalizability)",
+                "Identification of researcher assumptions",
+                "Alternative interpretations of findings",
+            ],
+            "reflection": [
+                "Personal connection to psychological concepts",
+                "Integration of course material with lived observation",
+                "Critical self-awareness about positionality",
+            ],
+        },
+        concern_framing_fragment=(
+            "CONCERN FRAMING (Psychology):\n"
+            "Default patterns apply. Also flag:\n"
+            "- Student pathologizes a cultural practice, communication style, or "
+            "community norm as a psychological disorder\n"
+            "- Student attributes a group's behavior to inherent psychological "
+            "traits rather than structural conditions ('people in poverty have "
+            "lower impulse control' without examining systemic context)\n"
+            "- Student diagnoses a real person (peer, family member, public figure) "
+            "based on surface behavior — diagnosis requires clinical assessment, "
+            "not pattern-matching from a textbook\n"
+            "- Student treats Western psychological frameworks as universal without "
+            "acknowledging cultural specificity\n"
+            "Neurodivergent self-description is NOT a concern — it is expertise. "
+            "Wellbeing signals always apply."
+        ),
+    ),
+
+    "government_civics": LensTemplate(
+        key="government_civics",
+        display_name="Government / Civics",
+        description=(
+            "Democratic participation, institutional analysis, policy reasoning, "
+            "constitutional interpretation, civic engagement"
+        ),
+        analysis_lens=[
+            "Understanding of institutional structures and processes",
+            "Policy analysis and evidence-based reasoning",
+            "Multiple perspectives on governance and power",
+            "Connection between civic structures and lived experience",
+            "Constitutional and legal reasoning",
+        ],
+        default_interests=[
+            "How students connect institutional structures to their own civic lives",
+            "Whether students see governance as something done TO them or BY them",
+            "How students reason about policy tradeoffs and competing rights",
+        ],
+        equity_attention_framing=(
+            "Whose citizenship is conditional? Who participates in democracy "
+            "and who is subject to it? Which students can discuss 'the system' "
+            "abstractly and which are navigating it for survival? Who has been "
+            "criminalized by the institutions being studied?"
+        ),
+        equity_prompt_fragment=(
+            "EQUITY ATTENTION (Government/Civics):\n"
+            "Notice when students whose communities face policing, immigration "
+            "enforcement, voter suppression, or incarceration bring that experience "
+            "into coursework — they are not being 'political,' they are describing "
+            "how governance operates on their bodies and families. This is primary "
+            "source knowledge about the subject matter.\n"
+            "Surface when students distinguish between formal rights and actual "
+            "access — 'everyone can vote' vs. who actually can, practically. "
+            "This is sophisticated institutional analysis.\n"
+            "A student who expresses distrust of government institutions is "
+            "describing a relationship to power, not demonstrating ignorance "
+            "about how government works. A student whose family has been deported, "
+            "detained, or disenfranchised has a different relationship to 'civic "
+            "participation' than one who assumes access.\n"
+            "Note when students from communities that built mutual aid, "
+            "sanctuary networks, or parallel governance structures describe "
+            "this as civic engagement — it is, even when it isn't recognized "
+            "by the formal system being studied."
+        ),
+        assignment_variants={
+            "policy_analysis": [
+                "Evidence-based reasoning about policy effects",
+                "Consideration of differential impact across communities",
+                "Institutional and structural analysis",
+            ],
+            "discussion": [
+                "Engagement with competing civic perspectives",
+                "Connection to current events and lived experience",
+                "Reasoning about rights, access, and power",
+            ],
+            "essay": [
+                "Constitutional or legal argument development",
+                "Multiple perspectives on governance questions",
+                "Integration of historical and contemporary evidence",
+            ],
+        },
+        concern_framing_fragment=(
+            "CONCERN FRAMING (Government/Civics):\n"
+            "Default patterns apply. Also flag:\n"
+            "- Student frames criminalization or incarceration as proof of "
+            "individual moral failure rather than examining institutional "
+            "structures and incentives\n"
+            "- Student treats formal legal equality as proof that structural "
+            "inequality doesn't exist ('everyone has the same rights now')\n"
+            "- Student dismisses community-based governance, mutual aid, or "
+            "protest as 'not real' civic participation\n"
+            "- Student attributes a community's political conditions to that "
+            "community's culture rather than to policy and institutional design\n"
+            "Do NOT flag passionate civic engagement, including anger about "
+            "injustice — this is the course working as intended."
+        ),
+    ),
+
+    "health_sciences": LensTemplate(
+        key="health_sciences",
+        display_name="Health Sciences",
+        description=(
+            "Health equity, clinical reasoning, patient-centered care, "
+            "community health, body and wellness across contexts"
+        ),
+        analysis_lens=[
+            "Understanding of health within structural and social context",
+            "Patient/client-centered reasoning",
+            "Evidence-based practice and critical appraisal",
+            "Awareness of health disparities and their causes",
+            "Ethical reasoning in care and research",
+        ],
+        default_interests=[
+            "How students reason about health disparities — structural vs. individual framing",
+            "Whether students center the patient/client perspective or the provider/system perspective",
+            "How students handle the intersection of clinical evidence and lived experience",
+        ],
+        equity_attention_framing=(
+            "Whose body is 'normal'? Whose pain is believed? Whose health "
+            "knowledge — community, Indigenous, ancestral — is dismissed as "
+            "'folk medicine'? Who is a research subject and who is a researcher? "
+            "Which students are studying health systems that have harmed their "
+            "own communities?"
+        ),
+        equity_prompt_fragment=(
+            "EQUITY ATTENTION (Health Sciences):\n"
+            "Notice when students from communities with histories of medical "
+            "racism — Black, Indigenous, disabled, incarcerated, queer — bring "
+            "that knowledge into health coursework. A student who describes their "
+            "family's distrust of hospitals is describing a rational response to "
+            "Tuskegee, forced sterilization, and ongoing disparities in pain "
+            "management. This is health literacy, not health ignorance.\n"
+            "Surface when students bring community health knowledge, traditional "
+            "medicine, or ancestral healing practices into dialogue with clinical "
+            "frameworks — this is integrative thinking, not 'unscientific.'\n"
+            "Note when disability is framed as a problem to fix rather than a "
+            "way of being in a world built for particular bodies. A student who "
+            "challenges the medical model of disability is doing critical work "
+            "in the discipline.\n"
+            "A student who references their own chronic illness, disability, "
+            "caregiving responsibilities, or navigation of healthcare systems "
+            "is contributing expertise about the subject matter, not digressing."
+        ),
+        assignment_variants={
+            "case_study": [
+                "Clinical reasoning and differential analysis",
+                "Patient/client context and social determinants",
+                "Ethical considerations and provider positionality",
+            ],
+            "reflection": [
+                "Personal connection to health concepts and systems",
+                "Awareness of structural determinants of health",
+                "Provider identity development and self-awareness",
+            ],
+            "discussion": [
+                "Evidence-based reasoning about health interventions",
+                "Community health perspectives and local knowledge",
+                "Ethical reasoning about care, consent, and access",
+            ],
+        },
+        concern_framing_fragment=(
+            "CONCERN FRAMING (Health Sciences):\n"
+            "Default patterns apply. Also flag:\n"
+            "- Student attributes a community's health outcomes to cultural "
+            "or behavioral deficits rather than structural determinants "
+            "(housing, pollution, food access, insurance, provider bias)\n"
+            "- Student dismisses patient/community health knowledge as "
+            "'non-compliant' or 'uneducated' rather than understanding it "
+            "as a rational response to context\n"
+            "- Student frames disability as inherently negative or as a "
+            "problem requiring correction, rather than considering the social "
+            "model and built environment\n"
+            "- Student uses biological essentialism to explain health "
+            "disparities across racial groups without engaging with the "
+            "evidence on structural causation\n"
+            "Wellbeing signals apply with heightened attention — students "
+            "in health fields may disclose personal health experiences in "
+            "the course of doing the work."
+        ),
+    ),
+
+    "arts": LensTemplate(
+        key="arts",
+        display_name="Arts",
+        description=(
+            "Creative practice, aesthetic analysis, cultural tradition, "
+            "artistic voice, critique and interpretation"
+        ),
+        analysis_lens=[
+            "Articulation of creative intent and process",
+            "Engagement with aesthetic traditions and cultural context",
+            "Critical interpretation of artistic works",
+            "Development of artistic voice and perspective",
+            "Willingness to take creative risks",
+        ],
+        default_interests=[
+            "How students articulate their creative choices and influences",
+            "Whether students engage with diverse aesthetic traditions or default to one canon",
+            "How students give and receive critique — what power dynamics surface",
+        ],
+        equity_attention_framing=(
+            "Whose aesthetics are 'fine art' and whose are 'craft' or "
+            "'folk art'? Whose traditions are studied in survey courses and "
+            "whose are electives? Which students are asked to explain their "
+            "cultural references and which can assume theirs are universal? "
+            "Who has had access to formal training and who brings self-taught, "
+            "community-taught, or ancestral knowledge?"
+        ),
+        equity_prompt_fragment=(
+            "EQUITY ATTENTION (Arts):\n"
+            "Notice when students draw on cultural, community, or family "
+            "artistic traditions — beadwork, muralism, spoken word, textile "
+            "arts, hip-hop production, ceremonial design — and whether these "
+            "are recognized as artistic practice or marginalized as 'other.' "
+            "A student whose artistic lineage is community-based rather than "
+            "institution-based is not less trained; they are differently trained.\n"
+            "Surface when students challenge what counts as art, whose work "
+            "hangs in galleries, or whose aesthetic vocabulary is treated as "
+            "the default. This is critical engagement with the discipline.\n"
+            "A student who creates work about their community's experience — "
+            "migration, displacement, resistance, joy — is doing artistic and "
+            "intellectual work simultaneously. Do not separate the political "
+            "content from the aesthetic achievement.\n"
+            "Note that access to materials, studio space, instruments, and "
+            "training is structurally unequal. A student's artistic sophistication "
+            "is not measured by their access to resources."
+        ),
+        assignment_variants={
+            "artist_statement": [
+                "Articulation of creative intent and influences",
+                "Connection between personal/cultural context and artistic choices",
+                "Situating work within broader artistic conversations",
+            ],
+            "critique": [
+                "Engagement with the work on its own terms",
+                "Awareness of aesthetic traditions informing the work",
+                "Constructive dialogue that respects creative risk",
+            ],
+            "reflection": [
+                "Process documentation and creative reasoning",
+                "Growth and experimentation over time",
+                "Connection between artistic practice and lived experience",
+            ],
+        },
+        concern_framing_fragment=(
+            "CONCERN FRAMING (Arts):\n"
+            "The humanities-specific default patterns (colorblind claims, "
+            "tone policing) apply when students write about art's cultural "
+            "and social dimensions. De-weight them for purely formal or "
+            "technical analysis unless it becomes a way to avoid engaging "
+            "with cultural content.\n"
+            "Also flag:\n"
+            "- Student dismisses another student's cultural artistic tradition "
+            "as 'not real art' or 'primitive' or 'folk'\n"
+            "- Student uses another culture's sacred or ceremonial artistic "
+            "forms without acknowledgment of origin or significance\n"
+            "- Student frames access to formal training, materials, or "
+            "institutional spaces as proof of artistic merit\n"
+            "Do NOT flag art that expresses pain, rage, grief, or political "
+            "conviction — this is what art does."
+        ),
     ),
 
     "general": LensTemplate(
@@ -379,6 +783,11 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "health, housing), note this as context, not distraction."
         ),
         assignment_variants={},
+        concern_framing_fragment=(
+            "CONCERN FRAMING (General):\n"
+            "All default patterns apply. Use judgment about which patterns "
+            "are most relevant given the assignment topic."
+        ),
     ),
 }
 
@@ -400,3 +809,12 @@ def get_equity_fragment(subject_key: str) -> str:
     """
     t = LENS_TEMPLATES.get(subject_key, LENS_TEMPLATES["general"])
     return t.equity_prompt_fragment
+
+
+def get_concern_framing_fragment(subject_key: str) -> str:
+    """Return the subject-specific concern framing for a subject area.
+
+    Empty string for general/unknown — the hardcoded defaults apply unmodified.
+    """
+    t = LENS_TEMPLATES.get(subject_key, LENS_TEMPLATES["general"])
+    return t.concern_framing_fragment

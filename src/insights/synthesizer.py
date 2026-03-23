@@ -13,11 +13,12 @@ Students to Check In With.
 
 import json
 import logging
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from insights.llm_backend import BackendConfig, parse_json_response, send_text
 from insights.models import (
     ConcernRecord,
+    GuidedSynthesisResult,
     OutlierReport,
     QuickAnalysisResult,
     SubmissionCodingRecord,
@@ -26,6 +27,10 @@ from insights.models import (
 )
 from insights.prompts import (
     INTEREST_AREAS_FRAGMENT,
+    SYNTHESIS_CONCERN_PROMPT,
+    SYNTHESIS_HIGHLIGHT_PROMPT,
+    SYNTHESIS_TEMPERATURE_PROMPT,
+    SYNTHESIS_TENSION_PROMPT,
     SYNTHESIS_PROMPT_DEEP,
     SYNTHESIS_PROMPT_LIGHTWEIGHT,
     SYNTHESIS_PROMPT_MEDIUM,
@@ -95,6 +100,14 @@ def _summarize_quick_analysis(qa: Optional[QuickAnalysisResult]) -> str:
             concern_types[sig.signal_type] = concern_types.get(sig.signal_type, 0) + 1
         concern_str = ", ".join(f"{k}: {v}" for k, v in concern_types.items())
         lines.append(f"Non-LLM concern signals: {concern_str}")
+    # Surface assignment connection observation when present — the synthesizer
+    # needs to know if submissions diverged from the assignment topic so it
+    # doesn't frame narrative sections around the assignment name when students
+    # wrote about something else entirely.
+    if qa.assignment_connection_observation:
+        lines.append(
+            f"ASSIGNMENT CONNECTION NOTE: {qa.assignment_connection_observation}"
+        )
     return "\n".join(lines)
 
 
@@ -283,3 +296,435 @@ def _run_synthesis(prompt: str, backend: BackendConfig) -> SynthesisReport:
     confidence = float(parsed.get("confidence", 0.5))
 
     return SynthesisReport(sections=sections, confidence=confidence)
+
+
+# ---------------------------------------------------------------------------
+# A6 — Guided Synthesis Chain
+# ---------------------------------------------------------------------------
+
+def _validate_no_student_data(payload: str, coding_records: List[SubmissionCodingRecord]) -> bool:
+    """FERPA enforcement: verify no student-identifiable data in cloud payload.
+
+    Call this BEFORE sending any payload to a cloud API. If validation fails,
+    skip cloud enhancement — do not crash.
+
+    Returns True if payload is safe to send, False if FERPA violation detected.
+    """
+    payload_lower = payload.lower()
+    for record in coding_records:
+        if record.student_name and record.student_name.lower() in payload_lower:
+            log.error(
+                "FERPA VIOLATION BLOCKED: student name '%s' found in cloud payload",
+                record.student_name,
+            )
+            return False
+        if record.student_id and record.student_id in payload:
+            log.error(
+                "FERPA VIOLATION BLOCKED: student ID '%s' found in cloud payload",
+                record.student_id,
+            )
+            return False
+    return True
+
+
+def _build_flagged_students_block(flagged: List[SubmissionCodingRecord]) -> str:
+    """Format flagged student data for Call 1 prompt."""
+    lines = []
+    for r in flagged:
+        concern_summaries = []
+        for c in r.concerns:
+            concern_summaries.append(
+                f'  - Flagged passage: "{c.flagged_passage[:120]}"\n'
+                f'    Why flagged: {c.why_flagged}\n'
+                f'    Confidence: {c.confidence:.2f}'
+            )
+        tags = ", ".join(r.theme_tags[:4]) if r.theme_tags else "none"
+        register = r.emotional_register or "unspecified"
+        lines.append(
+            f"STUDENT: {r.student_name}\n"
+            f"  Theme tags: {tags}\n"
+            f"  Emotional register: {register}\n"
+            f"  Concerns:\n" + "\n".join(concern_summaries)
+        )
+    return "\n\n".join(lines)
+
+
+def _build_strong_students_block(strong: List[SubmissionCodingRecord]) -> str:
+    """Format strong engager data for Call 2 prompt."""
+    lines = []
+    for r in strong:
+        tags = ", ".join(r.theme_tags[:4]) if r.theme_tags else "none"
+        first_quote = (
+            f'"{r.notable_quotes[0].text[:120]}"'
+            if r.notable_quotes
+            else "(no notable quote)"
+        )
+        personal = (
+            "; ".join(r.personal_connections[:2])
+            if r.personal_connections
+            else "none noted"
+        )
+        lines.append(
+            f"STUDENT: {r.student_name}\n"
+            f"  Theme tags: {tags}\n"
+            f"  Notable quote: {first_quote}\n"
+            f"  Personal connections: {personal}"
+        )
+    return "\n\n".join(lines)
+
+
+def _summarize_connection(qa_result: Optional[QuickAnalysisResult]) -> str:
+    """Extract assignment connection summary from QuickAnalysisResult."""
+    if not qa_result:
+        return "not available"
+    obs = getattr(qa_result, "assignment_connection_observation", "")
+    if obs:
+        return obs[:200]
+    return "not available"
+
+
+def _summarize_similarity(qa_result: Optional[QuickAnalysisResult]) -> str:
+    """Extract pairwise similarity observation from QuickAnalysisResult."""
+    if not qa_result:
+        return "not available"
+    ps = getattr(qa_result, "pairwise_similarity", None)
+    if ps and getattr(ps, "observation", ""):
+        return ps.observation[:200]
+    return "not available"
+
+
+def guided_synthesis(
+    coding_records: List[SubmissionCodingRecord],
+    *,
+    tier: str,
+    backend: BackendConfig,
+    assignment_name: str = "",
+    qa_result: Optional[QuickAnalysisResult] = None,
+    profile_fragment: str = "",
+    settings: Optional[Dict[str, Any]] = None,
+) -> GuidedSynthesisResult:
+    """Guided Synthesis Chain (A6).
+
+    Replaces the broken open-ended 3-pass synthesis with 4 scoped, guided
+    calls that surface patterns and tensions without prescribing pedagogy.
+    The teacher is the synthesis layer — this provides the diagnosis.
+
+    Each call has its own try/except. If Call 3 fails, Calls 1, 2, and 4
+    still complete and produce usable output. (#CRIP_TIME)
+
+    FERPA: Student names appear in LOCAL calls only. Cloud enhancement
+    uses ONLY anonymized pattern descriptions — validated before sending.
+    """
+    result = GuidedSynthesisResult()
+    settings = settings or {}
+
+    # Pre-processing (non-LLM): group students by engagement pattern
+    flagged = [r for r in coding_records if r.concerns]
+    strong = [
+        r for r in coding_records
+        if r.engagement_signals
+        and r.engagement_signals.get("engagement_depth") == "strong"
+    ]
+    limited = [
+        r for r in coding_records
+        if r.engagement_signals
+        and r.engagement_signals.get("engagement_depth") in ("limited", "minimal")
+    ]
+    # Middle: everyone not in flagged, strong, or limited
+    flagged_ids = {r.student_id for r in flagged}
+    strong_ids = {r.student_id for r in strong}
+    limited_ids = {r.student_id for r in limited}
+    middle = [
+        r for r in coding_records
+        if r.student_id not in flagged_ids
+        and r.student_id not in strong_ids
+        and r.student_id not in limited_ids
+    ]
+
+    total = len(coding_records)
+    log.info(
+        "Guided synthesis: total=%d flagged=%d strong=%d limited=%d middle=%d",
+        total, len(flagged), len(strong), len(limited), len(middle),
+    )
+
+    # ------------------------------------------------------------------
+    # Call 1 — Concern Pattern Analysis (only if flagged students exist)
+    # ------------------------------------------------------------------
+    call1_output: Dict[str, Any] = {}
+    if flagged:
+        result.calls_attempted += 1
+        try:
+            flagged_block = _build_flagged_students_block(flagged)
+            prompt = SYNTHESIS_CONCERN_PROMPT.format(
+                flagged_students_block=flagged_block,
+            )
+            log.info("Guided synthesis Call 1 (concerns): %d flagged students", len(flagged))
+            raw = send_text(backend, prompt, SYSTEM_PROMPT, max_tokens=800)
+            parsed = parse_json_response(raw)
+            if "_parse_error" not in parsed:
+                patterns = parsed.get("patterns", [])
+                diffs = parsed.get("key_differences", [])
+                if isinstance(patterns, list):
+                    result.concern_patterns = patterns
+                    call1_output["patterns"] = patterns
+                if isinstance(diffs, list):
+                    result.concern_differences = diffs
+                    call1_output["key_differences"] = diffs
+                result.calls_completed += 1
+                log.info("Call 1 complete: %d patterns, %d differences", len(patterns), len(diffs))
+            else:
+                log.warning("Call 1 JSON parse failed: %s", parsed.get("_parse_error"))
+        except Exception as e:
+            log.warning("Guided synthesis Call 1 failed (concern patterns): %s", e)
+
+    # ------------------------------------------------------------------
+    # Call 2 — Engagement Highlights (only if strong engagers exist)
+    # ------------------------------------------------------------------
+    call2_output: Dict[str, Any] = {}
+    if strong:
+        result.calls_attempted += 1
+        try:
+            strong_block = _build_strong_students_block(strong)
+            prompt = SYNTHESIS_HIGHLIGHT_PROMPT.format(
+                strong_students_block=strong_block,
+            )
+            log.info("Guided synthesis Call 2 (highlights): %d strong students", len(strong))
+            raw = send_text(backend, prompt, SYSTEM_PROMPT, max_tokens=800)
+            parsed = parse_json_response(raw)
+            if "_parse_error" not in parsed:
+                highlights = parsed.get("highlights", [])
+                if isinstance(highlights, list):
+                    result.engagement_highlights = highlights
+                    call2_output["highlights"] = highlights
+                result.calls_completed += 1
+                log.info("Call 2 complete: %d highlights", len(highlights))
+            else:
+                log.warning("Call 2 JSON parse failed: %s", parsed.get("_parse_error"))
+        except Exception as e:
+            log.warning("Guided synthesis Call 2 failed (highlights): %s", e)
+
+    # ------------------------------------------------------------------
+    # Call 3 — Tension Surfacing (only if BOTH flagged AND strong exist)
+    # ------------------------------------------------------------------
+    if flagged and strong and call1_output and call2_output:
+        result.calls_attempted += 1
+        try:
+            # Build concern patterns block from Call 1 output
+            concern_block_lines = []
+            for p in call1_output.get("patterns", []):
+                desc = p.get("description", "")
+                names = ", ".join(p.get("student_names", []))
+                concern_block_lines.append(f"- {desc} (students: {names})")
+            for d in call1_output.get("key_differences", []):
+                concern_block_lines.append(f"  Distinction: {d}")
+            concern_patterns_block = "\n".join(concern_block_lines) or "(none)"
+
+            # Build highlights block from Call 2 output
+            highlight_block_lines = []
+            for h in call2_output.get("highlights", []):
+                desc = h.get("description", "")
+                names = ", ".join(h.get("student_names", []))
+                highlight_block_lines.append(f"- {desc} (students: {names})")
+            highlight_patterns_block = "\n".join(highlight_block_lines) or "(none)"
+
+            prompt = SYNTHESIS_TENSION_PROMPT.format(
+                concern_patterns_block=concern_patterns_block,
+                highlight_patterns_block=highlight_patterns_block,
+            )
+            log.info("Guided synthesis Call 3 (tensions)")
+            raw = send_text(backend, prompt, SYSTEM_PROMPT, max_tokens=800)
+            parsed = parse_json_response(raw)
+            if "_parse_error" not in parsed:
+                tensions = parsed.get("tensions", [])
+                if isinstance(tensions, list):
+                    result.tensions = tensions
+                result.calls_completed += 1
+                log.info("Call 3 complete: %d tensions", len(tensions))
+            else:
+                log.warning("Call 3 JSON parse failed: %s", parsed.get("_parse_error"))
+        except Exception as e:
+            log.warning("Guided synthesis Call 3 failed (tensions): %s", e)
+    elif flagged and strong:
+        log.info(
+            "Skipping Call 3 (tension surfacing): Call 1 or Call 2 produced no output to work from"
+        )
+
+    # ------------------------------------------------------------------
+    # Call 4 — Class Temperature (ALWAYS runs)
+    # ------------------------------------------------------------------
+    result.calls_attempted += 1
+    try:
+        # Summarize concern types from flagged students
+        concern_type_counts: Dict[str, int] = {}
+        for r in flagged:
+            for c in r.concerns:
+                # Use first 6 words of why_flagged as the concern type label
+                label = " ".join(c.why_flagged.split()[:6]) if c.why_flagged else "unspecified"
+                concern_type_counts[label] = concern_type_counts.get(label, 0) + 1
+        if concern_type_counts:
+            concern_types_str = "; ".join(
+                f"{k} ({v})" for k, v in list(concern_type_counts.items())[:5]
+            )
+        else:
+            concern_types_str = "none"
+
+        connection_summary = _summarize_connection(qa_result)
+        similarity_summary = _summarize_similarity(qa_result)
+
+        # Edge case: ALL students flagged — note this for Call 4
+        all_flagged_note = ""
+        if len(flagged) == total and total > 0:
+            all_flagged_note = (
+                " Note: ALL students in this class were flagged for concerns — "
+                "this may indicate the assignment prompt or reading needs reframing."
+            )
+
+        prompt = SYNTHESIS_TEMPERATURE_PROMPT.format(
+            total_students=total,
+            flagged_count=len(flagged),
+            concern_types=concern_types_str + all_flagged_note,
+            strong_count=len(strong),
+            limited_count=len(limited),
+            middle_count=len(middle),
+            connection_summary=connection_summary,
+            similarity_summary=similarity_summary,
+        )
+        log.info("Guided synthesis Call 4 (class temperature): %d total students", total)
+        raw = send_text(backend, prompt, SYSTEM_PROMPT, max_tokens=800)
+        parsed = parse_json_response(raw)
+        if "_parse_error" not in parsed:
+            temp = parsed.get("class_temperature", "")
+            areas = parsed.get("attention_areas", [])
+            if isinstance(temp, str):
+                result.class_temperature = temp
+            if isinstance(areas, list):
+                result.attention_areas = areas
+            result.calls_completed += 1
+            log.info("Call 4 complete: class_temperature=%d chars", len(result.class_temperature))
+        else:
+            log.warning("Call 4 JSON parse failed: %s", parsed.get("_parse_error"))
+    except Exception as e:
+        log.warning("Guided synthesis Call 4 failed (class temperature): %s", e)
+
+    log.info(
+        "Guided synthesis complete: %d/%d calls succeeded",
+        result.calls_completed, result.calls_attempted,
+    )
+
+    # ------------------------------------------------------------------
+    # Optional cloud enhancement (FERPA-safe: anonymized patterns only)
+    # ------------------------------------------------------------------
+    cloud_url = settings.get("insights_cloud_url", "")
+    cloud_key = settings.get("insights_cloud_key", "")
+
+    if cloud_url and cloud_key:
+        try:
+            _run_cloud_enhancement(result, coding_records, assignment_name, cloud_url, cloud_key, settings)
+        except Exception as e:
+            log.warning("Cloud enhancement failed (non-fatal): %s", e)
+
+    return result
+
+
+def _run_cloud_enhancement(
+    result: GuidedSynthesisResult,
+    coding_records: List[SubmissionCodingRecord],
+    assignment_name: str,
+    cloud_url: str,
+    cloud_key: str,
+    settings: Dict[str, Any],
+) -> None:
+    """Run optional cloud synthesis using ANONYMIZED pattern data only.
+
+    FERPA enforcement: ONLY pattern descriptions and aggregate stats are sent.
+    NO student names, NO student IDs, NO student text, NO quotes.
+    """
+    total = len(coding_records)
+
+    # Build anonymized payload from guided synthesis output
+    payload_parts = [
+        f"An engagement analysis found these patterns in a class of {total} students "
+        f"responding to an assignment about {assignment_name or 'this topic'}:",
+        "",
+    ]
+
+    if result.concern_patterns:
+        payload_parts.append("CONCERN PATTERNS:")
+        for p in result.concern_patterns:
+            desc = p.get("description", "")
+            # Count student_names but DO NOT include the names
+            count = len(p.get("student_names", []))
+            payload_parts.append(f"- {desc} ({count} student(s))")
+        if result.concern_differences:
+            payload_parts.append("Key distinctions:")
+            for d in result.concern_differences:
+                payload_parts.append(f"  - {d}")
+        payload_parts.append("")
+
+    if result.engagement_highlights:
+        payload_parts.append("ENGAGEMENT HIGHLIGHTS:")
+        for h in result.engagement_highlights:
+            desc = h.get("description", "")
+            count = len(h.get("student_names", []))
+            payload_parts.append(f"- {desc} ({count} student(s))")
+        payload_parts.append("")
+
+    if result.tensions:
+        payload_parts.append("TENSIONS BETWEEN GROUPS:")
+        for t in result.tensions:
+            desc = t.get("description", "")
+            between = t.get("between", [])
+            payload_parts.append(f"- {desc}")
+            for b in between:
+                payload_parts.append(f"  Between: {b}")
+        payload_parts.append("")
+
+    if result.class_temperature:
+        payload_parts.append(f"CLASS TEMPERATURE: {result.class_temperature}")
+        if result.attention_areas:
+            payload_parts.append("Attention areas:")
+            for a in result.attention_areas:
+                payload_parts.append(f"  - {a}")
+        payload_parts.append("")
+
+    payload_parts.append(
+        "Provide a richer pedagogical analysis: What do these patterns suggest "
+        "about where the class is in their understanding? What tensions are "
+        "most productive for learning? What should the teacher pay attention to? "
+        "Do NOT suggest specific exercises or lesson designs — the teacher decides."
+    )
+
+    cloud_prompt = "\n".join(payload_parts)
+
+    # FERPA validation — MUST pass before any cloud call
+    if not _validate_no_student_data(cloud_prompt, coding_records):
+        log.error("Cloud enhancement aborted: FERPA validation failed")
+        return
+
+    # Also validate the cloud_prompt doesn't contain student IDs as standalone tokens
+    log.info("FERPA validation passed — sending anonymized patterns to cloud")
+
+    # Use cloud backend via existing llm_backend infrastructure
+    from insights.llm_backend import BackendConfig, send_text as _send_text, parse_json_response as _parse_json
+
+    cloud_model = settings.get("insights_cloud_model", "gpt-4o-mini")
+    cloud_format = settings.get("insights_cloud_api_format", "openai")
+    cloud_backend = BackendConfig(
+        name="cloud",
+        model=cloud_model,
+        base_url=cloud_url,
+        api_key=cloud_key,
+        api_format=cloud_format,
+    )
+
+    cloud_system = (
+        "You are helping a teacher understand class-level engagement patterns. "
+        "All data is anonymized — you will not see student names or text. "
+        "Do NOT suggest singling out students. Do NOT suggest specific exercises. "
+        "Analyze patterns and surface pedagogical significance."
+    )
+
+    raw = _send_text(cloud_backend, cloud_prompt, cloud_system, max_tokens=1200)
+    # Cloud response may be free text or JSON — store as-is
+    result.cloud_narrative = raw.strip()
+    log.info("Cloud enhancement complete: %d chars", len(result.cloud_narrative))

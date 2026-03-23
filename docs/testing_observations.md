@@ -1,19 +1,33 @@
 # Testing Observations — AIC & Insights Pipeline
 
 > Generated from DAIGT testing brief execution (2026-03-20).
+> Updated 2026-03-22 with methodology audit findings and Claude Sonnet validation data.
 > This document captures empirical findings that should drive system refinement.
 > Each observation includes the gap identified, proposed fix, and validation criteria.
+>
+> **2026-03-22 Update**: A methodology audit (`docs/comparison_analysis.md`) revealed that
+> the demo corpus's 19 "off-topic" submissions are a data construction artifact — DAIGT
+> essays with light keyword swaps, not genuinely off-topic student work. Findings
+> conditioned on this artifact are marked below. Additionally, 5 Claude Sonnet test
+> essays (`data/demo_source/claude_test_essays.json`) were added to calibration,
+> and the biology pipeline crash (SynthesisReport sections dict coercion) was fixed.
 
 ---
 
 ## Methodology Limits
 
 **What we CAN test with current data:**
-- Detection accuracy on well-written AI text (the hard case)
-- False positive rates on competent human writing (DAIGT essays)
+- Detection accuracy on well-written AI text (the hard case) — now includes Claude Sonnet essays (5 styles: naive, personal, formal, lab, adversarial)
+- False positive rates on competent human writing (DAIGT essays, n=295)
 - Pipeline stage timing and reliability on local 8B models
-- Concern detector behavior on specific discourse patterns (hand-crafted)
-- Theme/synthesis quality on adapted student voices
+- Concern detector behavior on specific discourse patterns (10 hand-crafted students)
+- Structural indicator validation (starter diversity, comma density, avg word length) — calibrated against DAIGT + 13 AI essays across 4 models
+
+**What the methodology audit revealed we CANNOT validly test:**
+- Topic-mismatch detection (current corpus has DAIGT-adapted essays, not genuinely off-topic work)
+- Theme quality on a coherent single-topic corpus (current corpus mixes driving + intersectionality)
+- Pairwise similarity validation (Ethan Liu / Nadia Petrov match is a construction artifact — same DAIGT source)
+- Engagement absence detection on realistic disengaged students (Tyler/Jaylen are AI-generated, not disengaged humans)
 
 **What we CANNOT test without real classroom data:**
 - Detection on truly minimal-effort submissions

@@ -7,7 +7,7 @@ against map-reduce information loss.
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -97,7 +97,8 @@ class SubmissionCodingRecord(BaseModel):
     # Metadata from non-LLM pass (carried forward for synthesis)
     word_count: int = 0
     cluster_id: Optional[int] = None
-    vader_sentiment: float = 0.0
+    emotional_register_score: float = 0.0
+    sentiment_reliability: str = "high"  # "high" | "low" | "suppressed"
     keyword_hits: Dict[str, int] = {}
 
     # Preprocessing metadata
@@ -105,6 +106,16 @@ class SubmissionCodingRecord(BaseModel):
 
     # Draft student feedback (Phase 2+)
     draft_feedback: Optional[str] = None
+
+    # AIC engagement dimensions — snapshot, not character assessment. Some engagement happens outside of text.
+    engagement_signals: Optional[Dict[str, Any]] = None
+
+    # Truncation detection (copied from PerSubmissionSummary for UI access)
+    is_possibly_truncated: bool = False
+    truncation_note: str = ""
+
+    # Theme tags that may be in tension with flagged concerns — teacher review recommended, never auto-correct.
+    theme_concern_notes: List[str] = []
 
 
 # ---------------------------------------------------------------------------
@@ -181,6 +192,10 @@ class PerSubmissionSummary(BaseModel):
     word_count: int = 0
     submission_type: str = ""
     vader_compound: float = 0.0
+    # GoEmotions enrichment — empty dict when VADER fallback was used
+    emotions: Dict[str, float] = {}
+    # Which backend produced the score: "go_emotions" | "vader" | "none"
+    sentiment_backend: str = ""
     keyword_hits: Dict[str, int] = {}
     cluster_id: Optional[int] = None
     was_translated: bool = False
@@ -191,6 +206,9 @@ class PerSubmissionSummary(BaseModel):
     gibberish_detail: str = ""
     # Assignment connection (vocabulary overlap with assignment description)
     assignment_connection: Optional["AssignmentConnectionScore"] = None
+    # Truncation detection (non-LLM heuristic)
+    is_possibly_truncated: bool = False
+    truncation_note: str = ""
 
 
 class AssignmentConnectionScore(BaseModel):
@@ -327,6 +345,21 @@ class Theme(BaseModel):
     confidence: float = 0.0
     sub_themes: Optional[List[str]] = None
 
+    @field_validator("sub_themes", mode="before")
+    @classmethod
+    def coerce_sub_themes(cls, v):
+        """Larger models return sub_themes as [{name:..., description:...}] — coerce to strings."""
+        if not isinstance(v, list):
+            return v
+        result = []
+        for item in v:
+            if isinstance(item, dict):
+                # Extract name, fall back to str(item)
+                result.append(item.get("name") or item.get("theme") or str(item))
+            else:
+                result.append(str(item))
+        return result or None
+
 
 class Contradiction(BaseModel):
     """Opposing views explicitly preserved — tensions are productive, not problems."""
@@ -391,6 +424,30 @@ class SynthesisReport(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Guided Synthesis (A6 — replaces broken open-ended 3-pass synthesis)
+# ---------------------------------------------------------------------------
+
+class GuidedSynthesisResult(BaseModel):
+    """Structured synthesis from guided 8B calls.
+
+    Each field is populated by a separate, scoped LLM call.
+    The teacher is the synthesis layer — this provides diagnosis.
+
+    Partial results are valid: if Call 3 fails, Calls 1, 2, and 4 still
+    produce useful output. (#CRIP_TIME: partial results > crash)
+    """
+    concern_patterns: List[Dict[str, Any]] = []      # Call 1
+    concern_differences: List[str] = []               # Call 1
+    engagement_highlights: List[Dict[str, Any]] = []  # Call 2
+    tensions: List[Dict[str, Any]] = []               # Call 3
+    class_temperature: str = ""                       # Call 4
+    attention_areas: List[str] = []                   # Call 4
+    calls_completed: int = 0                          # reliability tracking
+    calls_attempted: int = 0
+    cloud_narrative: str = ""                         # optional cloud enhancement
+
+
+# ---------------------------------------------------------------------------
 # Draft feedback (Phase 2+)
 # ---------------------------------------------------------------------------
 
@@ -420,6 +477,20 @@ class TeacherAnalysisProfile(BaseModel):
     feedback_style: str = "warm"
     feedback_length: str = "moderate"
     custom_patterns: Dict[str, str] = {}
+    # Teacher-defined concern patterns: plain-English descriptions injected
+    # into the concern detection prompt alongside the default patterns.
+    # Examples: "student makes a claim without citing evidence",
+    #           "student attributes a group behavior to biology/genetics"
+    custom_concern_patterns: List[str] = []
+    # Default patterns the teacher has muted for this course.
+    # Wellbeing/crisis signals cannot be fully disabled — they survive
+    # regardless of this list. Only pedagogical patterns (essentializing,
+    # colorblind framing, tone policing) can be suppressed here.
+    disabled_default_patterns: List[str] = []
+    # Teacher-defined positive signals to surface: community knowledge,
+    # code-switching, unexpected connections, multilingual thinking, etc.
+    # Flow into coding/synthesis prompts as strengths to name explicitly.
+    custom_strength_patterns: List[str] = []
     edit_history: List[Dict] = []
 
 

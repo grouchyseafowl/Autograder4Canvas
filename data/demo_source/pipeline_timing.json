@@ -1,5 +1,15 @@
 {
   "biology": {
-    "error": "1 validation error for SynthesisReport\nsections.confidence\n  Input should be a valid string [type=string_type, input_value=0.8, input_type=float]\n    For further information visit https://errors.pydantic.dev/2.12/v/string_type"
+    "quick_analysis": 12.97,
+    "coding_total": 736.86,
+    "coding_per_student_avg": 28.98,
+    "concerns": 435.45,
+    "themes": 843.77,
+    "outliers": 68.27,
+    "synthesis": 158.63,
+    "feedback": 572.93,
+    "total": 2857.86,
+    "students": 25,
+    "per_student_total": 114.31
   }
 }
