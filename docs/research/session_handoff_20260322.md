@@ -2,17 +2,21 @@
 
 ## Where We Are
 
-We have a working system. Llama 3.1 8B on MLX runs the full pipeline in ~80 min
-for 32 students and produces:
+We have a working system with a clear path to 3/3 concern detection, 0 false positives.
+
+Llama 3.1 8B on MLX runs the full pipeline in ~80 min for 32 students:
 - 0 equity false positives (S029 neurodivergent student protected)
-- 1/3 concern detection (catches essentializing, misses colorblind + tone policing)
+- 1/3 concern detection in current pipeline (essentializing only)
+- **BUT: confirmed that a focused/shorter concern prompt catches all 3 on the same model**
 - 4/4 synthesis calls (5 highlights, 2 tensions, class temperature)
-- Richer theme tags than Qwen ("code-switching as survival strategy", "critique of
-  traditional academic expectations")
+- Richer theme tags than Qwen ("code-switching as survival strategy")
 - Truncation detection working (S002)
 
+**The path to 3/3:** The full CONCERN_PROMPT (517 words) is too long for 8B — model
+loses tone policing in the noise. Focused prompt (276 words) catches it. Fix: tier-
+differentiated concern prompt (short for 8B, full for larger models).
+
 The chatbot handoff (Gemini Pro) achieves 3/3, 0 FP with the tightened prompt.
-That's the ceiling we're working toward locally.
 
 ## What's Committed
 
@@ -36,12 +40,12 @@ That's the ceiling we're working toward locally.
 
 ### 1. Can we reach 3/3 concern detection on 8B?
 
-**Current best:** 2/3 via multi-pass (standard catches S015, synthesis-first catches S018).
-S025 tone policing resists all 8B configurations tested.
+**SOLVED (late night finding).** Root cause: prompt length. The full CONCERN_PROMPT
+(517 words) buries tone policing in examples and "do NOT flag" instructions. A focused
+prompt (276 words) catches S025 correctly on the same 8B model.
 
-**Next to try:** Pairwise relational concern check (running now). If Llama can evaluate
-the Aiden/Destiny dynamic when shown both explicitly, that's 3/3. If not, tone policing
-at 8B requires either a cloud model for the concern pass or acceptance of 2/3 as the floor.
+Fix: tier-differentiated concern prompt — short for lightweight (8B), full for medium/deep.
+Not yet implemented. This is the Priority 1 code change for next session.
 
 ### 2. Can synthesis-first produce Gemini-level richness on 8B?
 

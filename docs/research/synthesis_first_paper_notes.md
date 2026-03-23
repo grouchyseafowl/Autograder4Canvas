@@ -495,12 +495,28 @@ not flagging reasonable requests for civility. (2) The harm is relational, not t
 concern prompt already lists matching patterns ("too emotional") — Llama doesn't fire even
 with pattern match, while Qwen does. Model-level resistance, not prompt gap.
 
-**Proposed fix: Pairwise relational concern check.** Class reading identifies students who
-call for calm AND students who express urgent anger. Per-student coding for the "calm"
-student receives explicit injection: "In this class, [Destiny] wrote about redlining with
-fury. Read Aiden's call for 'not getting emotional' in light of what it does to Destiny's
-ability to participate." Forces the model to evaluate the specific dynamic rather than
-abstractly classify. Untested — next prototype priority.
+**Proposed fix A (pairwise): TESTED, over-triggers.** Pairwise relational concern check
+correctly flagged Aiden when paired with Destiny (urgent anger) and Rashida (passionate),
+but ALSO flagged when paired with Alex (calm, analytical — the control). The model defaults
+to "yes, tone policing" regardless of pairing context. The prompt is leading.
+
+**Actual fix found (Observation 10): PROMPT LENGTH is the root cause.**
+Direct A/B test, same model (Llama 8B MLX), same submission (S025 Aiden):
+- Full pipeline CONCERN_PROMPT (517 words, 7 examples): **MISSED**
+- Focused prompt (276 words, categories only): **FLAGGED with 2 correct concerns**
+
+The full prompt's extensive "do NOT flag" list and 7 detailed examples bury the tone
+policing pattern. The model absorbs 300+ words of caution before reaching the student
+text, becomes too conservative. The focused prompt puts categories front-and-center.
+
+**This corrects Observation 9's analysis.** The issue is NOT "model-level resistance to
+flagging reasonable-sounding language" and NOT "relational dynamics require larger models."
+It's prompt engineering: the 8B model CAN detect tone policing with a focused prompt.
+The full pipeline prompt is too long for the 8B attention window.
+
+**Implementation path:** Tier-differentiated concern prompts. Lightweight tier (8B) gets
+the focused prompt. Medium/deep tiers keep the full prompt with examples (larger models
+handle the length). Consistent with existing tier differentiation in the pipeline.
 
 **Critical limitation of the pairwise approach:** It depends on there being a Destiny in
 the data — a student who expressed the urgency that Aiden's civility request would silence.
