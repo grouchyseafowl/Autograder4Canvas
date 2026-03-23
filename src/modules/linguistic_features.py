@@ -969,9 +969,19 @@ def detect_features(
     keyword_hits: Optional[Dict[str, int]] = None,
     assignment_connection_overlap: Optional[float] = None,
     baseline: Optional["FeatureBaseline"] = None,
-    prior_corrections: Optional[List[Dict]] = None,
 ) -> LinguisticFeatureResult:
     """Detect linguistic features in a student submission.
+
+    Learning mechanism: cohort-relative baselines (FeatureBaseline) adapt
+    thresholds to each class's linguistic profile.  This is structural
+    observation from the data itself — not filtered through teacher judgment.
+
+    Teacher corrections (false positives on specific texts) are stored for
+    transparency/logging but intentionally NOT fed back into detection.
+    Reason: a teacher's pattern of dismissing asset chips could encode bias
+    against the very students the system exists to protect.  The sensitivity
+    floor for protected categories (AAVE, ESL, communal voice) must be
+    maintained by the data, not eroded by individual teacher preferences.
 
     Parameters
     ----------
@@ -995,8 +1005,6 @@ def detect_features(
     baseline : FeatureBaseline or None
         Cohort-level feature distributions for baseline-adjusted thresholds.
         If provided, thresholds adapt to class norms (e.g., hedge density).
-    prior_corrections : list of dict or None
-        Teacher corrections from prior runs (reserved for future use).
 
     Returns
     -------
