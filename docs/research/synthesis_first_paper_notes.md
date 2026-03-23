@@ -360,9 +360,10 @@ computed from the class's own linguistic profile via exponential moving average 
 runs. The class data itself teaches the system what's normal for this population. This
 is structural observation from the data, not filtered through teacher judgment.
 
-Teacher corrections are still stored — for audit, institutional accountability, and a
-future "bias mirror" feature that could show teachers their own correction patterns
-relative to student linguistic profiles. But they do not feed back into detection.
+Corrections for **non-protected features** (formulaic structure, hedging density) are
+stored and can inform precision improvement. Corrections for **protected features**
+(AAVE, ESL, communal voice) are **not stored at all** — the system does not track
+teacher interactions with these chips (see Observation 10 for why).
 
 **Framework connection (#CRITICAL_PEDAGOGY):** This is a refusal of the banking model
 applied to the system's own learning. The standard ML feedback loop treats the teacher
@@ -375,9 +376,8 @@ what counts as a linguistic feature worth protecting.
 over detection sensitivity is paternalistic. The system says "we know better than you
 what needs protection." From an interdependence perspective, this fails to design for
 mutual reliance — it positions the system as the protector and the teacher as a potential
-threat. A more interdependent design might surface the teacher's correction patterns
-back to them as reflection data rather than silently overriding their judgment. (The
-"bias mirror" feature is designed for this but not yet built.)
+threat. See Observation 10 for how the expandable learn-note design partially resolves
+this tension by repositioning the system as teaching companion rather than monitor.
 
 ### Observation 7: Detection as asset-surfacing vs. detection as surveillance
 
@@ -517,6 +517,87 @@ boundary of text-based analysis. The system works best in classrooms where stude
 safe enough to write authentically. Where that safety doesn't exist, the harm is real but
 the evidence isn't in the data.
 
+### Observation 10: The teacher is a learner, not a threat
+
+The entire suppression layer, asset chips, and (proposed) bias mirror were designed
+around a model where the teacher is a potential source of harm to students. That model
+is not wrong — teacher bias toward non-standard English is well-documented (Godley &
+Escher, 2012; Baker-Bell, 2020). But it is incomplete in a way that matters
+architecturally.
+
+**The banking model applied to teachers.** Freire's critique of the banking model doesn't
+just apply to students — it applies to anyone in an institutional hierarchy treated as a
+receptacle rather than an agent. If the system treats the teacher as a source of bias to
+be monitored and corrected, it applies the banking model to teachers. "We deposit the
+correct understanding of linguistic diversity into you; your job is to receive it."
+
+**The surveillance problem.** Consider: a teacher runs the insights pipeline, sees green
+chips saying "AAVE linguistic features — authentic voice," and dismisses one because
+they already know this student well. The proposed bias mirror would eventually surface:
+"You dismissed 7 of 11 AAVE chips." From the system's perspective: potential bias
+pattern. From the teacher's perspective: "I used my professional judgment, and now the
+system is tracking me." That's surveillance of a worker by a tool that was supposed to
+help them.
+
+**#TRANSFORMATIVE_JUSTICE demands this reframe.** Can we address potential teacher bias
+without replicating the punitive structures we claim to oppose? Tracking and surfacing
+correction patterns IS a punitive structure — regardless of how it's labeled ("reflection
+data," "bias mirror," "professional development tool").
+
+**#CRIP_TIME demands it too.** Who defines the pace of a teacher's growth in linguistic
+awareness? A teacher who is genuinely learning to see AAVE as an asset — maybe for the
+first time in a career where they were told to enforce standard English — might dismiss
+early chips not from bias but from unfamiliarity. The system cannot distinguish "I don't
+value this student's language" from "I don't yet understand what this chip is telling me."
+Both look like dismissal in the data.
+
+**#DISABILITY_STUDIES asks its core question.** Is the problem the teacher, or the built
+environment? If a teacher dismisses AAVE chips, is that a deficit in the teacher — or a
+deficit in a profession that provided zero training in sociolinguistics, enforced standard
+English norms for 15 years, and now presents a tool that says "actually, this grammar is
+an asset"? The system asks teachers to unlearn institutional conditioning overnight and
+then proposes to track whether they comply.
+
+**The design resolution: teach, don't track.**
+
+Instead of the bias mirror, each feature chip now carries an expandable `learn_note` — a
+short explanation of the linguistic pattern that the teacher can read when they choose to.
+The note for habitual be explains: "This is a grammatical feature of AAVE that marks
+ongoing or habitual action. Standard English has no single-word equivalent for this
+distinction." The note for communal voice explains: "Many cultural traditions center
+collective experience over individual opinion. This is a different mode of academic
+engagement, not a lack of personal voice."
+
+The system offers knowledge. The teacher decides when to look. First run: they see the
+chip, maybe ignore it. Fifth run: they expand it, read the note. Tenth run: they start
+noticing the pattern themselves. That's learning on the teacher's own schedule.
+
+**What this means for correction storage:**
+- **Protected features** (AAVE, ESL, communal voice, oral transcription): corrections
+  are **not stored**. The system does not track teacher interactions with these chips.
+  `save_feature_correction()` silently returns when `protected=True`.
+- **Non-protected features** (formulaic structure, hedging density): corrections are
+  stored and can inform precision improvement. There is no equity risk in a teacher
+  saying "this 'In this essay I will...' detection was a false positive."
+
+**Caveat:** This design assumes that expandable learn notes are sufficient to support
+teacher learning about linguistic diversity. There is no evidence that passive
+information availability changes teacher practice. The expandable chip is better than
+a bias mirror (no surveillance) and better than nothing (information available when
+sought), but it may not be sufficient. Active professional development support — book
+study groups, coaching, curriculum materials — would likely have more impact than any
+feature of this system. The system is a supplement to teacher learning, not a substitute.
+
+**Framework tension that remains unresolved (#ALGORITHMIC_JUSTICE vs. #CRIP_TIME):**
+If the system never tracks protected-category corrections, there is no institutional
+mechanism for noticing systematic patterns of dismissal across a school or district.
+Individual teacher surveillance is wrong, but institutional accountability for how
+linguistic diversity is received is legitimate. This tension is not resolved by the
+current design — it is deliberately left unresolved, with the design choosing teacher
+dignity over institutional data collection. Whether this is the right tradeoff depends
+on the deployment context (a single teacher using the tool voluntarily vs. a district
+mandating its use for evaluation).
+
 ### New Open Questions
 
 6. Does the suppression layer actually change LLM coding output quality for AAVE/ESL
@@ -528,9 +609,30 @@ the evidence isn't in the data.
 8. At what point does linguistic feature detection become surveillance? Is there a
    threshold of granularity beyond which the system knows too much about students'
    linguistic identities for the protection it provides?
-9. Can the "bias mirror" feature (showing teachers their own correction patterns
-   relative to student linguistic profiles) be designed without itself becoming a
-   punitive instrument?
+9. ~~Can the "bias mirror" feature be designed without becoming punitive?~~
+   **Resolved: No. Don't build it.** See Observation 10. The system teaches through
+   expandable learn notes on chips; it does not track or surface teacher behavior
+   patterns. Corrections for protected categories are not stored.
+
+10. Do expandable learn notes actually change teacher practice over time, or do they
+    go unread? There is no evidence that passive information availability is sufficient
+    to shift teacher understanding of linguistic diversity. The design assumes teachers
+    will eventually expand the chips — that assumption is untested.
+11. Is the teacher-dignity-over-institutional-data tradeoff the right one in all
+    contexts? A single teacher using the tool voluntarily is different from a district
+    mandate. The current design optimizes for the voluntary case.
+
+### New Limitation
+
+12. **The system was designed around students, not with teachers.** No teachers were
+consulted during the design of the suppression layer, the asset chips, the learn notes,
+or the correction storage policy. The analysis of teacher bias is grounded in published
+research (Baker-Bell, Godley & Escher) but the design decisions about how to respond to
+that bias — teach vs. track, store vs. don't store, expand vs. surface — were made by
+the development team. A teacher might reasonably say: "You built a system to protect
+students from me, decided how it would interact with me, and never asked me." The
+Observation 10 reframe (teacher as learner) partially addresses this but was itself
+produced without teacher input.
 
 ### New Files
 
