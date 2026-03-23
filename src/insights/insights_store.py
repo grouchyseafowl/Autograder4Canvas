@@ -686,16 +686,16 @@ class InsightsStore:
         ).fetchone()
         return row["baseline_json"] if row else None
 
-    def save_feature_correction(self, profile_id: str, student_id: str, feature_name: str, correction_type: str, submission_text: str = ""):
+    def save_feature_correction(self, profile_id: str, student_id: str, feature_name: str, correction_type: str, submission_text: str = "", *, protected: bool = False):
         """Store a teacher correction to a linguistic feature detection.
 
-        Corrections are for TRANSPARENCY AND LOGGING only — intentionally NOT
-        fed back into detection.  A teacher's pattern of dismissing asset chips
-        could encode bias against the students the system protects.  Detection
-        sensitivity is driven by cohort-relative baselines (structural data),
-        not individual teacher preferences.  Available via get_feature_corrections()
-        for audit and future bias-mirror features.
+        Protected features (AAVE, ESL, communal voice) are NOT stored.
+        The system does not track teacher interactions with protected-category
+        chips. Detection quality improves through cohort-relative baselines
+        (structural data from student writing), not through monitoring teachers.
         """
+        if protected:
+            return  # Do not store. No tracking of teacher behavior.
         self._conn.execute(
             """INSERT INTO prompt_calibration
                (profile_id, submission_text, original_coding, corrected_coding, correction_type, created_at)

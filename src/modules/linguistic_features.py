@@ -71,7 +71,9 @@ class LinguisticFeature(BaseModel):
     name: str                    # e.g., "zero_copula"
     category: str                # e.g., "syntactic_variation"
     evidence: List[str] = []     # matched text excerpts (max 3)
-    asset_label: str = ""        # teacher-facing positive framing
+    asset_label: str = ""        # teacher-facing chip label (short)
+    learn_note: str = ""         # expandable explanation (teacher learning, not evaluation)
+    protected: bool = False      # True = AAVE, ESL, communal voice — corrections NOT stored
     sentiment_effect: str = "none"  # "suppress" | "caveat" | "none"
     aic_weight_adjustments: Dict[str, float] = {}  # marker → multiplier
 
@@ -167,6 +169,156 @@ _EXISTENTIAL_ITS = re.compile(r"\bit'?s\s+a\s+lot\s+of\b", re.IGNORECASE)
 
 _AAVE_AIC_ADJUSTMENTS = {"grammatical_perfection": 0.5}
 _AAVE_ASSET = "AAVE linguistic features — authentic voice"
+
+# ---------------------------------------------------------------------------
+# Learn notes — expandable explanations for teacher learning
+# These teach, not evaluate. Available when teacher expands the chip.
+# ---------------------------------------------------------------------------
+_LEARN_NOTES = {
+    "aave_lexical": (
+        "This student uses vocabulary features of African American Vernacular "
+        "English (AAVE) — a complete linguistic system with its own grammar, "
+        "not 'broken English.' These features (like 'finna,' 'ain't,' 'no cap') "
+        "are part of a rich linguistic tradition. Sentiment analysis tools trained "
+        "on standard English often misread AAVE affect, so this score is adjusted."
+    ),
+    "zero_copula": (
+        "This student omits the copula verb ('is/are') in places where AAVE "
+        "grammar allows it — e.g., 'she tired' instead of 'she is tired.' This "
+        "is a systematic grammatical rule in AAVE (described by linguist John "
+        "Rickford), not a missing word. It follows the same pattern as Russian "
+        "and Arabic, which also drop copula verbs."
+    ),
+    "zero_copula_pos": (
+        "Same as zero copula — detected via part-of-speech analysis for higher "
+        "accuracy. 'She tired' follows AAVE grammatical rules for copula deletion."
+    ),
+    "zero_copula_dep": (
+        "Same as zero copula — confirmed via dependency parsing. This is a "
+        "grammatical feature of AAVE, not a missing word."
+    ),
+    "negative_concord": (
+        "This student uses double negation ('didn't nobody tell me') — a "
+        "grammatical feature of AAVE that intensifies negation. This construction "
+        "is standard in many world languages (Spanish, French, Russian). It was "
+        "also standard in English until prescriptive grammarians stigmatized it "
+        "in the 18th century."
+    ),
+    "remote_past_bin": (
+        "This student uses 'been' to mark the remote past ('I been knew that') "
+        "— an AAVE tense marker with no direct equivalent in standard English. "
+        "It means the action started long ago and the speaker finds it obvious. "
+        "This is a precise temporal distinction that standard English lacks."
+    ),
+    "existential_its": (
+        "This student uses 'it's a lot of' where standard English would use "
+        "'there are many.' This is an AAVE existential construction — a "
+        "grammatical pattern, not a confusion between 'it's' and 'there are.'"
+    ),
+    "habitual_be": (
+        "This student uses uninflected 'be' to mark habitual or ongoing action "
+        "('she be working') — an AAVE aspect marker meaning something happens "
+        "regularly, not just right now. Standard English has no single-word "
+        "equivalent for this distinction."
+    ),
+    "was_translated": (
+        "This submission was translated from another language. The student is "
+        "a multilingual writer engaging with course material across languages. "
+        "Sentiment scores on translated text are unreliable — the translation "
+        "process changes affect markers."
+    ),
+    "tense_mixing": (
+        "This student mixes tenses in a way that suggests L1 (first language) "
+        "transfer — their home language may handle tense differently than "
+        "English. This is a sign of multilingual competence: the student is "
+        "navigating between two grammatical systems."
+    ),
+    "article_error": (
+        "This student's article usage ('the homework,' 'a research') reflects "
+        "transfer from a home language that handles articles differently — or "
+        "has no articles at all (Mandarin, Russian, Korean, Arabic). This is "
+        "multilingual writing, not carelessness."
+    ),
+    "preposition_transfer": (
+        "This student's preposition choices ('depend of,' 'interested for') "
+        "reflect direct translation from their home language's preposition "
+        "system. Each language maps spatial and abstract relationships "
+        "differently — transfer patterns are evidence of active bilingual "
+        "processing."
+    ),
+    "code_mixing": (
+        "This student mixes languages within their submission. Code-mixing is "
+        "a sophisticated communicative strategy — bilingual speakers do it to "
+        "access precise concepts, maintain cultural identity, or express ideas "
+        "that work better in one language than another."
+    ),
+    "code_mixing_langdetect": (
+        "Multiple languages detected across sentences in this submission. "
+        "Code-mixing between languages is a sign of multilingual fluency, "
+        "not confusion."
+    ),
+    "communal_voice": (
+        "This student uses 'we/our/us' more than 'I/my/me' — engaging through "
+        "a communal rather than individual voice. Many cultural traditions "
+        "center collective experience over individual opinion. This is a "
+        "different mode of academic engagement, not a lack of personal voice."
+    ),
+    "narrative_structure": (
+        "This student engages through storytelling, dialogue, or sequential "
+        "narration rather than thesis-evidence-conclusion structure. Narrative "
+        "is a knowledge-making tradition in its own right — in many communities, "
+        "stories ARE how analysis happens."
+    ),
+    "flat_affect_engaged": (
+        "This student's writing has a neutral emotional tone but shows "
+        "substantive engagement with course concepts. Some students engage "
+        "deeply through understated expression — a flat tone does not mean "
+        "flat thinking."
+    ),
+    "hedging_density": (
+        "This student uses frequent hedging language ('maybe,' 'I think,' "
+        "'it seems'). This may reflect cultural communication norms, "
+        "second-language caution, or simply a careful thinking style. High "
+        "hedging is not low confidence — it can signal intellectual humility."
+    ),
+    "complex_emotional_engagement": (
+        "This student shows co-occurring emotions (e.g., grief AND admiration, "
+        "anger AND caring). This complexity suggests deep engagement with "
+        "difficult course material — they are holding multiple feelings at once "
+        "rather than reducing the material to a simple reaction."
+    ),
+    "formulaic_structure": (
+        "This student uses a taught essay format ('In this essay I will...' "
+        "/ 'In conclusion...'). This structure was likely explicitly taught — "
+        "the student is following learned conventions, which is different from "
+        "AI-generated text that may use similar patterns."
+    ),
+}
+
+# Feature names whose corrections are NEVER stored.  The system does not track
+# teacher interactions with these chips.  Detection quality for protected
+# categories improves through cohort-relative baselines, not monitoring.
+_PROTECTED_FEATURES: frozenset = frozenset({
+    # AAVE
+    "aave_lexical", "zero_copula", "zero_copula_pos", "zero_copula_dep",
+    "negative_concord", "remote_past_bin", "existential_its", "habitual_be",
+    # Multilingual / ESL
+    "was_translated", "tense_mixing", "article_error", "preposition_transfer",
+    "code_mixing", "code_mixing_langdetect",
+    # Communal voice / narrative
+    "communal_voice", "narrative_structure",
+    # Oral transcription
+    "oral_transcription",
+})
+
+
+def _enrich_features(features: List[LinguisticFeature]) -> None:
+    """Add learn_note and protected flag to each feature in-place."""
+    for f in features:
+        if not f.learn_note:
+            f.learn_note = _LEARN_NOTES.get(f.name, "")
+        f.protected = f.name in _PROTECTED_FEATURES
+
 
 # --- spaCy POS cascade helpers (optional, for better zero copula detection) ---
 
@@ -976,12 +1128,11 @@ def detect_features(
     thresholds to each class's linguistic profile.  This is structural
     observation from the data itself — not filtered through teacher judgment.
 
-    Teacher corrections (false positives on specific texts) are stored for
-    transparency/logging but intentionally NOT fed back into detection.
-    Reason: a teacher's pattern of dismissing asset chips could encode bias
-    against the very students the system exists to protect.  The sensitivity
-    floor for protected categories (AAVE, ESL, communal voice) must be
-    maintained by the data, not eroded by individual teacher preferences.
+    Protected features (AAVE, ESL, communal voice) include expandable
+    learn notes that explain the linguistic pattern when teachers choose
+    to read them.  The system teaches, not evaluates.  Corrections for
+    protected features are not stored — the system does not track teacher
+    interactions with these chips.
 
     Parameters
     ----------
@@ -1062,7 +1213,10 @@ def detect_features(
             sentiment_effect="caveat",
         ))
 
-    # 2. Aggregate
+    # 2. Enrich features with learn notes and protected status
+    _enrich_features(features)
+
+    # 3. Aggregate
     tier = _derive_tier(features)
     triggers = [f.name for f in features if f.sentiment_effect in ("suppress", "caveat")]
     caveat = _build_caveat(features, tier)
