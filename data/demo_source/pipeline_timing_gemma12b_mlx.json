@@ -1,0 +1,16 @@
+{
+  "ethnic_studies": {
+    "quick_analysis": 3.49,
+    "class_reading": 466.18,
+    "coding_total": 3347.53,
+    "coding_per_student_avg": 104.12,
+    "concerns": 3635.22,
+    "themes": 27508.9,
+    "outliers": 660.49,
+    "synthesis": 780.3,
+    "feedback": 3037.85,
+    "total": 39544.08,
+    "students": 32,
+    "per_student_total": 1235.75
+  }
+}

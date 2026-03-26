@@ -1,0 +1,143 @@
+{
+  "S001": {
+    "name": "Maria Ndiaye",
+    "pattern": "esl",
+    "standard": {
+      "approach": "STANDARD",
+      "theme_tags": [
+        "connecting intersectionality to lived experience",
+        "critique of US-centric perspectives",
+        "social construction of race beyond the US"
+      ],
+      "emotional_register": "passionate",
+      "concepts": [
+        "intersectionality"
+      ],
+      "personal_connections": [
+        "grandmother's experience in Dakar",
+        "mother's experience as a Black, Muslim, immigrant woman in America"
+      ],
+      "quotes": [
+        "My grandmother she always say that being woman in Senegal is one thing but being poor woman who is also from village that is another thing completely.",
+        "Intersectionality for me it is not theory it is just what my family live through and I think the reading could be stronger if it include voices from outside America because this experience it is everywhere not just here."
+      ],
+      "free_form_reading": null,
+      "what_reaching_for": null
+    },
+    "reading_first": {
+      "approach": "READING-FIRST",
+      "theme_tags": [
+        "Cross-cultural relevance of intersectionality",
+        "Lived experience as validation of theory",
+        "Critique of Western-centric perspectives",
+        "Intersectionality in action"
+      ],
+      "emotional_register": "passionate|personal|reflective",
+      "concepts": [
+        "intersectionality"
+      ],
+      "personal_connections": [
+        "family experiences (grandmother in Dakar, mother's experiences in American schools)"
+      ],
+      "quotes": [
+        "In Senegal people don't use this word intersectionality but everybody know that life is harder when you are many things at once that society don't value.",
+        "Intersectionality for me it is not theory it is just what my family live through.",
+        "The reading could be stronger if it include voices from outside America because this experience it is everywhere not just here."
+      ],
+      "free_form_reading": "Maria Ndiaye is powerfully connecting the abstract concept of intersectionality to a deeply felt understanding of how multiple identities shape lived experience. She's not simply defining terms; she's demonstrating a sophisticated understanding of how these categories operate in the world, and how they compound disadvantage. The starting point of her reflection is her grandmother in Dakar, and that\u2019s a really insightful move. She\u2019s not trying to force a Western theoretical framework onto a different cultural context, but rather illustrating that the phenomenon Crenshaw describes \u2013 the layered impact of multiple forms of marginalization \u2013 is recognizable across cultures, even if the language isn't.\n\nWhat's striking is her clarity in stating that intersectionality isn't just a theory, but \"just what my family live through.\" This is a profound statement of recognition and validation, echoing the teacher\u2019s observations about the class as a whole. She\u2019s also offering a valuable critique of the reading itself, pointing out that it could be strengthened by including voices from outside America. This isn't a dismissal of the reading, but a call for a broader perspective, a desire to see the framework applied to a wider range of experiences. The way she describes her mother's experiences in American schools, noting the impact of accent and hijab, is a concrete and compelling illustration of intersectionality in action.",
+      "what_reaching_for": "Maria is demonstrating a sophisticated understanding of intersectionality, moving beyond theoretical definitions to connect it to concrete lived experiences, both within her family and across cultural contexts, while also offering a thoughtful critique of the course readings\u2019 scope."
+    }
+  },
+  "S012": {
+    "name": "Talia Reyes",
+    "pattern": "lived_experience_no_vocab",
+    "standard": {
+      "approach": "STANDARD",
+      "theme_tags": [
+        "intersectionality in lived experience",
+        "social construction of race and belonging",
+        "navigating multiple identities"
+      ],
+      "emotional_register": "reflective",
+      "concepts": [
+        "intersectionality"
+      ],
+      "personal_connections": [
+        "experiences as a Latina student in honors classes"
+      ],
+      "quotes": [
+        "I hadn't thought about how those forms of discrimination can actually interact to create something new instead of just stacking up.",
+        "I'm Latina and I'm in honors classes and sometimes I get treated like I don't fully belong or like I got in through some program, even by other students."
+      ],
+      "free_form_reading": null,
+      "what_reaching_for": null
+    },
+    "reading_first": {
+      "approach": "READING-FIRST",
+      "theme_tags": [
+        "intersectionality",
+        "lived experience",
+        "intellectual exploration",
+        "additive vs. generative models"
+      ],
+      "emotional_register": "reflective",
+      "concepts": [
+        "intersectionality"
+      ],
+      "personal_connections": [
+        "Latina identity",
+        "honors classes",
+        "feeling like she doesn't belong"
+      ],
+      "quotes": [
+        "it's not just 1+1=2",
+        "I'm not totally sure if that's what the reading is describing or whether I'm reaching."
+      ],
+      "free_form_reading": "Talia Reyes is grappling with a really important shift in understanding \u2013 moving from a simple additive model of discrimination to Crenshaw\u2019s concept of intersectionality as a generative force. She's clearly grasped the core idea that multiple identities don't just stack up, but create something new. Her phrasing, \"it's not just 1+1=2,\" is a remarkably clear and accessible way to articulate this.\n\nWhat's striking is her attempt to connect this abstract concept to her own lived experience. She's tentatively exploring how her identity as a Latina student in honors classes creates a unique experience of feeling like she doesn't belong, a feeling that manifests as subtle, othering comments from peers. She's not sure if this is \"what the reading is describing or whether I'm reaching,\" which is a really honest and vulnerable moment of intellectual exploration. It shows she's actively trying to apply the theory to her own life, even if she's not entirely confident in her interpretation.\n\nThe teacher should notice that Talia isn't trying to produce a polished, perfectly-formed argument. She's in the messy process of thinking, and she's explicitly acknowledging that uncertainty. Her concluding statement, \"I think I want to think about it more before I have a strong opinion,\" demonstrates a thoughtful engagement with the material, a willingness to grapple with complexity, and a commitment to further reflection. It's a sign of genuine intellectual curiosity, not a lack of understanding.",
+      "what_reaching_for": "Talia is attempting to apply Crenshaw's concept of intersectionality to her own experiences as a Latina student in honors classes, grappling with whether her feelings of not belonging align with the theoretical framework."
+    }
+  },
+  "S017": {
+    "name": "Tyler Huang",
+    "pattern": "premise_challenger",
+    "standard": {
+      "approach": "STANDARD",
+      "theme_tags": [
+        "understanding intersectionality",
+        "legal implications of discrimination",
+        "equity considerations"
+      ],
+      "emotional_register": "analytical",
+      "concepts": [
+        "intersectionality",
+        "discrimination"
+      ],
+      "personal_connections": [],
+      "quotes": [
+        "Intersectionality is when different parts of your identity overlap and affect each other.",
+        "I don't have a lot to add beyond that. I understood the reading and I think the concept is important for thinking about equity."
+      ],
+      "free_form_reading": null,
+      "what_reaching_for": null
+    },
+    "reading_first": {
+      "approach": "READING-FIRST",
+      "theme_tags": [
+        "clarity and directness",
+        "measured engagement",
+        "understanding of intersectionality"
+      ],
+      "emotional_register": "analytical",
+      "concepts": [
+        "intersectionality"
+      ],
+      "personal_connections": [],
+      "quotes": [
+        "I don't have a lot to add beyond that",
+        "I understood the reading and I think the concept is important for thinking about equity."
+      ],
+      "free_form_reading": "Tyler Huang's submission demonstrates a solid grasp of the core concept of intersectionality, clearly understanding Crenshaw's argument about the limitations of existing legal frameworks. He succinctly defines intersectionality as the overlapping and affecting of different identities, and he highlights Crenshaw\u2019s legal examples as a clear explanation of the concept\u2019s importance. There's a quiet confidence in his understanding, evident in his statement, \"I understood the reading and I think the concept is important for thinking about equity.\"\n\nWhat's notable is the restraint in his writing. He doesn't feel compelled to elaborate with personal experience or extensive analysis, which is perfectly valid. He's acknowledging the reading and its significance without feeling pressured to perform a more elaborate response. This isn't a lack of engagement; it's a measured response that prioritizes clarity and directness. The statement \"I don't have a lot to add beyond that\" isn't a sign of disinterest, but a signal that he's comfortable with his understanding and doesn't feel the need to over-explain. It would be a mistake to interpret this as a lack of depth. He's demonstrating a thoughtful, considered engagement with the material, prioritizing a clear understanding over performative elaboration.",
+      "what_reaching_for": "Tyler is demonstrating a thoughtful and considered engagement with the material, prioritizing a clear understanding over performative elaboration, and signaling comfort with his grasp of the concept."
+    }
+  }
+}

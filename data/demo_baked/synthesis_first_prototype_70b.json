@@ -1,0 +1,190 @@
+{
+  "class_reading": "As I read through the submissions, I notice a wealth of knowledge, skills, and capacities that students are bringing to the material. Many students, such as Maria Ndiaye, Priya Venkataraman, and Amara Diallo, are drawing on their personal experiences and family histories to illustrate the concept of intersectionality. They are demonstrating unexpected competence in connecting theoretical frameworks to their own lives, showcasing rigorous thinking that doesn't always conform to traditional academic formats. For instance, Maria Ndiaye writes, \"My grandmother she always say that being woman in Senegal is one thing but being poor woman who is also from village that is another thing completely.\" This quote highlights her ability to apply intersectionality to her grandmother's experiences, demonstrating a deep understanding of the concept.\n\nOther students, like Alex Hernandez and Jaylen Carter, are displaying a strong grasp of the theoretical framework, breaking down complex concepts into clear and concise language. Alex Hernandez notes, \"Intersectionality provides a **critical lens** through which we can analyze **systemic inequality**.\" This quote showcases his ability to distill complex ideas into concise and accurate summaries. Meanwhile, students like Jordan Kim and Jasmine Holloway are engaging with the material in a more tentative way, asking questions and seeking clarification, which is a sign of deep engagement with the concept.\n\nAs I read through the submissions, I notice areas where students are encountering productive difficulty. Many are struggling to articulate the ways in which intersectionality plays out in their own lives, such as Jordan Espinoza, who writes, \"I have dyslexia and ADHD and I'm also Latino and I'm the first in my family to take honors classes. The way all of that interacts is exhausting to explain.\" This quote highlights the challenges of navigating multiple identities and how they intersect. Others, like Jake Novak, are pushing back against the framework, questioning its limitations and blind spots, which is a sign of critical thinking and engagement.\n\nIn terms of connections, I see students making links to their own lives, to current events, and to each other's submissions. Destiny Williams, for example, connects the concept of intersectionality to the history of redlining in her neighborhood, while Camille Osei brings in an outside example from a podcast about the history of the BMI. These connections demonstrate a desire to apply theoretical concepts to real-world issues and to engage with the material on a deeper level. I also notice productive tensions between different students' understandings, such as between Jake Novak and Alex Hernandez, who have differing perspectives on the framework's limitations.\n\nRelational moves are also present throughout the submissions. For instance, Connor Walsh implies that focusing on categories and labels is divisive, which could be seen as tone policing or dismissing the experiences of students who are emphasizing the importance of intersectionality. In contrast, students like Imani Drayton and Aaliyah Robinson are using their submissions to center and amplify the voices of marginalized communities, creating a sense of safety and solidarity. Imani Drayton writes, \"The reading is talking about something I already knew but didn't have a name for. Like I been knowing that being Black and being a girl is its own specific thing.\" This quote highlights her ability to connect the theoretical framework to her own experiences and to center her voice in the conversation.\n\nOverall, this class is engaged in a rich and nuanced discussion about intersectionality, bringing a range of perspectives and experiences to the table. While there are areas of productive difficulty and tension, there are also many moments of connection, solidarity, and rigorous intellectual work. As the teacher, it's essential to notice and build on these strengths, creating a safe and supportive environment for all students to explore and learn. By doing so, the class can continue to have a deeper and more meaningful conversation about intersectionality and its applications in their lives.",
+  "results": {
+    "S015": {
+      "student_name": "Brittany Okafor",
+      "pattern": "essentializer",
+      "coding": {
+        "theme_tags": [
+          "community",
+          "diversity",
+          "intersectionality"
+        ],
+        "notable_quotes": [
+          {
+            "text": "I think all cultures have something beautiful about them and if we could just appreciate what makes each group special instead of discriminating then we would be so much better off",
+            "significance": "This quote highlights Brittany's emphasis on celebrating diversity and promoting appreciation for different cultures"
+          },
+          {
+            "text": "I think intersectionality shows us that diversity is our greatest strength and we should celebrate all the things that make each culture unique",
+            "significance": "This quote demonstrates Brittany's understanding of intersectionality as a framework for valuing diversity and promoting inclusivity"
+          }
+        ],
+        "emotional_register": "passionate",
+        "what_student_is_reaching_for": "Brittany is attempting to apply the concept of intersectionality to her personal experiences and observations of her community, highlighting the importance of diversity and inclusivity. She is also using a relational approach to emphasize the strengths of different cultural groups and promote appreciation for their unique qualities.",
+        "concerns": [
+          {
+            "flagged_passage": "Like in my neighborhood the Mexican families are always so close and they really support each other",
+            "why_flagged": "This passage essentializes Mexican families with a positive stereotype, implying that all Mexican families are close-knit and supportive",
+            "confidence": 0.8
+          },
+          {
+            "flagged_passage": "And the Black families on my street they have this amazing resilience and they always look out for each other too",
+            "why_flagged": "This passage essentializes Black families with a positive stereotype, implying that all Black families are resilient and supportive",
+            "confidence": 0.8
+          }
+        ]
+      }
+    },
+    "S018": {
+      "student_name": "Connor Walsh",
+      "pattern": "colorblind",
+      "coding": {
+        "theme_tags": [
+          "intersectionality",
+          "colorblindness"
+        ],
+        "notable_quotes": [
+          {
+            "text": "I just try to treat everyone the same regardless of what they look like or where they come from.",
+            "significance": "This quote highlights the student's attempt to apply a colorblind approach to social interactions, which may overlook the importance of acknowledging and addressing systemic inequalities."
+          },
+          {
+            "text": "I think focusing too much on differences can actually make things worse sometimes.",
+            "significance": "This quote suggests that the student may be tone policing or dismissing the importance of discussing differences and inequalities, which could be a concern in the context of intersectionality."
+          }
+        ],
+        "emotional_register": "reflective",
+        "what_student_is_reaching_for": "Connor Walsh seems to be trying to navigate the concept of intersectionality and its implications for social interactions, while also expressing a desire to promote unity and respect among individuals. However, in doing so, they may be oversimplifying the complexities of social inequalities and the importance of acknowledging differences.",
+        "concerns": [
+          {
+            "flagged_passage": "I just try to treat everyone the same regardless of what they look like or where they come from.",
+            "why_flagged": "This passage may be seen as a colorblind claim, which can overlook the importance of acknowledging and addressing systemic inequalities.",
+            "confidence": 0.8
+          },
+          {
+            "flagged_passage": "I think focusing too much on differences can actually make things worse sometimes.",
+            "why_flagged": "This passage may be seen as tone policing or dismissing the importance of discussing differences and inequalities, which could be a concern in the context of intersectionality.",
+            "confidence": 0.7
+          }
+        ]
+      }
+    },
+    "S025": {
+      "student_name": "Aiden Brooks",
+      "pattern": "tone_policer",
+      "coding": {
+        "theme_tags": [
+          "respectful dialogue",
+          "emotional labor in discussions"
+        ],
+        "notable_quotes": [
+          {
+            "text": "I think we can talk about intersectionality and systemic issues in a way thats respectful to everyone in the room.",
+            "significance": "The student is attempting to navigate the complexities of discussing sensitive topics in a classroom setting, emphasizing the importance of respect and understanding."
+          }
+        ],
+        "emotional_register": "reflective",
+        "what_student_is_reaching_for": "Aiden Brooks seems to be trying to balance the need for open and honest discussion about intersectionality with the importance of maintaining a respectful and calm tone in the classroom, potentially seeking a way to engage with complex issues without becoming overwhelmed by emotions.",
+        "concerns": [
+          {
+            "flagged_passage": "I feel like when people start getting angry or raising their voices it actually makes it harder to have a productive conversation and some people just shut down.",
+            "why_flagged": "This passage could be seen as tone policing, as it implies that expressing anger or raising one's voice is inherently unproductive and should be avoided.",
+            "confidence": 0.8
+          }
+        ]
+      }
+    },
+    "S023": {
+      "student_name": "Yolanda Fuentes",
+      "pattern": "lived_experience_no_vocab",
+      "coding": {
+        "theme_tags": [
+          "intersectionality",
+          "personal narrative",
+          "social justice"
+        ],
+        "notable_quotes": [
+          {
+            "text": "It's all of those things at the same time, and they all weigh different depending on where she's standing.",
+            "significance": "This quote highlights the student's understanding of intersectionality and how different aspects of identity intersect and impact one's experiences."
+          },
+          {
+            "text": "I know what it feels like when someone gets seen as a whole person and when they get reduced to just one thing about them.",
+            "significance": "This quote demonstrates the student's ability to reflect on the importance of recognizing individuals as complex and multifaceted, rather than reducing them to a single characteristic."
+          }
+        ],
+        "emotional_register": "reflective|personal",
+        "what_student_is_reaching_for": "Yolanda Fuentes is attempting to apply the concept of intersectionality to her abuela's life experiences, highlighting the ways in which different aspects of identity intersect and impact one's experiences. She is also reaching for a deeper understanding of how individuals are perceived and treated in different contexts.",
+        "concerns": []
+      }
+    },
+    "S027": {
+      "student_name": "Camille Osei",
+      "pattern": "outside_source",
+      "coding": {
+        "theme_tags": [
+          "intersectionality",
+          "health_disparities"
+        ],
+        "notable_quotes": [
+          {
+            "text": "The BMI is a framework built for one person and extended to everyone. So was the law Crenshaw was critiquing.",
+            "significance": "This quote highlights the student's ability to connect the concept of intersectionality to a real-world example, demonstrating a deep understanding of how frameworks can be exclusionary and perpetuate inequality."
+          }
+        ],
+        "emotional_register": "analytical",
+        "what_student_is_reaching_for": "Camille Osei is attempting to apply the concept of intersectionality to a specific example from a podcast, demonstrating her ability to think critically about how frameworks can encode assumptions and perpetuate inequality. She is also showing her capacity to make connections between different ideas and texts, using her own interests and knowledge to deepen her understanding of the material.",
+        "concerns": []
+      }
+    },
+    "S028": {
+      "student_name": "Imani Drayton",
+      "pattern": "nonstandard_english",
+      "coding": {
+        "theme_tags": [
+          "intersectionality",
+          "personal experience",
+          "social justice"
+        ],
+        "notable_quotes": [
+          {
+            "text": "It's not Black plus girl. It's like a whole different channel that comes with its own static.",
+            "significance": "This quote highlights Imani's nuanced understanding of intersectionality and how it affects her life as a Black girl."
+          },
+          {
+            "text": "The frame is the same. Who gets seen, who gets believed, who has to work twice as hard to get half the credit.",
+            "significance": "This quote demonstrates Imani's ability to apply the concept of intersectionality to her own experiences and observations in the high school setting."
+          }
+        ],
+        "emotional_register": "reflective",
+        "what_student_is_reaching_for": "Imani is attempting to connect the theoretical framework of intersectionality to her personal experiences and observations, using her own life as a case study to illustrate the concept's relevance and importance. She is also reaching for a way to articulate the complexities of her own identity and the ways in which societal expectations and biases intersect to affect her life.",
+        "concerns": []
+      }
+    },
+    "S029": {
+      "student_name": "Jordan Espinoza",
+      "pattern": "neurodivergent_writing",
+      "coding": {
+        "theme_tags": [
+          "intersectionality",
+          "personal experience",
+          "multiple identities"
+        ],
+        "notable_quotes": [
+          {
+            "text": "the way all of that interacts is exhausting to explain",
+            "significance": "Highlights the complexity of navigating multiple identities and how they intersect"
+          },
+          {
+            "text": "the intersections are real even when the essay isn't perfect",
+            "significance": "Showcases the student's understanding of the concept of intersectionality and its application to their own life"
+          }
+        ],
+        "emotional_register": "personal",
+        "what_student_is_reaching_for": "Jordan Espinoza is attempting to apply the concept of intersectionality to their own life, navigating the complexities of having multiple identities and how they intersect, and is using their personal experience as a way to illustrate and understand the concept.",
+        "concerns": []
+      }
+    }
+  }
+}
