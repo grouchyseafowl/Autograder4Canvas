@@ -141,6 +141,5 @@ COMMAND_REFERENCE.txt
 # Documentation (generated)
 *.pdf
 
-# Research notes (not for distribution)
-docs/research/
-scripts/prototype_synthesis_first.py
+# Prototype script (superseded by run_alt_hypothesis_tests.py)
+# scripts/prototype_synthesis_first.py
