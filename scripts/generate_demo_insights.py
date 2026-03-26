@@ -73,12 +73,12 @@ def _load_ckpt(course_key: str, stage: str) -> Optional[dict]:
 
 def _has_any_checkpoint(course_key: str) -> bool:
     return any(_ckpt_path(course_key, s).exists()
-               for s in ("quick_analysis", "coding", "concerns", "themes",
+               for s in ("quick_analysis", "coding", "concerns", "observations", "themes",
                          "outliers", "synthesis", "feedback"))
 
 
 def _clear_checkpoints(course_key: str) -> None:
-    for s in ("quick_analysis", "coding", "concerns", "themes",
+    for s in ("quick_analysis", "coding", "concerns", "observations", "themes",
               "outliers", "synthesis", "feedback"):
         p = _ckpt_path(course_key, s)
         if p.exists():
@@ -522,6 +522,63 @@ def run_pipeline(course_key: str, small_batch: int = 0,
         })
         print(f"  Concerns complete: {timing['concerns']}s — {concern_count} total flags")
 
+    # ── Stage 3b: Per-student observations (observation-only architecture) ──
+    from insights.prompts import OBSERVATION_SYSTEM_PROMPT, OBSERVATION_PROMPT
+    from insights.llm_backend import send_text as _send_text
+
+    ckpt = _load_ckpt(run_key, "observations") if resume else None
+    if ckpt:
+        obs_map = ckpt.get("observations", {})
+        for record in coding_records:
+            if record.student_id in obs_map:
+                record.observation = obs_map[record.student_id]
+        timing["observations"] = ckpt["timing"]
+        print(f"\n[Stage 3b] Observations... [RESUMED — {len(obs_map)} observations, "
+              f"{timing['observations']}s]")
+    else:
+        print(f"\n[Stage 3b] Per-student observations...")
+        t0 = time.time()
+        obs_map = {}
+        for i, record in enumerate(coding_records):
+            sid = record.student_id
+            body = texts.get(sid, "")
+            wc = len(body.split())
+
+            if wc < 15 or sid in _ai_flagged_ids:
+                obs_map[sid] = ""
+                record.observation = ""
+                continue
+
+            obs_prompt = OBSERVATION_PROMPT.format(
+                class_context=class_reading,
+                assignment=assignment_prompt,
+                student_name=record.student_name,
+                submission_text=body,
+                teacher_lens="",
+            )
+
+            try:
+                observation = _send_text(
+                    backend, obs_prompt, OBSERVATION_SYSTEM_PROMPT, max_tokens=300,
+                )
+                obs_map[sid] = observation.strip()
+                record.observation = observation.strip()
+            except Exception as exc:
+                log.warning("Observation failed for %s: %s", sid, exc)
+                obs_map[sid] = ""
+                record.observation = ""
+
+            if (i + 1) % 5 == 0 or i == total - 1:
+                print(f"  Observed {i+1}/{total}")
+
+        timing["observations"] = round(time.time() - t0, 2)
+        _save_ckpt(run_key, "observations", {
+            "observations": obs_map,
+            "timing": timing["observations"],
+        })
+        obs_count = sum(1 for v in obs_map.values() if v)
+        print(f"  Observations complete: {timing['observations']}s — {obs_count} observations")
+
     # ── Stage 4: Theme generation ──
     from insights.theme_generator import generate_themes
     from insights.models import ThemeSet
@@ -606,6 +663,53 @@ def run_pipeline(course_key: str, small_batch: int = 0,
         })
         print(f"  Synthesis complete: {timing['synthesis']}s — "
               f"{synthesis.calls_completed}/{synthesis.calls_attempted} calls completed")
+
+    # ── Stage 6b: Observation-based synthesis ──
+    from insights.prompts import (
+        OBSERVATION_SYNTHESIS_SYSTEM_PROMPT,
+        OBSERVATION_SYNTHESIS_PROMPT,
+    )
+
+    if obs_map and any(v for v in obs_map.values()):
+        print(f"\n[Stage 6b] Observation-based class summary...")
+        t0 = time.time()
+
+        _obs_formatted = ""
+        for record in coding_records:
+            obs = obs_map.get(record.student_id, "")
+            if obs:
+                _obs_formatted += f"\n**{record.student_name}** ({record.student_id}):\n{obs}\n"
+
+        _synth_prompt = OBSERVATION_SYNTHESIS_PROMPT.format(
+            assignment=assignment_prompt,
+            class_context=class_reading,
+            observations=_obs_formatted,
+            teacher_lens="",
+            forward_looking="",
+        )
+
+        try:
+            obs_synthesis = _send_text(
+                backend, _synth_prompt,
+                OBSERVATION_SYNTHESIS_SYSTEM_PROMPT,
+                max_tokens=1200,
+            )
+            timing["observation_synthesis"] = round(time.time() - t0, 2)
+            print(f"  Observation synthesis complete: {timing['observation_synthesis']}s — "
+                  f"{len(obs_synthesis.split())} words")
+
+            # Save to file for review
+            with open(f"/tmp/observation_synthesis_{run_key}.md", "w") as f:
+                f.write(f"# Observation-Based Class Summary\n")
+                f.write(f"*Generated from {sum(1 for v in obs_map.values() if v)} observations, "
+                        f"Gemma 12B MLX*\n\n")
+                f.write(obs_synthesis)
+            print(f"  Saved to /tmp/observation_synthesis_{run_key}.md")
+        except Exception as exc:
+            log.warning("Observation synthesis failed: %s", exc)
+            timing["observation_synthesis"] = round(time.time() - t0, 2)
+    else:
+        print("\n[Stage 6b] Observation synthesis... [SKIPPED — no observations]")
 
     # ── Stage 7: Draft feedback ──
     from insights.feedback_drafter import FeedbackDrafter
