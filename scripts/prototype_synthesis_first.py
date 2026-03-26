@@ -26,11 +26,8 @@ sys.path.insert(0, str(ROOT / "src"))
 from insights.llm_backend import BackendConfig, send_text
 
 BACKEND = BackendConfig(
-    name="cloud",
-    model="nvidia/nemotron-nano-9b-v2:free",
-    base_url="https://openrouter.ai/api/v1",
-    api_key="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",
-    api_format="openai",
+    name="mlx",
+    model="mlx-community/Meta-Llama-3.1-8B-Instruct-4bit",
 )
 
 # ──────────────────────────────────────────────────────────
@@ -298,7 +295,7 @@ for sid in sorted(results.keys()):
     print(f"  {sid} {r['student_name']}: {tags}")
 
 # Save full results
-output_path = ROOT / "data" / "demo_baked" / "synthesis_first_prototype.json"
+output_path = ROOT / "data" / "demo_baked" / "synthesis_first_mlx_llama_v3.json"
 with open(output_path, "w") as f:
     json.dump({
         "class_reading": class_reading,

@@ -39,10 +39,12 @@ _DEFAULTS = {
     "insights_whisper_model": "base",
     "insights_translation_backend": "ollama",
     "insights_translation_model": "llama3.1:8b",
-    "insights_model_tier": "lightweight",
-    "insights_throttle_delay": 0,
+    "insights_model_tier": "auto",            # "auto" picks best available (27b > 12b)
+    "insights_throttle_delay": 15,
     "insights_low_priority": True,
     "insights_keep_awake": True,
+    "insights_setup_complete": False,         # gates first-run wizard
+    "insights_cloud_privacy": "",             # "institutional_dpa" or "anonymized_only"
     # Accessibility
     "font_scale": 1.25,                   # 1.0 = small, 1.25 = default, 1.5 = extra large
     "insights_draft_feedback": False,

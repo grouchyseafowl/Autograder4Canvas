@@ -137,6 +137,9 @@ class PreprocessedSubmission:
     was_image_transcribed: bool = False
     original_language: Optional[str] = None
     original_language_name: Optional[str] = None
+    # Three-way multilingual classification from language_detector
+    multilingual_type: str = "monolingual_english"
+    detected_languages: Optional[List[str]] = None
 
     # Original content preserved for reference
     original_text: Optional[str] = None
@@ -511,6 +514,7 @@ class PreprocessingPipeline:
         # We only need LLM translation for the text portion.
         translation_result = None
         translated_text = text_content
+        lang_result = None
 
         if self.translation_enabled and text_content.strip():
             lang_result = detect_language(text_content)
@@ -591,6 +595,12 @@ class PreprocessingPipeline:
             image_transcription_results=image_transcription_results,
             translation_result=translation_result,
             teacher_comment=teacher_comment,
+            multilingual_type=(
+                lang_result.multilingual_type if lang_result else "monolingual_english"
+            ),
+            detected_languages=(
+                lang_result.detected_languages if lang_result else None
+            ),
         )
 
     def process_submissions(

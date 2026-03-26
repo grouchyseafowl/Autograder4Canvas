@@ -453,6 +453,173 @@ def _format_lens(lens: Optional[Dict]) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Export: Handoff Prompt (anonymized patterns → institutional chatbot)
+# ---------------------------------------------------------------------------
+
+_FERPA_ANONYMIZED_NOTICE = """\
+> **FERPA notice:** This prompt contains anonymized class-level patterns.
+> No student names or identifying information are included.
+
+---
+
+"""
+
+_HANDOFF_INSTRUCTIONS = """\
+Provide a richer pedagogical analysis of these class-level patterns.
+
+What do these patterns suggest about where the class is right now?
+What tensions are most productive to bring into the room?
+What should the teacher notice about HOW students are engaging with the material —
+not just what they said, but the register, energy, and entry points they used?
+
+Do NOT suggest singling out individual students to share or present.
+Instead, suggest structural teaching opportunities: discussion formats,
+follow-up prompts, grouping strategies, or writing moves the whole class
+could benefit from.
+
+Consider:
+- What unspoken questions are underneath the surface patterns?
+- Where is surface agreement masking real disagreement worth surfacing?
+- What concerns deserve a structural response rather than an individual one?
+- What does the class temperature suggest about where students are emotionally?
+"""
+
+_HANDOFF_PROMPT = """\
+You are helping a teacher plan next steps after reading their class's submissions.
+Below are anonymized class-level patterns — no individual students are identified.
+
+**Course:** {course_name}
+**Assignment:** {assignment_name}
+**Total submissions:** {total_submissions}
+{teacher_context}
+## Class Reading
+
+{class_reading}
+
+## Pattern Summary
+
+{pattern_summary}
+
+---
+
+## Your Task
+
+{instructions}
+"""
+
+
+def export_handoff_prompt(
+    *,
+    course_name: str,
+    assignment_name: str,
+    class_reading: str,
+    synthesis_data: dict,
+    total_submissions: int,
+    student_names: list,
+    teacher_context: str = "",
+) -> str:
+    """Generate an anonymized prompt for pasting into an institutional chatbot.
+
+    FERPA-safe: all student names are replaced with anonymous labels.
+    No direct quotes that could identify students are included.
+    The teacher reviews the prompt before pasting.
+
+    Returns markdown text ready to copy-paste.
+    """
+    name_map = _build_name_map(student_names)
+
+    # Anonymize the free-text class reading
+    anon_reading = _anonymize_text(class_reading, name_map)
+
+    # Extract and anonymize pattern fields from synthesis_data
+    pattern_summary = _format_pattern_summary(synthesis_data, name_map)
+
+    # Format teacher context
+    ctx_block = _format_teacher_context(teacher_context)
+
+    body = _HANDOFF_PROMPT.format(
+        course_name=course_name,
+        assignment_name=assignment_name,
+        total_submissions=total_submissions,
+        teacher_context=ctx_block,
+        class_reading=anon_reading,
+        pattern_summary=pattern_summary,
+        instructions=_HANDOFF_INSTRUCTIONS,
+    )
+
+    parts = [
+        f"# Handoff Prompt: {assignment_name}\n",
+        f"**Exported:** {datetime.now().strftime('%Y-%m-%d %H:%M')}  \n\n",
+        _FERPA_ANONYMIZED_NOTICE,
+        body,
+    ]
+    return "".join(parts)
+
+
+def _anonymize_text(text: str, name_map: dict) -> str:
+    """Replace student names with anonymous labels."""
+    result = text
+    for name, label in name_map.items():
+        result = result.replace(name, label)
+    return result
+
+
+def _build_name_map(student_names: list) -> dict:
+    """Build name → anonymous label mapping, longest names first."""
+    # Sort longest first to avoid partial replacement issues
+    sorted_names = sorted(set(student_names), key=len, reverse=True)
+    labels = []
+    for i in range(len(sorted_names)):
+        if i < 26:
+            labels.append(f"Student {chr(65 + i)}")
+        else:
+            labels.append(f"Student {i + 1}")
+    return dict(zip(sorted_names, labels))
+
+
+def _format_pattern_summary(synthesis_data: dict, name_map: dict) -> str:
+    """Extract and anonymize pattern fields from synthesis_data."""
+    parts = []
+
+    concern_patterns = synthesis_data.get("concern_patterns", [])
+    if concern_patterns:
+        parts.append("**Concern patterns:**")
+        if isinstance(concern_patterns, list):
+            for item in concern_patterns:
+                text = item if isinstance(item, str) else str(item)
+                parts.append(f"- {_anonymize_text(text, name_map)}")
+        else:
+            parts.append(_anonymize_text(str(concern_patterns), name_map))
+
+    engagement_highlights = synthesis_data.get("engagement_highlights", [])
+    if engagement_highlights:
+        parts.append("\n**Engagement highlights:**")
+        if isinstance(engagement_highlights, list):
+            for item in engagement_highlights:
+                text = item if isinstance(item, str) else str(item)
+                parts.append(f"- {_anonymize_text(text, name_map)}")
+        else:
+            parts.append(_anonymize_text(str(engagement_highlights), name_map))
+
+    tensions = synthesis_data.get("tensions", [])
+    if tensions:
+        parts.append("\n**Tensions:**")
+        if isinstance(tensions, list):
+            for item in tensions:
+                text = item if isinstance(item, str) else str(item)
+                parts.append(f"- {_anonymize_text(text, name_map)}")
+        else:
+            parts.append(_anonymize_text(str(tensions), name_map))
+
+    class_temperature = synthesis_data.get("class_temperature", "")
+    if class_temperature:
+        anon_temp = _anonymize_text(str(class_temperature), name_map)
+        parts.append(f"\n**Class temperature:** {anon_temp}")
+
+    return "\n".join(parts) if parts else "(No pattern data available.)"
+
+
+# ---------------------------------------------------------------------------
 # File saving helper
 # ---------------------------------------------------------------------------
 

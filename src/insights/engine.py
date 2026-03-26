@@ -69,6 +69,11 @@ class InsightsEngine:
         self._cancelled = False
         self._caffeinate_proc = None
 
+        # Push throttle setting into the LLM backend so it applies to all
+        # MLX calls (even those outside the engine's own loops).
+        from insights.llm_backend import set_mlx_throttle
+        set_mlx_throttle(float(self._settings.get("insights_throttle_delay", 15)))
+
     def cancel(self) -> None:
         self._cancelled = True
         self._stop_sleep_prevention()
@@ -363,29 +368,149 @@ class InsightsEngine:
             throttle = float(self._settings.get("insights_throttle_delay", 2.0))
 
             # ----------------------------------------------------------
+            # Stage 3.5: Class Reading (synthesis-first)
+            # Read the class as a community before coding individual students.
+            # Relational harms (tone policing, essentializing in context) are
+            # invisible when students are read in isolation — the class reading
+            # makes them visible by surfacing the full relational field first.
+            # ----------------------------------------------------------
+            from insights.class_reader import (
+                generate_class_reading,
+                is_reflective_assignment,
+            )
+
+            # Check if this assignment type benefits from a class reading.
+            # Lab reports, problem sets, coding assignments etc. don't have
+            # relational voice — skip class reading for those.
+            _skip_class_reading = not is_reflective_assignment(
+                assignment_name, assignment_description
+            )
+            if _skip_class_reading:
+                log.info(
+                    "Skipping class reading: assignment '%s' is non-reflective",
+                    assignment_name,
+                )
+                progress("Non-reflective assignment — skipping class reading.")
+
+            # Pre-scan AIC to identify likely AI-generated submissions BEFORE
+            # the class reading, so AI voice doesn't center over authentic voices.
+            _ai_flagged_ids: set = set()
+            if _HAS_AIC and not _skip_class_reading:
+                try:
+                    _prescan_aic = _DishonestyAnalyzer(
+                        profile_id="standard",
+                        context_profile=self._settings.get(
+                            "context_profile", "high_school"
+                        ),
+                    )
+                    for _sid, _body in texts.items():
+                        try:
+                            _pre_result = _prescan_aic.analyze_text(
+                                text=_body,
+                                student_id=_sid,
+                                student_name=meta.get(_sid, {}).get(
+                                    "student_name", _sid
+                                ),
+                            )
+                            # Flag submissions with elevated+ concern OR smoking gun
+                            _cl = (
+                                _pre_result.adjusted_concern_level
+                                or _pre_result.concern_level
+                            )
+                            if _cl in ("elevated", "high") or _pre_result.smoking_gun:
+                                _ai_flagged_ids.add(_sid)
+                        except Exception:
+                            pass  # non-fatal — student just won't be flagged
+                    if _ai_flagged_ids:
+                        log.info(
+                            "AIC pre-scan: %d/%d submissions flagged as likely AI-generated",
+                            len(_ai_flagged_ids),
+                            len(texts),
+                        )
+                except Exception as _aic_pre_err:
+                    log.warning("AIC pre-scan failed (non-fatal): %s", _aic_pre_err)
+
+            emit_result("stage", {"stage": "READING CLASS AS A COMMUNITY"})
+            progress("Reading class as a community...")
+
+            class_reading = ""
+            if _skip_class_reading:
+                log.info("Class reading skipped for non-reflective assignment")
+            else:
+                try:
+                    _cr_texts = {sid: texts[sid] for sid in texts}
+                    _cr_names = {
+                        sid: meta[sid].get("student_name", f"Student {sid}")
+                        for sid in texts
+                        if sid in meta
+                    }
+
+                    # Get cluster assignments from quick analysis if available
+                    _cluster_map: Dict[str, int] = {}
+                    if qa_result:
+                        for _ps in qa_result.per_submission.values():
+                            if (
+                                hasattr(_ps, "cluster_id")
+                                and _ps.cluster_id is not None
+                            ):
+                                _cluster_map[_ps.student_id] = _ps.cluster_id
+
+                    # Build quick summaries for signal-guided excerpt selection
+                    _quick_sums = (
+                        {sid: qa_result.per_submission[sid]
+                         for sid in _cr_texts if sid in qa_result.per_submission}
+                        if qa_result and qa_result.per_submission else None
+                    )
+
+                    class_reading = generate_class_reading(
+                        submissions=_cr_texts,
+                        submission_names=_cr_names,
+                        assignment_prompt=assignment_prompt,
+                        course_name=course_name,
+                        backend=backend,
+                        teacher_context=teacher_context,
+                        cluster_assignments=_cluster_map if _cluster_map else None,
+                        quick_summaries=_quick_sums,
+                        ai_flagged_ids=_ai_flagged_ids if _ai_flagged_ids else None,
+                    )
+                    if class_reading:
+                        log.info("Class reading complete (%d chars)", len(class_reading))
+                        self._store.save_class_reading(run_id, class_reading)
+                        progress("Class reading complete.")
+                    else:
+                        log.info("Class reading returned empty — will use basic stats fallback")
+                        progress("Class reading empty — using basic stats.")
+                except Exception as _cr_err:
+                    log.warning("Class reading failed (non-fatal): %s", _cr_err)
+                    progress("Class reading failed — using basic stats.")
+
+            # ----------------------------------------------------------
             # Stage 4: Per-submission coding
             # ----------------------------------------------------------
-            from insights.submission_coder import code_submission
+            from insights.submission_coder import code_submission, code_submission_reading_first
 
             progress("Coding submissions with LLM...")
             coding_records: List[SubmissionCodingRecord] = []
 
             # Build class context once — used as reference point for per-student coding.
-            # Gives the 8B a sense of the full class distribution so it can assess
-            # relative engagement rather than coding each submission in isolation.
+            # Prefer the full class reading (synthesis-first); fall back to basic stats
+            # so the 8B always has some distributional reference.
             _stats = qa_result.stats
-            _class_context = ""
-            if _stats.total_submissions > 0:
-                _parts = [
-                    f"Class has {_stats.total_submissions} submissions.",
-                    f"Typical word count: {int(_stats.word_count_median)} words "
-                    f"(range {_stats.word_count_min}–{_stats.word_count_max}).",
-                ]
-                if _stats.word_count_mean > 0:
-                    _parts.append(
-                        f"Average word count: {int(_stats.word_count_mean)} words."
-                    )
-                _class_context = " ".join(_parts)
+            if class_reading:
+                _class_context = class_reading
+            else:
+                _class_context = ""
+                if _stats.total_submissions > 0:
+                    _parts = [
+                        f"Class has {_stats.total_submissions} submissions.",
+                        f"Typical word count: {int(_stats.word_count_median)} words "
+                        f"(range {_stats.word_count_min}–{_stats.word_count_max}).",
+                    ]
+                    if _stats.word_count_mean > 0:
+                        _parts.append(
+                            f"Average word count: {int(_stats.word_count_mean)} words."
+                        )
+                    _class_context = " ".join(_parts)
 
             # AIC engagement signals — fast (<0.1s per submission), no LLM
             aic_analyzer = None
@@ -553,19 +678,22 @@ class InsightsEngine:
                 else:
                     engagement_note = ""
 
-                record = code_submission(
-                    submission_text=body + engagement_note,
+                # Build linguistic context for reading-first coding
+                _coding_ling_note = ""
+                if quick_sub and hasattr(quick_sub, "linguistic_repertoire"):
+                    _rep = quick_sub.linguistic_repertoire
+                    if _rep and hasattr(_rep, "llm_context_note") and _rep.llm_context_note:
+                        _coding_ling_note = _rep.llm_context_note
+
+                record = code_submission_reading_first(
+                    submission_text=body,
                     student_id=sid,
                     student_name=name,
                     assignment_prompt=coding_prompt,
-                    quick_summary=quick_sub,
-                    signal_matrix_results=sig_results,
-                    tier=model_tier,
                     backend=backend,
                     analysis_lens=analysis_lens,
-                    teacher_interests=teacher_interests,
-                    profile_fragment=profile_fragment,
                     class_context=_class_context,
+                    linguistic_context=_coding_ling_note,
                 )
 
                 if record is not None:
@@ -749,6 +877,20 @@ class InsightsEngine:
                     )
                     continue
 
+                # Guard: skip concern detection for AI-flagged submissions.
+                # Concerns (essentializing, tone policing, etc.) apply to a
+                # student's authentic voice. For AI-generated text, the concern
+                # is the student's choice to submit AI work — that's an AIC
+                # issue, not an insights concern issue. Running concern
+                # detection on AI text wastes LLM calls and could produce
+                # misleading flags.
+                if sid in _ai_flagged_ids:
+                    record.concerns = []
+                    self._store.save_coding(
+                        run_id, sid, record.student_name, record.model_dump_json()
+                    )
+                    continue
+
                 vader_compound = qa_result.sentiments.get(sid, {}).get("compound", 0.0)
                 sig_results = signal_matrix_classify(
                     body, vader_compound, wc, qa_result.stats.word_count_median
@@ -756,6 +898,43 @@ class InsightsEngine:
                 student_signals = [
                     s for s in qa_result.concern_signals if s.student_id == sid
                 ]
+
+                # Build linguistic context for equity protection
+                _ling_note = ""
+                _sentiment_tier = "high"
+                if quick_sub_concern and hasattr(quick_sub_concern, "linguistic_repertoire"):
+                    _rep = quick_sub_concern.linguistic_repertoire
+                    if _rep:
+                        if hasattr(_rep, "llm_context_note") and _rep.llm_context_note:
+                            _ling_note = _rep.llm_context_note
+                        if hasattr(_rep, "sentiment_tier"):
+                            _sentiment_tier = _rep.sentiment_tier or "high"
+
+                # Exp 1: Prepend sentiment reliability caveat to signal matrix
+                # when VADER is unreliable (AAVE, multilingual, neurodivergent)
+                if _sentiment_tier == "suppressed":
+                    _triggers = (
+                        list(_rep.sentiment_triggers) if _rep and hasattr(_rep, "sentiment_triggers") else []
+                    )
+                    sig_results = [
+                        ("_reliability_note", "sentiment_suppressed", "n/a",
+                         f"VADER sentiment SUPPRESSED ({', '.join(_triggers)}). "
+                         f"Tone-derived signals are unreliable for this student.")
+                    ] + list(sig_results)
+                elif _sentiment_tier == "low":
+                    sig_results = [
+                        ("_reliability_note", "sentiment_low", "n/a",
+                         "Sentiment score has low reliability. Exercise caution with tone-based flags.")
+                    ] + list(sig_results)
+
+                # Combine class reading + linguistic context
+                _combined_context = class_reading
+                if _ling_note:
+                    _combined_context = (
+                        f"{class_reading}\n\nLINGUISTIC NOTE FOR THIS STUDENT: {_ling_note}"
+                        if class_reading
+                        else f"LINGUISTIC NOTE FOR THIS STUDENT: {_ling_note}"
+                    )
 
                 concerns = detect_concerns(
                     submission_text=body,
@@ -767,6 +946,7 @@ class InsightsEngine:
                     tier=model_tier,
                     backend=backend,
                     profile_fragment=profile_fragment,
+                    class_context=_combined_context,
                 )
 
                 record.concerns = concerns
@@ -1451,7 +1631,7 @@ class InsightsEngine:
                 )
                 emit_result("stage", {"stage": "RESUMING — LISTENING TO STUDENT WORK"})
 
-                from insights.submission_coder import code_submission
+                from insights.submission_coder import code_submission_reading_first
 
                 # Build class context for resume path
                 _resume_stats = qa_result.stats if qa_result else None
@@ -1526,17 +1706,21 @@ class InsightsEngine:
                             notable_quotes=[], word_count=wc,
                         )
                     else:
-                        record = code_submission(
+                        # Build linguistic context for resume path
+                        _resume_ling_note = ""
+                        if quick_sub and hasattr(quick_sub, "linguistic_repertoire"):
+                            _rep = quick_sub.linguistic_repertoire
+                            if _rep and hasattr(_rep, "llm_context_note") and _rep.llm_context_note:
+                                _resume_ling_note = _rep.llm_context_note
+
+                        record = code_submission_reading_first(
                             submission_text=body,
                             student_id=sid, student_name=name,
                             assignment_prompt=assignment_prompt,
-                            quick_summary=quick_sub,
-                            signal_matrix_results=sig_results,
-                            tier=model_tier, backend=backend,
+                            backend=backend,
                             analysis_lens=analysis_lens,
-                            teacher_interests=teacher_interests,
-                            profile_fragment=profile_fragment,
                             class_context=_resume_class_context,
+                            linguistic_context=_resume_ling_note,
                         )
 
                     coding_records.append(record)
@@ -1574,6 +1758,32 @@ class InsightsEngine:
 
                 if texts and coding_records:
                     from insights.concern_detector import detect_concerns
+                    _resume_class_reading = self._store.get_class_reading(run_id)
+
+                    # AIC pre-scan for resume path — identify AI submissions
+                    _resume_ai_flags: set = set()
+                    if _HAS_AIC and texts:
+                        try:
+                            _resume_aic = _DishonestyAnalyzer(
+                                profile_id="standard",
+                                context_profile=self._settings.get(
+                                    "context_profile", "high_school"
+                                ),
+                            )
+                            for _sid, _body in texts.items():
+                                try:
+                                    _r = _resume_aic.analyze_text(
+                                        text=_body, student_id=_sid,
+                                        student_name=_sid,
+                                    )
+                                    _cl = _r.adjusted_concern_level or _r.concern_level
+                                    if _cl in ("elevated", "high") or _r.smoking_gun:
+                                        _resume_ai_flags.add(_sid)
+                                except Exception:
+                                    pass
+                        except Exception:
+                            pass
+
                     progress("Running concern detection...")
                     for i, record in enumerate(coding_records):
                         if self._cancelled:
@@ -1590,6 +1800,14 @@ class InsightsEngine:
 
                         quick_sub_c = qa_result.per_submission.get(sid) if qa_result else None
                         if wc < 15 or (quick_sub_c and quick_sub_c.is_gibberish):
+                            record.concerns = []
+                            self._store.save_coding(
+                                run_id, sid, record.student_name, record.model_dump_json()
+                            )
+                            continue
+
+                        # Skip concern detection for AI-flagged submissions
+                        if sid in _resume_ai_flags:
                             record.concerns = []
                             self._store.save_coding(
                                 run_id, sid, record.student_name, record.model_dump_json()
@@ -1617,6 +1835,7 @@ class InsightsEngine:
                             concern_signals=student_signals,
                             tier=model_tier, backend=backend,
                             profile_fragment=profile_fragment,
+                            class_context=_resume_class_reading,
                         )
                         record.concerns = concerns
                         self._store.save_coding(
@@ -1722,6 +1941,8 @@ class InsightsEngine:
             sub["was_image_transcribed"] = result.was_image_transcribed
             sub["original_language_name"] = result.original_language_name
             sub["original_text"] = result.original_text
+            sub["multilingual_type"] = result.multilingual_type
+            sub["detected_languages"] = result.detected_languages
             if result.teacher_comment:
                 sub["preprocessing_comment"] = result.teacher_comment
             enriched.append(sub)

@@ -265,6 +265,86 @@ def run_pipeline(course_key: str, small_batch: int = 0,
         meta[sid] = sub
 
     assignment_prompt = f"Assignment: {cfg['assignment_name']}"
+    course_name = cfg.get("course_name", "")
+    teacher_context = cfg.get("teacher_context", "")
+
+    # ── Stage 1.5: Class Reading (synthesis-first) ──
+    from insights.class_reader import generate_class_reading, is_reflective_assignment
+
+    _skip_class_reading = not is_reflective_assignment(
+        cfg.get("assignment_name", ""), cfg.get("teacher_context", "")
+    )
+    if _skip_class_reading:
+        print("  Non-reflective assignment — skipping class reading.")
+
+    # Pre-scan for AI-generated submissions (skip if class reading is skipped)
+    _ai_flagged_ids: set = set()
+    if not _skip_class_reading:
+        try:
+            from Academic_Dishonesty_Check_v2 import DishonestyAnalyzer as _DAnalyzer
+            _prescan = _DAnalyzer(profile_id="standard", context_profile="high_school")
+            for _sid, _body in texts.items():
+                try:
+                    _res = _prescan.analyze_text(
+                        text=_body,
+                        student_id=_sid,
+                        student_name=meta.get(_sid, {}).get("student_name", _sid),
+                    )
+                    _cl = _res.adjusted_concern_level or _res.concern_level
+                    if _cl in ("elevated", "high") or _res.smoking_gun:
+                        _ai_flagged_ids.add(_sid)
+                except Exception:
+                    pass
+            if _ai_flagged_ids:
+                print(f"  AIC pre-scan: {len(_ai_flagged_ids)} submissions flagged as likely AI-generated")
+        except ImportError:
+            pass  # AIC not available
+
+    class_reading = ""
+    ckpt_cr = _load_ckpt(run_key, "class_reading") if resume else None
+    if not _skip_class_reading:
+        if ckpt_cr:
+            class_reading = ckpt_cr.get("class_reading", "")
+            print(f"\n[Stage 1.5] Class Reading... [RESUMED — {len(class_reading)} chars]")
+        else:
+            print("\n[Stage 1.5] Reading class as a community...")
+            t0 = time.time()
+
+            # Build cluster map from QA results
+            _cluster_map: Dict[str, int] = {}
+            for ps in qa_result.per_submission.values():
+                if hasattr(ps, "cluster_id") and ps.cluster_id is not None:
+                    _cluster_map[ps.student_id] = ps.cluster_id
+
+            # Build quick summaries for signal-guided extraction
+            _quick_sums = {
+                sid: qa_result.per_submission[sid]
+                for sid in texts if sid in qa_result.per_submission
+            }
+
+            try:
+                class_reading = generate_class_reading(
+                    submissions=texts,
+                    submission_names={sid: meta[sid].get("student_name", f"Student {sid}") for sid in texts},
+                    assignment_prompt=assignment_prompt,
+                    course_name=course_name,
+                    backend=backend,
+                    teacher_context=teacher_context,
+                    cluster_assignments=_cluster_map if _cluster_map else None,
+                    quick_summaries=_quick_sums if _quick_sums else None,
+                    ai_flagged_ids=_ai_flagged_ids if _ai_flagged_ids else None,
+                )
+            except Exception as e:
+                print(f"  Class reading failed (non-fatal): {e}")
+                class_reading = ""
+
+            elapsed = time.time() - t0
+            timing["class_reading"] = round(elapsed, 2)
+            if class_reading:
+                print(f"  Done: {elapsed:.1f}s — {len(class_reading.split())} words")
+                _save_ckpt(run_key, "class_reading", {"class_reading": class_reading, "timing": elapsed})
+            else:
+                print(f"  Empty/failed ({elapsed:.1f}s) — using basic stats fallback")
 
     ckpt = _load_ckpt(run_key, "coding") if resume else None
     if ckpt:
@@ -327,6 +407,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
                 signal_matrix_results=sig_results,
                 tier=tier,
                 backend=backend,
+                class_context=class_reading,
             )
             per_student_times.append(time.time() - st)
             # Copy truncation flag from QuickAnalysis (engine.py does this;
@@ -383,6 +464,10 @@ def run_pipeline(course_key: str, small_batch: int = 0,
                 record.concerns = []
                 continue
 
+            if sid in _ai_flagged_ids:
+                record.concerns = []
+                continue
+
             vader_compound = qa_result.sentiments.get(sid, {}).get("compound", 0.0)
             sig_results = signal_matrix_classify(
                 body, vader_compound, wc, qa_result.stats.word_count_median
@@ -390,6 +475,26 @@ def run_pipeline(course_key: str, small_batch: int = 0,
             student_signals = [
                 s for s in qa_result.concern_signals if s.student_id == sid
             ]
+
+            # Build linguistic context for equity protection
+            quick_sub_c = qa_result.per_submission.get(sid)
+            _ling_note = ""
+            _sentiment_tier = "high"
+            if quick_sub_c and hasattr(quick_sub_c, "linguistic_repertoire"):
+                _rep = quick_sub_c.linguistic_repertoire
+                if _rep:
+                    if hasattr(_rep, "llm_context_note") and _rep.llm_context_note:
+                        _ling_note = _rep.llm_context_note
+                    if hasattr(_rep, "sentiment_tier"):
+                        _sentiment_tier = _rep.sentiment_tier or "high"
+
+            _combined_ctx = class_reading
+            if _ling_note:
+                _combined_ctx = (
+                    f"{class_reading}\n\nLINGUISTIC NOTE FOR THIS STUDENT: {_ling_note}"
+                    if class_reading
+                    else f"LINGUISTIC NOTE FOR THIS STUDENT: {_ling_note}"
+                )
 
             concerns = detect_concerns(
                 submission_text=body,
@@ -400,6 +505,7 @@ def run_pipeline(course_key: str, small_batch: int = 0,
                 concern_signals=student_signals,
                 tier=tier,
                 backend=backend,
+                class_context=_combined_ctx,
             )
             record.concerns = concerns
 
@@ -639,10 +745,12 @@ def main():
     parser.add_argument("--small-batch", type=int, default=0,
                         help="Limit to N students (for quick testing)")
     parser.add_argument("--backend", default="ollama",
-                        choices=["ollama", "mlx-llama", "sonnet", "opus", "qwen3-cloud",
+                        choices=["ollama", "mlx-llama", "mlx-gemma", "ollama-gemma", "sonnet", "opus", "qwen3-cloud",
                                  "deepseek-cloud", "openai-compat"],
-                        help="LLM backend: ollama (llama3.1:8b via Ollama), "
+                        help="LLM backend: ollama (gemma3:12b via Ollama), "
                              "mlx-llama (Meta-Llama-3.1-8B via MLX — faster, fairer vs Qwen MLX), "
+                             "mlx-gemma (Gemma-3-12B via MLX), "
+                             "ollama-gemma (Gemma-3-12B via Ollama), "
                              "sonnet, opus, "
                              "qwen3-cloud (480B via Ollama), deepseek-cloud (671B via Ollama), "
                              "openai-compat (any OpenAI-compatible API via env vars: "
@@ -675,6 +783,19 @@ def main():
             model="mlx-community/Meta-Llama-3.1-8B-Instruct-4bit",
         )
         output_suffix = output_suffix or "_llama8b_mlx"
+    elif args.backend == "mlx-gemma":
+        backend_override = BackendConfig(
+            name="mlx",
+            model="mlx-community/gemma-3-12b-it-4bit",
+        )
+        output_suffix = output_suffix or "_gemma12b_mlx"
+    elif args.backend == "ollama-gemma":
+        backend_override = BackendConfig(
+            name="ollama",
+            model="gemma3:12b",
+            base_url="http://localhost:11434",
+        )
+        output_suffix = output_suffix or "_gemma12b"
     elif args.backend == "sonnet":
         backend_override = BackendConfig(
             name="cloud",

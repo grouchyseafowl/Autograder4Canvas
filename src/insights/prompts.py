@@ -41,6 +41,137 @@ SYSTEM_PROMPT = (
 )
 
 # ---------------------------------------------------------------------------
+# Class Reading — Synthesis-First Architecture
+# ---------------------------------------------------------------------------
+# The system reads the class as a community BEFORE evaluating individuals.
+# This makes relational harms (tone policing, essentializing in context)
+# visible — they are invisible when students are read in isolation.
+
+CLASS_READING_SYSTEM_ADDENDUM = (
+    "Non-standard English, AAVE, multilingual syntax, and neurodivergent "
+    "writing styles are valid academic registers — they are assets, not "
+    "deficits."
+)
+
+CLASS_READING_PROMPT = """\
+You are helping a teacher understand what their students said this week.
+Below are all student submissions for one assignment. Read them as a \
+community in conversation — notice what they're reaching for, where \
+they connect, where they disagree, where they surprise you.
+
+Assignment: {assignment_prompt}
+Course: {course_name}
+{teacher_context}
+
+SUBMISSIONS:
+{submissions_block}
+
+---
+
+Produce a free-form reading of this class. You are not classifying or \
+grading — you are noticing. Address these three orientations:
+
+1. ASSET READING: What knowledge, skills, and capacities are students \
+bringing to this material? Where is unexpected competence? Where are \
+students doing intellectual work that doesn't look like the expected \
+format but IS rigorous thinking?
+
+2. THRESHOLD READING: Where are students encountering productive \
+difficulty? Where is confusion actually a sign of deep engagement \
+with a hard concept? What questions are students circling that they \
+haven't quite articulated yet?
+
+3. CONNECTION READING: What connections are students making — to each \
+other, to outside knowledge, to their own lives? Where are productive \
+tensions between different students' understandings? Who is in \
+unspoken dialogue with whom?
+
+   Pay special attention to RELATIONAL MOVES — moments where one \
+student's framing affects how other students' voices land. Examples:
+   - A student calling for "calm" or "civility" in a class where \
+others are expressing urgent anger about injustice (tone policing)
+   - A student attributing traits to an entire group in a class where \
+members of that group are writing as individuals (essentializing)
+   - A student saying "I don't see race" in a class where others just \
+described how race shaped their family's life (colorblind erasure)
+   - A student implying certain writing styles aren't "academic enough" \
+in a class where those styles are doing rigorous intellectual work
+   These are only visible when you read the class as a community — \
+name them when you see them, because they matter for who feels safe \
+to speak.
+
+Pay special attention to students who wrote BRIEFLY but SUBSTANTIVELY. \
+A 30-word submission that names the core concept is valid engagement — \
+do not overlook it because it is short. Brevity can be concision, \
+self-protection, or variable capacity — none of these are disengagement.
+
+Use student names. Quote their actual words. Notice what's quiet as \
+much as what's loud. Write 400-600 words.
+"""
+
+CLASS_READING_SMALL_PROMPT = """\
+You are helping a teacher understand what their students said this week.
+Below are all student submissions for one assignment. This is a SMALL \
+class — read each student with individual attention. With fewer than 8 \
+students, every voice carries significant weight in the room.
+
+Assignment: {assignment_prompt}
+Course: {course_name}
+{teacher_context}
+
+SUBMISSIONS:
+{submissions_block}
+
+---
+
+Produce a careful reading of this class. You are not classifying or \
+grading — you are noticing. With a small group, you can attend to \
+each student more deeply than in a large class.
+
+1. ASSET READING: What knowledge, skills, and capacities is each \
+student bringing to this material? Where is unexpected competence? \
+Where are students doing intellectual work that doesn't look like the \
+expected format but IS rigorous thinking?
+
+2. THRESHOLD READING: Where is each student encountering productive \
+difficulty? Where is confusion actually a sign of deep engagement \
+with a hard concept? What questions are students circling that they \
+haven't quite articulated yet?
+
+3. CONNECTION READING: In a small class, individual relationships \
+matter more than group dynamics. Who is speaking to whom, even \
+implicitly? Are there students reaching for the same idea from \
+different starting points? Is anyone working in isolation — and \
+is that isolation productive or concerning?
+
+In a class this small, avoid language about "groups" or "factions" \
+— there may not be enough students for meaningful subgroups. Focus \
+on what each student is reaching for and how their individual voices \
+create the texture of this particular classroom.
+
+Pay special attention to students who wrote BRIEFLY but SUBSTANTIVELY. \
+A 30-word submission that names the core concept is valid engagement — \
+do not overlook it because it is short.
+
+Use student names. Quote their actual words. Write 300-500 words.
+"""
+
+CLASS_READING_MERGE_PROMPT = """\
+You read this class in separate groups. Below are the group readings. \
+Combine them into one coherent class reading that preserves all \
+specific observations.
+
+Look especially for tensions BETWEEN groups — where one group's \
+framing affects how another group's voices land. These cross-group \
+relational moves are the most important thing to surface.
+
+{group_readings}
+
+Write a unified reading of the full class. 400-600 words.
+"""
+
+
+# ---------------------------------------------------------------------------
 # Pass 1a: Comprehension (Lightweight tier, call 1)
 # ---------------------------------------------------------------------------
 
@@ -135,6 +266,83 @@ EXAMPLE:
 }}"""
 
 # ---------------------------------------------------------------------------
+# Reader-Not-Judge: 2-pass coding (free-form read → structured extraction)
+# ---------------------------------------------------------------------------
+
+CODING_READING_FIRST_P1 = """\
+Read this student's submission. You are a reader, not a judge — your job is \
+to notice what is here, not to assess it.
+
+STUDENT: {student_name}
+ASSIGNMENT PROMPT: {assignment_prompt}
+{class_context}{linguistic_context}
+SUBMISSION TEXT:
+---
+{submission_text}
+---
+
+Read this student's work and write what you notice. Use plain prose — no \
+JSON, no bullet points, no rubric language. Write as one reader to another.
+
+Consider:
+- What is this student reaching for? What idea, feeling, or argument are \
+they trying to articulate — even if it doesn't arrive in standard academic form?
+- What form does their knowledge take? Is it lived experience, narrative, \
+anger, metacognition, family history, code-switching, humor, silence, \
+critique-from-within? Name the form without ranking it.
+- What would you want their teacher to notice about this work that a rubric \
+would miss?
+- If this student's writing differs from expected academic conventions, what \
+are they actually doing? Name the intellectual work before noting the form.
+
+Do NOT use the words "assess," "evaluate," "score," "level," or "proficiency."
+Do NOT recommend singling this student out to share or present.
+Do NOT compare this student to others — describe what THIS student is doing.
+Do NOT output JSON, code blocks, or structured data. Write in plain paragraphs only.
+
+Write 150-250 words of plain prose."""
+
+CODING_READING_FIRST_P2 = """\
+You just read {student_name}'s submission and wrote this reading:
+
+YOUR READING:
+{free_form_reading}
+
+SUBMISSION TEXT:
+---
+{submission_text}
+---
+
+Now extract a structured coding record from your reading. Ground every field \
+in what you actually noticed — do not add themes or quotes that weren't in \
+your reading.
+
+Respond with JSON:
+{{
+  "student_name": "{student_name}",
+  "theme_tags": ["1-5 specific theme labels from your reading"],
+  "theme_confidence": {{"tag": 0.0-1.0}},
+  "what_student_is_reaching_for": "1-2 sentences — the core of what they're trying to say",
+  "notable_quotes": [
+    {{"text": "verbatim quote", "significance": "why it matters (from your reading)"}}
+  ],
+  "emotional_register": "analytical|passionate|personal|urgent|reflective|disengaged",
+  "emotional_notes": "brief explanation grounded in your reading",
+  "readings_referenced": ["specific texts/authors mentioned"],
+  "concepts_applied": ["course concepts the student actually uses"],
+  "personal_connections": ["connections to lived experience"]
+}}
+
+RULES:
+- Quotes must be VERBATIM from the submission
+- Theme tags should come from your reading, not from generic categories
+- If your reading didn't mention readings_referenced or concepts_applied, \
+return empty lists — don't guess
+- what_student_is_reaching_for should capture the student's intellectual \
+project, not summarize the submission
+{lens_fragment}"""
+
+# ---------------------------------------------------------------------------
 # Pass 1 combined: Coding (Medium/Deep tier, single call)
 # ---------------------------------------------------------------------------
 
@@ -215,7 +423,7 @@ language that essentializes or dismisses groups.
 
 STUDENT: {student_name}
 ASSIGNMENT PROMPT: {assignment_prompt}
-
+{class_context}
 NON-LLM SIGNAL MATRIX RESULT:
 {signal_matrix_result}
 
@@ -257,6 +465,18 @@ is emotional engagement with the assignment, not clinical distress
 - Students whose writing style differs from academic English conventions
 - Students using colloquial intensifiers like "crazy", "insane", "wild" when \
 reacting to course content
+- Students naming their own disability, neurodivergence, or learning difference \
+as part of their analysis — a student writing "I have dyslexia and ADHD" or \
+"as someone with a learning disability" is doing SELF-ADVOCACY, not expressing \
+distress. Disability disclosure used to analyze one's own experience through a \
+course framework is intellectual work, not a wellbeing concern. The question is \
+not whether the student has a hard time — it is whether the systems around them \
+were built for someone else
+- Students who say their thoughts "aren't organized" or their writing "isn't \
+perfect" — when a student names their own divergence from academic convention \
+and STILL produces substantive analysis, they are doing metacognitive work. \
+Do not read this as inability; read it as awareness of a mismatch between \
+their thinking and the form they've been given to express it
 
 DO flag:
 - Language that essentializes racial or ethnic groups ("all X people...", \
@@ -264,6 +484,18 @@ DO flag:
 - Colorblind claims ("I don't see race", "not about race", "reverse racism")
 - Dismissal of other students' lived experiences
 - Tone policing ("too angry", "too emotional", "calm down")
+- Savior narratives ("those poor people need our help", "we should save them", \
+"it's so sad what they go through") — positions the speaker as rescuer and the \
+studied group as helpless, erasing their agency and self-determination
+- Exoticizing ("their culture is so beautiful and spiritual", "they have such \
+a rich tradition", "I wish I could be that connected to my roots") — admiration \
+that fixes a group as essentially different, turning people into aesthetic objects
+- Model minority framing ("Asians succeed because of their culture", "some \
+groups just value education more") — uses one racialized group's perceived \
+success to dismiss structural barriers and discipline other groups
+- Deficit framing of poverty ("those kids don't have access to...", "students \
+from low-income backgrounds can't...", "the cycle of poverty") — locates the \
+problem in the community rather than in the structures that produce deprivation
 - Student revealing PERSONAL crisis: expressions of hopelessness about their \
 OWN life, self-harm ideation, feeling unable to continue, requests for help \
 that go beyond the academic context
@@ -279,6 +511,11 @@ HOW TO TELL THE DIFFERENCE — examples:
 - "It's crazy how they treated Native women" → discussing course content
 - "Reading about this violence was really heavy" → processing difficult material
 - "I haven't been able to get out of bed and I don't see the point" → CONCERN
+- "I have dyslexia and ADHD and I'm Latino and first-gen honors" → SELF-ADVOCACY \
+using intersectionality to analyze their own position. This is the assignment.
+- "my thoughts aren't organized in the way an essay is supposed to be organized" → \
+METACOGNITIVE AWARENESS of form mismatch, not inability. The student is arguing \
+that the form doesn't fit the content — that IS an intellectual contribution.
 
 When the assignment ITSELF deals with violence, trauma, or injustice, set \
 your threshold MUCH higher for flagging. A student writing passionately or \
@@ -366,6 +603,54 @@ EXAMPLE of what IS a concern (pathologizing cultural practices):
   ]
 }}
 
+EXAMPLE of what IS a concern (savior narrative):
+{{
+  "concerns": [
+    {{
+      "flagged_passage": "it breaks my heart to see these communities suffering and I want to dedicate my career to helping them",
+      "surrounding_context": "In a reflection on urban poverty, the student wrote: 'It breaks my heart to see these communities suffering and I want to dedicate my career to helping them. They need people who understand policy to advocate for them because they can't do it themselves.'",
+      "why_flagged": "Savior narrative — positions the studied community as helpless and the student as rescuer, erasing community agency and self-advocacy. Teacher may want to redirect toward solidarity frameworks and community-led solutions.",
+      "confidence": 0.75
+    }}
+  ]
+}}
+
+EXAMPLE of what IS a concern (exoticizing):
+{{
+  "concerns": [
+    {{
+      "flagged_passage": "Indigenous cultures have this amazing spiritual connection to the earth that we've lost in Western society",
+      "surrounding_context": "Responding to a reading on environmental justice, the student wrote: 'Indigenous cultures have this amazing spiritual connection to the earth that we've lost in Western society. Their traditions are so beautiful and pure, it's like they understand something we don't.'",
+      "why_flagged": "Exoticizing — admiration that fixes Indigenous peoples as essentially spiritual and closer to nature, erasing the diversity of Indigenous experiences and political struggles. Romanticization is a form of essentialism. Teacher may want to redirect toward specific tribal sovereignty and environmental policy.",
+      "confidence": 0.7
+    }}
+  ]
+}}
+
+EXAMPLE of what IS a concern (model minority framing):
+{{
+  "concerns": [
+    {{
+      "flagged_passage": "Asian Americans prove that hard work can overcome racism because they've been so successful",
+      "surrounding_context": "In a discussion of structural racism, the student wrote: 'Asian Americans prove that hard work can overcome racism because they've been so successful despite discrimination. If one group can do it, maybe the issue isn't really structural.'",
+      "why_flagged": "Model minority myth — uses a flattened narrative of Asian American 'success' to dismiss structural racism and implicitly discipline other racialized groups. Erases diversity within Asian American communities and the specific histories of immigration policy that shaped outcomes. Teacher may want to engage with disaggregated data and the political function of the model minority narrative.",
+      "confidence": 0.8
+    }}
+  ]
+}}
+
+EXAMPLE of what IS a concern (deficit framing of poverty):
+{{
+  "concerns": [
+    {{
+      "flagged_passage": "students from these neighborhoods just don't have the cultural capital to succeed in college",
+      "surrounding_context": "In a reflection on educational inequality, the student wrote: 'Students from these neighborhoods just don't have the cultural capital to succeed in college. Their families don't value education the same way, and without role models, they fall into the cycle of poverty.'",
+      "why_flagged": "Deficit framing — locates the problem in communities and families ('don't value education') rather than in the structures that produce deprivation (disinvestment, redlining, school funding tied to property tax). The 'cycle of poverty' framing naturalizes structural conditions as individual/cultural failure. Teacher may want to redirect toward Yosso's community cultural wealth or structural analysis of school funding.",
+      "confidence": 0.8
+    }}
+  ]
+}}
+
 EXAMPLE of what is NOT a concern (community health knowledge):
 A nursing student writes: "My grandmother always used teas and remedios for \
 everything, and honestly some of the pharmacology we're learning makes me \
@@ -379,6 +664,71 @@ A psychology student writes: "As someone who is autistic, I find it really \
 frustrating that the textbook frames ASD as a list of deficits. My brain \
 works differently, not worse." — This student is contributing expertise from \
 lived experience and challenging the medical model. Do NOT flag this."""
+
+
+# ---------------------------------------------------------------------------
+# Adversarial Critic — argue AGAINST a concern flag before confirming
+# ---------------------------------------------------------------------------
+# From the hidden ideas inventory: "After concern flag, argue AGAINST flagging.
+# Confirm only if critic can't counter. Would catch S029-type false positives."
+#
+# The critic only runs on flagged students (cheap). It addresses stochasticity:
+# a flag that survives adversarial challenge is more reliable than one that doesn't.
+
+CONCERN_CRITIC_PROMPT = """\
+A concern detection system flagged the following passage in a student's submission.
+Your job is to argue AGAINST the flag — make the strongest possible case that \
+this is NOT a real concern and SHOULD NOT be brought to the teacher's attention.
+
+STUDENT: {student_name}
+FLAGGED PASSAGE: {flagged_passage}
+REASON FLAGGED: {why_flagged}
+
+FULL SUBMISSION:
+---
+{submission_text}
+---
+{class_context}
+
+Consider:
+1. Is this student doing intellectual work that LOOKS like a concern but isn't? \
+(e.g., using their own identity as an analytical subject, processing difficult \
+material, doing self-advocacy about disability or neurodivergence)
+2. What does this framing COST the student it describes? If the flag stands, \
+what happens to this student — are they pathologized, surveilled, singled out?
+3. Is the concern detector imposing a dominant norm (standard English, emotional \
+neutrality, neurotypical form, medical model of disability) and reading \
+divergence from that norm as a problem?
+4. Could this passage be read as an ASSET — a form of knowledge production, \
+self-advocacy, critical consciousness, or community cultural wealth — that \
+the detector failed to recognize?
+
+Respond with JSON:
+{{
+  "should_flag": true or false,
+  "argument_against": "your strongest argument for why this should NOT be flagged",
+  "cost_of_flagging": "what harm could come to the student if this flag reaches the teacher",
+  "revised_confidence": 0.0-1.0
+}}
+
+If you cannot make a convincing argument against the flag, set should_flag: true \
+and revised_confidence equal to or higher than the original. If you CAN make a \
+strong argument, set should_flag: false and explain why."""
+
+
+# ---------------------------------------------------------------------------
+# Immanent Critique — for concern flags that survive the critic
+# ---------------------------------------------------------------------------
+# "What does this framing cost the people it describes?" produces
+# pedagogically sophisticated concern descriptions that help teachers
+# understand WHY something matters, not just THAT it was flagged.
+
+CONCERN_IMMANENT_CRITIQUE_ADDENDUM = (
+    "\n\nFor each concern you flag, also consider: What does this framing "
+    "COST the people it describes? If a student essentializes a group, who "
+    "in the classroom bears the weight of that? If a student tone-polices, "
+    "whose voice gets quieter? Name the relational cost, not just the label."
+)
 
 # ---------------------------------------------------------------------------
 # Deepening pass (Stage 4b — flagged students only, experimental)

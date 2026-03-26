@@ -247,6 +247,17 @@ class InsightsStore:
             """
         )
         self._conn.commit()
+        self._migrate_v6()
+
+    def _migrate_v6(self) -> None:
+        """Add class_reading column to insights_runs."""
+        try:
+            self._conn.execute(
+                "ALTER TABLE insights_runs ADD COLUMN class_reading TEXT"
+            )
+            self._conn.commit()
+        except Exception:
+            pass  # column already exists
 
     @staticmethod
     def generate_run_id() -> str:
@@ -326,6 +337,22 @@ class InsightsStore:
             (result_json, run_id),
         )
         self._conn.commit()
+
+    def save_class_reading(self, run_id: str, class_reading: str) -> None:
+        """Persist the class-level reading for a run."""
+        self._conn.execute(
+            "UPDATE insights_runs SET class_reading = ? WHERE run_id = ?",
+            (class_reading, run_id),
+        )
+        self._conn.commit()
+
+    def get_class_reading(self, run_id: str) -> str:
+        """Load the class-level reading for a run."""
+        row = self._conn.execute(
+            "SELECT class_reading FROM insights_runs WHERE run_id = ?",
+            (run_id,),
+        ).fetchone()
+        return (row["class_reading"] or "") if row else ""
 
     def get_run(self, run_id: str) -> Optional[Dict]:
         """Get a single run by ID with JSON decoded."""

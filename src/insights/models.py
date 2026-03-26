@@ -94,6 +94,10 @@ class SubmissionCodingRecord(BaseModel):
     # Analysis lens alignment — observations, NOT scores or levels
     lens_observations: Optional[Dict[str, str]] = None
 
+    # Free-form reading (reader-not-judge coding path)
+    free_form_reading: Optional[str] = None
+    what_student_is_reaching_for: Optional[str] = None
+
     # Metadata from non-LLM pass (carried forward for synthesis)
     word_count: int = 0
     cluster_id: Optional[int] = None

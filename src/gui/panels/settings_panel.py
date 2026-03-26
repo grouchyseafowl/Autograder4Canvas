@@ -301,10 +301,25 @@ class SettingsPanel(QWidget):
     def _build_insights_section(self, lo: QVBoxLayout) -> None:
         lo.addWidget(make_section_label("Insights & AI"))
         lo.addWidget(make_h_rule())
-        lo.addWidget(QLabel(
+
+        # Setup wizard launch row
+        wiz_row = QHBoxLayout()
+        wiz_row.setSpacing(SPACING_SM)
+        wiz_desc = QLabel(
             "Configure the AI models used by Generate Insights.\n"
             "Local models keep student data on your machine (FERPA-safe)."
-        ))
+        )
+        wiz_desc.setWordWrap(True)
+        wiz_desc.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(12)}px;"
+            f" background: transparent; border: none;"
+        )
+        wiz_row.addWidget(wiz_desc, 1)
+        wiz_btn = QPushButton("Run Setup Wizard\u2026")
+        make_secondary_button(wiz_btn)
+        wiz_btn.clicked.connect(self._on_launch_insights_wizard)
+        wiz_row.addWidget(wiz_btn)
+        lo.addLayout(wiz_row)
 
         # Two-column: left = local model, right = cloud/institutional
         cols = QHBoxLayout()
@@ -911,6 +926,12 @@ class SettingsPanel(QWidget):
         from gui.dialogs.signal_tuning_dialog import SignalTuningDialog
         dlg = SignalTuningDialog(parent=self)
         dlg.exec()
+
+    def _on_launch_insights_wizard(self) -> None:
+        from gui.dialogs.insights_wizard import InsightsWizard
+        dlg = InsightsWizard(parent=self)
+        if dlg.exec() == InsightsWizard.DialogCode.Accepted:
+            self._load_current_settings()  # refresh fields from saved settings
 
     # ------------------------------------------------------------------
     # Signals / slots

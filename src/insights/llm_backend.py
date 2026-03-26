@@ -71,8 +71,8 @@ class BackendConfig:
 # ---------------------------------------------------------------------------
 
 DEFAULT_MODELS = {
-    "lightweight": "llama3.1:8b",
-    "medium": "llama3.1:70b",
+    "lightweight": "gemma3:12b",
+    "medium": "gemma3:27b",
     "deep_thinking": "",  # requires cloud API — user must configure
 }
 
@@ -80,6 +80,60 @@ DEFAULT_MODELS = {
 def get_default_model(tier: str) -> str:
     """Return the default Ollama model name for a tier."""
     return DEFAULT_MODELS.get(tier, "llama3.1:8b")
+
+
+# ---------------------------------------------------------------------------
+# Hardware detection
+# ---------------------------------------------------------------------------
+
+def detect_hardware() -> dict:
+    """Detect hardware capabilities for AI model selection.
+
+    Returns dict with: apple_silicon, ram_gb, can_run_12b, can_run_27b,
+    description (human-readable summary).
+    """
+    import platform as _platform
+
+    info = {
+        "apple_silicon": False,
+        "ram_gb": 0.0,
+        "can_run_12b": False,
+        "can_run_27b": False,
+        "description": "Unknown hardware",
+    }
+
+    if _platform.system() == "Darwin" and _platform.machine() == "arm64":
+        info["apple_silicon"] = True
+
+    if _platform.system() == "Darwin":
+        try:
+            r = subprocess.run(
+                ["sysctl", "-n", "hw.memsize"],
+                capture_output=True, text=True, timeout=5,
+            )
+            info["ram_gb"] = int(r.stdout.strip()) / (1024 ** 3)
+        except Exception:
+            pass
+    elif _platform.system() == "Linux":
+        try:
+            with open("/proc/meminfo") as f:
+                for line in f:
+                    if line.startswith("MemTotal:"):
+                        info["ram_gb"] = int(line.split()[1]) / (1024 * 1024)
+                        break
+        except Exception:
+            pass
+
+    info["can_run_12b"] = info["ram_gb"] >= 14
+    info["can_run_27b"] = info["ram_gb"] >= 28
+
+    parts = []
+    if info["apple_silicon"]:
+        parts.append("Apple Silicon")
+    parts.append(f"{info['ram_gb']:.0f} GB RAM")
+    info["description"] = " \u00b7 ".join(parts)
+
+    return info
 
 
 # ---------------------------------------------------------------------------
@@ -191,6 +245,18 @@ def reset_ollama_cache() -> None:
 # the previous call completes before the next one starts.
 _mlx_lock = threading.Lock()
 
+# MLX throttle — minimum seconds between calls.  Metal can hang if calls arrive
+# back-to-back with no breathing room.  Loaded from insights_throttle_delay
+# setting; default matches the settings default (15 s).
+_mlx_throttle_delay: float = 15.0
+_last_mlx_call: float = 0.0
+
+
+def set_mlx_throttle(seconds: float) -> None:
+    """Set the minimum gap (seconds) between MLX generate() calls."""
+    global _mlx_throttle_delay
+    _mlx_throttle_delay = max(0.0, float(seconds))
+
 _mlx_available: Optional[bool] = None
 
 
@@ -225,9 +291,29 @@ def auto_detect_backend(
 ) -> Optional[BackendConfig]:
     """Auto-detect the best available backend for the given tier.
 
+    When tier is "auto", checks for the best locally-available model:
+    gemma3:27b first (medium tier), then gemma3:12b (lightweight).
+    This means teachers with 32 GB+ RAM who have 27b installed get
+    full-quality analysis automatically — no cloud enhancement needed.
+
     Returns None if no LLM backend is available.
     """
     s = settings or {}
+
+    # --- Auto-tier: pick the best model that's already installed ----------
+    if tier == "auto":
+        ollama_url = s.get("insights_ollama_url", "http://localhost:11434")
+        if check_ollama(ollama_url):
+            if check_ollama_model("gemma3:27b", ollama_url):
+                tier = "medium"
+                log.info("Auto-tier: gemma3:27b available → medium")
+            elif check_ollama_model("gemma3:12b", ollama_url):
+                tier = "lightweight"
+                log.info("Auto-tier: gemma3:12b available → lightweight")
+            else:
+                tier = "lightweight"  # fallback; will try other models
+        else:
+            tier = "lightweight"
 
     # Check for user-configured cloud API first (for medium/deep tiers)
     # Support both key names: GUI saves insights_cloud_url/key,
@@ -258,7 +344,7 @@ def auto_detect_backend(
             return BackendConfig(
                 name="mlx",
                 model=s.get("insights_mlx_model",
-                            "mlx-community/Meta-Llama-3.1-8B-Instruct-4bit"),
+                            "mlx-community/gemma-3-12b-it-4bit"),
             )
         return None
 
@@ -268,10 +354,10 @@ def auto_detect_backend(
                 return BackendConfig(
                     name="ollama", model=ollama_model, base_url=ollama_url,
                 )
-            if ollama_model != "llama3.1:8b" and check_ollama_model("llama3.1:8b", ollama_url):
-                log.warning("Model '%s' not found, falling back to llama3.1:8b", ollama_model)
+            if ollama_model != "gemma3:12b" and check_ollama_model("gemma3:12b", ollama_url):
+                log.warning("Model '%s' not found, falling back to gemma3:12b", ollama_model)
                 return BackendConfig(
-                    name="ollama", model="llama3.1:8b", base_url=ollama_url,
+                    name="ollama", model="gemma3:12b", base_url=ollama_url,
                 )
             log.warning("Ollama running but no suitable model found")
         return None
@@ -379,10 +465,29 @@ _ollama_text = _with_retry(_ollama_text_impl)
 def _mlx_text_impl(
     backend: BackendConfig, prompt: str, system_prompt: str
 ) -> str:
+    global _last_mlx_call
     # Serialize all MLX calls — Metal kernel doesn't support concurrent access
     # from multiple threads on the same loaded model.
     with _mlx_lock:
-        return _mlx_text_inner(backend, prompt, system_prompt)
+        # Throttle: wait until minimum gap since last call has elapsed.
+        # Prevents Metal from hanging on rapid back-to-back calls.
+        if _mlx_throttle_delay > 0 and _last_mlx_call > 0:
+            elapsed = time.time() - _last_mlx_call
+            if elapsed < _mlx_throttle_delay:
+                wait = _mlx_throttle_delay - elapsed
+                log.debug("MLX throttle: waiting %.1fs before next call", wait)
+                time.sleep(wait)
+        result = _mlx_text_inner(backend, prompt, system_prompt)
+        # Release intermediate Metal buffers after each call.
+        # Without this, repeated inference fragments the unified memory pool
+        # on 16 GB machines, eventually causing Metal command buffer deadlocks.
+        try:
+            import mlx.core as mx
+            (mx.clear_cache if hasattr(mx, 'clear_cache') else mx.metal.clear_cache)()
+        except Exception:
+            pass
+        _last_mlx_call = time.time()
+        return result
 
 
 def _mlx_text_inner(

@@ -23,6 +23,8 @@ from insights.patterns import assess_sentiment_reliability, classify_vader_polar
 from insights.prompts import (
     ANALYSIS_LENS_PROMPT_FRAGMENT,
     CODING_FULL_PROMPT,
+    CODING_READING_FIRST_P1,
+    CODING_READING_FIRST_P2,
     COMPREHENSION_PROMPT,
     DEEPENING_PROMPT,
     INTEREST_AREAS_FRAGMENT,
@@ -32,6 +34,52 @@ from insights.prompts import (
 )
 
 log = logging.getLogger(__name__)
+
+
+def _chunk_text(text: str, chunk_size: int, overlap: int) -> list:
+    """Split text into overlapping chunks, preferring paragraph boundaries.
+
+    Break priority: paragraph (\n\n) > sentence (. ! ?) > hard cut.
+    Paragraphs are the natural unit of student thought — splitting
+    mid-paragraph risks severing an argument the student is building.
+
+    Returns a list of chunks. Short text (≤ chunk_size) returns a single-element list.
+    """
+    if len(text) <= chunk_size:
+        return [text]
+
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = start + chunk_size
+        if end >= len(text):
+            chunks.append(text[start:])
+            break
+
+        # Search the last ~500 chars of the chunk for a break point
+        search_start = max(start, end - 500)
+        search_region = text[search_start:end]
+
+        # Priority 1: paragraph break (double newline)
+        para_idx = search_region.rfind("\n\n")
+        if para_idx >= 0:
+            end = search_start + para_idx + 2  # include the break
+        else:
+            # Priority 2: sentence boundary
+            best_sent = -1
+            for marker in [". ", ".\n", "! ", "!\n", "? ", "?\n"]:
+                idx = search_region.rfind(marker)
+                if idx > best_sent:
+                    best_sent = idx
+            if best_sent >= 0:
+                end = search_start + best_sent + 2
+            # else: hard cut at chunk_size (no good break found)
+
+        chunks.append(text[start:end])
+        # Overlap from the break point so the next chunk has context
+        start = max(start + 1, end - overlap)
+
+    return chunks
 
 
 def _format_signal_matrix(signals: list) -> str:
@@ -528,4 +576,116 @@ def _code_full(
         personal_connections=parsed.get("personal_connections", []),
         current_events_referenced=parsed.get("current_events_referenced", []),
         lens_observations=lens_obs,
+    )
+
+
+def code_submission_reading_first(
+    *,
+    submission_text: str,
+    student_id: str,
+    student_name: str,
+    assignment_prompt: str,
+    backend: BackendConfig,
+    analysis_lens: Optional[Dict] = None,
+    class_context: str = "",
+    linguistic_context: str = "",
+) -> SubmissionCodingRecord:
+    """Reader-not-judge coding: free-form reading → structured extraction.
+
+    Pass 1 — the model reads as a human reader would: no JSON, no rubric,
+    just "what do you notice?" This produces the qualitative richness that
+    JSON-first prompting kills (see synthesis-first architecture notes).
+
+    Pass 2 — a lightweight extraction pass pulls structured fields from the
+    reading. The reading grounds the extraction, preventing slot-filling
+    behavior where the model invents content to satisfy the schema.
+
+    This is an ALTERNATIVE to code_submission(), not a replacement.
+    The existing tiers (lightweight, medium, deep) remain unchanged.
+    """
+    # --- Pass 1: Free-form reading ---
+    # For long submissions, chunk into overlapping segments and merge readings.
+    # Each chunk gets a full Pass 1 reading; readings are concatenated for Pass 2.
+    # This ensures the model sees the ENTIRE submission — no silent truncation.
+    CHUNK_SIZE = 3000       # chars per chunk (~600 words)
+    CHUNK_OVERLAP = 400     # overlap to preserve context across boundaries
+
+    class_context_block = f"\nCLASS CONTEXT:\n{class_context}\n" if class_context else ""
+    ling_block = f"\n{linguistic_context}\n" if linguistic_context else ""
+
+    chunks = _chunk_text(submission_text, CHUNK_SIZE, CHUNK_OVERLAP)
+
+    readings = []
+    for ci, chunk in enumerate(chunks):
+        chunk_label = ""
+        if len(chunks) > 1:
+            chunk_label = f"\n[Section {ci + 1} of {len(chunks)}]\n"
+
+        p1_prompt = CODING_READING_FIRST_P1.format(
+            student_name=student_name,
+            assignment_prompt=assignment_prompt,
+            class_context=class_context_block if ci == 0 else "",
+            linguistic_context=ling_block if ci == 0 else "",
+            submission_text=chunk_label + chunk,
+        )
+
+        chunk_reading = send_text(backend, p1_prompt, SYSTEM_PROMPT, max_tokens=1200)
+        readings.append(chunk_reading)
+        log.info(
+            "Reading-first P1 for %s chunk %d/%d: %d chars",
+            student_name, ci + 1, len(chunks), len(chunk_reading),
+        )
+
+    reading = "\n\n".join(readings)
+
+    # --- Pass 2: Structured extraction ---
+    # For long submissions, Pass 2 gets beginning + end so the model can
+    # verify quotes against actual text. The reading from Pass 1 carries
+    # the full content understanding.
+    lens_fragment = _build_lens_fragment(analysis_lens)
+
+    if len(submission_text) > CHUNK_SIZE:
+        # Show beginning and end so quotes from any part can be verified
+        half = CHUNK_SIZE // 2
+        p2_text = submission_text[:half] + "\n[...]\n" + submission_text[-half:]
+    else:
+        p2_text = submission_text
+
+    p2_prompt = CODING_READING_FIRST_P2.format(
+        student_name=student_name,
+        free_form_reading=reading,
+        submission_text=p2_text,
+        lens_fragment=lens_fragment,
+    )
+
+    raw = send_text(backend, p2_prompt, SYSTEM_PROMPT, max_tokens=600)
+    parsed = _parse_response(raw, student_name, student_id)
+
+    if "_parse_error" in parsed:
+        repair = JSON_REPAIR_PROMPT.format(
+            raw_response=raw[:1500],
+            expected_format='{"student_name": "...", "theme_tags": [...], ...}',
+        )
+        raw = send_text(backend, repair, SYSTEM_PROMPT)
+        parsed = _parse_response(raw, student_name, student_id)
+
+    # Validate concepts against submission text (hallucination guard)
+    validated_concepts = _validate_concepts(
+        parsed.get("concepts_applied", []), submission_text,
+    )
+
+    return SubmissionCodingRecord(
+        student_id=student_id,
+        student_name=student_name,
+        theme_tags=parsed.get("theme_tags", []),
+        theme_confidence=parsed.get("theme_confidence", {}),
+        notable_quotes=_safe_quotes(parsed.get("notable_quotes", [])),
+        emotional_register=parsed.get("emotional_register", ""),
+        emotional_notes=parsed.get("emotional_notes", ""),
+        readings_referenced=parsed.get("readings_referenced", []),
+        concepts_applied=validated_concepts,
+        personal_connections=parsed.get("personal_connections", []),
+        # Reader-not-judge specific fields
+        free_form_reading=reading,
+        what_student_is_reaching_for=parsed.get("what_student_is_reaching_for", ""),
     )

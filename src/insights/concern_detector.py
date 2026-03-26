@@ -17,7 +17,13 @@ from typing import Dict, List, Optional
 from insights.llm_backend import BackendConfig, parse_json_response, send_text
 from insights.models import ConcernRecord, ConcernSignal
 from insights.patterns import CRITICAL_KEYWORDS, has_critical_keywords
-from insights.prompts import CONCERN_PROMPT, JSON_REPAIR_PROMPT, SYSTEM_PROMPT
+from insights.prompts import (
+    CONCERN_CRITIC_PROMPT,
+    CONCERN_IMMANENT_CRITIQUE_ADDENDUM,
+    CONCERN_PROMPT,
+    JSON_REPAIR_PROMPT,
+    SYSTEM_PROMPT,
+)
 
 log = logging.getLogger(__name__)
 
@@ -46,16 +52,24 @@ def _format_signal_matrix_for_prompt(signals: List[ConcernSignal]) -> str:
 
 
 def _format_signal_matrix_tuples(signals: list) -> str:
-    """Format raw signal matrix tuples for the concern prompt."""
+    """Format raw signal matrix tuples for the concern prompt.
+
+    Filters out APPROPRIATE signals to avoid confusing smaller models
+    into analyzing strengths as concerns.
+    """
     if not signals:
         return "No non-LLM concern signals for this submission."
     lines = []
     for sig in signals:
         if isinstance(sig, tuple) and len(sig) >= 4:
+            if sig[0] == "APPROPRIATE":
+                continue
             lines.append(f"- {sig[0]}: {sig[3]} (category: {sig[1]}, VADER: {sig[2]})")
         elif hasattr(sig, "signal_type"):
+            if sig.signal_type == "APPROPRIATE":
+                continue
             lines.append(f"- {sig.signal_type}: {sig.interpretation}")
-    return "\n".join(lines) if lines else "No non-LLM concern signals."
+    return "\n".join(lines) if lines else "No non-LLM concern signals for this submission."
 
 
 # Phrases that indicate the LLM is flagging course content, not student wellbeing
@@ -135,15 +149,21 @@ def detect_concerns(
     tier: str,
     backend: Optional[BackendConfig],
     profile_fragment: str = "",
+    class_context: str = "",
 ) -> List[ConcernRecord]:
     """Run dedicated concern detection on one submission.
 
     If no LLM backend is available, returns signal matrix results as
     low-confidence concern flags (non-LLM fallback).
     """
-    # Format signal matrix context
+    # Format signal matrix context — only pass actual concern signals,
+    # not APPROPRIATE signals which confuse smaller models into flagging strengths
     if concern_signals:
-        signal_text = _format_signal_matrix_for_prompt(concern_signals)
+        actual_concerns = [s for s in concern_signals
+                           if s.signal_type not in ("APPROPRIATE",)]
+        signal_text = (_format_signal_matrix_for_prompt(actual_concerns)
+                       if actual_concerns
+                       else "No non-LLM concern signals for this submission.")
     else:
         signal_text = _format_signal_matrix_tuples(signal_matrix_results)
 
@@ -158,15 +178,25 @@ def detect_concerns(
         )
 
     # LLM concern detection
+    # Class context makes relational harms visible (tone policing, etc.)
+    class_context_block = (
+        f"\nCLASS CONTEXT (from reading all submissions as a community):\n"
+        f"---\n{class_context}\n---\n"
+        if class_context
+        else ""
+    )
     prompt = CONCERN_PROMPT.format(
         student_name=student_name,
         assignment_prompt=assignment_prompt,
+        class_context=class_context_block,
         signal_matrix_result=signal_text,
         submission_text=submission_text,
         profile_fragment=profile_fragment,
-    )
+    ) + CONCERN_IMMANENT_CRITIQUE_ADDENDUM
 
-    raw = send_text(backend, prompt, SYSTEM_PROMPT)
+    # Cap response length — 4096 default lets small models ramble and
+    # generate false positives by analyzing strengths as concerns
+    raw = send_text(backend, prompt, SYSTEM_PROMPT, max_tokens=800)
     parsed = parse_json_response(raw)
 
     if "_parse_error" in parsed:
@@ -175,7 +205,7 @@ def detect_concerns(
             raw_response=raw[:1500],
             expected_format='{"concerns": [{"flagged_passage": "...", ...}]}',
         )
-        raw = send_text(backend, repair, SYSTEM_PROMPT)
+        raw = send_text(backend, repair, SYSTEM_PROMPT, max_tokens=800)
         parsed = parse_json_response(raw)
 
     # Build ConcernRecords from LLM response
@@ -198,6 +228,11 @@ def detect_concerns(
 
     # Drop low-confidence flags to reduce noise in teacher's view
     concerns = [c for c in concerns if c.confidence >= 0.7]
+
+    # TODO: Adversarial critic pass — argue AGAINST each surviving flag.
+    # Prompt is written (CONCERN_CRITIC_PROMPT in prompts.py).
+    # Waiting on replication study frequency data before wiring in.
+    # See docs/research/hidden_ideas_tracker.md
 
     return concerns
 
