@@ -247,8 +247,9 @@ _mlx_lock = threading.Lock()
 
 # MLX throttle — minimum seconds between calls.  Metal can hang if calls arrive
 # back-to-back with no breathing room.  Loaded from insights_throttle_delay
-# setting; default matches the settings default (15 s).
-_mlx_throttle_delay: float = 15.0
+# setting; default matches the settings default (20 s).  Raised from 15s after
+# observation stage added a third inference pass per student.
+_mlx_throttle_delay: float = 20.0
 _last_mlx_call: float = 0.0
 
 
@@ -256,6 +257,27 @@ def set_mlx_throttle(seconds: float) -> None:
     """Set the minimum gap (seconds) between MLX generate() calls."""
     global _mlx_throttle_delay
     _mlx_throttle_delay = max(0.0, float(seconds))
+
+
+def unload_mlx_model() -> None:
+    """Release the cached MLX model and free unified memory.
+
+    Call between pipeline stages (e.g., after coding, before observations)
+    to give Metal a clean slate.  The model will be re-loaded on the next
+    send_text() call — costs ~15-20s but prevents the cumulative memory
+    fragmentation that causes Metal deadlocks on 16 GB machines.
+    """
+    if hasattr(_mlx_text_inner, "_cache") and _mlx_text_inner._cache:
+        log.info("Unloading MLX model(s) to free Metal memory...")
+        _mlx_text_inner._cache.clear()
+        try:
+            import mlx.core as mx
+            (mx.clear_cache if hasattr(mx, "clear_cache") else mx.metal.clear_cache)()
+        except Exception:
+            pass
+        import gc
+        gc.collect()
+        log.info("MLX model unloaded.")
 
 _mlx_available: Optional[bool] = None
 

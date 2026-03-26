@@ -437,6 +437,11 @@ def run_pipeline(course_key: str, small_batch: int = 0,
         print(f"  Coding complete: {timing['coding_total']}s "
               f"(avg {timing.get('coding_per_student_avg', 0)}s/student)")
 
+    # Release MLX model between coding → concerns
+    if backend and backend.name == "mlx":
+        from insights.llm_backend import unload_mlx_model
+        unload_mlx_model()
+
     # ── Stage 3: Concern detection ──
     from insights.concern_detector import detect_concerns
 
@@ -522,6 +527,11 @@ def run_pipeline(course_key: str, small_batch: int = 0,
         })
         print(f"  Concerns complete: {timing['concerns']}s — {concern_count} total flags")
 
+    # Release MLX model between stages to prevent Metal deadlock on 16 GB
+    if backend and backend.name == "mlx":
+        from insights.llm_backend import unload_mlx_model
+        unload_mlx_model()
+
     # ── Stage 3b: Per-student observations (observation-only architecture) ──
     from insights.prompts import OBSERVATION_SYSTEM_PROMPT, OBSERVATION_PROMPT
     from insights.llm_backend import send_text as _send_text
@@ -578,6 +588,11 @@ def run_pipeline(course_key: str, small_batch: int = 0,
         })
         obs_count = sum(1 for v in obs_map.values() if v)
         print(f"  Observations complete: {timing['observations']}s — {obs_count} observations")
+
+    # Release MLX model between observations → themes
+    if backend and backend.name == "mlx":
+        from insights.llm_backend import unload_mlx_model
+        unload_mlx_model()
 
     # ── Stage 4: Theme generation ──
     from insights.theme_generator import generate_themes
@@ -698,13 +713,16 @@ def run_pipeline(course_key: str, small_batch: int = 0,
             print(f"  Observation synthesis complete: {timing['observation_synthesis']}s — "
                   f"{len(obs_synthesis.split())} words")
 
-            # Save to file for review
-            with open(f"/tmp/observation_synthesis_{run_key}.md", "w") as f:
+            # Save to persistent location (not /tmp)
+            _obs_synth_dir = ROOT / "data" / "research" / "raw_outputs"
+            _obs_synth_dir.mkdir(parents=True, exist_ok=True)
+            _obs_synth_path = _obs_synth_dir / f"observation_synthesis_{run_key}.md"
+            with open(_obs_synth_path, "w") as f:
                 f.write(f"# Observation-Based Class Summary\n")
                 f.write(f"*Generated from {sum(1 for v in obs_map.values() if v)} observations, "
-                        f"Gemma 12B MLX*\n\n")
+                        f"{backend.model}*\n\n")
                 f.write(obs_synthesis)
-            print(f"  Saved to /tmp/observation_synthesis_{run_key}.md")
+            print(f"  Saved to {_obs_synth_path}")
         except Exception as exc:
             log.warning("Observation synthesis failed: %s", exc)
             timing["observation_synthesis"] = round(time.time() - t0, 2)

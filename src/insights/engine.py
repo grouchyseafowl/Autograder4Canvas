@@ -71,8 +71,8 @@ class InsightsEngine:
 
         # Push throttle setting into the LLM backend so it applies to all
         # MLX calls (even those outside the engine's own loops).
-        from insights.llm_backend import set_mlx_throttle
-        set_mlx_throttle(float(self._settings.get("insights_throttle_delay", 15)))
+        from insights.llm_backend import set_mlx_throttle, unload_mlx_model
+        set_mlx_throttle(float(self._settings.get("insights_throttle_delay", 20)))
 
     def cancel(self) -> None:
         self._cancelled = True
@@ -748,6 +748,12 @@ class InsightsEngine:
 
             self._store.complete_stage(run_id, "coding")
 
+            # Release MLX model between stages to prevent Metal memory
+            # fragmentation on 16 GB machines.  Costs ~15-20s reload but
+            # prevents the cumulative deadlock that freezes the system.
+            if backend and backend.name == "mlx":
+                unload_mlx_model()
+
             # ----------------------------------------------------------
             # Linguistic feature baselines + trends
             # ----------------------------------------------------------
@@ -961,6 +967,10 @@ class InsightsEngine:
 
             self._store.complete_stage(run_id, "concerns")
 
+            # Release MLX model between concerns → observations
+            if backend and backend.name == "mlx":
+                unload_mlx_model()
+
             if self._cancelled:
                 return None
 
@@ -1129,6 +1139,10 @@ class InsightsEngine:
                     time.sleep(throttle)
 
             self._store.complete_stage(run_id, "observations")
+
+            # Release MLX model between observations → themes
+            if backend and backend.name == "mlx":
+                unload_mlx_model()
 
             if self._cancelled:
                 return None

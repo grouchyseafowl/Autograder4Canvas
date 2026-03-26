@@ -40,7 +40,7 @@ _DEFAULTS = {
     "insights_translation_backend": "ollama",
     "insights_translation_model": "llama3.1:8b",
     "insights_model_tier": "auto",            # "auto" picks best available (27b > 12b)
-    "insights_throttle_delay": 15,
+    "insights_throttle_delay": 20,
     "insights_low_priority": True,
     "insights_keep_awake": True,
     "insights_setup_complete": False,         # gates first-run wizard
