@@ -148,6 +148,29 @@ Run AFTER full pipeline integration.
 
 ---
 
+## Technical debt: dual pipeline implementation
+
+**Status**: Known issue, not yet fixed
+**Problem**: `scripts/generate_demo_insights.py` reimplements the pipeline
+independently of `src/insights/engine.py`. Both have their own stage ordering,
+backend selection, concern detection wiring, and now observation stages. This
+creates a multiple-sources-of-truth problem: changes to the engine don't
+automatically apply to the demo generator and vice versa.
+
+**Impact**: May explain quality degradation between isolated tests (which run
+through the demo generator) and integrated tests (which run through the engine).
+Round 2 → integration quality drops could be partly caused by this divergence.
+
+**Fix**: Refactor demo generator to call `engine.py` methods directly, passing
+pre-loaded texts instead of going through the data fetcher. Engine needs a
+`run_from_texts()` method that accepts a dict of {student_id: text} rather than
+fetching from Canvas API.
+
+**Effort**: Medium-large — engine is tightly coupled to the data fetcher. But
+this is critical infrastructure for testing reliability.
+
+---
+
 ## Not a gap (System B advantages to preserve)
 
 - Synthesis-first class reading

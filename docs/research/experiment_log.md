@@ -1686,6 +1686,72 @@ effect is format-dependent, not model-specific. Replication on a different domai
 (biology, history) — not recommended for this paper; the Ethnic Studies context is
 where stakes are highest and the mechanism is most visible.
 
+### Methodological review: round 2 → full pipeline quality drop (2026-03-26)
+
+Two methodological issues were active during the round 2 → full pipeline transition.
+Both are documented here for the paper's methods section.
+
+**Issue 1: Dual pipeline implementation (technical)**
+
+The demo generator (`scripts/generate_demo_insights.py`) reimplements the pipeline
+independently of `src/insights/engine.py`. Different backend selection logic, different
+stage ordering, different parameter passing. Changes to one don't automatically apply
+to the other. This created confusion when results differed across test paths, but was
+NOT the primary cause of the round 2 → full pipeline quality drop, because:
+
+- The replication study called `detect_concerns()` directly — same code path regardless
+  of whether it's invoked from the demo generator or engine
+- The quality drop was caused by different INPUT conditions (max_tokens, signal matrix),
+  not different code paths
+- The dual implementation is real technical debt that needs fixing for reliability,
+  but it didn't invalidate the test results
+
+**Issue 2: Narrow test set masking structural problem (methodological)**
+
+The replication study tested 7 specific students: S015 (essentializer), S018
+(colorblind), S025 (tone policer), S023 (lived experience), S027 (outside source),
+S028 (AAVE), S029 (neurodivergent). This set was designed to test specific concern
+patterns and linguistic protections.
+
+It did NOT include: S022 (righteous anger), S024 (lived experience with grandmother's
+dehumanization narrative), S004/S005 (strong writers of color). These are exactly the
+students where the binary concern detector produces false positives — the students
+most engaged with the course material, writing with the most emotional intensity
+about experiences of racialization.
+
+The 100% accuracy on 7 students was real but not representative. The test set was too
+narrow to surface the disparate impact pattern that appeared on the full 32-student
+run. This is a textbook sampling problem: the evaluation set didn't include the
+population most vulnerable to the system's failure mode.
+
+**Verdict on the original diagnoses:**
+
+The post-round-2 fixes (max_tokens=800, APPROPRIATE signal filtering) were CORRECT.
+They addressed real issues:
+- max_tokens=4096 genuinely caused the model to fill space analyzing strengths as
+  concerns. Reducing to 800 eliminated this failure mode.
+- APPROPRIATE signal contamination genuinely confused the model. Filtering it out
+  was the right fix.
+
+These fixes improved results: S029 (neurodivergent) went from false positive to
+CLEAR. Several other false positives from the full pipeline run were eliminated.
+
+BUT the fixes were INCOMPLETE. The deeper structural problem — binary classification
+producing systematic disparate impact on students of color writing about lived
+experience — persisted through the fixes and was only revealed by the full 32-student
+test that included the vulnerable students the replication study had missed.
+
+**For the paper**: This sequence is itself a finding. It demonstrates how narrow
+evaluation sets can produce false confidence in AI fairness metrics. A system that
+tests perfectly on 7 carefully chosen students can still produce systematic harm on
+a full class, because the students most likely to be harmed are precisely the ones
+that curated test sets may not include — they are the edge cases from the model's
+perspective but the core population from the course's perspective. This parallels
+Buolamwini & Gebru's (2018) finding that facial recognition systems tested on
+non-representative benchmarks appeared accurate but failed on darker-skinned faces.
+The mechanism is the same: the evaluation set didn't include the population most
+vulnerable to the system's failure mode.
+
 ### Note on the Opus system's architecture
 
 Worth documenting: the Opus one-shot prompt was accidentally observation-based.
