@@ -7,7 +7,7 @@ against map-reduce information loss.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -382,8 +382,9 @@ class QuickAnalysisResult(BaseModel):
     # Keyword pattern hits
     keyword_hits: Dict[str, KeywordHit] = {}
 
-    # VADER sentiment per submission
-    sentiments: Dict[str, Dict[str, float]] = {}  # student_id → {pos,neg,neu,compound}
+    # Emotional register scores per submission (GoEmotions or VADER fallback)
+    # Inner dict keys: compound/pos/neg/neu (float), emotions (dict), reliability (str)
+    sentiments: Dict[str, Dict[str, Union[float, str, Dict[str, float]]]] = {}
     sentiment_distribution: Dict[str, int] = {}  # register → count
 
     # Embedding clusters

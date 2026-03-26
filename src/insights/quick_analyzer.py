@@ -983,7 +983,7 @@ class QuickAnalyzer:
 
     def _compute_emotional_register(
         self, texts: Dict[str, str], meta: Dict[str, Dict]
-    ) -> Tuple[Dict[str, Dict[str, float]], Dict[str, int]]:
+    ) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, int]]:
         """Compute emotional register scores using GoEmotions.
 
         Primary backend: SamLowe/roberta-base-go_emotions via HuggingFace
@@ -998,7 +998,7 @@ class QuickAnalyzer:
           emotions   : dict[str, float]  full GoEmotions label→score map
           reliability: str  "go_emotions" | "vader" | "none"
         """
-        sentiments: Dict[str, Dict[str, float]] = {}
+        sentiments: Dict[str, Dict[str, Any]] = {}
         register_counts: Dict[str, int] = Counter()
 
         score_fn = self._build_emotion_scorer()
@@ -1541,7 +1541,7 @@ class QuickAnalyzer:
         self,
         texts: Dict[str, str],
         meta: Dict[str, Dict],
-        sentiments: Dict[str, Dict[str, float]],
+        sentiments: Dict[str, Dict[str, Any]],
         shared_refs: List[SharedReference],
     ) -> List[ContradictionSignal]:
         """Detect contradictions: shared reference + opposing sentiment."""
@@ -1594,7 +1594,7 @@ class QuickAnalyzer:
         self,
         texts: Dict[str, str],
         meta: Dict[str, Dict],
-        sentiments: Dict[str, Dict[str, float]],
+        sentiments: Dict[str, Dict[str, Any]],
         median_wc: float,
     ) -> List[ConcernSignal]:
         signals = []
