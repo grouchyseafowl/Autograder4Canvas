@@ -778,26 +778,48 @@ The asset chip isn't just saying "this is a valid way to write." It's saying
 are the same features that no language model reproduces. Protection and
 authentication are the same operation.
 
-**Caveat:** This convergence holds for the current generation of language models.
-Future models trained on more diverse data, or specifically fine-tuned to produce
-non-standard registers, could break this correlation. The system should not rely
-on linguistic diversity as an authenticity signal in its AIC pipeline — but the
-observation that the two signals currently overlap is worth documenting.
+**Why this convergence is structural, not contingent.** Initial analysis framed
+this as temporary — "current models don't produce AAVE but future models might."
+Silverstein's monoglot standard ideology (1996) suggests the convergence is deeper
+than training data. The monoglot standard — the belief that there is one correct
+form of a language — is not just a bias in LLM training corpora. It is the
+organizing principle of how language models work: predict the next most probable
+token based on training distribution. Frequency-as-correctness IS the monoglot
+standard, implemented as mathematics.
 
-**#AFROFUTURISM connection:** If AAVE features become something AI can produce
-convincingly, the very markers that currently protect Black students from biased
-scoring would become markers that AI can mimic. The students would lose both their
-protection (the suppression layer would fire on AI text too) and their
-authenticity signal. Designing for this future means ensuring the suppression
-layer is grounded in linguistic JUSTICE (the score is biased, period) not in
-authenticity detection (the score is biased because humans write this way and
-machines don't — yet).
+RLHF reinforces it further: human raters reward "correct" English, the reward
+model learns standard register = high quality, and even diverse training data
+gets pushed back toward the standard by the reward signal. To produce genuine
+dialectal variation, you would need a reward model that explicitly values it —
+and the question of who defines "good AAVE" for that reward model reproduces
+the power structure (Alim & Smitherman, 2012). The model doesn't speak AAVE;
+it performs AAVE within a system whose architecture treats standard English as
+the unmarked default. That production is mimicry within a hierarchy, not
+multilingual competence.
+
+This means the suppression layer's grounding in tool bias (the sentiment scorer
+is unreliable for this text pattern) is correct for a second reason: not just
+because the scorer is biased, but because the monoglot standard that makes the
+scorer biased is the same monoglot standard that prevents language models from
+authentically producing the patterns the scorer misreads. The bias and the
+inability are structurally linked.
+
+**#AFROFUTURISM still applies but differently.** The question is not "will AI
+learn to produce AAVE" but "what happens when AI production of AAVE-like text
+is used to discredit actual AAVE writers?" If a district says "AI can write like
+this too, so these features don't prove anything" — that weaponizes the
+convergence even without the convergence actually breaking. The suppression layer
+must stand on linguistic justice (the tool is biased), not on authenticity
+detection, because authenticity arguments can be undermined by institutional
+actors regardless of their technical accuracy.
 
 **#COMMUNITY_CULTURAL_WEALTH:** The asset that institutions ignore — non-standard
 linguistic practice — turns out to be the asset that most clearly distinguishes
 human intellectual engagement from machine text production. The students
 institutions have spent the most effort "correcting" are the students whose
-writing is most irreducibly their own.
+writing is most irreducibly their own. And the structural conditions that make
+it irreducible (the monoglot standard's dominance in AI architecture) are the
+same conditions that produce the bias the system protects against.
 
 **Design implication:** The guided insights (expandable chip notes) now serve a
 third function beyond equity protection and asset surfacing: they contextualize
