@@ -509,17 +509,27 @@ class InsightsStore:
         theme_set_json: Optional[str] = None,
         outlier_report_json: Optional[str] = None,
         synthesis_report_json: Optional[str] = None,
+        observation_synthesis: Optional[str] = None,
     ) -> None:
+        # Ensure observation_synthesis column exists (added 2026-03-25)
+        try:
+            self._conn.execute(
+                "ALTER TABLE insights_themes ADD COLUMN observation_synthesis TEXT"
+            )
+        except Exception:
+            pass  # column already exists
+
         self._conn.execute(
             """
-            INSERT INTO insights_themes (run_id, theme_set, outlier_report, synthesis_report)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO insights_themes (run_id, theme_set, outlier_report, synthesis_report, observation_synthesis)
+            VALUES (?, ?, ?, ?, ?)
             ON CONFLICT (run_id) DO UPDATE SET
                 theme_set = COALESCE(excluded.theme_set, insights_themes.theme_set),
                 outlier_report = COALESCE(excluded.outlier_report, insights_themes.outlier_report),
-                synthesis_report = COALESCE(excluded.synthesis_report, insights_themes.synthesis_report)
+                synthesis_report = COALESCE(excluded.synthesis_report, insights_themes.synthesis_report),
+                observation_synthesis = COALESCE(excluded.observation_synthesis, insights_themes.observation_synthesis)
             """,
-            (run_id, theme_set_json, outlier_report_json, synthesis_report_json),
+            (run_id, theme_set_json, outlier_report_json, synthesis_report_json, observation_synthesis),
         )
         self._conn.commit()
 

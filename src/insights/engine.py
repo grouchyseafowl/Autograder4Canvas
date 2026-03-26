@@ -1057,6 +1057,83 @@ class InsightsEngine:
                 return None
 
             # ----------------------------------------------------------
+            # Stage 5b: Per-student observations (observation-only architecture)
+            # Replaces binary concern detection with generative observations.
+            # Every student gets a 3-4 sentence observation describing their
+            # intellectual reach, emotional engagement, and anything the teacher
+            # should notice — including structural power moves.
+            # Results stored as observation field on each coding record.
+            # ----------------------------------------------------------
+            from insights.prompts import (
+                OBSERVATION_SYSTEM_PROMPT,
+                OBSERVATION_PROMPT,
+            )
+
+            progress("Generating per-student observations...")
+            _teacher_lens = ""
+            _tl_raw = self._settings.get("insights_teacher_lens", "")
+            if _tl_raw:
+                _teacher_lens = (
+                    f"TEACHER'S OBSERVATION PRIORITIES:\n{_tl_raw}\n"
+                )
+
+            observations_map = {}  # sid -> observation text
+            for i, record in enumerate(coding_records):
+                if self._cancelled:
+                    return None
+
+                sid = record.student_id
+                body = texts.get(sid, "")
+                wc = len(body.split())
+
+                progress(f"Observing {i + 1}/{total}: {record.student_name}...")
+
+                # Skip very short or gibberish
+                if wc < 15:
+                    observations_map[sid] = "Submission too brief for observation."
+                    continue
+
+                # Skip AI-flagged (observation is about authentic voice)
+                if sid in _ai_flagged_ids:
+                    observations_map[sid] = (
+                        "Submission flagged as likely AI-generated; "
+                        "observation applies to authentic student work."
+                    )
+                    continue
+
+                obs_prompt = OBSERVATION_PROMPT.format(
+                    class_context=class_reading,
+                    assignment=assignment_prompt,
+                    student_name=record.student_name,
+                    submission_text=body,
+                    teacher_lens=_teacher_lens,
+                )
+
+                try:
+                    observation = send_text(
+                        backend, obs_prompt, OBSERVATION_SYSTEM_PROMPT,
+                        max_tokens=300,
+                    )
+                    observations_map[sid] = observation.strip()
+                except Exception as exc:
+                    log.warning("Observation failed for %s: %s", sid, exc)
+                    observations_map[sid] = ""
+
+                # Store on the record
+                record.observation = observations_map[sid]
+                self._store.save_coding(
+                    run_id, sid, record.student_name, record.model_dump_json()
+                )
+
+                if throttle > 0 and i < total - 1:
+                    time.sleep(throttle)
+
+            self._store.complete_stage(run_id, "observations")
+
+            if self._cancelled:
+                return None
+
+            # ----------------------------------------------------------
             # Stage 4b: Deepening pass (experimental — flagged students only)
             # Runs ONLY for students with concern flags. Asks the 8B to:
             #   1. Name the rhetorical strategy precisely
@@ -1280,6 +1357,59 @@ class InsightsEngine:
             # Emit synthesis for live preview
             emit_result("stage", {"stage": "SYNTHESIS"})
             emit_result("synthesis", synthesis.model_dump())
+
+            # ----------------------------------------------------------
+            # Stage 8b: Observation-based synthesis
+            # Reads all per-student observations and produces a teacher-facing
+            # class summary (observation-only architecture). This runs in
+            # parallel with the guided synthesis above — we keep both for
+            # comparison during validation. Eventually this replaces Stage 8.
+            # ----------------------------------------------------------
+            from insights.prompts import (
+                OBSERVATION_SYNTHESIS_SYSTEM_PROMPT,
+                OBSERVATION_SYNTHESIS_PROMPT,
+                OBSERVATION_SYNTHESIS_FORWARD_LOOKING,
+            )
+
+            if observations_map:
+                progress("Generating observation-based class summary...")
+
+                _obs_formatted = ""
+                for sid, obs in observations_map.items():
+                    _rec = next((r for r in coding_records if r.student_id == sid), None)
+                    _name = _rec.student_name if _rec else sid
+                    _obs_formatted += f"\n**{_name}** ({sid}):\n{obs}\n"
+
+                _fwd = ""
+                _next_week = self._settings.get("insights_next_week_topic", "")
+                if _next_week:
+                    _fwd = OBSERVATION_SYNTHESIS_FORWARD_LOOKING.format(
+                        next_week_topic=_next_week
+                    )
+
+                _synth_prompt = OBSERVATION_SYNTHESIS_PROMPT.format(
+                    assignment=assignment_prompt,
+                    class_context=class_reading,
+                    observations=_obs_formatted,
+                    teacher_lens=_teacher_lens,
+                    forward_looking=_fwd,
+                )
+
+                try:
+                    obs_synthesis = send_text(
+                        backend, _synth_prompt,
+                        OBSERVATION_SYNTHESIS_SYSTEM_PROMPT,
+                        max_tokens=1200,
+                    )
+
+                    # Store as a special synthesis record
+                    self._store.save_themes(
+                        run_id,
+                        observation_synthesis=obs_synthesis.strip(),
+                    )
+                    log.info("Observation synthesis: %d words", len(obs_synthesis.split()))
+                except Exception as exc:
+                    log.warning("Observation synthesis failed: %s", exc)
 
             # ----------------------------------------------------------
             # Stage 9: Draft student feedback (if enabled)

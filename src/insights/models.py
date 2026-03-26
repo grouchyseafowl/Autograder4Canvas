@@ -98,6 +98,13 @@ class SubmissionCodingRecord(BaseModel):
     free_form_reading: Optional[str] = None
     what_student_is_reaching_for: Optional[str] = None
 
+    # Per-student observation (observation-only architecture)
+    # Replaces binary concern FLAGS with generative prose — the teacher reads
+    # observations and decides what warrants action. 3-4 sentences covering
+    # intellectual reach, emotional engagement, capacity signals, and any
+    # structural power moves.
+    observation: Optional[str] = None
+
     # Metadata from non-LLM pass (carried forward for synthesis)
     word_count: int = 0
     cluster_id: Optional[int] = None
