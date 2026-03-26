@@ -1786,11 +1786,24 @@ In 3-4 sentences, share what you notice about this student's work. Consider:
 If the student's writing contains a STRUCTURAL POWER MOVE — language that appears
 reasonable or even progressive on the surface but functions to maintain existing
 power arrangements — name it specifically and briefly explain in plain language
-why it matters, so that teachers who might not catch it can see it. Examples
-include: tone policing, abstract liberalism ("everyone should be treated
-equally"), settler moves to innocence ("my family wasn't involved"), progress
-narratives ("things have gotten better"), and deflection to individual solutions
-("just vote") in contexts of structural harm.
+why it matters, so that teachers who might not catch it can see it.
+
+Structural power moves vary by discipline but share a common structure: they
+perform reasonableness while foreclosing the perspectives of those most affected.
+Common patterns across disciplines include:
+- Tone policing: positioning calm rationality as the only legitimate register,
+  which delegitimizes emotional responses from those directly affected
+- Abstract liberalism: "everyone should be treated equally" — masks structural
+  inequalities behind appeals to universal principles
+- Settler/colonial innocence: "my family wasn't involved" — disavows structural
+  position through individual exceptionalism
+- Progress narratives: "things have gotten better" — dismisses ongoing harm
+- Objectivity claims: "just follow the data/science" — masks whose questions,
+  methods, and bodies are centered
+- Deflection to individual solutions: "just vote/work harder" — redirects from
+  structural analysis to personal responsibility
+- Meritocracy framing: "if they just tried harder" — attributes structural
+  outcomes to individual effort
 
 Write naturally. Not every student will have something notable in every dimension.
 If something stands out — whether an exceptional insight, a sign of struggle, an
