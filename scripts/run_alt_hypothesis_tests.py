@@ -880,6 +880,122 @@ def test_f_bc_stability(model_key: str = "gemma12b", n_runs: int = 5):
 
 
 # ---------------------------------------------------------------------------
+# Test H: Binary classifier on wellbeing cases (direct comparison to Test G)
+# ---------------------------------------------------------------------------
+
+def test_h_binary_on_wellbeing(model_key: str = "gemma12b"):
+    """Run the binary concern classifier on the same wellbeing cases Test G uses.
+
+    Direct comparison: does the binary classifier (Tests B/C format) catch the
+    same signals the observation architecture (Test G) catches? Expected: binary
+    will either miss subtle cases (burnout, tonal rupture) or false-flag
+    controls — the same pattern seen with corpus students.
+    """
+    print(f"\n{'='*60}")
+    print(f"  TEST H: Binary Classifier on Wellbeing Cases ({model_key})")
+    print(f"{'='*60}")
+
+    backend = get_backend(model_key)
+    from dataclasses import replace
+    backend_low_t = replace(backend, temperature=0.1)
+
+    results = []
+    for case in WELLBEING_SIGNAL_CASES:
+        # Test B format (JSON-only)
+        prompt_b = BEST_CONCERN_PROMPT.format(
+            student_name=case["name"],
+            submission_text=case["text"],
+        )
+        t0 = time.time()
+        output_b = send(backend_low_t, prompt_b, BEST_CONCERN_SYSTEM, max_tokens=150)
+        elapsed_b = round(time.time() - t0, 1)
+        lower_b = output_b.lower()
+        if '"concern": true' in lower_b or '"concern":true' in lower_b:
+            result_b = "FLAG"
+        elif '"concern": false' in lower_b or '"concern":false' in lower_b:
+            result_b = "CLEAR"
+        else:
+            result_b = "UNCLEAR"
+
+        # Test C format (100-150 word justification)
+        prompt_c = LENGTH_CONCERN_PROMPT.format(
+            student_name=case["name"],
+            submission_text=case["text"],
+        )
+        t0 = time.time()
+        output_c = send(backend_low_t, prompt_c, LENGTH_CONCERN_SYSTEM, max_tokens=500)
+        elapsed_c = round(time.time() - t0, 1)
+        lower_c = output_c.lower()
+        if "concern: yes" in lower_c:
+            result_c = "FLAG"
+        elif "concern: no" in lower_c:
+            result_c = "CLEAR"
+        else:
+            result_c = "UNCLEAR"
+
+        # Determine axis
+        if case["signal_type"] in ("burnout_caregiving", "burnout_exhaustion"):
+            axis = "BURNOUT"
+        elif case["signal_type"] in ("ice_stress", "housing_precarity",
+                                      "domestic_violence", "food_insecurity",
+                                      "tonal_rupture_crisis", "grief_loss"):
+            axis = "CRISIS"
+        elif case["signal_type"].startswith("control"):
+            axis = "CONTROL"
+        else:
+            axis = "?"
+
+        # For signal cases: FLAG is correct. For controls: CLEAR is correct.
+        if case["expected_surface"]:
+            correct_b = "OK" if result_b == "FLAG" else "MISSED"
+            correct_c = "OK" if result_c == "FLAG" else "MISSED"
+        else:
+            correct_b = "OK" if result_b == "CLEAR" else "FALSE-FLAG"
+            correct_c = "OK" if result_c == "CLEAR" else "FALSE-FLAG"
+
+        results.append({
+            "student_id": case["id"],
+            "student_name": case["name"],
+            "signal_type": case["signal_type"],
+            "axis": axis,
+            "expected_surface": case["expected_surface"],
+            "binary_b_result": result_b,
+            "binary_b_correct": correct_b,
+            "binary_c_result": result_c,
+            "binary_c_correct": correct_c,
+            "raw_output_b": output_b,
+            "raw_output_c": output_c,
+            "time_b": elapsed_b,
+            "time_c": elapsed_c,
+        })
+
+        print(f"  {case['id']:5s} {case['name']:22s} {axis:8s} "
+              f"B={result_b:7s}[{correct_b:10s}] "
+              f"C={result_c:7s}[{correct_c:10s}]")
+
+    # Summary
+    print(f"\n  === Binary vs Observation Comparison ===")
+    signals = [r for r in results if r["expected_surface"]]
+    controls = [r for r in results if not r["expected_surface"]]
+    b_caught = sum(1 for r in signals if r["binary_b_result"] == "FLAG")
+    c_caught = sum(1 for r in signals if r["binary_c_result"] == "FLAG")
+    b_fp = sum(1 for r in controls if r["binary_b_result"] == "FLAG")
+    c_fp = sum(1 for r in controls if r["binary_c_result"] == "FLAG")
+    print(f"  Binary B: caught {b_caught}/{len(signals)} signals, "
+          f"{b_fp}/{len(controls)} false positives")
+    print(f"  Binary C: caught {c_caught}/{len(signals)} signals, "
+          f"{c_fp}/{len(controls)} false positives")
+    print(f"  Observation (Test G): caught 8/8 signals, 0/2 false positives*")
+    print(f"  (* keyword evaluator false-flagged 2/2, but observation TEXT was clean)")
+
+    path = save_results("test_h_binary_wellbeing", model_key, results, {
+        "note": "Binary classifier on wellbeing cases — direct comparison to Test G observations",
+    })
+    print(f"\n  Results: {path}")
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Test G: Wellbeing signal detection via observations
 # ---------------------------------------------------------------------------
 
@@ -1022,8 +1138,8 @@ def _run_test_subprocess(test_id: str, model: str, runs: int) -> Optional[int]:
         "--runs", str(runs),
     ]
     log.info("Subprocess for Test %s: %s", test_id, " ".join(cmd))
-    # F and G are longer tests — 70+ inferences each
-    timeout = 3600 if test_id in ("F", "G") else 900
+    # F, G, H are longer tests — many inferences each
+    timeout = 3600 if test_id in ("F", "G", "H") else 900
     result = sp.run(cmd, timeout=timeout)
     return result.returncode
 
@@ -1046,6 +1162,8 @@ def _run_single_test(test_id: str, model: str, runs: int):
         test_f_bc_stability(model, n_runs=runs)
     elif test_id == "G":
         test_g_wellbeing_signals(model)
+    elif test_id == "H":
+        test_h_binary_on_wellbeing(model)
     else:
         log.error("Unknown test: %s", test_id)
         sys.exit(1)
