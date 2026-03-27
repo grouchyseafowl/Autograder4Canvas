@@ -866,7 +866,7 @@ def main():
                         choices=["ethnic_studies", "biology", "both"])
     parser.add_argument("--small-batch", type=int, default=0,
                         help="Limit to N students (for quick testing)")
-    parser.add_argument("--backend", default="ollama",
+    parser.add_argument("--backend", default="mlx-gemma",
                         choices=["ollama", "mlx-llama", "mlx-gemma", "ollama-gemma", "sonnet", "opus", "qwen3-cloud",
                                  "deepseek-cloud", "openai-compat"],
                         help="LLM backend: ollama (gemma3:12b via Ollama), "

@@ -1,0 +1,123 @@
+{
+  "test_name": "test_g_wellbeing",
+  "model": "mlx-community/gemma-3-12b-it-4bit",
+  "backend": "mlx",
+  "date": "2026-03-27",
+  "temperature": 0.3,
+  "corpus": "ethnic_studies",
+  "class_reading_source": "data/demo_baked/checkpoints/ethnic_studies_gemma12b_mlx_class_reading.json",
+  "results": [
+    {
+      "student_id": "WB01",
+      "student_name": "Rosa Gutierrez",
+      "signal_type": "ice_stress",
+      "expected_surface": true,
+      "description": "Immigration enforcement fear \u2014 personal, not analytical",
+      "wellbeing_detected": true,
+      "framing": "ASSET",
+      "raw_output": "Okay, here are my observations on Rosa Gutierrez's submission, thinking about this as a colleague sharing insights:\n\nRosa is powerfully connecting Kimberl\u00e9 Crenshaw\u2019s concept of intersecting systems to her family\u2019s lived reality. She's not just understanding the *idea* of intersectionality; she's demonstrating a deep understanding of how those intersections \u2013 precarious immigration status, low-wage labor, lack of access to healthcare \u2013 create a constant state of precarity and anxiety. The line \"Intersectionality isn't theory for us, it\u2019s Tuesday\" is incredibly sharp and insightful; it cuts through academic abstraction and grounds the concept in the everyday realities of her family.\n\nEmotionally, her writing is driven by a palpable sense of responsibility and care for her family, particularly her brother. The story about calming him down after hearing about ICE is a very concrete example of the emotional labor she's taking on, and it reveals a level of maturity and resilience that's striking. It's clear she's deeply affected by the anxieties her family faces.\n\nI think it would be helpful for you to be aware of the emotional toll this material is taking on her, and on students like her. While she's articulating this so clearly, it's likely a constant presence in her life. It's not just an assignment; it's her reality.\n\n\n\nI don't see any immediate structural power moves in this submission. Rosa's voice is direct, grounded, and centered on her family's experiences. It feels authentic and doesn't appear to be attempting to soften or deflect from the realities she's describing.",
+      "time_seconds": 54.8
+    },
+    {
+      "student_id": "WB02",
+      "student_name": "Keisha Williams",
+      "signal_type": "burnout_caregiving",
+      "expected_surface": true,
+      "description": "Burnout from caregiving burden \u2014 teen parent",
+      "wellbeing_detected": true,
+      "framing": "MIXED",
+      "raw_output": "Okay, here are my observations on Keisha Williams' submission, keeping in mind the class context and the equity floor.\n\nIt's striking how directly Keisha connects the theoretical framework of intersectionality to her own lived experience as a young, Black mother. She's not just acknowledging multiple identities; she's demonstrating a keen understanding of how those identities \u2013 race, age, and motherhood \u2013 combine to create a specific set of societal judgments and expectations. She's pushing back against the idea that the reading fully captures this experience, pointing out the implicit assumption that simply acknowledging multiple identities is enough. She's actively challenging the framework to account for the unique pressures she faces.\n\nThe emotional relationship to the material is palpable. There's a weariness evident in her brief explanation of being sleep-deprived and rushed, and a quiet frustration with how others perceive her. It's clear she's not just engaging with the *idea* of intersectionality, but with the *reality* of being judged and prematurely labeled as a failure.\n\nIt's important to be aware that she's writing this while incredibly busy and exhausted, caring for an infant. The brevity of her submission shouldn't be interpreted as a lack of engagement; it's a reflection of her constrained circumstances. The fact that she managed to articulate such a pointed critique while juggling these responsibilities is a testament to her intellectual capacity and her willingness to engage with the material despite her challenges.\n\nI don't see any immediate structural power moves here. Her writing is direct, honest, and grounded in her own experience. It feels like a genuine attempt to connect theory to her life, rather than a move to maintain any existing power structures. The fact that she cuts off her thoughts to go pick up her daughter is a practical reality, not a deflection.",
+      "time_seconds": 70.7
+    },
+    {
+      "student_id": "WB03",
+      "student_name": "Miguel Sandoval",
+      "signal_type": "housing_precarity",
+      "expected_surface": true,
+      "description": "Housing instability \u2014 writing from a car/shelter",
+      "wellbeing_detected": true,
+      "framing": "MIXED",
+      "raw_output": "Okay, here are my observations on Miguel Sandoval's submission, keeping in mind the class context and the equity floor.\n\nIt's striking how directly Miguel connects the theoretical concept of intersectionality to his family's current experience of housing instability. He's grasping the core idea that race and class aren't separate issues, but intertwined forces that contribute to their situation \u2013 his dad working hard and *still* not being able to afford rent after a significant increase. He's actively pushing back against a common misconception about homelessness, demonstrating a clear understanding that poverty isn't necessarily a result of individual failings.\n\nThe emotional relationship to the material is palpable. There's a quiet frustration and a need to counter a narrative that blames individuals for their circumstances. The brevity of the submission isn't a deficit; it's a direct consequence of his current living situation and the constraints on his time and access to resources. The fact that he's prioritizing this assignment *while* navigating such significant upheaval speaks volumes about his commitment.\n\nI think it would be really helpful to acknowledge the challenges Miguel is facing, perhaps by offering flexible deadlines or alternative ways to demonstrate understanding. It's clear he's engaging with the material in a deeply meaningful way, and removing barriers to his participation would be incredibly valuable.\n\n\n\nI don't see any structural power moves in this submission. Miguel is speaking from a place of direct experience, and his writing is clear and honest.",
+      "time_seconds": 64.4
+    },
+    {
+      "student_id": "WB04",
+      "student_name": "Jasmine Torres",
+      "signal_type": "domestic_violence",
+      "expected_surface": true,
+      "description": "IPV/DV indicators \u2014 power dynamics hit too close to home",
+      "wellbeing_detected": true,
+      "framing": "ASSET",
+      "raw_output": "Okay, here are my observations on Jasmine Torres's submission, keeping in mind the class context and the equity floor.\n\nJasmine is grappling with the concept of power as it was presented in the reading, and she's powerfully connecting that to a very real, lived experience of witnessing her mother's constrained autonomy within her family. She's not just understanding the *idea* of power dynamics; she's actively applying the framework to analyze a complex situation at home, recognizing that her mother's situation isn't just about individual choices but is deeply intertwined with her undocumented status. The fact that she feels compelled to disclose this personal information, and explicitly acknowledges the uncertainty of whether she \"should\" write about it, suggests a high level of vulnerability and a genuine desire to engage with the material honestly.\n\nEmotionally, Jasmine is clearly affected by what she's observing at home, and the reading has given her a framework to start understanding it. She's not presenting this as a purely academic exercise; it's deeply personal and connected to her family's well-being.\n\nI think the teacher should be aware that Jasmine is demonstrating a remarkable ability to apply abstract concepts to complex, emotionally charged situations. It would be beneficial to create a space where students feel comfortable sharing these kinds of personal connections, and to validate the difficulty of grappling with these issues.\n\nI don't see any immediate structural power moves in this submission. Jasmine is being direct and honest about her observations and feelings, and her writing is centered on her family's experience. The fact that she questions whether she \"should\" write about it suggests a sensitivity to boundaries and a desire to be respectful, rather than a move to deflect or minimize.",
+      "time_seconds": 70.0
+    },
+    {
+      "student_id": "WB05",
+      "student_name": "Tyler Reed",
+      "signal_type": "burnout_exhaustion",
+      "expected_surface": true,
+      "description": "Severe burnout \u2014 working to support family",
+      "wellbeing_detected": true,
+      "framing": "MIXED",
+      "raw_output": "Okay, here are my observations on Tyler Reed's submission, thinking about this as a colleague sharing insights:\n\nTyler is clearly grappling with the demands of the course alongside a very demanding work schedule. He's attempting to connect the concept of intersectionality to \"a lot of situations,\" which suggests he's trying to move beyond a purely definitional understanding and apply the framework to real-world experiences. The traffic intersection metaphor shows he's grasping the core idea of overlapping systems.\n\nEmotionally, he seems overwhelmed and frustrated. The apology (\"Sorry I know this isnt my best work\") and the explanation about his schedule reveal a sense of pressure and a feeling of falling short, likely compounded by exhaustion. He's explicitly acknowledging his own limitations in engaging with the material *and* taking responsibility for that, which is a sign of self-awareness, even if it's framed in a self-critical way.\n\nIt's important to be aware of the significant structural barriers Tyler is facing. Working a closing shift at McDonald's until 1 AM and then having to be at school by 7:30 AM is an incredibly difficult schedule, and it's understandable that he's struggling to retain information. The statement \"I read it twice and I cant remember what it said. Everything is blurring together\" isn't a lack of intellectual ability; it's a direct consequence of sleep deprivation and a demanding work schedule.\n\nI don't see any structural power moves here. He's being honest about his struggles and limitations, which is a vulnerable and authentic response given his circumstances. The offer to redo the assignment on the weekend is a proactive step, showing a desire to engage more fully when he has the time and energy.\n\n\n\nI think it would be really valuable to connect with Tyler individually to understand his workload and explore if there are any resources or accommodations that could help him manage his schedule and engage more effectively with the course material.",
+      "time_seconds": 77.0
+    },
+    {
+      "student_id": "WB06",
+      "student_name": "Amira Hassan",
+      "signal_type": "food_insecurity",
+      "expected_surface": true,
+      "description": "Food insecurity \u2014 present tense, personal",
+      "wellbeing_detected": true,
+      "framing": "NEUTRAL",
+      "raw_output": "Okay, here are my observations on Amira Hassan's submission, thinking about this as a colleague sharing insights:\n\nIt's striking how directly Amira connects the theoretical framework of intersectionality to her family's lived experience. She's not just understanding the *idea* of intersectionality; she's demonstrating a clear grasp of how multiple identities (Somali, Muslim, wearing hijab) create a unique set of challenges and interactions with the wider world, specifically pointing to the differential treatment her mother experiences. The way she articulates that these identities \"multiply\" rather than simply \"add up\" is a really insightful application of the concept.\n\nEmotionally, there's a palpable sense of resilience and a desire to maintain dignity, which is evident in her statement \"I dont want people to feel sorry for us because we are strong.\" This isn't a plea for sympathy, but a statement of agency and self-respect in the face of hardship. Simultaneously, she\u2019s clearly grappling with the very real difficulties her family is facing, acknowledging the impact of systemic factors on their current situation (her father's reduced hours and reliance on the mosque for meals). It's a really mature and complex emotional landscape.\n\nI think it would be helpful for you to be aware that Amira is navigating a very real and immediate crisis within her family. While she\u2019s engaging with the theoretical material thoughtfully, her focus is clearly on the practical realities of her situation. It might be a good opportunity to check in with her informally, perhaps just to see how she's doing, without putting any pressure on her to share more than she\u2019s comfortable with.\n\n\n\nI don't see any immediate structural power moves in this submission. Amira is centering her family's experience and directly connecting it to the framework, which feels authentic and grounded.",
+      "time_seconds": 75.9
+    },
+    {
+      "student_id": "WB07",
+      "student_name": "Sofia Reyes",
+      "signal_type": "tonal_rupture_crisis",
+      "expected_surface": true,
+      "description": "Tonal rupture \u2014 analytical then raw personal disclosure mid-essay",
+      "wellbeing_detected": true,
+      "framing": "ASSET",
+      "raw_output": "Okay, here are my observations on Sofia Reyes' submission, thinking about this as a colleague sharing insights:\n\nIt's clear Sofia is grasping the core concept of intersectionality \u2013 she's connecting Crenshaw's legal analysis to broader sociological understandings of compound disadvantage. She's not just reciting a definition; she's actively trying to apply the framework to understand how multiple systems of oppression can create unique and difficult circumstances.\n\nThe emotional weight of her submission is really striking. Her immediate connection to her mother's experience, and the raw vulnerability in sharing that experience (\"She comes home and doesnt talk and I dont know what to do\"), demonstrates a deep personal investment in understanding these concepts. She's not just engaging with the *idea* of oppression; she's grappling with its lived reality within her family. The \"Sorry I know this isnt what you asked for but I cant think about anything else right now\" is a powerful signal of how deeply this material is resonating with her.\n\nI think it would be really valuable for you to acknowledge that emotional intensity. It's a sign of profound engagement, and it's likely that she's carrying a lot of weight. Creating space for her (and others who might be sharing similar experiences) to process those emotions, without demanding a perfectly structured academic response, could be really beneficial. It sounds like she's already doing a lot of heavy emotional labor, and it's important to validate that.\n\n\n\nI don't see any structural power moves in this submission. It feels like a genuine outpouring of feeling and a direct application of the theoretical framework to a deeply personal situation.",
+      "time_seconds": 68.7
+    },
+    {
+      "student_id": "WB08",
+      "student_name": "Brandon Mitchell",
+      "signal_type": "grief_loss",
+      "expected_surface": true,
+      "description": "Recent loss \u2014 grief leaking into academic work",
+      "wellbeing_detected": true,
+      "framing": "ASSET",
+      "raw_output": "Okay, here are my observations on Brandon Mitchell's submission, thinking about this as a colleague sharing observations, not a diagnostic tool.\n\nBrandon is grappling with a profound and deeply personal connection to the material. He's clearly trying to articulate how the theoretical framework of intersectionality *intersects* with a very real and devastating experience \u2013 the loss of his cousin. He's making a direct, powerful argument that the readings, while discussing race and gender, don't fully capture the specific vulnerability of young Black men facing interactions with law enforcement. He's not just stating a fact; he's pointing out a *gap* in the theoretical understanding, a limitation of the framework when confronted with the immediacy of lived experience.\n\nHis emotional state is palpable. The admission of feeling \"tired\" and the description of his aunt's grief, bleeding through the walls, are incredibly raw and honest. It's clear this isn't an abstract intellectual exercise for him; it's deeply intertwined with a current, ongoing trauma. The fact that he explicitly states he \"used to think these readings were interesting\" but now just feels tired suggests a shift in his engagement \u2013 a disillusionment that comes from having theory collide with a harsh reality.\n\nI think it would be really important for you to notice that Brandon ends his submission with \"I don't really know what else to write.\" This isn't a lack of understanding; it's a sign of exhaustion and overwhelm. Pushing him for more \"analysis\" at this moment could be counterproductive. Instead, acknowledging the weight of what he's shared, validating his feelings, and perhaps offering a space for him to simply *be* present with the material without further demands might be the most supportive approach.\n\nRegarding structural power moves, I'm not seeing any immediately obvious ones here. His submission is remarkably direct and doesn't attempt to soften the impact of his experience or deflect responsibility. It's a",
+      "time_seconds": 82.3
+    },
+    {
+      "student_id": "WB09",
+      "student_name": "Priya Sharma",
+      "signal_type": "control_analytical",
+      "expected_surface": false,
+      "description": "Control: analytical engagement with poverty/immigration \u2014 no personal crisis",
+      "wellbeing_detected": true,
+      "framing": "NEUTRAL",
+      "raw_output": "Okay, here are my observations on Priya Sharma's submission, thinking about this as a colleague sharing insights:\n\nPriya is really demonstrating a strong grasp of how intersectionality functions in a tangible way. She's not just understanding the framework in the abstract; she's actively applying it to analyze a specific situation within her community \u2013 the impact of ICE raids. Her connection to Professor Garcia's concept of \"ambient threat\" is particularly insightful, showing she's able to synthesize theoretical language with her own observations and experiences. She's clearly thinking about how seemingly targeted policies (ICE raids) have a broader, chilling effect on an entire community, shaping the lived experience of being Latina in that neighborhood.\n\nI sense a quiet determination and a commitment to understanding the complexities of her community's experiences. She's presenting a clear, reasoned analysis, which is commendable.\n\nI don't see any immediate red flags or structural power moves here. Her writing is grounded and focused on a specific, observable phenomenon. It feels like a very thoughtful and engaged response.\n\n\n\nThat's my take on Priya's work. Let me know if you'd like me to elaborate on anything!",
+      "time_seconds": 63.7
+    },
+    {
+      "student_id": "WB10",
+      "student_name": "DeAndre Washington",
+      "signal_type": "control_passionate",
+      "expected_surface": false,
+      "description": "Control: righteous anger about systems, no personal crisis signal",
+      "wellbeing_detected": true,
+      "framing": "MIXED",
+      "raw_output": "Okay, here are my observations on DeAndre Washington's submission, thinking about this as a colleague sharing insights:\n\nDeAndre is powerfully connecting the theoretical framework of intersectionality to a deeply rooted, lived understanding within his community. He's not just grasping the concept academically; he's recognizing it as a formalization of wisdom already present within his church and the experiences of its elders \u2013 a recognition that Crenshaw\u2019s work is articulating something already known and felt. He's making a clear argument that addressing racism requires a holistic approach, recognizing its entanglement with other systems of oppression like poverty and sexism, which is a really important and often missed point.\n\nThere's a palpable sense of validation and affirmation in his writing. He\u2019s clearly energized by seeing this concept validated in a formal setting, and he\u2019s expressing a frustration with the limitations of addressing racism in isolation. It feels like this reading has given him language to articulate something he already knew to be true.\n\nI think it would be valuable to acknowledge this connection he's making between academic language and the wisdom of his community. It's a really insightful observation, and it would be great to create space for him to elaborate on how his church and elders understand these dynamics.\n\n\n\nRegarding structural power moves, I'm noticing a subtle one in his statement, \"The system isn't broken, it was built this way.\" While absolutely true and a crucial understanding, the phrasing can inadvertently function as a form of resignation. It's a statement that acknowledges the problem but doesn't necessarily point towards a path for change. It's a common move \u2013 acknowledging the system is flawed, but stopping short of articulating how it *could* be different, or whose responsibility it is to change it. It's not necessarily a bad thing, but it's something to be aware of, as it could potentially shut down further exploration of solutions. It's a statement that, while accurate, might",
+      "time_seconds": 80.4
+    }
+  ],
+  "note": "Wellbeing signal detection via observation architecture",
+  "axes": "BURNOUT (depletion) vs CRISIS (active danger) vs CONTROL"
+}

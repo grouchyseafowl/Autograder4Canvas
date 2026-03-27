@@ -269,13 +269,29 @@ def unload_mlx_model() -> None:
     """
     if hasattr(_mlx_text_inner, "_cache") and _mlx_text_inner._cache:
         log.info("Unloading MLX model(s) to free Metal memory...")
+        # Explicitly delete model/tokenizer references before clearing the dict.
+        # This ensures Python refcounts drop to zero so Metal buffers are released
+        # when gc.collect() runs, rather than lingering until the dict is reaped.
+        for key in list(_mlx_text_inner._cache.keys()):
+            model, tokenizer = _mlx_text_inner._cache.pop(key)
+            del model, tokenizer
         _mlx_text_inner._cache.clear()
+        import gc
+        gc.collect()
         try:
             import mlx.core as mx
+            # Flush the Metal cache after gc has dropped all array references.
             (mx.clear_cache if hasattr(mx, "clear_cache") else mx.metal.clear_cache)()
+            # Temporarily set cache limit to 0 to force Metal to release all
+            # reclaimable buffers, then restore.  On MLX versions without
+            # set_cache_limit this is a no-op.
+            _set_limit = getattr(mx, "set_cache_limit",
+                                   getattr(mx.metal, "set_cache_limit", None))
+            if _set_limit:
+                _set_limit(0)
+                _set_limit(2 ** 31)  # restore ~2 GB default
         except Exception:
             pass
-        import gc
         gc.collect()
         log.info("MLX model unloaded.")
 
