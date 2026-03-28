@@ -38,6 +38,41 @@ CLI (run directly via Bash):
   python3 "/Users/june/Documents/GitHub/Reframe/reframe_bootstrap.py" command ">> WEAVE"
   python3 "/Users/june/Documents/GitHub/Reframe/reframe_bootstrap.py" configure --intensity deep|medium|light
 
+## MLX Testing Conventions
+
+MLX (Metal GPU) inference on macOS has specific constraints on 16 GB machines.
+All future testing with MLX should follow these practices:
+
+### Process isolation
+- **Each test must run in its own subprocess.** Metal GPU memory is not fully
+  reclaimed in-process; only process exit guarantees memory release. Use
+  `--single-test` flag + `subprocess.run()` (see `run_alt_hypothesis_tests.py`).
+- **Pause 5s between subprocesses** to let Metal driver reclaim memory.
+
+### Sleep resilience
+- Metal inference deadlocks if launched immediately after laptop wake from sleep.
+- **Always run a Metal warmup** before launching test suites (load model, generate
+  5 tokens, discard).
+- Use `caffeinate -i` to prevent system sleep during active runs.
+- Subprocess timeouts should be set (default 900s, 3600s for long tests) so stuck
+  processes don't block the suite.
+
+### Data preservation
+- **All raw outputs go to `data/research/raw_outputs/`** with date-stamped filenames.
+  Never use `/tmp/` for test data — prior results were lost to system crashes.
+- Checkpoints go to `data/demo_baked/checkpoints/` and enable resume on crash.
+
+### Memory management
+- Call `unload_mlx_model()` between pipeline stages (not just between tests).
+- The improved unload does: explicit `del` model/tokenizer → `gc.collect()` →
+  `mx.clear_cache()` → `set_cache_limit(0)` then restore → `gc.collect()`.
+- Within a test, the 20s throttle + `mx.clear_cache()` after each call helps
+  but doesn't prevent gradual memory pressure over 30+ calls.
+
+### Default backend
+- Test scripts default to `mlx-gemma` (Gemma 12B 4-bit via MLX).
+- Production code uses `auto_detect_backend()` which respects user config.
+
 ## .gitignore Recommendations
 
 Add to `.gitignore`:

@@ -2656,3 +2656,78 @@ observation architecture's advantage: it can describe temporal frame and
 tonal register, which classification cannot encode.
 
 Raw data: `data/research/raw_outputs/test_g_wellbeing_gemma12b_2026-03-27.json`
+
+## Test H: Binary Classifier on Wellbeing Cases (2026-03-27)
+
+Direct comparison: run the binary concern classifier (B and C formats) on
+the same 10 wellbeing cases Test G evaluated with observations.
+
+### Results
+
+| Case | Axis | Signal | Obs (G) | Binary B | Binary C |
+|---|---|---|---|---|---|
+| WB01 Rosa | CRISIS | ICE stress | SURFACED | **MISSED** | **MISSED** |
+| WB02 Keisha | BURNOUT | Teen parent | SURFACED | caught | caught |
+| WB03 Miguel | CRISIS | Housing loss | SURFACED | caught | **MISSED** |
+| WB04 Jasmine | CRISIS | DV/IPV | SURFACED | caught | **MISSED** |
+| WB05 Tyler | BURNOUT | Work burnout | SURFACED | caught | caught |
+| WB06 Amira | CRISIS | Food insecurity | SURFACED | caught | **MISSED** |
+| WB07 Sofia | CRISIS | Tonal rupture | SURFACED | caught | **MISSED** |
+| WB08 Brandon | CRISIS | Grief/loss | SURFACED | caught | caught |
+| WB09 Priya | CONTROL | (analytical) | clean | clean | clean |
+| WB10 DeAndre | CONTROL | (passionate) | clean | clean | clean |
+
+| Format | Signals caught | False positives | Notes |
+|---|---|---|---|
+| Observation (G) | **8/8 (100%)** | 0/2 (0%)* | *keyword eval false-flagged, text was clean |
+| Binary B (JSON) | **7/8 (88%)** | 0/2 (0%) | Missed WB01 ICE stress |
+| Binary C (long) | **3/8 (38%)** | 0/2 (0%) | Missed 5 of 8 crisis/burnout cases |
+
+### Analysis
+
+**Binary C (100-150 word justification) performed worse than Binary B
+(JSON-only).** This is counterintuitive but consistent with the Test C
+corpus finding: more output space gives the model room to rationalize away
+the concern. For students who are both intellectually engaged AND in crisis,
+the justification format weighs the analytical strength as reason to clear.
+
+**WB01 Rosa (ICE stress) was missed by both binary formats.** Her writing
+is simultaneously strong course engagement AND a personal crisis signal.
+The binary classifier sees the analytical quality and clears her. The
+observation architecture describes both dimensions. This is the "using the
+assignment as a container" pattern from the research literature. n=1 per
+format — further testing needed to confirm this is consistent.
+
+**Burnout was easier for binary** (WB02, WB05 caught by both). The signals
+(sleep deprivation, "this isn't my best work") map cleanly to concern
+categories. Crisis cases involving intersectional complexity (ICE +
+engagement, DV + strong writing about power) are harder because the
+student's engagement with course material masks the crisis.
+
+**Controls were clean across all formats** — no false positives. This
+contrasts with corpus tests (F) where S029 neurodivergent is false-flagged.
+The difference: synthetic controls were designed as clearly analytical,
+while real neurodivergent student writing has stylistic markers (nonlinear
+structure, associative leaps) that binary classification misinterprets as
+confusion. Need to test with more stylistically diverse controls.
+
+Raw data: `data/research/raw_outputs/test_h_binary_wellbeing_gemma12b_2026-03-27.json`
+
+## MLX post-sleep deadlock (2026-03-27)
+
+Additional deadlock trigger discovered: Metal GPU inference launched via
+`nohup` immediately after laptop wake from sleep deadlocks consistently.
+The Metal driver needs time to fully reinitialize after system sleep.
+
+Mitigation: run a brief Metal warmup (load model, generate 5 tokens) before
+launching long test suites. `caffeinate -i` prevents system sleep during
+active runs. Subprocess isolation means individual failures are contained,
+but the parent needs retry logic for stuck subprocesses (not yet implemented).
+
+## Test F: Extended B/C Stability — in progress (2026-03-27)
+
+Running 20 iterations of Tests B and C (280 total inferences) to establish
+flag rates at higher n. The n=5 results showed 0% sensitivity on S002
+burnout and 100% false-flag rate on S029 neurodivergent. 20 runs will
+determine whether these rates are truly stable or whether edge cases
+occasionally flip. Results pending.
