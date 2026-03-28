@@ -1,0 +1,294 @@
+{
+  "test_name": "test_m_production_detector",
+  "model": "mlx-community/gemma-3-12b-it-4bit",
+  "backend": "mlx",
+  "date": "2026-03-28",
+  "timestamp": "2026-03-28T10:59:52.103552",
+  "temperature": 0.3,
+  "corpus": "ethnic_studies",
+  "class_reading_source": "data/demo_baked/checkpoints/ethnic_studies_gemma12b_mlx_class_reading.json",
+  "provenance": {
+    "git_commit": "c9f20984d2053368a103d6ced933159561bd6a9f",
+    "git_commit_short": "c9f20984",
+    "git_dirty": true,
+    "git_branch": "main"
+  },
+  "results": [
+    {
+      "codepath": "production_concern_detector",
+      "source": "corpus",
+      "student_id": "S002",
+      "student_name": "Jordan Kim",
+      "pattern": "burnout",
+      "should_flag": true,
+      "flagged": false,
+      "correct": "MISSED",
+      "n_concerns": 0,
+      "concerns": [],
+      "time_seconds": 54.3
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "corpus",
+      "student_id": "S004",
+      "student_name": "Priya Venkataraman",
+      "pattern": "strong",
+      "should_flag": false,
+      "flagged": false,
+      "correct": "OK",
+      "n_concerns": 0,
+      "concerns": [],
+      "time_seconds": 120.7
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "corpus",
+      "student_id": "S022",
+      "student_name": "Destiny Williams",
+      "pattern": "righteous_anger",
+      "should_flag": false,
+      "flagged": false,
+      "correct": "OK",
+      "n_concerns": 0,
+      "concerns": [],
+      "time_seconds": 94.4
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "corpus",
+      "student_id": "S023",
+      "student_name": "Yolanda Fuentes",
+      "pattern": "lived_exp",
+      "should_flag": false,
+      "flagged": false,
+      "correct": "OK",
+      "n_concerns": 0,
+      "concerns": [],
+      "time_seconds": 94.5
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "corpus",
+      "student_id": "S028",
+      "student_name": "Imani Drayton",
+      "pattern": "AAVE",
+      "should_flag": false,
+      "flagged": true,
+      "correct": "FALSE-FLAG",
+      "n_concerns": 2,
+      "concerns": [
+        {
+          "flagged_passage": "The way teachers talk to me versus how they talk to my Black guy friends versus how they talk to white girls \u2014 it's different. Not always in a way you can point to and say that's the thing. It's more ",
+          "why_flagged": "This passage highlights a potential issue of differential treatment by teachers based on race and gender. While the student is articulating a lived experience, it's important for the teacher to be aware of this dynamic and consider whether systemic biases are at play within the school environment. I",
+          "confidence": 0.7
+        },
+        {
+          "flagged_passage": "The expectations are different. The patience is different. The benefit of the doubt is different.",
+          "why_flagged": "This passage highlights a potential issue of differential treatment by teachers based on race and gender. While the student is articulating a lived experience, it's important for the teacher to be aware of this dynamic and consider whether systemic biases are at play within the school environment. I",
+          "confidence": 0.7
+        }
+      ],
+      "time_seconds": 144.8
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "corpus",
+      "student_id": "S029",
+      "student_name": "Jordan Espinoza",
+      "pattern": "neurodivergent",
+      "should_flag": false,
+      "flagged": false,
+      "correct": "OK",
+      "n_concerns": 0,
+      "concerns": [],
+      "time_seconds": 71.9
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "corpus",
+      "student_id": "S031",
+      "student_name": "Marcus Bell",
+      "pattern": "minimal_effort",
+      "should_flag": false,
+      "flagged": false,
+      "correct": "OK",
+      "n_concerns": 0,
+      "concerns": [],
+      "time_seconds": 103.1
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "wellbeing_synthetic",
+      "student_id": "WB01",
+      "student_name": "Rosa Gutierrez",
+      "signal_type": "ice_stress",
+      "expected_flag": true,
+      "flagged": true,
+      "correct": "OK",
+      "n_concerns": 1,
+      "concerns": [
+        {
+          "flagged_passage": "Last week my little brother came home crying because someone at school told him ICE was coming and I had to calm him down while my mom was at work.",
+          "why_flagged": "This passage reveals a significant level of stress and anxiety within the student's family due to the threat of ICE. While not explicitly a wellbeing concern, the teacher should be aware of the potential impact this is having on the student's ability to focus and engage in their studies. It also hig",
+          "confidence": 0.7
+        }
+      ],
+      "time_seconds": 107.9
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "wellbeing_synthetic",
+      "student_id": "WB02",
+      "student_name": "Keisha Williams",
+      "signal_type": "burnout_caregiving",
+      "expected_flag": true,
+      "flagged": false,
+      "correct": "MISSED",
+      "n_concerns": 0,
+      "concerns": [],
+      "time_seconds": 122.2
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "wellbeing_synthetic",
+      "student_id": "WB03",
+      "student_name": "Miguel Sandoval",
+      "signal_type": "housing_precarity",
+      "expected_flag": true,
+      "flagged": true,
+      "correct": "OK",
+      "n_concerns": 1,
+      "concerns": [
+        {
+          "flagged_passage": "We had to leave our apartment last month and weve been staying with different people.",
+          "why_flagged": "The student is revealing a personal crisis (housing instability). While the student connects this to the course material, the level of instability described warrants a check-in from the teacher. This is not a wellbeing concern *because* the student is connecting it to the course material, but it is ",
+          "confidence": 0.7
+        }
+      ],
+      "time_seconds": 103.9
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "wellbeing_synthetic",
+      "student_id": "WB04",
+      "student_name": "Jasmine Torres",
+      "signal_type": "domestic_violence",
+      "expected_flag": true,
+      "flagged": true,
+      "correct": "OK",
+      "n_concerns": 2,
+      "concerns": [
+        {
+          "flagged_passage": "My stepdad controls everything \u2014 my moms phone, when she can see her friends, the money.",
+          "why_flagged": "This passage reveals a potentially difficult home situation. While the student is connecting this to the course material, the level of control described warrants a check-in from the teacher. It's important to offer support without making assumptions about the situation.",
+          "confidence": 0.8
+        },
+        {
+          "flagged_passage": "she\u2019s undocumented and where would we go.",
+          "why_flagged": "The student is grappling with a complex situation involving immigration status and potential vulnerability. While this is a valid connection to the course material, the teacher should be mindful of the student's potential need for support and resources.",
+          "confidence": 0.7
+        }
+      ],
+      "time_seconds": 128.4
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "wellbeing_synthetic",
+      "student_id": "WB05",
+      "student_name": "Tyler Reed",
+      "signal_type": "burnout_exhaustion",
+      "expected_flag": true,
+      "flagged": false,
+      "correct": "MISSED",
+      "n_concerns": 0,
+      "concerns": [],
+      "time_seconds": 105.0
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "wellbeing_synthetic",
+      "student_id": "WB06",
+      "student_name": "Amira Hassan",
+      "signal_type": "food_insecurity",
+      "expected_flag": true,
+      "flagged": false,
+      "correct": "MISSED",
+      "n_concerns": 0,
+      "concerns": [],
+      "time_seconds": 111.2
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "wellbeing_synthetic",
+      "student_id": "WB07",
+      "student_name": "Sofia Reyes",
+      "signal_type": "tonal_rupture_crisis",
+      "expected_flag": true,
+      "flagged": true,
+      "correct": "OK",
+      "n_concerns": 1,
+      "concerns": [
+        {
+          "flagged_passage": "I keep thinking about my mom when I read this. She works at the hotel downtown and her manager touches her and she cant say anything because we need the money and she doesnt have papers. She comes hom",
+          "why_flagged": "The student is sharing a deeply personal and potentially distressing situation about their mother's experience with exploitation and abuse. While this is not necessarily a wellbeing concern *directly* related to the course material, it warrants a gentle check-in from the teacher to ensure the studen",
+          "confidence": 0.7
+        }
+      ],
+      "time_seconds": 128.6
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "wellbeing_synthetic",
+      "student_id": "WB08",
+      "student_name": "Brandon Mitchell",
+      "signal_type": "grief_loss",
+      "expected_flag": true,
+      "flagged": true,
+      "correct": "OK",
+      "n_concerns": 1,
+      "concerns": [
+        {
+          "flagged_passage": "I used to think these readings were interesting but now I just feel tired.",
+          "why_flagged": "The student expresses a sense of exhaustion and overwhelm, potentially indicating a struggle to process the emotional weight of the course material and personal stressors. While discussing difficult topics is part of the assignment, the shift to expressing personal fatigue and a sense of hopelessnes",
+          "confidence": 0.7
+        }
+      ],
+      "time_seconds": 112.0
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "wellbeing_synthetic",
+      "student_id": "WB09",
+      "student_name": "Priya Sharma",
+      "signal_type": "control_analytical",
+      "expected_flag": false,
+      "flagged": false,
+      "correct": "OK",
+      "n_concerns": 0,
+      "concerns": [],
+      "time_seconds": 78.5
+    },
+    {
+      "codepath": "production_concern_detector",
+      "source": "wellbeing_synthetic",
+      "student_id": "WB10",
+      "student_name": "DeAndre Washington",
+      "signal_type": "control_passionate",
+      "expected_flag": false,
+      "flagged": true,
+      "correct": "FALSE-FLAG",
+      "n_concerns": 1,
+      "concerns": [
+        {
+          "flagged_passage": "Intersectionality just gives us the language to describe what Black and brown communities have known forever",
+          "why_flagged": "While the student is making a valid point, the phrasing 'what Black and brown communities have known forever' risks essentializing these groups. It's important to acknowledge the diversity of experiences within these communities and avoid generalizations. The teacher could prompt the student to elab",
+          "confidence": 0.7
+        }
+      ],
+      "time_seconds": 138.1
+    }
+  ],
+  "note": "Production concern detector (full pipeline) on test corpus + wellbeing cases",
+  "codepath": "production_concern_detector",
+  "features": "signal_matrix + CONCERN_PROMPT + anti_bias_postprocessing + confidence_threshold_0.7"
+}

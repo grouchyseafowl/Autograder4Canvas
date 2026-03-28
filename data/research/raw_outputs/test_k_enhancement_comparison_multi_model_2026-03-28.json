@@ -1,0 +1,146 @@
+{
+  "test_name": "test_k_enhancement_comparison",
+  "model": "multi_model",
+  "backend": "multi",
+  "date": "2026-03-28",
+  "timestamp": "2026-03-28T11:01:25.899672",
+  "temperature": "varies",
+  "corpus": "ethnic_studies",
+  "class_reading_source": "data/demo_baked/checkpoints/ethnic_studies_gemma12b_mlx_class_reading.json",
+  "provenance": {
+    "git_commit": "c9f20984d2053368a103d6ced933159561bd6a9f",
+    "git_commit_short": "c9f20984",
+    "git_dirty": true,
+    "git_branch": "main"
+  },
+  "results": [
+    {
+      "codepath": "test_harness_custom",
+      "model_key": "gemma27b_free",
+      "model_id": "google/gemma-3-27b-it:free",
+      "cost_note": "Free \u2014 Google AI Studio (no system prompt support)",
+      "scores": {
+        "structural_naming": 2,
+        "language_justice": 1,
+        "relational_analysis": 3,
+        "pedagogical_depth": 2,
+        "anti_spotlighting": 0
+      },
+      "total_score": 8,
+      "word_count": 674,
+      "raw_output": "## Pedagogical Analysis: Week 6 Discussion - Intersectionality in Practice\n\nThis engagement analysis reveals a class grappling with intersectionality in a complex and, overall, *productive* way. The class isn\u2019t simply accepting the framework; they are actively negotiating it, revealing both promising understanding and predictable points of friction. The \u201ctemperature\u201d reading \u2013 surface-level engagement for most, deep connection for a cluster, and distinct resistance from a few \u2013 is a common and healthy pattern when introducing challenging concepts.\n\n**Where the Class Is in Their Understanding:**\n\nThe class is moving *beyond* definitional understanding of intersectionality and into the messy work of *applying* it. The fact that most students engaged at a surface level with Crenshaw suggests they grasp the core concept. However, the deeper divides reveal that application is where the real learning \u2013 and struggle \u2013 is happening. \n\nThe presence of both strong personal connections *and* analytical extensions of the framework indicates a bifurcation in how students are processing the material. Some are finding immediate resonance with their own lives, while others are approaching it as an intellectual tool. This isn\u2019t necessarily a problem, but it highlights a need to bridge these approaches. The fact that the analytical engagers are extending the framework to current events is particularly encouraging \u2013 it shows they are internalizing it and seeing its relevance.\n\n**Most Productive Tensions:**\n\nThe tension between \u201canalytical engagers\u201d and \u201cexperiential engagers\u201d is the most valuable dynamic here. This isn\u2019t a deficit; it\u2019s a *site of learning*. The analytical approach can offer tools for understanding systemic forces, while the experiential approach grounds the theory in lived realities and challenges abstract generalizations.  Allowing students to articulate *how* their approaches differ, and what each gains and loses, could be powerfully illuminating.  The key is to frame this as a difference in entry point, not a hierarchy of understanding.\n\nThe tension stemming from the \u201ctone policing\u201d incident is also productive, *if* handled carefully. It reveals a crucial power dynamic at play \u2013 who gets to define appropriate emotional responses, and whose experiences are deemed legitimate. This is a perfect opportunity to unpack how calls for \u201ccalm\u201d can function as a silencing mechanism, particularly for those directly impacted by injustice.\n\n**Areas for the Teacher to Pay Attention To:**\n\n* **Distinct Resistance:** The two students exhibiting resistance require separate attention. The colorblind framing represents a denial of systemic inequality and requires a response that gently but firmly challenges that denial, potentially by returning to foundational concepts of structural racism. The tone policing, however, is a different beast. It\u2019s about regulating emotional expression and requires a response that names the power dynamic at play and validates the urgency of lived experience. Treating these as a single issue would be a pedagogical mistake.\n* **Capacity & Wellbeing:** The student experiencing burnout is a critical signal. This isn\u2019t about engagement with the material; it\u2019s about their overall wellbeing.  Acknowledging the demands on students\u2019 time and energy, and signaling openness to flexibility, is crucial. This student\u2019s experience may also be indicative of broader pressures within the class.\n* **Valuing Diverse Linguistic Practices:** The student utilizing AAVE is demonstrating sophisticated analysis *through* their language. This is a reminder to resist deficit-based views of language and to recognize that intellectual rigor can manifest in diverse registers.  The teacher should be mindful of how language norms might inadvertently privilege certain voices and marginalize others.\n* **Neurodiversity & Cognitive Styles:** The neurodivergent student\u2019s non-linear connections highlight the value of diverse cognitive approaches. This reinforces the need to create a learning environment that is inclusive of different ways of thinking and knowing.\n* **Facilitating Meta-Discussion:** Encourage students to reflect on *how* they are engaging with the material. Questions like \u201cWhat assumptions are you bringing to this discussion?\u201d or \u201cHow does your personal experience shape your understanding?\u201d can help surface these underlying dynamics.\n\n\n\nOverall, this class is demonstrating a willingness to grapple with complex ideas. The teacher\u2019s role is to skillfully navigate the tensions, validate diverse perspectives, and create a space where students can learn *from* each other\u2019s struggles and insights.\n\n\n\n",
+      "time_seconds": 18.1
+    },
+    {
+      "codepath": "test_harness_custom",
+      "model_key": "llama70b_free",
+      "model_id": "meta-llama/llama-3.3-70b-instruct:free",
+      "error": "Error code: 429 - {'error': {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'meta-llama/llama-3.3-70b-instruct:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations', 'provider_name': 'Venice', 'is_byok': False}}, 'user_id': 'user_3800p1Xc4Vi1mtiYIHJrObTKuW2'}",
+      "scores": {},
+      "total_score": -1
+    },
+    {
+      "codepath": "test_harness_custom",
+      "model_key": "mistral_small_free",
+      "model_id": "mistralai/mistral-small-3.1-24b-instruct:free",
+      "error": "Error code: 429 - {'error': {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'mistralai/mistral-small-3.1-24b-instruct:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations', 'provider_name': 'Venice', 'is_byok': False}}, 'user_id': 'user_3800p1Xc4Vi1mtiYIHJrObTKuW2'}",
+      "scores": {},
+      "total_score": -1
+    },
+    {
+      "codepath": "test_harness_custom",
+      "model_key": "nemotron_120b_free",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "cost_note": "Free \u2014 120B MoE (12B active), 262K context",
+      "scores": {
+        "structural_naming": 2,
+        "language_justice": 2,
+        "relational_analysis": 1,
+        "pedagogical_depth": 1,
+        "anti_spotlighting": 1
+      },
+      "total_score": 7,
+      "word_count": 803,
+      "raw_output": "**Wherethe class appears to be in their understanding**\n\n- **Surface\u2011level grasp of the framework** \u2013 The majority of students can articulate Crenshaw\u2019s intersectionality concept at a basic definitional level. They are able to name the idea that race, gender, class, etc., interact, but many are still treating it as an abstract checklist rather than a lens for interpreting lived experience.\n\n- **Emerging depth in a minority** \u2013 About a quarter of the class (\u22486\u20118 students) are moving beyond definition to *personal\u2011structural bridging*: they are linking the theory to family histories, neighborhood histories, or their own embodied experiences. This indicates that the concept is beginning to function as a interpretive tool for them, not just a term to memorize.\n\n- **Resistant moves are structurally distinct** \u2013 Two students are actively pushing back, but they are doing so in qualitatively different ways:\n  1. **Denial of relevance** (colorblind framing) treats race as irrelevant to the analysis, effectively refusing to let the structural lens operate.\n  2. **Delegitimization of affect** (tone\u2011policing) accepts that race matters but insists that only a certain \u201ccalm, rational\u201d register is permissible, thereby controlling how the structural analysis can be voiced.\n\n  Because the moves target different levers of the framework (the *content* vs. the *form* of discussion), they require different kinds of pedagogical attention rather than a single \u201ccorrective\u201d response.\n\n- **Capacity issue, not disengagement** \u2013 The student who notes exhaustion and shorter submissions is still engaging with the material; the barrier is temporal/energetic, not conceptual. Recognizing this prevents misreading the behavior as a lack of interest or understanding.\n\n- **Neurodivergent and linguistic richness** \u2013 The student employing AAVE and the student with an associative, nonlinear writing style are both producing sophisticated intersectional analysis, albeit in registers that may be misread as \u201cinformal\u201d or \u201cdisorganized.\u201d Their work shows that the class already contains diverse epistemic resources that can enrich collective sense\u2011making if those resources are made visible and valued.\n\n**Productive tensions for learning**\n\n1. **Analytical vs. experiential engagement**  \n   - *What it looks like*: Some students treat intersectionality as a theoretical tool to apply to case studies or current events; others speak from the immediacy of how those structures shape their families, neighborhoods, or bodies.  \n   - *Why it\u2019s productive*: This tension surfaces the gap between \u201cknowing about\u201d and \u201cliving with\u201d oppression. When held in a space that respects both perspectives, it can push analytical students to see the limits of abstraction and encourage experiential students to articulate how their lived insights map onto broader structural patterns. The tension becomes a site for co\u2011construction of knowledge rather than a clash to be resolved.\n\n2. **Tone\u2011policing vs. urgent lived\u2011experience expression**  \n   - *What it looks like*: One student\u2019s call for \u201ccalm, rational discussion\u201d meets another\u2019s urgent, affect\u2011laden testimony about ICE enforcement affecting family safety.  \n   - *Why it\u2019s productive*: The exchange makes visible the politics of discourse\u2014who gets to decide what counts as \u201cappropriate\u201d communication and whose emotions are deemed legitimate. Highlighting this dynamic can help the class examine how power operates not only in substantive content but also in the *regulation* of voice. It opens a doorway to discuss epistemic justice, the role of affect in political analysis, and the ways that demands for \u201cneutrality\u201d can silence marginalized perspectives.\n\n**What the teacher should pay attention to (without prescribing specific activities)**\n\n- **Monitor the balance between abstract application and personal connection**  \n  Keep an eye on whether the class is drifting toward treating intersectionality solely as a theoretical exercise or, conversely, toward anecdotal sharing that lacks linkage to structural analysis. Noticing when the balance shifts can inform when to invite bridging prompts (e.g., asking students to trace how a personal story illustrates a broader pattern, or how a structural pattern shows up in everyday life) without dictating the exact form of those prompts.\n\n- **Notice and name discursive moves as they occur**    When a student invokes colorblind language or calls for calm, flag the move in the moment (e.g., \u201cI hear a suggestion that we set aside race for now; let\u2019s consider what that does to our analysis\u201d) or in follow\u2011up feedback. Naming the move helps the whole class see the underlying power dynamics without targeting any individual.\n\n- **Track signs of capacity strain versus disengagement**  \n  Look for patterns in submission length, timing, and self\u2011reported fatigue across weeks. If a student\u2019s output drops but their reflections still show engagement with concepts, consider offering flexible deadlines or alternative ways to demonstrate understanding (e.g., brief audio notes, visual maps) rather than assuming a lack of interest.\n\n- **Leverage existing epistemic diversity**  \n  The AAVE\u2011register student and the associative\u2011style neurodivergent student are already modeling sophisticated analysis in non\u2011dominant forms. Highlighting\u2014through general class comments\u2014that analysis can take many linguistic and cognitive shapes validates those approaches and encourages others to experiment with different registers or structures in their own work.\n\n- **Create space for the analytical\u2011experient",
+      "time_seconds": 53.2
+    },
+    {
+      "codepath": "test_harness_custom",
+      "model_key": "dolphin_mistral_free",
+      "model_id": "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+      "error": "Error code: 429 - {'error': {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations', 'provider_name': 'Venice', 'is_byok': False}}, 'user_id': 'user_3800p1Xc4Vi1mtiYIHJrObTKuW2'}",
+      "scores": {},
+      "total_score": -1
+    },
+    {
+      "codepath": "test_harness_custom",
+      "model_key": "hermes_405b_free",
+      "model_id": "nousresearch/hermes-3-llama-3.1-405b:free",
+      "error": "Error code: 429 - {'error': {'message': 'Rate limit exceeded: limit_rpm/nousresearch/hermes-3-llama-3.1-405b/196b4f57-a8ce-493a-8248-a24505c2862d. High demand for nousresearch/hermes-3-llama-3.1-405b:free on OpenRouter - limited to 8 requests per minute. Please retry shortly.', 'code': 429, 'metadata': {'headers': {'X-RateLimit-Limit': '8', 'X-RateLimit-Remaining': '0', 'X-RateLimit-Reset': '1774720860000'}, 'provider_name': None}}, 'user_id': 'user_3800p1Xc4Vi1mtiYIHJrObTKuW2'}",
+      "scores": {},
+      "total_score": -1
+    },
+    {
+      "codepath": "test_harness_custom",
+      "model_key": "minimax_m25_free",
+      "model_id": "minimax/minimax-m2.5:free",
+      "error": "Error code: 404 - {'error': {'message': 'No endpoints available matching your guardrail restrictions and data policy. Configure: https://openrouter.ai/settings/privacy', 'code': 404}}",
+      "scores": {},
+      "total_score": -1
+    },
+    {
+      "codepath": "test_harness_custom",
+      "model_key": "arcee_trinity_free",
+      "model_id": "arcee-ai/trinity-large-preview:free",
+      "cost_note": "Free \u2014 400B MoE (13B active), preview",
+      "scores": {
+        "structural_naming": 2,
+        "language_justice": 0,
+        "relational_analysis": 3,
+        "pedagogical_depth": 1,
+        "anti_spotlighting": 0
+      },
+      "total_score": 6,
+      "word_count": 385,
+      "raw_output": "The patterns reveal a class at a critical juncture in their intersectional understanding. Most students (24-26) have engaged with Crenshaw's framework at some level, suggesting the foundational concepts have landed. However, the distribution shows distinct learning zones emerging.\n\nThe 6-8 students making deep personal connections represent a crucial learning edge \u2014 they're bridging theoretical frameworks with lived experience in ways that suggest genuine conceptual integration. This is where intersectional understanding becomes transformative rather than merely academic. Their work shows the framework \"clicking\" into place as a lens for understanding their own and others' experiences.\n\nThe two students making resistant moves (colorblind framing and tone policing) are actually at similar developmental stages \u2014 both are defending against a framework that challenges their existing worldview. The colorblind student is defending against seeing structural patterns; the tone-policing student is defending against emotional expressions of those structures. These are predictable resistance patterns when students encounter frameworks that challenge their epistemic comfort zones.\n\nThe most productive tension for learning is between the analytical and experiential engagers. This tension represents a fundamental pedagogical opportunity: students are naturally grappling with whether intersectionality is a tool for analyzing others' experiences versus understanding one's own positionality within systems. This is exactly where deeper intersectional understanding develops \u2014 when students can hold both the analytical distance needed for structural analysis and the personal proximity that makes it meaningful.\n\nThe burnout student signals something important about the course's emotional labor demands. Their continued engagement despite exhaustion suggests the material is compelling enough to push through fatigue, but also raises questions about sustainable engagement with emotionally charged material.\n\nThe teacher should pay attention to:\n- The distinct nature of the two resistant moves \u2014 they require different pedagogical approaches\n- The analytical-experiential divide as a productive tension to name and structure, not smooth over\n- The cluster of deep engagers as potential discussion leaders who can model bridging theory and experience\n- The burnout signal as feedback about the course's emotional demands\n\nThe class appears to be moving from initial exposure to Crenshaw's framework toward grappling with its implications \u2014 both intellectually and personally. This is often where the most significant learning happens, but also where resistance and discomfort emerge. The patterns suggest a class ready to engage more deeply with the tensions inherent in intersectional analysis.",
+      "time_seconds": 4.8
+    },
+    {
+      "codepath": "test_harness_custom",
+      "model_key": "step_flash_free",
+      "model_id": "stepfun/step-3.5-flash:free",
+      "cost_note": "Free \u2014 StepFun 196B MoE (11B active)",
+      "scores": {
+        "structural_naming": 2,
+        "language_justice": 1,
+        "relational_analysis": 1,
+        "pedagogical_depth": 3,
+        "anti_spotlighting": 0
+      },
+      "total_score": 7,
+      "word_count": 595,
+      "raw_output": "Based on these patterns, here is a richer pedagogical analysis of the class's engagement with intersectionality:\n\n### **Developmental Stage of Class Understanding**\nThe class is in a **transitional and contested phase** of understanding intersectionality. Most students (24) are operating at a **surface or conceptual level**, able to identify Crenshaw's framework but not yet fully integrating it. A significant minority (6-8) are demonstrating **transformative engagement**, where the theory is being personalized, connected to community history, or extended into new domains (like disability studies). This creates a **bimodal distribution**: a core of deep engagers surrounded by a larger group at varying levels of conceptual uptake, with two students exhibiting defensive resistance and one showing capacity collapse.\n\nThe presence of students using AAVE and neurodivergent styles to perform sophisticated analysis is critical. It suggests the class's \"deep engagement\" is **not monolithic** and may be **undervalued by conventional academic metrics**. The teacher is likely seeing only the tip of the iceberg of intellectual labor from students whose modes of expression fall outside the normative academic register.\n\n### **Productive Tensions as Learning Catalysts**\nThe tensions identified are not problems to be solved but **fertile ground for metacognitive and sociological learning**.\n\n1.  **Analytical vs. Experiential Engagement:** This is the central, most productive tension. It mirrors the classic theory/practice divide but with a critical race theory twist. The \"analytical\" students treat intersectionality as an intellectual tool; the \"experiential\" students (like the one sharing ICE family fears) treat it as a lived condition that shapes their rhetorical stance and urgency. **Pedagogical significance:** This tension can be harnessed to ask: *How does a framework designed to explain systemic oppression change when the analyst is also subject to that system? What is the relationship between \"knowing about\" and \"living within\" an intersectional reality?* The goal is not to choose a side, but to examine how positionality shapes the entry point into the framework.\n\n2.  **Discourse Norms vs. Urgent Testimony:** The \"tone policing\" incident is a **live enactment of power dynamics** that intersectionality seeks to expose. One student is applying a dominant (often white, middle-class) norm of \"rational calm\" to a discussion about state violence and family separation. **Pedagogical significance:** This is a moment to dissect **epistemic injustice**\u2014who gets to define what counts as legitimate discourse? The teacher can use this to show how calls for \"civility\" can function as a tool to silence marginalized voices and derail structural critique. The tension is between a *procedural* view of discussion (rules for debate) and a *substantive* view (the content of the argument about life-and-death stakes).\n\n### **Key Areas for Teacher Attention & Interpretation**\n\n1.  **Distinguish Types of Resistance:** The two resistant students require **fundamentally different interpretations and responses**.\n    *   **Colorblindness (\"I don't see race\")** is a **denial of structural reality**. It reflects a liberal individualist worldview that the course is explicitly challenging. The pedagogical task is to make the *structures* of race visible, not to attack the student's character.\n    *   **Tone Policing (\"calm, rational discussion\")** is a **regulation of discourse and emotion**. It's a move to control the *terms* of engagement. The pedagogical task is to expose how discourse norms themselves are political and can uphold power. These are not \"bad attitudes\" but **different epistemological and rhetorical positions** that need to be named and analyzed.\n\n2.  **Monitor the \"Burnout\" Signal as a Systemic Indicator:** This is not a conceptual problem but a **capacity problem**. The student is still trying to engage but is depleted. The teacher should note this as a sign of **external pressures (work, exhaustion) impeding learning**. The response is not academic correction but **rec",
+      "time_seconds": 22.3
+    }
+  ],
+  "note": "Enhancement model comparison \u2014 FERPA-compliant anonymized prompt tested against free/cheap OpenRouter models. Goal: find cost-effective enhancement mechanism for teachers without paid API access.",
+  "prompt_length": 3281,
+  "models_tested": [
+    "gemma27b_free",
+    "llama70b_free",
+    "mistral_small_free",
+    "nemotron_120b_free",
+    "dolphin_mistral_free",
+    "hermes_405b_free",
+    "minimax_m25_free",
+    "arcee_trinity_free",
+    "step_flash_free"
+  ],
+  "quality_dimensions": [
+    "structural_naming",
+    "language_justice",
+    "relational_analysis",
+    "pedagogical_depth",
+    "anti_spotlighting"
+  ]
+}

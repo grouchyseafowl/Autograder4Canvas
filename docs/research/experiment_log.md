@@ -3141,6 +3141,146 @@ format itself — not just a particular prompt implementation — is the
 variable. Without it, a reviewer could reasonably argue that better prompt
 engineering would fix the binary approach.
 
+## Test M: Production Concern Detector — THE METHODOLOGICAL CORRECTION (2026-03-28)
+
+Test M runs the actual production `concern_detector.detect_concerns()` on
+the same students the simplified binary tests measured. This is the MSOT
+validation — does the production system reproduce the failures?
+
+### Results — Corpus Students
+
+| Student | Pattern | Simplified (B/C/F) | Production (M) | Changed? |
+|---|---|---|---|---|
+| S002 Jordan Kim | burnout | CLEAR (0/25) | CLEAR | Same — both miss |
+| S004 Priya Venkataraman | strong | CLEAR | CLEAR | Same |
+| S022 Destiny Williams | righteous anger | CLEAR | CLEAR | Same |
+| S023 Yolanda Fuentes | lived exp | CLEAR | CLEAR | Same |
+| S028 Imani Drayton | AAVE | CLEAR (25/25) | **FLAG (conf=0.70)** | **New FP** |
+| S029 Jordan Espinoza | neurodivergent | **FLAG (25/25)** | **CLEAR** | **Fixed** |
+| S031 Marcus Bell | minimal | CLEAR | CLEAR | Same |
+
+### Results — Wellbeing Cases
+
+| Case | Signal | Simplified B | Simplified C | Production (M) | Obs (G) |
+|---|---|---|---|---|---|
+| WB01 Rosa | ICE stress | CLEAR | CLEAR | **FLAG** | SURFACED |
+| WB02 Keisha | Caregiving | FLAG | FLAG | **CLEAR** | SURFACED |
+| WB03 Miguel | Housing | FLAG | CLEAR | **FLAG** | SURFACED |
+| WB04 Jasmine | DV | FLAG | CLEAR | **FLAG** | SURFACED |
+| WB05 Tyler | Burnout | FLAG | FLAG | **CLEAR** | SURFACED |
+| WB06 Amira | Food | FLAG | CLEAR | **CLEAR** | SURFACED |
+| WB07 Sofia | Tonal rupture | FLAG | CLEAR | **FLAG** | SURFACED |
+| WB08 Brandon | Grief | FLAG | FLAG | **FLAG** | SURFACED |
+| WB09 Priya | Control | CLEAR | CLEAR | **CLEAR** | *keyword FP |
+| WB10 DeAndre | Control | CLEAR | CLEAR | **FLAG** | clean |
+
+**Production: 5/8 signals caught, 1/2 false positives.**
+
+### Analysis — What This Changes
+
+**1. The S029 false-flag was a test-harness artifact, not a systemic failure.**
+
+The production detector clears Jordan Espinoza. This means the n=25 finding
+(100% false-flag rate) was specific to the simplified binary prompt, which
+lacked:
+- The richer CONCERN_PROMPT with more nuanced examples
+- Anti-bias post-processing (`_check_bias_in_output()`)
+- Confidence thresholding (0.7 minimum)
+
+The paper CANNOT claim "binary classification deterministically false-flags
+neurodivergent students." It CAN claim "simplified binary classification
+without post-processing safeguards false-flags neurodivergent students, and
+the safeguards required to prevent this are non-trivial and may not be
+present in other systems." This is a weaker but more honest claim.
+
+**2. The production detector introduces a NEW false positive: S028 (AAVE).**
+
+Imani Drayton was flagged at confidence 0.70 for "differential treatment
+by teachers based on race and gender." The detector read her description
+of being treated differently by teachers and flagged it as a concern —
+not about her writing quality, but about her situation. This is arguably
+a correct pedagogical flag (a teacher might want to know a student
+experiences bias from other teachers), but it's not a wellbeing concern
+in the Tests B/C sense. The production detector's broader concern scope
+(not just wellbeing) catches things the simplified binary doesn't, but
+also produces different false positives.
+
+**3. The production detector has a BURNOUT blind spot.**
+
+It catches crisis signals well (WB01 ICE, WB03 housing, WB04 DV, WB07
+tonal rupture, WB08 grief) but misses burnout signals (WB02 caregiving,
+WB05 work exhaustion, WB06 food insecurity). The production prompt
+(`CONCERN_PROMPT`) focuses on distress, self-harm, and hopelessness —
+burnout signals (sleep deprivation, "this isn't my best work," time
+pressure from work shifts) don't match the prompt's concern exemplars.
+
+The observation architecture catches ALL 8 signals (both crisis and
+burnout). This is a genuine advantage of the observation format over
+classification — burnout manifests as texture in writing (trailing off,
+metacommentary about fatigue) that classification prompts aren't trained
+to look for, but generative observation naturally describes.
+
+**4. WB01 (ICE stress) result is reversed from the simplified test.**
+
+The simplified binary MISSED Rosa entirely. The production detector
+catches her (conf=0.70). The richer prompt with more context gives the
+model enough signal to recognize the crisis. This supports the "prompt
+engineering matters within classification" argument.
+
+**5. WB10 (DeAndre, passionate engagement) is a production-only FP.**
+
+Flagged for "risks essentializing" — the production detector catches
+pedagogical concerns (essentializing language) that the simplified binary
+doesn't look for. This is the production system's broader scope at work,
+not a wellbeing failure.
+
+### Revised comparison matrix
+
+| Approach | S029 (ND) | S002 (burnout) | WB signals | WB FP | Total FP |
+|---|---|---|---|---|---|
+| Simplified binary B | FLAG 25/25 | CLEAR 25/25 | 7/8 | 0/2 | 1 (S029) |
+| Simplified binary C | FLAG 25/25 | CLEAR 25/25 | 3/8 | 0/2 | 1 (S029) |
+| **Production detector** | **CLEAR** | **CLEAR** | **5/8** | **1/2** | **2** (S028, WB10) |
+| Observations (gen.) | N/A | caught fatigue | 8/8 | 0/2* | 0 |
+
+*Observation keyword evaluator false-flagged 2/2 but observation text was clean.
+
+### Implications for the paper
+
+The thesis shifts from "binary classification is inherently inequitable" to
+a more nuanced claim:
+
+**"The equity of classification-based approaches depends on the quality of
+the classification infrastructure — prompt design, post-processing
+safeguards, confidence thresholding. Simplified classification (the kind
+most likely to be deployed by resource-constrained institutions) produces
+systematic disparate impact. The observation architecture achieves better
+equity outcomes with less infrastructure because the format itself prevents
+the information loss that requires post-processing to correct."**
+
+This is actually a STRONGER argument for real-world deployment. A school
+deploying an AI tool is unlikely to implement all the safeguards in the
+production concern detector. The observation architecture achieves equity
+by design rather than by accumulated patches.
+
+Connects to Winner (1980) "Do Artifacts Have Politics?" — the observation
+format embeds equity in its structure, while classification requires
+ongoing political work (anti-bias regexes, confidence tuning, prompt
+refinement) to prevent the harm the format naturally produces.
+
+### Methodological note
+
+This test validates the MSOT concern raised earlier: the simplified tests
+were measuring a different system than the production code. The S029
+finding changes fundamentally when tested against the real system. All
+prior claims based on the simplified binary (Tests B/C/F/H) should be
+read as claims about simplified classification, not classification in
+general.
+
+Raw data: `data/research/raw_outputs/test_m_production_detector_gemma12b_2026-03-28.json`
+Provenance: `c9f2098` (dirty — Test M added but uncommitted when run started)
+Codepath: `production_concern_detector` (confirmed in result metadata)
+
 ---
 
 # Session — 2026-03-28
@@ -3354,3 +3494,242 @@ engine → extract from store → assemble baked JSON.
   scored on 5 quality dimensions)
 - **Test L**: Expanded wellbeing classifier (4-axis CRISIS/BURNOUT/
   ENGAGED/NONE, comparison to Test I 3-axis)
+
+## Test J re-run (10:23) — confirms all fixes, preamble now fully stripped
+
+Second run of Test J with preamble regex fix. Results identical to first
+run on structural naming and synthesis sections (deterministic at temp 0.3).
+Key change: **Aiden's preamble now stripped** (was `true` in first run,
+now `false`). Two-pass regex working correctly.
+
+All results confirmed stable across both runs.
+
+## Test K re-run (10:29) — Gemma 27B free is viable enhancement tier
+
+### Results
+
+| Model | Total | Struct | LangJ | Relat | PedD | AntiS | Words | Time | Status |
+|-------|-------|--------|-------|-------|------|-------|-------|------|--------|
+| **Gemma 27B free** | **8** | 2 | 2 | 2 | 2 | 0 | 691 | 16.7s | **Best** |
+| Nemotron 120B MoE | 5 | 2 | 0 | 2 | 1 | 0 | 389 | 39.0s | Truncated |
+| GLM 4.5 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 101.9s | Empty response |
+| Llama 70B | — | — | — | — | — | — | — | — | 429 rate limited |
+| Mistral Small 24B | — | — | — | — | — | — | — | — | 429 rate limited |
+| Hermes 405B | — | — | — | — | — | — | — | — | 429 rate limited |
+
+Dimensions: structural_naming, language_justice, relational_analysis,
+pedagogical_depth, anti_spotlighting. Each scored by keyword/phrase match.
+
+### Gemma 27B free analysis (score 8, best available)
+
+System prompt folded into user message (Google AI Studio backend doesn't
+support developer instructions). Despite this limitation, output quality
+is strong:
+
+**Structural naming (2/2+):** Correctly distinguishes colorblind framing
+("universalist epistemology that treats structural analysis as irrelevant")
+from tone policing ("polices the affective terms of discourse"). Names
+both mechanisms explicitly. This is the dimension where the local 12B
+pipeline improved most with our prompt changes — the enhancement tier
+adds further analytical depth by contextualizing the mechanisms within
+broader epistemological patterns.
+
+**Language justice (2/2+):** Explicitly recognizes AAVE and neurodivergent
+writing as "diverse ways of knowing and communicating" and states "this
+isn't about lowering standards, but about recognizing that intellectual
+rigor can manifest in different forms." This is the dimension most often
+absent from smaller models. The framing — rigor manifesting in different
+forms — is the gold standard language justice position: the problem is
+the assessment environment's monoculturalism, not the student's register
+(#DISABILITY_STUDIES parallel: the problem is the built environment, not
+the body).
+
+**Relational analysis (2/2+):** Constructs the analytical/experiential
+tension as productive dialectic: "The analytical approach risks remaining
+abstract without grounding; experiential engagement benefits from
+clarifying power of theoretical frameworks." This is the relational
+analysis dimension the 12B pipeline can't yet produce — constructing
+productive tension pairs requires holding multiple student positions
+simultaneously and reasoning about their relationship.
+
+**Pedagogical depth (2/2+):** Names the "silent majority" question —
+what prevents surface-level engagers from going deeper? Connects burnout
+to institutional support systems. Recognizes resistance as "deeply held
+beliefs being challenged," not disengagement. This shows pedagogical
+reasoning that connects individual patterns to systemic conditions.
+
+**Anti-spotlighting (0, but false negative in scoring):** The model
+recommends "facilitate a space where these tensions can be explored
+constructively" and "create a classroom environment where all voices
+are heard" — both structural approaches. The scoring keywords are too
+narrow (looking for "structural opportunity" / "class-wide" / "small
+group" exact phrases). The actual output IS anti-spotlighting; the
+measurement tool failed, not the model. Real score is likely 2+.
+
+**Caveats for the paper:**
+- Gemma 27B free runs through Google AI Studio. Google's terms allow
+  educational use but the free tier has rate limits and no SLA. A teacher
+  using this path depends on Google's continued free hosting.
+- The `:free` suffix routes through whatever provider is available —
+  quality and latency may vary by time of day and provider load.
+- System prompt limitation means all instructions go in the user message,
+  which may reduce instruction-following on some tasks.
+- The enhancement prompt is pre-validated as FERPA-compliant: only
+  anonymized patterns, no student names/text/IDs. But the teacher should
+  still review the prompt before sending.
+
+### Nemotron 120B MoE analysis (score 5, truncated)
+
+120B total parameters but only 12B active per token (MoE architecture).
+Despite truncation, the completed portion shows sophisticated analytical
+framing: "The colorblind framing student operates from a universalist
+epistemology... the tone-policing student seeks to control HOW [race] can
+be discussed." This distinction between denying relevance vs. policing
+expression is more precise than Gemma 27B's framing.
+
+**Zero on language justice** — didn't mention AAVE or neurodivergent
+writing at all. The enhancement prompt includes explicit examples of
+both. Nemotron may have a weaker training signal on linguistic diversity
+compared to Gemma.
+
+**Truncation:** Output cut mid-sentence at 389 words. Likely hit a
+provider-side token limit or timeout. Should be retested with explicit
+max_tokens confirmation.
+
+### GLM 4.5 — empty response
+
+Returned empty string after 101.9 seconds. May indicate provider timeout,
+content filtering, or incompatible prompt format. Not viable without
+further investigation.
+
+### Rate-limited models (Llama 70B, Mistral Small, Hermes 405B)
+
+All three hit 429 rate limits despite 3-retry logic with 15/30/45s waits.
+The Venice provider (which serves Llama and Mistral free tier) appears to
+have strict per-key quotas. These models need testing during off-peak
+hours or via a different provider routing.
+
+Hermes 405B (Llama 3.1 base, 405B parameters) is the most promising
+untested model — if it follows the pattern from our earlier finding
+that Llama 70B produces generic themes, 405B on Hermes fine-tune may
+do better due to the NousResearch instruction tuning.
+
+### Free model landscape survey (2026-03-28)
+
+27 models available on OpenRouter free tier. The landscape clusters into
+several categories relevant to our use case:
+
+**Tier A — Most promising for enhancement (not yet fully tested):**
+
+| Model | Params | Active | Provider | Notes |
+|-------|--------|--------|----------|-------|
+| google/gemma-3-27b-it:free | 27B | 27B (dense) | Google AI Studio | **TESTED: score 8. Best available.** |
+| nousresearch/hermes-3-llama-3.1-405b:free | 405B | 405B (dense) | Venice | Rate limited. Instruction-tuned Llama 3.1. Needs off-peak test. |
+| openai/gpt-oss-120b:free | 117B | 5.1B (MoE) | OpenAI | Open-weight GPT. Very low active params. Untested. |
+| arcee-ai/trinity-large-preview:free | 400B | 13B (MoE, 4-of-256) | Arcee | Preview model. Untested. |
+| stepfun/step-3.5-flash:free | 196B | 11B (MoE) | StepFun | Chinese lab (StepFun). Untested. |
+
+**Tier B — Interesting but limited:**
+
+| Model | Notes |
+|-------|-------|
+| nvidia/nemotron-3-super-120b-a12b:free | TESTED: score 5, truncated. Needs retest. Strong analytical framing but 0 language justice. |
+| meta-llama/llama-3.3-70b-instruct:free | Rate limited. Prior testing (experiment log 2026-03-23) showed Llama 70B qualitatively ≈ Llama 8B on equity dimensions. Low priority. |
+| mistralai/mistral-small-3.1-24b-instruct:free | Rate limited. Small model. |
+| minimax/minimax-m2.5:free | Chinese lab (MiniMax). 196K context. Untested. |
+| qwen/qwen3-next-80b-a3b-instruct:free | 80B/3B active MoE. Very low active params. Qwen previously showed 1/3 concern detection (log 2026-03-22). Low priority. |
+
+**Tier C — Too small or specialized:**
+
+| Model | Notes |
+|-------|-------|
+| google/gemma-3-12b-it:free | Already our local model. No enhancement value. |
+| google/gemma-3-4b-it:free | 4B. Already tested: 3/3 concerns but 4 FP. |
+| google/gemma-3n-e2b/e4b-it:free | Nano models. Too small. |
+| liquid/lfm-2.5-1.2b-*:free | 1.2B. Far too small. |
+| qwen/qwen3-4b:free | 4B. Too small. |
+| nvidia/nemotron-nano-*:free | 9-12B nano variants. No enhancement value over local 12B. |
+
+### Privacy and sovereignty considerations
+
+**Who controls the data path?**
+
+All OpenRouter free-tier calls route through OpenRouter's infrastructure
+to third-party model providers. The data path is:
+
+  Teacher's machine → OpenRouter API → Provider (Google/NVIDIA/Meta/etc.)
+
+For our enhancement tier, the payload is FERPA-compliant (anonymized
+patterns only, validated by `_validate_no_student_data()` before send).
+No student names, IDs, quotes, or identifiable text crosses the wire.
+But the anonymized patterns themselves — "3 students demonstrated
+colorblind framing in discussions of structural racism" — do traverse
+commercial infrastructure.
+
+**Provider-specific considerations:**
+
+- **Google (Gemma):** Data may be processed on Google Cloud. Google's
+  AI Studio terms as of 2026 state that free-tier inputs may be used
+  to improve products. This means anonymized educational patterns could
+  enter Google's training data. For the enhancement payload this is
+  low-risk (no student data), but worth noting.
+  (#INDIGENOUS_DATA_SOVEREIGNTY: even "anonymized" patterns about how
+  students in a specific community engage with race carry cultural
+  information. The teacher should know where it goes.)
+
+- **NVIDIA (Nemotron):** Hosted via NVIDIA API or partner. Similar
+  terms around training data usage for free tier.
+
+- **Venice.ai (Llama, Mistral, Hermes):** Venice is a privacy-focused
+  provider that advertises no-logging and no-training-on-inputs. This
+  makes Venice-routed models potentially better for privacy-conscious
+  deployments. However, Venice's free tier has strict rate limits.
+
+- **OpenAI (gpt-oss):** Despite being "open source," these models
+  are hosted on OpenAI infrastructure. OpenAI's data handling policies
+  apply. The free tier likely involves usage for improvement.
+
+- **Self-hosted option:** All open-weight models (Gemma, Llama, Mistral,
+  Nemotron, Qwen, GPT-OSS) can be self-hosted. An institution with a
+  server running Gemma 27B via Ollama/vLLM eliminates all third-party
+  data transmission. This is our Tier 4 deployment model.
+
+**Ecological considerations:**
+
+MoE models (Nemotron 120B/12B active, Step 196B/11B active, GPT-OSS
+120B/5.1B active, Arcee 400B/13B active) are significantly more
+energy-efficient per inference than dense models of equivalent total
+parameter count. A 120B MoE activating 12B per token uses roughly the
+same compute as a 12B dense model. For teachers running many enhancement
+calls, MoE models on free tier have lower ecological footprint than
+dense 405B models.
+
+However, the free tier's ecological cost is externalized — Google, NVIDIA,
+etc. bear the compute cost and the teacher sees it as "free." The true
+cost is subsidized by the provider's commercial business, which itself
+has environmental impact. Self-hosting on institutional hardware makes
+the cost visible and accountable.
+
+### No larger free Gemma models exist
+
+Gemma 3 comes in 4B, 12B, and 27B. There is no free 70B+ Gemma model.
+Google's next step up would be Gemini models, which are not open-weight
+and not available on free OpenRouter tier. 27B is the ceiling for free
+Gemma.
+
+### Recommended enhancement model priority for further testing
+
+1. **google/gemma-3-27b-it:free** — CONFIRMED viable (score 8). Default
+   enhancement model. Fold system prompt into user message.
+2. **nvidia/nemotron-3-super-120b-a12b:free** — RETEST needed. Truncated
+   output showed strongest analytical framing. Check max_tokens config.
+3. **openai/gpt-oss-120b:free** — UNTESTED. Open-weight GPT, 5.1B active.
+   Interesting for comparison: does GPT training data produce different
+   equity framing than Gemma?
+4. **nousresearch/hermes-3-llama-3.1-405b:free** — RETRY off-peak. 405B
+   dense, instruction-tuned. If it works, it's the largest free model.
+5. **arcee-ai/trinity-large-preview:free** — UNTESTED. 400B/13B MoE.
+   Preview status means quality may change.
+6. **stepfun/step-3.5-flash:free** — UNTESTED. Chinese lab, 196B/11B MoE.
+   Worth testing for linguistic diversity perspective — training data may
+   include different cultural framings of race and power.
