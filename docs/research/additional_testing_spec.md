@@ -1,7 +1,7 @@
 # Additional Testing Specification: Pipeline Validation Phases 1-4
 
 **Status**: Spec complete, not yet implemented
-**Date**: 2026-03-26
+**Date**: 2026-03-28
 **Depends on**: Observation architecture (validated 32/32), Test N 4-axis results,
 Gemma 12B MLX as reference model, synthesis-first pipeline (engine.py + class_reader.py)
 
@@ -91,8 +91,11 @@ corpus. Real classes produce submissions ranging from 50 to 2000 words.
    -- P1 must produce readings for each chunk; P2 must synthesize them.
 3. **Observation generation** -- observations on long essays should still produce
    asset-framed, teacher-readable prose.
-4. **4-axis classification (Test N protocol)** -- run on LF02 and LF06 raw text
-   to verify CRISIS/BURNOUT detection survives chunking.
+4. **4-axis classification (Test N protocol)** -- run on ALL long-form essays
+   (not just LF02/LF06) to verify classification handles multi-chunk text.
+   Key question: does the classifier see the full submission or just chunk 1?
+5. **Test P protocol (two-pass)** -- run on LF02 and LF06 to verify the
+   proposed pipeline architecture works on chunked text.
 
 ### Success Criteria
 
@@ -298,6 +301,7 @@ submissions.
 | TR03 | Spanish-dominant, wellbeing signal | Translated text with burnout signal: "I am sorry the writing is not very good because I am working in the nights now at the restaurant of my uncle and I do not sleep enough." Translation artifacts + genuine burnout. | Tests whether the pipeline distinguishes translation artifacts (non-standard syntax) from burnout signals (content). |
 | TR04 | Spanish-dominant, strong student | Translated text, sophisticated argument: "The intersectionality is not only a theory of the academy. In Mexico, my mother she experienced that being woman and being indigenous and being poor it is not three separate things, it is one experience that the society uses to say you do not belong." | Tests whether translated syntax obscures intellectual sophistication. |
 | TR05 | Vietnamese-origin, concept inclusion | English text with untranslated cultural concepts: "My ba noi always said that kinh nghiem -- lived experience -- is worth more than any textbook. When Crenshaw writes about intersectionality I think about the concept of tinh cam, which means something like emotional connection but deeper." | Tests whether untranslated terms are read as intellectual moves (concept inclusion) or confusion. |
+| TR06 | Code-switching + ICE crisis | Spanglish with embedded crisis signal: "Mi mama no puede ir al doctor porque no tiene papeles and now my brother is scared to go to school porque alguien le dijo que ICE was coming. The reading talks about how intersectionality means these things overlap and that's exactly what's happening — we can't separate the immigration thing from the money thing from the fear thing, es todo junto." | The hardest equity test: code-switching is BOTH a linguistic asset AND the channel through which crisis signals emerge. The pipeline must recognize the bilingual register as engaged AND surface the ICE crisis signal. |
 
 ### Corpus Composition
 
@@ -419,6 +423,8 @@ For each model, run:
    specificity, and wellbeing signal presence.
 3. **Reading-first coding**: on 5 selected students. Compare
    what_student_is_reaching_for quality across models.
+4. **Test P protocol (two-pass)**: on the same 5 selected students + WB01-WB04.
+   Tests whether the two-pass architecture generalizes across model families.
 
 ### Success Criteria
 
