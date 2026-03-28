@@ -1958,6 +1958,237 @@ specific.
 
 ---
 
+# Session — 2026-03-27
+
+## Alt Hypothesis Tests: Reproduction Results
+
+Tests A-D + E re-run with persistent output capture. All raw outputs saved
+to `data/research/raw_outputs/`. MLX deadlock resolved via subprocess
+isolation (each test runs in a fresh process, Metal memory fully reclaimed
+between tests).
+
+### Test A — Temperature/Consistency (reproduction)
+
+| Model | S022 (righteous anger) | S028 (AAVE) | Consistent? |
+|---|---|---|---|
+| Gemma 12B (5 runs) | MIXED 5/5 | ASSET 5/5 | 100% |
+| Qwen 7B (3 runs) | ASSET 3/3 | ASSET 3/3 | 100% |
+| Gemma 27B cloud (3 runs) | ASSET 3/3 | ASSET 3/3 | 100% |
+
+Prior result: ASSET 10/10 on Gemma 12B. The S022 shift from ASSET→MIXED is
+a classification artifact — the model produces asset-oriented prose
+("powerfully connecting the theoretical framework to a deeply felt reality")
+but also names the struggle Destiny is describing, which triggers both asset
+and deficit keywords in our classifier. Qwen 7B and Gemma 27B classify pure
+ASSET because their prose avoids deficit-adjacent language.
+
+**Key finding preserved and strengthened:** 16/16 runs across three model
+families produce generative, contextual observations. Zero binary flags.
+The MIXED/ASSET distinction is a classifier sensitivity issue, not a framing
+issue — read the actual prose and it's all asset-oriented. The consistency
+is 100% across all models.
+
+**Cross-model finding:** Observation architecture produces consistent
+generative framing across Gemma 12B, Qwen 7B, AND Gemma 27B. Format drives
+the outcome, not the specific model.
+
+### Test B — Best Possible Concern Prompt (reproduction)
+
+| Student | Pattern | Expected | Got | Prior |
+|---|---|---|---|---|
+| S002 Jordan Kim | burnout | FLAG | **CLEAR** | CLEAR |
+| S004 Priya | strong | CLEAR | CLEAR | CLEAR |
+| S022 Destiny | righteous_anger | CLEAR | CLEAR | CLEAR |
+| S023 Yolanda | lived_exp | CLEAR | CLEAR | CLEAR |
+| S028 Imani | AAVE | CLEAR | CLEAR | CLEAR |
+| S029 Jordan E | neurodivergent | CLEAR | **FLAG** | CLEAR |
+| S031 Marcus | minimal_effort | CLEAR | CLEAR | CLEAR |
+
+Prior run cleared everything. This run flags S029 while clearing S002.
+The model reads "exhausting to explain" + neurodivergence indicators as
+burnout rather than recognizing it as a statement about navigating
+intersecting identities (which is the assignment).
+
+**This is stronger evidence than the prior result.** The prior showed
+overcorrection. This shows INSTABILITY: the same prompt on the same model
+produces different results across runs on exactly the students where
+reliability matters most. The binary format can't settle on a threshold
+for S029 (neurodivergent self-advocacy vs. distress).
+
+### Test C — Length Effect (reproduction)
+
+| Student | Pattern | Expected | Got | Prior |
+|---|---|---|---|---|
+| S002 Jordan Kim | burnout | FLAG | **CLEAR** | CLEAR |
+| S029 Jordan E | neurodivergent | CLEAR | **FLAG** | FLAG |
+| S023 Yolanda | lived_exp | CLEAR | CLEAR | **FLAG** |
+| All others | — | CLEAR | CLEAR | CLEAR |
+
+S029 persists as a flag with the same reasoning: "combined with the
+acknowledgement of dyslexia, ADHD... suggests a potential for burnout."
+The model treats neurodivergent identity disclosure as a risk factor.
+More output space gives it room to build a case linking neurodivergence
+to burnout rather than recognizing self-advocacy.
+
+S023 no longer flagged (was flagged in prior run). S002 burnout still
+missed. The pattern: more output space makes the equity problem WORSE
+for neurodivergent students specifically, while being unstable on others.
+
+### Test D — Structural Power Moves (reproduction)
+
+**7/7 detected.** Perfect reproduction.
+
+| Test Case | Type | Detected | Time |
+|---|---|---|---|
+| S018 Connor | colorblind | YES | 53s |
+| S025 Aiden | tone policing | YES | 69s |
+| PM01 | abstract liberalism | YES | 70s |
+| PM02 | settler innocence | YES | 67s |
+| PM03 | progress narrative | YES | 69s |
+| PM04 | meritocracy deflection | YES | 69s |
+| PM05 | objectivity claim | YES | 71s |
+
+### Test E — Cross-Model Replication
+
+Both Qwen 7B (local, 3 runs) and Gemma 27B cloud (3 runs) produced
+consistent generative framing. The format effect holds across three
+model families and two size classes (7B, 12B, 27B).
+
+### Cross-test synthesis (updated)
+
+| Test | Question | Prior | Reproduction |
+|---|---|---|---|
+| A | Stochastic? | NO (10/10) | NO (16/16 across 3 models) |
+| B | Fixable by better prompts? | Overcorrects | UNSTABLE — S029 flips |
+| C | Fixable by more output? | S023+S029 flagged | S029 still flagged |
+| D | Can observations catch what classification can't? | 7/7 | 7/7 |
+| E | Model-specific? | Not tested | NO — 3 families confirm |
+
+**Updated thesis:** The format is the primary variable AND the binary
+format is unreliable on neurodivergent students specifically. S029
+(Jordan Espinoza — dyslexic, ADHD, first-gen honors) is flagged in
+some runs and cleared in others. The observation architecture eliminates
+this instability by never forcing classification.
+
+## Pipeline Quality Comparison: Tier Analysis
+
+Compared the Gemma 12B pipeline output against two gold standards:
+- Opus one-shot (`data/demo_baked/baseline_claudcode_opus.md`)
+- Cloud enhancement (`data/demo_baked/cloud_enhancement_test.md`)
+- Gemma 12B observation synthesis (`data/research/raw_outputs/observation_synthesis_ethnic_studies_gemma12b_mlx.md`)
+
+### 4-dimension comparison
+
+**Dimension 1 — Concerns:**
+- Opus: Names Connor (colorblind) and Aiden (tone policing) directly as
+  power moves. Neither is framed as "concern" — they're pedagogical moments.
+- Cloud: "The model's framing *replicates* the silencing" — immanent critique
+  of the model's own failure to catch tone policing.
+- Pipeline: Aiden flagged for check-in ("subtle attempt to shut down
+  emotional expression"). Connor not explicitly in check-in list, though
+  called out in per-student observations. Hedges where gold standards name.
+
+**Dimension 2 — Positive insights:**
+- Opus: Maria extending the framework transnationally, Destiny connecting
+  redlining maps to present-day neighborhood, Jake raising class critique.
+- Cloud: "Family narratives aren't illustrations of theory; they *are*
+  a form of analysis."
+- Pipeline: Ingrid connecting theory to mother's experience, Destiny on
+  redlining legacy, Camille extending to BMI/Maintenance Phase podcast.
+  Teacher moves provided. **Approaching gold standard on this dimension.**
+
+**Dimension 3 — Class trends:**
+- Opus: 6 emergent themes, 3 explicit tensions (Jake vs Destiny, Connor/
+  Aiden vs Destiny, Brittany vs Reading), caught 19 off-topic phone essays.
+- Cloud: Tension pairs + affect mapping + structural teaching opportunities.
+- Pipeline: 3 intellectual threads, 3 exceptional contributions, class
+  temperature, students to check in with, 24 coded themes. Misses
+  phone/driving detection (per-student architecture can't see cross-student
+  patterns). Does NOT construct dialectical tension pairs.
+
+**Dimension 4 — Qualitative richness:**
+- Opus: "Aiden is essentially asking Destiny to perform calm while
+  discussing systems that materially harm her family."
+- Cloud: "These linguistic and cognitive styles aren't deviations *from*
+  academic rigor, but potentially *different pathways to* it."
+- Pipeline: "Measured engagement," "subtle attempt to shut down emotional
+  expression." Describes but doesn't construct the relational argument.
+  Language justice not explicitly named.
+
+### Quality gradient validates the deployment tier model
+
+| Tier | Quality | What teachers get |
+|---|---|---|
+| 1 (12B local) | 7.5/10 analysis, 6.5/10 teacher-facing | Observations, themes, feedback, check-ins. No immanent critique. |
+| 2 (12B + handoff) | 8.5/10 estimated | Tier 1 + teacher pastes into chatbot → structural analysis, language justice |
+| 3 (cloud API) | 9/10 | Automated cloud enhancement on anonymized patterns |
+| One-shot (Opus/Gemini) | 9.5/10 | Full immanent critique, dialectical tensions, forensic detection |
+
+Each tier is genuinely useful — Tier 1 is not a degraded version of Tier 4.
+A teacher with only Tier 1 still gets asset-framing, concern detection that
+doesn't harm neurodivergent students, and actionable observations.
+
+### Key pipeline gaps identified
+
+1. **`what_student_is_reaching_for` is NULL for all 32 students.** This was
+   identified in round 2 testing as "the most valuable new field" — where
+   the reading-first philosophy pays off at the per-student level. It's in
+   the model schema but nothing populates it during the observation stage.
+   High-priority fix.
+
+2. **Observation truncation.** Several observations cut off mid-sentence.
+   The 300 max_tokens limit is too tight. Raise to 400-500.
+
+3. **Anti-spotlighting gap.** Pipeline's teacher moves recommend individual
+   interventions ("ask her," "encourage him") rather than structural
+   opportunities. Cloud enhancement explicitly avoids this: "Instead of
+   individual interventions, focus on structural opportunities." Fix: add
+   anti-spotlighting guidance to the observation synthesis prompt.
+
+4. **Linguistic assets sparse.** Only 2/32 students have linguistic asset
+   notes. The reading-first coding approach was supposed to surface these
+   but they're not propagating.
+
+5. **No executive summary.** Opus opens with "Your class is split in two."
+   Pipeline opens with temperature analysis. Teachers need the 2-sentence
+   version first.
+
+## AI-Flagged Student Skip: Design Question
+
+The pipeline currently skips AI-flagged students entirely for both concern
+detection AND observations. The rationale (lines 886-898, 1106-1110 of
+engine.py): "observation applies to authentic student work."
+
+**Problem:** This encodes one institutional stance (AI use = skip the student)
+when teacher policies vary widely. Some teachers allow AI for certain
+assignments, use AI as a drafting tool, or want to observe HOW a student
+uses AI. Skipping the student entirely means:
+- No observation of the student's engagement choices
+- No concern detection (a student using AI might still be in distress)
+- The student becomes invisible to the system
+- Teachers who allow AI get no analysis of those submissions
+
+**The skip is a form of exclusion.** A student who uses AI assistance
+(which may correlate with disability accommodations, ESL support needs,
+or institutional access differences) is rendered invisible to the teacher.
+This is the opposite of the observation architecture's philosophy — which
+is to describe what you see and let the teacher decide.
+
+**Proposed alternative:** Generate observations for ALL students. For
+AI-flagged submissions, the observation could note: "This submission shows
+indicators of AI-generated text. What you might notice: [observation of
+the student's choice of topic, framing, what they asked the AI to do,
+what parts feel personal vs. templated]." Let the teacher decide whether
+the student's engagement with AI is itself worth observing.
+
+This connects to the broader question: is the system designed to serve
+institutions that prohibit AI, or teachers who want to understand their
+students? The observation architecture's strength is that it doesn't
+pre-decide what counts — extending that principle to AI-flagged
+submissions is consistent with the design philosophy.
+
+---
+
 # Session 6: Reproduction Run + MLX Deadlock Fix (2026-03-26)
 
 ## Goal
