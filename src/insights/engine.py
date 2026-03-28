@@ -1083,6 +1083,7 @@ class InsightsEngine:
             # Reads all per-student observations and produces a teacher-facing
             # class summary. Replaces the former guided synthesis chain.
             # ----------------------------------------------------------
+            from insights.llm_backend import send_text
             from insights.prompts import (
                 OBSERVATION_SYNTHESIS_SYSTEM_PROMPT,
                 OBSERVATION_SYNTHESIS_PROMPT,
@@ -1170,6 +1171,19 @@ class InsightsEngine:
                     log.info("Observation synthesis: %d words", len(obs_synthesis.split()))
                 except Exception as exc:
                     log.warning("Observation synthesis failed: %s", exc)
+
+            # Optional cloud enhancement (FERPA-safe: anonymized patterns only)
+            try:
+                from insights.synthesizer import run_cloud_enhancement
+                _cloud_narrative = run_cloud_enhancement(
+                    coding_records, assignment_name, self._settings
+                )
+                if _cloud_narrative:
+                    self._store.save_themes(
+                        run_id, synthesis_report_json=_cloud_narrative
+                    )
+            except Exception as _ce:
+                log.warning("Cloud enhancement failed (non-fatal): %s", _ce)
 
             self._store.complete_stage(run_id, "synthesis")
             self._emit_timing(timing_callback, "observation_synthesis", _stage_t0)
@@ -1675,6 +1689,71 @@ class InsightsEngine:
                     progress("Wellbeing classification complete.")
                 else:
                     self._store.complete_stage(run_id, "wellbeing")
+
+                if self._cancelled:
+                    self._stop_sleep_prevention()
+                    return None
+
+            # ----------------------------------------------------------
+            # If observations not complete, run them
+            # ----------------------------------------------------------
+            if "observations" not in completed_set:
+                if not texts:
+                    for row in existing_codings:
+                        sid = row.get("student_id", "")
+                        sub_text = row.get("submission_text", "")
+                        if sub_text:
+                            texts[sid] = sub_text
+
+                if texts and coding_records:
+                    from insights.submission_coder import observe_student
+
+                    _resume_class_reading = self._store.get_class_reading(run_id)
+                    _resume_teacher_lens = ""
+                    _tl_raw = self._settings.get("insights_teacher_lens", "")
+                    if _tl_raw:
+                        _resume_teacher_lens = (
+                            f"TEACHER'S OBSERVATION PRIORITIES:\n{_tl_raw}\n"
+                        )
+
+                    progress("Generating per-student observations...")
+                    for i, record in enumerate(coding_records):
+                        if self._cancelled:
+                            self._stop_sleep_prevention()
+                            return None
+
+                        sid = record.student_id
+                        # Skip if observation already populated (partial resume)
+                        if record.observation:
+                            continue
+
+                        body = texts.get(sid, "")
+                        progress(
+                            f"Observing {i + 1}/{len(coding_records)}: "
+                            f"{record.student_name}..."
+                        )
+
+                        obs_text = observe_student(
+                            backend,
+                            student_name=record.student_name,
+                            submission_text=body,
+                            class_context=_resume_class_reading,
+                            assignment=assignment_prompt,
+                            teacher_lens=_resume_teacher_lens,
+                        )
+                        record.observation = obs_text
+                        self._store.save_coding(
+                            run_id, sid, record.student_name,
+                            record.model_dump_json(),
+                        )
+
+                        if throttle > 0 and i < len(coding_records) - 1:
+                            time.sleep(throttle)
+
+                    self._store.complete_stage(run_id, "observations")
+                    progress("Observations complete.")
+                else:
+                    self._store.complete_stage(run_id, "observations")
 
                 if self._cancelled:
                     self._stop_sleep_prevention()

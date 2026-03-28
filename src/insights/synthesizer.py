@@ -677,77 +677,88 @@ def guided_synthesis(
     # ------------------------------------------------------------------
     # Optional cloud enhancement (FERPA-safe: anonymized patterns only)
     # ------------------------------------------------------------------
-    cloud_url = settings.get("insights_cloud_url", "")
-    cloud_key = settings.get("insights_cloud_key", "")
-
-    if cloud_url and cloud_key:
-        try:
-            _run_cloud_enhancement(result, coding_records, assignment_name, cloud_url, cloud_key, settings)
-        except Exception as e:
-            log.warning("Cloud enhancement failed (non-fatal): %s", e)
+    # Cloud enhancement now handled by run_cloud_enhancement() called
+    # from the pipeline after observation synthesis completes.
 
     return result
 
 
-def _run_cloud_enhancement(
-    result: GuidedSynthesisResult,
+def run_cloud_enhancement(
     coding_records: List[SubmissionCodingRecord],
     assignment_name: str,
-    cloud_url: str,
-    cloud_key: str,
     settings: Dict[str, Any],
-) -> None:
+) -> str:
     """Run optional cloud synthesis using ANONYMIZED pattern data only.
 
-    FERPA enforcement: ONLY pattern descriptions and aggregate stats are sent.
-    NO student names, NO student IDs, NO student text, NO quotes.
+    Builds payload from coding records: aggregate wellbeing distribution,
+    engagement patterns, theme tag frequency. No student names, IDs,
+    text, or quotes cross the wire.
+
+    FERPA enforcement: _validate_no_student_data() runs before any cloud call.
+
+    Returns the cloud narrative text, or empty string on failure/skip.
     """
+    cloud_url = settings.get("insights_cloud_url", "")
+    cloud_key = settings.get("insights_cloud_key", "")
+    if not cloud_url or not cloud_key:
+        return ""
+
     total = len(coding_records)
 
-    # Build anonymized payload from guided synthesis output
+    # Build anonymized payload from coding records (Option 3 from spec)
     payload_parts = [
         f"An engagement analysis found these patterns in a class of {total} students "
         f"responding to an assignment about {assignment_name or 'this topic'}:",
         "",
     ]
 
-    if result.concern_patterns:
-        payload_parts.append("CONCERN PATTERNS:")
-        for p in result.concern_patterns:
-            desc = p.get("description", "")
-            # Count student_names but DO NOT include the names
-            count = len(p.get("student_names", []))
-            payload_parts.append(f"- {desc} ({count} student(s))")
-        if result.concern_differences:
-            payload_parts.append("Key distinctions:")
-            for d in result.concern_differences:
-                payload_parts.append(f"  - {d}")
+    # Wellbeing axis distribution
+    axis_counts: Dict[str, int] = {}
+    for r in coding_records:
+        axis = r.wellbeing_axis or "NONE"
+        axis_counts[axis] = axis_counts.get(axis, 0) + 1
+    payload_parts.append("WELLBEING DISTRIBUTION:")
+    for axis, count in sorted(axis_counts.items()):
+        payload_parts.append(f"  {axis}: {count} student(s)")
+    payload_parts.append("")
+
+    # Engagement patterns from coding records
+    registers: Dict[str, int] = {}
+    for r in coding_records:
+        reg = r.emotional_register or "unspecified"
+        registers[reg] = registers.get(reg, 0) + 1
+    if registers:
+        payload_parts.append("EMOTIONAL REGISTER DISTRIBUTION:")
+        for reg, count in sorted(registers.items(), key=lambda x: -x[1]):
+            payload_parts.append(f"  {reg}: {count}")
         payload_parts.append("")
 
-    if result.engagement_highlights:
-        payload_parts.append("ENGAGEMENT HIGHLIGHTS:")
-        for h in result.engagement_highlights:
-            desc = h.get("description", "")
-            count = len(h.get("student_names", []))
-            payload_parts.append(f"- {desc} ({count} student(s))")
+    # Theme tag frequency (anonymized — just tags and counts)
+    tag_counts: Dict[str, int] = {}
+    for r in coding_records:
+        for tag in r.theme_tags:
+            tag_counts[tag] = tag_counts.get(tag, 0) + 1
+    if tag_counts:
+        top_tags = sorted(tag_counts.items(), key=lambda x: -x[1])[:10]
+        payload_parts.append("TOP THEMES:")
+        for tag, count in top_tags:
+            payload_parts.append(f"  - {tag} ({count} student(s))")
         payload_parts.append("")
 
-    if result.tensions:
-        payload_parts.append("TENSIONS BETWEEN GROUPS:")
-        for t in result.tensions:
-            desc = t.get("description", "")
-            between = t.get("between", [])
-            payload_parts.append(f"- {desc}")
-            for b in between:
-                payload_parts.append(f"  Between: {b}")
-        payload_parts.append("")
-
-    if result.class_temperature:
-        payload_parts.append(f"CLASS TEMPERATURE: {result.class_temperature}")
-        if result.attention_areas:
-            payload_parts.append("Attention areas:")
-            for a in result.attention_areas:
-                payload_parts.append(f"  - {a}")
+    # Aggregate engagement signals
+    strong = sum(
+        1 for r in coding_records
+        if r.engagement_signals and r.engagement_signals.get("engagement_depth") == "strong"
+    )
+    limited = sum(
+        1 for r in coding_records
+        if r.engagement_signals and r.engagement_signals.get("engagement_depth") in ("limited", "minimal")
+    )
+    if strong or limited:
+        payload_parts.append(
+            f"ENGAGEMENT: {strong} strong engagers, {limited} limited/minimal, "
+            f"{total - strong - limited} middle."
+        )
         payload_parts.append("")
 
     payload_parts.append(
@@ -762,13 +773,9 @@ def _run_cloud_enhancement(
     # FERPA validation — MUST pass before any cloud call
     if not _validate_no_student_data(cloud_prompt, coding_records):
         log.error("Cloud enhancement aborted: FERPA validation failed")
-        return
+        return ""
 
-    # Also validate the cloud_prompt doesn't contain student IDs as standalone tokens
     log.info("FERPA validation passed — sending anonymized patterns to cloud")
-
-    # Use cloud backend via existing llm_backend infrastructure
-    from insights.llm_backend import BackendConfig, send_text as _send_text, parse_json_response as _parse_json
 
     cloud_model = settings.get("insights_cloud_model", "gpt-4o-mini")
     cloud_format = settings.get("insights_cloud_api_format", "openai")
@@ -787,7 +794,11 @@ def _run_cloud_enhancement(
         "Analyze patterns and surface pedagogical significance."
     )
 
-    raw = _send_text(cloud_backend, cloud_prompt, cloud_system, max_tokens=1200)
-    # Cloud response may be free text or JSON — store as-is
-    result.cloud_narrative = raw.strip()
-    log.info("Cloud enhancement complete: %d chars", len(result.cloud_narrative))
+    try:
+        raw = send_text(cloud_backend, cloud_prompt, cloud_system, max_tokens=1200)
+        narrative = raw.strip()
+        log.info("Cloud enhancement complete: %d chars", len(narrative))
+        return narrative
+    except Exception as e:
+        log.warning("Cloud enhancement failed: %s", e)
+        return ""

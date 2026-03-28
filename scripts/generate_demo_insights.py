@@ -25,6 +25,7 @@ sys.path.insert(0, str(ROOT / "src"))
 CORPUS_DIR = ROOT / "data" / "demo_corpus"
 ASSETS_DIR = ROOT / "src" / "demo_assets"
 TIMING_PATH = ROOT / "data" / "demo_source" / "pipeline_timing.json"
+CHECKPOINT_DIR = ROOT / "data" / "demo_baked" / "checkpoints"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -80,10 +81,44 @@ COURSES = {
 # Pipeline runner
 # ──────────────────────────────────────────────────────────────
 
+def _save_coding_checkpoint(path: Path, records: list, total: int) -> None:
+    """Save per-student coding checkpoint (crash recovery for baked output)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({
+        "coded_count": len(records),
+        "total": total,
+        "records": records,
+    }, indent=2, default=str))
+
+
+def _find_incomplete_run(store, course_id: str, assignment_id: str) -> Optional[str]:
+    """Find the most recent incomplete run for this course/assignment.
+
+    The SQLite store is the checkpoint — every student's coding record is
+    saved immediately after it completes. If the process dies mid-pipeline,
+    the incomplete run persists in the store and can be resumed.
+    """
+    runs = store.get_runs(course_id)
+    for run in runs:
+        if (run.get("assignment_id") == assignment_id
+                and not run.get("completed_at")):
+            return run.get("run_id")
+    return None
+
+
 def run_pipeline(course_key: str, small_batch: int = 0,
                  backend_override=None, output_suffix: str = "",
                  tier_override: Optional[str] = None) -> dict:
     """Run the full Insights pipeline for one course via InsightsEngine.
+
+    Supports checkpoint/resume: if a previous run was interrupted (Metal
+    memory crash, sleep deadlock, etc.), detects the incomplete run in
+    the SQLite store and resumes via engine.resume_run() — which skips
+    already-coded students and picks up at the next uncompleted stage.
+
+    Per-student coding records are also saved to a JSON checkpoint file
+    in data/demo_baked/checkpoints/ as each student completes. This
+    provides a second recovery path independent of the SQLite store.
 
     Args:
         backend_override: Optional BackendConfig to use instead of default.
@@ -103,19 +138,6 @@ def run_pipeline(course_key: str, small_batch: int = 0,
     print(f"  Pipeline: {cfg['course_name']}")
     print(f"  Students: {total}")
     print(f"{'═'*60}")
-
-    # ── Build submission dicts (as QuickAnalyzer expects) ──
-    submissions = []
-    for s in corpus:
-        submissions.append({
-            "student_id": s["student_id"],
-            "student_name": s["student_name"],
-            "body": s["text"],
-            "submission_type": "online_text_entry",
-            "word_count": s.get("word_count", len(s["text"].split())),
-            "submitted_at": "2026-03-08T22:00:00Z",
-            "due_at": "2026-03-08T23:59:00Z",
-        })
 
     # ── Build engine ──
     from settings import load_settings
@@ -148,20 +170,60 @@ def run_pipeline(course_key: str, small_batch: int = 0,
     def on_timing(stage_name, elapsed):
         timing[stage_name] = elapsed
 
-    # ── Run the pipeline ──
-    run_id = engine.run_from_submissions(
-        submissions=submissions,
-        course_id=cfg.get("course_id", "0"),
-        course_name=cfg.get("course_name", ""),
-        assignment_id=cfg.get("assignment_id", "0"),
-        assignment_name=cfg.get("assignment_name", ""),
-        model_tier=tier,
-        teacher_context=cfg.get("teacher_context", ""),
-        next_week_topic=cfg.get("next_week_topic", ""),
-        progress_callback=lambda msg: print(f"  {msg}"),
-        timing_callback=on_timing,
-        backend_override=backend_override,
+    # ── Check for incomplete run in store (resume on crash) ──
+    run_id = None
+    prev_run_id = _find_incomplete_run(
+        store, cfg.get("course_id", "0"), cfg.get("assignment_id", "0")
     )
+
+    if prev_run_id:
+        coded_count = len(store.get_codings(prev_run_id))
+        print(f"\n  Resuming interrupted run: {prev_run_id}")
+        print(f"    {coded_count}/{total} students already coded")
+        run_id = engine.resume_run(
+            run_id=prev_run_id,
+            progress_callback=lambda msg: print(f"  {msg}"),
+        )
+        if run_id is None:
+            print("  Resume failed — starting fresh run")
+
+    if run_id is None:
+        # ── Fresh run ──
+        submissions = []
+        for s in corpus:
+            submissions.append({
+                "student_id": s["student_id"],
+                "student_name": s["student_name"],
+                "body": s["text"],
+                "submission_type": "online_text_entry",
+                "word_count": s.get("word_count", len(s["text"].split())),
+                "submitted_at": "2026-03-08T22:00:00Z",
+                "due_at": "2026-03-08T23:59:00Z",
+            })
+
+        # Per-student checkpoint callback — saves coding records as they complete
+        coding_ckpt_path = CHECKPOINT_DIR / f"{course_key}{output_suffix}_coding.json"
+        _coding_records: list = []
+
+        def _on_result(result_type, data):
+            if result_type == "coding":
+                _coding_records.append(data)
+                _save_coding_checkpoint(coding_ckpt_path, _coding_records, total)
+
+        run_id = engine.run_from_submissions(
+            submissions=submissions,
+            course_id=cfg.get("course_id", "0"),
+            course_name=cfg.get("course_name", ""),
+            assignment_id=cfg.get("assignment_id", "0"),
+            assignment_name=cfg.get("assignment_name", ""),
+            model_tier=tier,
+            teacher_context=cfg.get("teacher_context", ""),
+            next_week_topic=cfg.get("next_week_topic", ""),
+            progress_callback=lambda msg: print(f"  {msg}"),
+            result_callback=_on_result,
+            timing_callback=on_timing,
+            backend_override=backend_override,
+        )
 
     if run_id is None:
         raise RuntimeError("Pipeline returned None — check logs for errors")
