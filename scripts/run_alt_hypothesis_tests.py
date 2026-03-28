@@ -1815,9 +1815,11 @@ TIER2_EXPANDED_SYSTEM = (
     "- ENGAGED: The student is doing intellectual work on difficult material. "
     "May write about racism, poverty, immigration, violence, disability, or "
     "family experience AS COURSE MATERIAL — even connecting it to their own "
-    "community. Community and family knowledge used as analytical resource is "
-    "a form of engagement, not a sign of distress. Students drawing on lived "
-    "experience to analyze course concepts are doing the assignment.\n"
+    "life, community, or family. Students who bring personal and community "
+    "life experience into their analysis are often doing the most "
+    "sophisticated version of the assignment. This is engagement, not "
+    "distress — even when the material is painful or the experience is "
+    "ongoing.\n"
     "- NONE: Nothing notable in either direction.\n\n"
     "The key distinction: is the difficult content about the student's OWN "
     "current circumstances (CRISIS/BURNOUT), or is it course material they're "
@@ -2196,6 +2198,182 @@ def test_m_production_detector(model_key: str = "gemma12b"):
 
 
 # ---------------------------------------------------------------------------
+# Test N: 4-axis classification on raw submissions (not observations)
+# ---------------------------------------------------------------------------
+
+FOUR_AXIS_SUBMISSION_SYSTEM = (
+    "You are assessing a student's submission for their teacher.\n\n"
+    "Classify into ONE of four categories:\n"
+    "- CRISIS: The student's OWN current situation involves active danger or "
+    "instability — domestic violence, housing loss, food insecurity, immigration "
+    "enforcement threat, recent loss/grief. The writing reveals present-tense "
+    "personal circumstances beyond the assignment scope.\n"
+    "- BURNOUT: The student is depleted — exhaustion, overwork, caregiving burden, "
+    "sleep deprivation. They're functioning but running on empty. Metacommentary "
+    "about fatigue, trailing off, apologies for quality.\n"
+    "- ENGAGED: The student is doing the assignment. This includes passionate, "
+    "angry, emotional, or confrontational engagement with difficult material. "
+    "Writing about racism, immigration, poverty, violence AS COURSE MATERIAL "
+    "is engagement, not crisis — even when drawing on personal or community "
+    "experience. AAVE, multilingual mixing, nonstandard English, and "
+    "neurodivergent writing patterns (fragmented, nonlinear, associative) are "
+    "VALID ACADEMIC REGISTERS and indicate engagement.\n"
+    "- NONE: Insufficient text or off-topic.\n\n"
+    "The critical distinction: is the difficult content about the student's "
+    "OWN current circumstances leaking through the assignment, or course "
+    "material they're engaging with intellectually? The former is CRISIS/BURNOUT; "
+    "the latter is ENGAGED.\n\n"
+    "Respond with JSON only: {\"axis\": \"CRISIS\"|\"BURNOUT\"|\"ENGAGED\"|\"NONE\", "
+    "\"signal\": \"brief description\", \"confidence\": 0.0-1.0}"
+)
+
+FOUR_AXIS_SUBMISSION_PROMPT = """\
+STUDENT: {student_name}
+SUBMISSION:
+---
+{submission_text}
+---
+
+Classify this submission. Respond with JSON only."""
+
+
+def test_n_four_axis_submissions(model_key: str = "gemma12b"):
+    """Test 4-axis classification directly on raw student submissions.
+
+    Unlike Test L (which classifies observations), this classifies the raw
+    student writing. Answers: does a richer classification schema (4 options
+    instead of binary) fix the S029 false-flag and S002 miss when applied
+    directly to submissions?
+
+    Comparison matrix:
+    - Test B/C/F: simplified binary on submissions → S029 flagged, S002 missed
+    - Test M: production binary on submissions → pending
+    - Test N (this): 4-axis on submissions → does richer schema help?
+    - Test L: 4-axis on observations → does observation pre-processing help?
+    - Test G: generative observations → the non-classification approach
+    """
+    print(f"\n{'='*60}")
+    print(f"  TEST N: 4-Axis Classification on Submissions ({model_key})")
+    print(f"{'='*60}")
+
+    corpus = load_corpus()
+    backend = get_backend(model_key)
+    from dataclasses import replace as _replace
+    backend = _replace(backend, temperature=0.1)
+
+    # Corpus students
+    test_cases = [
+        ("S002", "burnout", "BURNOUT"),
+        ("S004", "strong", "ENGAGED"),
+        ("S022", "righteous_anger", "ENGAGED"),
+        ("S023", "lived_exp", "ENGAGED"),
+        ("S028", "AAVE", "ENGAGED"),
+        ("S029", "neurodivergent", "ENGAGED"),
+        ("S031", "minimal_effort", "ENGAGED"),
+    ]
+
+    results = []
+
+    print(f"\n  --- Corpus students ---")
+    for sid, pattern, expected_axis in test_cases:
+        student = corpus[sid]
+        prompt = FOUR_AXIS_SUBMISSION_PROMPT.format(
+            student_name=student["student_name"],
+            submission_text=student["text"],
+        )
+        t0 = time.time()
+        output = send(backend, prompt, FOUR_AXIS_SUBMISSION_SYSTEM, max_tokens=150)
+        elapsed = round(time.time() - t0, 1)
+
+        # Parse
+        import re as _re
+        axis_match = _re.search(r'"axis"\s*:\s*"([^"]*)"', output)
+        axis = axis_match.group(1) if axis_match else "PARSE_ERROR"
+        conf_match = _re.search(r'"confidence"\s*:\s*([\d.]+)', output)
+        confidence = float(conf_match.group(1)) if conf_match else 0.0
+
+        correct = "OK" if axis == expected_axis else "MISMATCH"
+
+        results.append({
+            "codepath": "test_harness_4axis_submissions",
+            "source": "corpus",
+            "student_id": sid,
+            "student_name": student["student_name"],
+            "pattern": pattern,
+            "expected_axis": expected_axis,
+            "actual_axis": axis,
+            "confidence": confidence,
+            "correct": correct,
+            "prompt": prompt,
+            "system_prompt": FOUR_AXIS_SUBMISSION_SYSTEM,
+            "raw_output": output,
+            "time_seconds": elapsed,
+        })
+
+        print(f"  {sid} {student['student_name']:20s} {pattern:20s} "
+              f"expect={expected_axis:8s} got={axis:8s} conf={confidence:.1f} [{correct}]")
+
+    print(f"\n  --- Wellbeing cases ---")
+    for case in WELLBEING_SIGNAL_CASES:
+        expected_axis = "ENGAGED" if case["signal_type"].startswith("control") else (
+            "BURNOUT" if "burnout" in case["signal_type"] else "CRISIS"
+        )
+
+        prompt = FOUR_AXIS_SUBMISSION_PROMPT.format(
+            student_name=case["name"],
+            submission_text=case["text"],
+        )
+        t0 = time.time()
+        output = send(backend, prompt, FOUR_AXIS_SUBMISSION_SYSTEM, max_tokens=150)
+        elapsed = round(time.time() - t0, 1)
+
+        axis_match = _re.search(r'"axis"\s*:\s*"([^"]*)"', output)
+        axis = axis_match.group(1) if axis_match else "PARSE_ERROR"
+        conf_match = _re.search(r'"confidence"\s*:\s*([\d.]+)', output)
+        confidence = float(conf_match.group(1)) if conf_match else 0.0
+
+        correct = "OK" if axis == expected_axis else "MISMATCH"
+
+        results.append({
+            "codepath": "test_harness_4axis_submissions",
+            "source": "wellbeing_synthetic",
+            "student_id": case["id"],
+            "student_name": case["name"],
+            "signal_type": case["signal_type"],
+            "expected_axis": expected_axis,
+            "actual_axis": axis,
+            "confidence": confidence,
+            "correct": correct,
+            "prompt": prompt,
+            "system_prompt": FOUR_AXIS_SUBMISSION_SYSTEM,
+            "raw_output": output,
+            "time_seconds": elapsed,
+        })
+
+        print(f"  {case['id']:5s} {case['name']:22s} {case['signal_type']:22s} "
+              f"expect={expected_axis:8s} got={axis:8s} conf={confidence:.1f} [{correct}]")
+
+    # Key comparisons
+    print(f"\n  === Key Comparisons ===")
+    s029 = next((r for r in results if r.get("student_id") == "S029"), None)
+    s002 = next((r for r in results if r.get("student_id") == "S002"), None)
+    if s029:
+        print(f"  S029 (neurodivergent): {s029['actual_axis']} (conf={s029['confidence']:.1f})"
+              f" — binary was FLAG 25/25; 4-axis says {s029['actual_axis']}")
+    if s002:
+        print(f"  S002 (burnout):        {s002['actual_axis']} (conf={s002['confidence']:.1f})"
+              f" — binary was CLEAR 25/25; 4-axis says {s002['actual_axis']}")
+
+    path = save_results("test_n_4axis_submissions", model_key, results, {
+        "note": "4-axis classification (CRISIS/BURNOUT/ENGAGED/NONE) on raw submissions",
+        "codepath": "test_harness_4axis_submissions",
+        "comparison": "Binary (B/C/F) → Production (M) → 4-axis submissions (N) → 4-axis observations (L) → Generative observations (G)",
+    })
+    print(f"\n  Results: {path}")
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
 
@@ -2252,6 +2430,8 @@ def _run_single_test(test_id: str, model: str, runs: int):
         test_l_expanded_wellbeing(model)
     elif test_id == "M":
         test_m_production_detector(model)
+    elif test_id == "N":
+        test_n_four_axis_submissions(model)
     else:
         log.error("Unknown test: %s", test_id)
         sys.exit(1)

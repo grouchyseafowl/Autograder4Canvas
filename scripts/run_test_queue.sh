@@ -109,15 +109,7 @@ sleep 10
 run_test "K: Enhancement model comparison" "$TEST_T" \
     scripts/run_alt_hypothesis_tests.py --tests K --no-subprocess
 
-# --- Step 3: Test F batches (if time permits) ---
-for batch in 1 2 3 4; do
-    run_test "F batch $batch/4 (n=5)" "$F_BATCH_T" \
-        scripts/run_alt_hypothesis_tests.py --tests F --runs 5 --no-subprocess
-    # Brief pause for Metal recovery between batches
-    sleep 10
-done
-
-# --- Step 4: Test M — Production concern detector (MSOT validation) ---
+# --- Step 3: Test M — Production concern detector (MSOT validation) ---
 # Runs the ACTUAL production concern_detector.detect_concerns() on test
 # students + wellbeing cases. Answers: does the production system (with
 # anti-bias post-processing, confidence thresholding, signal matrix)
@@ -128,12 +120,23 @@ run_test "M: Production concern detector" "$TEST_T" \
 
 sleep 10
 
-# --- Step 5: Test L — Expanded wellbeing classifier (4-axis) ---
+# --- Step 4: Test L — Expanded wellbeing classifier (4-axis) ---
 # Tests CRISIS/BURNOUT/ENGAGED/NONE schema. Should fix Test I's
 # false positive on Priya (analytical engagement misread as burnout).
 # Runs on MLX — needs observations from Test G.
 run_test "L: Expanded wellbeing classifier" "$TEST_T" \
     scripts/run_alt_hypothesis_tests.py --tests L --no-subprocess
+
+sleep 10
+
+# --- Step 5: Test N — 4-axis classification on raw submissions ---
+# Tests the CRISIS/BURNOUT/ENGAGED/NONE schema directly on student
+# writing (not observations). This answers: does a richer classification
+# schema fix the S029 false-flag and S002 miss when applied directly to
+# submissions? Comparison to Test M (production binary) and Test L
+# (4-axis on observations).
+run_test "N: 4-axis classification on submissions" "$TEST_T" \
+    scripts/run_alt_hypothesis_tests.py --tests N --no-subprocess
 
 sleep 10
 
