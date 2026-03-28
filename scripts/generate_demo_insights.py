@@ -469,9 +469,8 @@ def run_pipeline(course_key: str, small_batch: int = 0,
                 record.concerns = []
                 continue
 
-            if sid in _ai_flagged_ids:
-                record.concerns = []
-                continue
+            # AI-flagged students still get concern detection — a student
+            # in distress might use AI to complete work they can't manage.
 
             vader_compound = qa_result.sentiments.get(sid, {}).get("compound", 0.0)
             sig_results = signal_matrix_classify(
@@ -533,8 +532,8 @@ def run_pipeline(course_key: str, small_batch: int = 0,
         unload_mlx_model()
 
     # ── Stage 3b: Per-student observations (observation-only architecture) ──
-    from insights.prompts import OBSERVATION_SYSTEM_PROMPT, OBSERVATION_PROMPT
-    from insights.llm_backend import send_text as _send_text
+    # Uses shared observe_student() — single source of truth with engine.py
+    from insights.submission_coder import observe_student
 
     ckpt = _load_ckpt(run_key, "observations") if resume else None
     if ckpt:
@@ -552,31 +551,17 @@ def run_pipeline(course_key: str, small_batch: int = 0,
         for i, record in enumerate(coding_records):
             sid = record.student_id
             body = texts.get(sid, "")
-            wc = len(body.split())
 
-            if wc < 15 or sid in _ai_flagged_ids:
-                obs_map[sid] = ""
-                record.observation = ""
-                continue
-
-            obs_prompt = OBSERVATION_PROMPT.format(
-                class_context=class_reading,
-                assignment=assignment_prompt,
+            obs_text = observe_student(
+                backend,
                 student_name=record.student_name,
                 submission_text=body,
-                teacher_lens="",
+                class_context=class_reading,
+                assignment=assignment_prompt,
+                is_ai_flagged=(sid in _ai_flagged_ids),
             )
-
-            try:
-                observation = _send_text(
-                    backend, obs_prompt, OBSERVATION_SYSTEM_PROMPT, max_tokens=300,
-                )
-                obs_map[sid] = observation.strip()
-                record.observation = observation.strip()
-            except Exception as exc:
-                log.warning("Observation failed for %s: %s", sid, exc)
-                obs_map[sid] = ""
-                record.observation = ""
+            obs_map[sid] = obs_text
+            record.observation = obs_text
 
             if (i + 1) % 5 == 0 or i == total - 1:
                 print(f"  Observed {i+1}/{total}")

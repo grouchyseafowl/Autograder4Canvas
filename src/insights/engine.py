@@ -883,19 +883,11 @@ class InsightsEngine:
                     )
                     continue
 
-                # Guard: skip concern detection for AI-flagged submissions.
-                # Concerns (essentializing, tone policing, etc.) apply to a
-                # student's authentic voice. For AI-generated text, the concern
-                # is the student's choice to submit AI work — that's an AIC
-                # issue, not an insights concern issue. Running concern
-                # detection on AI text wastes LLM calls and could produce
-                # misleading flags.
-                if sid in _ai_flagged_ids:
-                    record.concerns = []
-                    self._store.save_coding(
-                        run_id, sid, record.student_name, record.model_dump_json()
-                    )
-                    continue
+                # AI-flagged submissions still get concern detection.
+                # A student in distress might use AI to complete work they
+                # can't manage — skipping them makes them invisible.
+                # The AIC flag is noted separately; concern detection runs
+                # on the actual submitted text regardless of authorship.
 
                 vader_compound = qa_result.sentiments.get(sid, {}).get("compound", 0.0)
                 sig_results = signal_matrix_classify(
@@ -1074,10 +1066,7 @@ class InsightsEngine:
             # should notice — including structural power moves.
             # Results stored as observation field on each coding record.
             # ----------------------------------------------------------
-            from insights.prompts import (
-                OBSERVATION_SYSTEM_PROMPT,
-                OBSERVATION_PROMPT,
-            )
+            from insights.submission_coder import observe_student
 
             progress("Generating per-student observations...")
             _teacher_lens = ""
@@ -1094,43 +1083,22 @@ class InsightsEngine:
 
                 sid = record.student_id
                 body = texts.get(sid, "")
-                wc = len(body.split())
 
                 progress(f"Observing {i + 1}/{total}: {record.student_name}...")
 
-                # Skip very short or gibberish
-                if wc < 15:
-                    observations_map[sid] = "Submission too brief for observation."
-                    continue
-
-                # Skip AI-flagged (observation is about authentic voice)
-                if sid in _ai_flagged_ids:
-                    observations_map[sid] = (
-                        "Submission flagged as likely AI-generated; "
-                        "observation applies to authentic student work."
-                    )
-                    continue
-
-                obs_prompt = OBSERVATION_PROMPT.format(
-                    class_context=class_reading,
-                    assignment=assignment_prompt,
+                obs_text = observe_student(
+                    backend,
                     student_name=record.student_name,
                     submission_text=body,
+                    class_context=class_reading,
+                    assignment=assignment_prompt,
+                    is_ai_flagged=(sid in _ai_flagged_ids),
                     teacher_lens=_teacher_lens,
                 )
-
-                try:
-                    observation = send_text(
-                        backend, obs_prompt, OBSERVATION_SYSTEM_PROMPT,
-                        max_tokens=300,
-                    )
-                    observations_map[sid] = observation.strip()
-                except Exception as exc:
-                    log.warning("Observation failed for %s: %s", sid, exc)
-                    observations_map[sid] = ""
+                observations_map[sid] = obs_text
 
                 # Store on the record
-                record.observation = observations_map[sid]
+                record.observation = obs_text
                 self._store.save_coding(
                     run_id, sid, record.student_name, record.model_dump_json()
                 )
