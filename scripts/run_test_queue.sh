@@ -5,6 +5,14 @@
 #
 # Usage:
 #   caffeinate -i ./scripts/run_test_queue.sh
+#   caffeinate -i ./scripts/run_test_queue.sh --timeout-scale 2.0  # double all timeouts
+#   PIPELINE_TIMEOUT=21600 caffeinate -i ./scripts/run_test_queue.sh
+#
+# Timeout configuration:
+#   --timeout-scale <factor>   Multiply all timeouts by this factor (default 1.0)
+#   PIPELINE_TIMEOUT env var   Override pipeline timeout (default 18000s / 5h)
+#   TEST_TIMEOUT env var       Override per-test timeout (default 3600s / 1h)
+#   F_BATCH_TIMEOUT env var    Override F batch timeout (default 2400s / 40m)
 #
 # Queue:
 #   1. Full pipeline re-run (with all prompt fixes applied)
@@ -17,12 +25,28 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
+# Parse timeout scale factor
+TIMEOUT_SCALE=1.0
+for arg in "$@"; do
+    case $arg in
+        --timeout-scale=*) TIMEOUT_SCALE="${arg#*=}" ;;
+        --timeout-scale) shift; TIMEOUT_SCALE="${1:-1.0}" ;;
+    esac
+done
+
+# Configurable timeouts (env vars override defaults, scale factor applies)
+_scale() { echo "$1 * $TIMEOUT_SCALE" | bc | cut -d. -f1; }
+PIPELINE_T=$(_scale "${PIPELINE_TIMEOUT:-18000}")
+TEST_T=$(_scale "${TEST_TIMEOUT:-3600}")
+F_BATCH_T=$(_scale "${F_BATCH_TIMEOUT:-2400}")
+
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 LOG="data/research/raw_outputs/test_queue_${TIMESTAMP}.log"
 mkdir -p data/research/raw_outputs
 
 echo "═══════════════════════════════════════════════" | tee "$LOG"
 echo "  Test Queue — $TIMESTAMP" | tee -a "$LOG"
+echo "  Timeouts: pipeline=${PIPELINE_T}s test=${TEST_T}s F_batch=${F_BATCH_T}s (scale=${TIMEOUT_SCALE})" | tee -a "$LOG"
 echo "═══════════════════════════════════════════════" | tee -a "$LOG"
 
 # Metal warmup
@@ -76,7 +100,7 @@ run_test() {
 #   - multiplicity + pedagogical wins sections
 #   - confusion_or_questions field
 #   - structural naming in observation prompt
-run_test "Pipeline re-run (all fixes)" 18000 \
+run_test "Pipeline re-run (all fixes)" "$PIPELINE_T" \
     scripts/generate_demo_insights.py --course ethnic_studies
 
 sleep 15  # longer pause after full pipeline — lots of Metal allocation
@@ -85,7 +109,7 @@ sleep 15  # longer pause after full pipeline — lots of Metal allocation
 # Tests whether the prompt changes actually work at 12B:
 # structural naming quality, anti-spotlighting, what_reaching_for,
 # preamble stripping. See test docstring for interpretation guide.
-run_test "J: Pipeline validation" 3600 \
+run_test "J: Pipeline validation" "$TEST_T" \
     scripts/run_alt_hypothesis_tests.py --tests J --no-subprocess
 
 sleep 10
@@ -95,19 +119,19 @@ sleep 10
 # NO MLX required — all calls go to cloud. Safe to run after Metal tests.
 # Scores models on: structural naming, language justice, relational
 # analysis, pedagogical depth, anti-spotlighting.
-run_test "K: Enhancement model comparison" 1800 \
+run_test "K: Enhancement model comparison" "$TEST_T" \
     scripts/run_alt_hypothesis_tests.py --tests K --no-subprocess
 
 # --- Step 4: Test F batches (if time permits) ---
 for batch in 1 2 3 4; do
-    run_test "F batch $batch/4 (n=5)" 2400 \
+    run_test "F batch $batch/4 (n=5)" "$F_BATCH_T" \
         scripts/run_alt_hypothesis_tests.py --tests F --runs 5 --no-subprocess
     # Brief pause for Metal recovery between batches
     sleep 10
 done
 
 # --- Step 5: Test I — Tier 2 wellbeing classification on observations ---
-run_test "I: Tier 2 wellbeing classification" 1800 \
+run_test "I: Tier 2 wellbeing classification" "$TEST_T" \
     scripts/run_tier2_wellbeing_test.py
 
 echo "" | tee -a "$LOG"
