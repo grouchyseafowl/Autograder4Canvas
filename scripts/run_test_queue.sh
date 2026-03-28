@@ -92,20 +92,7 @@ run_test() {
     return $rc
 }
 
-# --- Step 1: Full pipeline re-run (with all prompt fixes) ---
-# This regenerates the baked demo JSON with:
-#   - reading-first coding (populates what_student_is_reaching_for)
-#   - preamble stripping on observations
-#   - anti-spotlighting in observation synthesis
-#   - multiplicity + pedagogical wins sections
-#   - confusion_or_questions field
-#   - structural naming in observation prompt
-run_test "Pipeline re-run (all fixes)" "$PIPELINE_T" \
-    scripts/generate_demo_insights.py --course ethnic_studies
-
-sleep 15  # longer pause after full pipeline — lots of Metal allocation
-
-# --- Step 2: Test J — Pipeline validation ---
+# --- Step 1: Test J — Pipeline validation ---
 # Tests whether the prompt changes actually work at 12B:
 # structural naming quality, anti-spotlighting, what_reaching_for,
 # preamble stripping. See test docstring for interpretation guide.
@@ -114,7 +101,7 @@ run_test "J: Pipeline validation" "$TEST_T" \
 
 sleep 10
 
-# --- Step 3: Test K — Enhancement model comparison (cloud, no MLX) ---
+# --- Step 2: Test K — Enhancement model comparison (cloud, no MLX) ---
 # Tests anonymized enhancement prompt against free OpenRouter models.
 # NO MLX required — all calls go to cloud. Safe to run after Metal tests.
 # Scores models on: structural naming, language justice, relational
@@ -122,13 +109,24 @@ sleep 10
 run_test "K: Enhancement model comparison" "$TEST_T" \
     scripts/run_alt_hypothesis_tests.py --tests K --no-subprocess
 
-# --- Step 4: Test F batches (if time permits) ---
+# --- Step 3: Test F batches (if time permits) ---
 for batch in 1 2 3 4; do
     run_test "F batch $batch/4 (n=5)" "$F_BATCH_T" \
         scripts/run_alt_hypothesis_tests.py --tests F --runs 5 --no-subprocess
     # Brief pause for Metal recovery between batches
     sleep 10
 done
+
+# --- Step 4: Test M — Production concern detector (MSOT validation) ---
+# Runs the ACTUAL production concern_detector.detect_concerns() on test
+# students + wellbeing cases. Answers: does the production system (with
+# anti-bias post-processing, confidence thresholding, signal matrix)
+# reproduce the same S029/S002 failures as the simplified test prompt?
+# This is the most methodologically important test in the queue.
+run_test "M: Production concern detector" "$TEST_T" \
+    scripts/run_alt_hypothesis_tests.py --tests M --no-subprocess
+
+sleep 10
 
 # --- Step 5: Test L — Expanded wellbeing classifier (4-axis) ---
 # Tests CRISIS/BURNOUT/ENGAGED/NONE schema. Should fix Test I's
@@ -143,22 +141,29 @@ sleep 10
 run_test "I: Tier 2 wellbeing (3-axis baseline)" "$TEST_T" \
     scripts/run_tier2_wellbeing_test.py
 
+sleep 15
+
+# --- Step 7: Pipeline re-run (last — longest, checkpointed) ---
+# Runs after all tests so Metal has clean state for the 5h pipeline.
+# Resumes from class_reading checkpoint (skips Stages 1 + 1.5).
+run_test "Pipeline re-run (all fixes)" "$PIPELINE_T" \
+    scripts/generate_demo_insights.py --course ethnic_studies
+
 echo "" | tee -a "$LOG"
 echo "═══════════════════════════════════════════════" | tee -a "$LOG"
 echo "  Queue complete. Log: $LOG" | tee -a "$LOG"
 echo "" | tee -a "$LOG"
 echo "  RESULTS INTERPRETATION GUIDE:" | tee -a "$LOG"
-echo "  Pipeline re-run: Check data/demo_baked/checkpoints/ for" | tee -a "$LOG"
-echo "    updated ethnic_studies_*_coding.json. Verify" | tee -a "$LOG"
-echo "    what_student_is_reaching_for is populated (was 0/32)." | tee -a "$LOG"
-echo "  Test J: See test docstring for scoring interpretation." | tee -a "$LOG"
-echo "    Key metrics: structural_naming_score, violation_count," | tee -a "$LOG"
-echo "    reaching_for populated count. Note: J2 uses ~10 students" | tee -a "$LOG"
-echo "    (not 32) and no P7 insight ranking." | tee -a "$LOG"
+echo "  Test M: THE CRITICAL TEST. Does the production concern detector" | tee -a "$LOG"
+echo "    reproduce S029 false-flag and S002 miss? If production system" | tee -a "$LOG"
+echo "    handles S029 correctly, the n=25 finding is specific to the" | tee -a "$LOG"
+echo "    simplified binary prompt, not a general classification failure." | tee -a "$LOG"
+echo "  Test J: structural_naming_score, violation_count," | tee -a "$LOG"
+echo "    reaching_for count. J2 uses ~10 students, no P7 ranking." | tee -a "$LOG"
 echo "  Test K: Rank models by total score AND per-dimension." | tee -a "$LOG"
-echo "    Language justice dimension is hardest — flag models" | tee -a "$LOG"
-echo "    scoring 0 there." | tee -a "$LOG"
+echo "    Language justice dimension hardest — flag 0-scorers." | tee -a "$LOG"
 echo "  Test L vs I: Compare false positive rates. L should have" | tee -a "$LOG"
 echo "    0/2 FP (vs I's 1/2). If ENGAGED absorbed BURNOUT cases," | tee -a "$LOG"
 echo "    the prompt needs refinement." | tee -a "$LOG"
+echo "  Pipeline: Check what_student_is_reaching_for populated (was 0/32)." | tee -a "$LOG"
 echo "═══════════════════════════════════════════════" | tee -a "$LOG"

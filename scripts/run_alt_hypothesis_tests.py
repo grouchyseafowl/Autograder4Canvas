@@ -2009,6 +2009,193 @@ def get_backend_from_cfg(cfg: dict):
 
 
 # ---------------------------------------------------------------------------
+# Test M: Production concern detector on test corpus + wellbeing cases
+# ---------------------------------------------------------------------------
+
+def test_m_production_detector(model_key: str = "gemma12b"):
+    """Run the ACTUAL production concern detector on test students.
+
+    Tests B/C/F used a simplified binary prompt. This test runs the real
+    concern_detector.detect_concerns() with its full pipeline:
+    - Signal matrix pre-screening
+    - Production CONCERN_PROMPT (richer than the test-harness prompt)
+    - Anti-bias post-processing (_check_bias_in_output)
+    - Course-content disambiguation
+    - Confidence thresholding (0.7 minimum to surface)
+
+    Answers the critical methodological question: does the production system
+    reproduce the same failures as the simplified test prompt?
+
+    If S029 is NOT flagged by the production system, the n=25 finding is
+    specific to the simplified binary format, and the production concern
+    detector may be adequate. If S029 IS flagged, the failure generalizes.
+    """
+    print(f"\n{'='*60}")
+    print(f"  TEST M: Production Concern Detector ({model_key})")
+    print(f"{'='*60}")
+
+    from insights.concern_detector import detect_concerns
+    from insights.patterns import signal_matrix_classify
+
+    corpus = load_corpus()
+    class_reading = load_class_reading()
+    backend = get_backend(model_key)
+    assignment = "Week 6 Discussion: Intersectionality in Practice"
+
+    # Test corpus students (same as Tests B/C/F)
+    corpus_cases = [
+        ("S002", "burnout", True),     # true positive — should FLAG
+        ("S004", "strong", False),     # should NOT flag
+        ("S022", "righteous_anger", False),
+        ("S023", "lived_exp", False),
+        ("S028", "AAVE", False),
+        ("S029", "neurodivergent", False),  # the critical case
+        ("S031", "minimal_effort", False),
+    ]
+
+    # Also run on wellbeing cases (for comparison with Tests G/H/I/L)
+    wb_cases = [
+        (case["id"], case["name"], case["text"], case["signal_type"],
+         case["expected_surface"])
+        for case in WELLBEING_SIGNAL_CASES
+    ]
+
+    results = []
+
+    print(f"\n  --- Corpus students (production detector) ---")
+    for sid, pattern, should_flag in corpus_cases:
+        student = corpus[sid]
+        body = student["text"]
+        wc = len(body.split())
+
+        # Run signal matrix (same as production pipeline)
+        from insights.quick_analyzer import QuickAnalyzer
+        vader_compound = 0.0  # simplified — production uses full VADER
+        sig_results = signal_matrix_classify(body, vader_compound, wc, 150)
+
+        t0 = time.time()
+        concerns = detect_concerns(
+            submission_text=body,
+            student_name=student["student_name"],
+            student_id=sid,
+            assignment_prompt=f"Assignment: {assignment}",
+            signal_matrix_results=sig_results,
+            tier="lightweight",
+            backend=backend,
+            class_context=class_reading,
+        )
+        elapsed = round(time.time() - t0, 1)
+
+        flagged = len(concerns) > 0
+        if should_flag:
+            correct = "OK" if flagged else "MISSED"
+        else:
+            correct = "OK" if not flagged else "FALSE-FLAG"
+
+        results.append({
+            "codepath": "production_concern_detector",
+            "source": "corpus",
+            "student_id": sid,
+            "student_name": student["student_name"],
+            "pattern": pattern,
+            "should_flag": should_flag,
+            "flagged": flagged,
+            "correct": correct,
+            "n_concerns": len(concerns),
+            "concerns": [
+                {
+                    "flagged_passage": c.flagged_passage[:200],
+                    "why_flagged": c.why_flagged[:300],
+                    "confidence": c.confidence,
+                }
+                for c in concerns
+            ],
+            "time_seconds": elapsed,
+        })
+
+        flag_str = f"FLAG ({len(concerns)})" if flagged else "CLEAR"
+        confs = [f"{c.confidence:.2f}" for c in concerns]
+        print(f"  {sid} {student['student_name']:20s} {pattern:20s} "
+              f"{flag_str:10s} [{correct}] confs={confs} ({elapsed}s)")
+
+    print(f"\n  --- Wellbeing cases (production detector) ---")
+    for wid, wname, wtext, wsignal, wexpected in wb_cases:
+        wc = len(wtext.split())
+        sig_results = signal_matrix_classify(wtext, 0.0, wc, 150)
+
+        t0 = time.time()
+        concerns = detect_concerns(
+            submission_text=wtext,
+            student_name=wname,
+            student_id=wid,
+            assignment_prompt=f"Assignment: {assignment}",
+            signal_matrix_results=sig_results,
+            tier="lightweight",
+            backend=backend,
+            class_context=class_reading,
+        )
+        elapsed = round(time.time() - t0, 1)
+
+        flagged = len(concerns) > 0
+        if wexpected:
+            correct = "OK" if flagged else "MISSED"
+        else:
+            correct = "OK" if not flagged else "FALSE-FLAG"
+
+        results.append({
+            "codepath": "production_concern_detector",
+            "source": "wellbeing_synthetic",
+            "student_id": wid,
+            "student_name": wname,
+            "signal_type": wsignal,
+            "expected_flag": wexpected,
+            "flagged": flagged,
+            "correct": correct,
+            "n_concerns": len(concerns),
+            "concerns": [
+                {
+                    "flagged_passage": c.flagged_passage[:200],
+                    "why_flagged": c.why_flagged[:300],
+                    "confidence": c.confidence,
+                }
+                for c in concerns
+            ],
+            "time_seconds": elapsed,
+        })
+
+        flag_str = f"FLAG ({len(concerns)})" if flagged else "CLEAR"
+        print(f"  {wid:5s} {wname:22s} {wsignal:22s} "
+              f"{flag_str:10s} [{correct}] ({elapsed}s)")
+
+    # Summary
+    print(f"\n  === Production Detector Summary ===")
+    corpus_r = [r for r in results if r["source"] == "corpus"]
+    wb_r = [r for r in results if r["source"] == "wellbeing_synthetic"]
+
+    s029 = next((r for r in corpus_r if r["student_id"] == "S029"), None)
+    s002 = next((r for r in corpus_r if r["student_id"] == "S002"), None)
+    print(f"  S029 (neurodivergent): {'FLAGGED' if s029 and s029['flagged'] else 'CLEAR'}"
+          f" — {'SAME as simplified test' if s029 and s029['flagged'] else 'DIFFERENT from simplified test'}")
+    print(f"  S002 (burnout):        {'FLAGGED' if s002 and s002['flagged'] else 'CLEAR'}"
+          f" — {'DIFFERENT from simplified test' if s002 and s002['flagged'] else 'SAME as simplified test'}")
+
+    wb_signals = [r for r in wb_r if r["expected_flag"]]
+    wb_controls = [r for r in wb_r if not r["expected_flag"]]
+    wb_caught = sum(1 for r in wb_signals if r["flagged"])
+    wb_fp = sum(1 for r in wb_controls if r["flagged"])
+    print(f"  Wellbeing signals: {wb_caught}/{len(wb_signals)} caught")
+    print(f"  Wellbeing controls: {wb_fp}/{len(wb_controls)} false positives")
+
+    path = save_results("test_m_production_detector", model_key, results, {
+        "note": "Production concern detector (full pipeline) on test corpus + wellbeing cases",
+        "codepath": "production_concern_detector",
+        "features": "signal_matrix + CONCERN_PROMPT + anti_bias_postprocessing + confidence_threshold_0.7",
+    })
+    print(f"\n  Results: {path}")
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
 
@@ -2063,6 +2250,8 @@ def _run_single_test(test_id: str, model: str, runs: int):
         test_k_enhancement_comparison()
     elif test_id == "L":
         test_l_expanded_wellbeing(model)
+    elif test_id == "M":
+        test_m_production_detector(model)
     else:
         log.error("Unknown test: %s", test_id)
         sys.exit(1)
