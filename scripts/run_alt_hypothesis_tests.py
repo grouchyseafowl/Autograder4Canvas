@@ -532,7 +532,8 @@ def save_results(test_name: str, model_key: str, results: list, metadata: dict =
     """
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     date = datetime.now().strftime("%Y-%m-%d")
-    filename = f"{test_name}_{model_key}_{date}.json"
+    time_tag = datetime.now().strftime("%H%M")
+    filename = f"{test_name}_{model_key}_{date}_{time_tag}.json"
     output = {
         "test_name": test_name,
         "model": MODELS.get(model_key, {}).get("model", model_key),
@@ -1506,67 +1507,59 @@ ENHANCEMENT_QUALITY_MARKERS = {
     ],
 }
 
-# Models to test — free or very cheap on OpenRouter.
-# These all receive the SAME anonymized enhancement prompt.
-# Cost is per-run cost for ~1200 output tokens.
-# Models confirmed available on OpenRouter free tier (queried 2026-03-28).
-# Gemma 27B free does NOT support system prompts via Google AI Studio backend —
-# system prompt must be folded into user message for that model.
+# Models to test — free tier on OpenRouter (confirmed 2026-03-28).
+# Ordered: reliable providers first, Venice (rate-limited) last.
+# This ensures we get data from working models even if Venice quota is hit.
+_OR = {"base_url": "https://openrouter.ai/api/v1", "api_key_fn": _openrouter_key}
 ENHANCEMENT_MODELS = {
+    # --- Tier 1: Reliable providers (no rate limit issues in testing) ---
     "gemma27b_free": {
-        "name": "cloud",
-        "model": "google/gemma-3-27b-it:free",
-        "max_tokens": 1200,
-        "temperature": 0.3,
-        "base_url": "https://openrouter.ai/api/v1",
-        "api_key_fn": _openrouter_key,
-        "cost_note": "Free — Google AI Studio (no system prompt support)",
+        "name": "cloud", "model": "google/gemma-3-27b-it:free",
+        "max_tokens": 1200, "temperature": 0.3, **_OR,
+        "cost_note": "Free — Google-hosted (no system prompt)",
         "fold_system_into_user": True,
     },
-    "llama70b_free": {
-        "name": "cloud",
-        "model": "meta-llama/llama-3.3-70b-instruct:free",
-        "max_tokens": 1200,
-        "temperature": 0.3,
-        "base_url": "https://openrouter.ai/api/v1",
-        "api_key_fn": _openrouter_key,
-        "cost_note": "Free — rate limited, may need retry",
-    },
-    "mistral_small_free": {
-        "name": "cloud",
-        "model": "mistralai/mistral-small-3.1-24b-instruct:free",
-        "max_tokens": 1200,
-        "temperature": 0.3,
-        "base_url": "https://openrouter.ai/api/v1",
-        "api_key_fn": _openrouter_key,
-        "cost_note": "Free — rate limited, may need retry",
-    },
     "nemotron_120b_free": {
-        "name": "cloud",
-        "model": "nvidia/nemotron-3-super-120b-a12b:free",
-        "max_tokens": 1200,
-        "temperature": 0.3,
-        "base_url": "https://openrouter.ai/api/v1",
-        "api_key_fn": _openrouter_key,
-        "cost_note": "Free — 120B MoE (12B active), 262K context",
+        "name": "cloud", "model": "nvidia/nemotron-3-super-120b-a12b:free",
+        "max_tokens": 1200, "temperature": 0.3, **_OR,
+        "cost_note": "Free — NVIDIA-hosted, 120B MoE (12B active)",
     },
-    "glm45_air_free": {
+    "step_flash_free": {
+        "name": "cloud", "model": "stepfun/step-3.5-flash:free",
+        "max_tokens": 1200, "temperature": 0.3, **_OR,
+        "cost_note": "Free — StepFun-hosted, 196B MoE (11B active)",
+    },
+    "arcee_trinity_free": {
+        "name": "cloud", "model": "arcee-ai/trinity-large-preview:free",
+        "max_tokens": 1200, "temperature": 0.3, **_OR,
+        "cost_note": "Free — Arcee-hosted, 400B MoE (13B active), preview",
+    },
+    "minimax_m25_free": {
+        "name": "cloud", "model": "minimax/minimax-m2.5:free",
+        "max_tokens": 1200, "temperature": 0.3, **_OR,
+        "cost_note": "Free — MiniMax-hosted, 196K context",
+    },
+    # --- Tier 2: Venice-hosted (privacy-first but rate-limited) ---
+    "dolphin_mistral_free": {
         "name": "cloud",
-        "model": "z-ai/glm-4.5-air:free",
-        "max_tokens": 1200,
-        "temperature": 0.3,
-        "base_url": "https://openrouter.ai/api/v1",
-        "api_key_fn": _openrouter_key,
-        "cost_note": "Free — GLM 4.5, 131K context",
+        "model": "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+        "max_tokens": 1200, "temperature": 0.3, **_OR,
+        "cost_note": "Free — Venice (no-logging), 24B",
     },
     "hermes_405b_free": {
-        "name": "cloud",
-        "model": "nousresearch/hermes-3-llama-3.1-405b:free",
-        "max_tokens": 1200,
-        "temperature": 0.3,
-        "base_url": "https://openrouter.ai/api/v1",
-        "api_key_fn": _openrouter_key,
-        "cost_note": "Free — 405B, rate limited",
+        "name": "cloud", "model": "nousresearch/hermes-3-llama-3.1-405b:free",
+        "max_tokens": 1200, "temperature": 0.3, **_OR,
+        "cost_note": "Free — Venice (no-logging), 405B dense",
+    },
+    "llama70b_free": {
+        "name": "cloud", "model": "meta-llama/llama-3.3-70b-instruct:free",
+        "max_tokens": 1200, "temperature": 0.3, **_OR,
+        "cost_note": "Free — Venice, 70B dense",
+    },
+    "mistral_small_free": {
+        "name": "cloud", "model": "mistralai/mistral-small-3.1-24b-instruct:free",
+        "max_tokens": 1200, "temperature": 0.3, **_OR,
+        "cost_note": "Free — Venice, 24B",
     },
 }
 
@@ -2374,6 +2367,206 @@ def test_n_four_axis_submissions(model_key: str = "gemma12b"):
 
 
 # ---------------------------------------------------------------------------
+# Test O: Multi-axis classification (student can be ENGAGED + CRISIS)
+# ---------------------------------------------------------------------------
+
+MULTI_AXIS_SYSTEM = (
+    "You are assessing a student's submission for their teacher.\n\n"
+    "A student can be in MULTIPLE states simultaneously — a student writing "
+    "brilliantly about intersectionality CAN ALSO be in personal crisis. "
+    "Tag ALL that apply:\n\n"
+    "- CRISIS: The student's OWN current situation involves active danger or "
+    "instability. Present-tense personal circumstances: DV, housing loss, food "
+    "insecurity, immigration enforcement threat, grief/loss.\n"
+    "- BURNOUT: The student is depleted — exhaustion, overwork, caregiving, "
+    "sleep deprivation. Metacommentary about fatigue, trailing off, apologies.\n"
+    "- CHECK-IN: Something subtle that doesn't rise to CRISIS or BURNOUT but "
+    "the teacher might want to note — a shift in tone, a trailing-off ending, "
+    "a brief mention of difficulty that could be nothing or could be something. "
+    "When in doubt between ENGAGED-only and CHECK-IN, choose CHECK-IN.\n"
+    "- ENGAGED: The student is doing the assignment. Passionate engagement with "
+    "difficult material is ENGAGEMENT. AAVE, neurodivergent patterns, multilingual "
+    "mixing are valid academic registers.\n\n"
+    "CRITICAL: A student can be ENGAGED AND in CRISIS (e.g., writing powerfully "
+    "about intersectionality while also revealing their family faces ICE enforcement). "
+    "Tag BOTH.\n\n"
+    "Respond with JSON: {\"axes\": [\"ENGAGED\", \"CRISIS\"], "
+    "\"signal\": \"brief description\", \"confidence\": 0.0-1.0}"
+)
+
+MULTI_AXIS_PROMPT = """\
+STUDENT: {student_name}
+SUBMISSION:
+---
+{submission_text}
+---
+
+Tag ALL applicable states. Respond with JSON only."""
+
+
+def test_o_multi_axis(model_key: str = "gemma12b"):
+    """Test multi-axis classification where students can have multiple tags.
+
+    Unlike Test N (single-axis: pick ONE of CRISIS/BURNOUT/ENGAGED/NONE),
+    this allows multiple simultaneous tags. A student can be ENGAGED + CRISIS.
+    Also adds CHECK-IN axis for subtle/ambiguous signals (targeting S002).
+
+    Answers: does allowing multiple axes catch signals that single-axis misses
+    (especially the ENGAGED + CRISIS overlap cases and the S002 ambiguity)?
+    """
+    print(f"\n{'='*60}")
+    print(f"  TEST O: Multi-Axis Classification ({model_key})")
+    print(f"{'='*60}")
+
+    corpus = load_corpus()
+    backend = get_backend(model_key)
+    from dataclasses import replace as _replace
+    backend = _replace(backend, temperature=0.1)
+
+    import re as _re
+
+    # Corpus students
+    corpus_cases = [
+        ("S002", "burnout", ["BURNOUT", "CHECK-IN"]),
+        ("S004", "strong", ["ENGAGED"]),
+        ("S022", "righteous_anger", ["ENGAGED"]),
+        ("S023", "lived_exp", ["ENGAGED"]),
+        ("S028", "AAVE", ["ENGAGED"]),
+        ("S029", "neurodivergent", ["ENGAGED"]),
+        ("S031", "minimal_effort", ["ENGAGED"]),
+    ]
+
+    results = []
+
+    print(f"\n  --- Corpus students ---")
+    for sid, pattern, expected_axes in corpus_cases:
+        student = corpus[sid]
+        prompt = MULTI_AXIS_PROMPT.format(
+            student_name=student["student_name"],
+            submission_text=student["text"],
+        )
+        t0 = time.time()
+        output = send(backend, prompt, MULTI_AXIS_SYSTEM, max_tokens=200)
+        elapsed = round(time.time() - t0, 1)
+
+        # Parse axes array
+        axes_match = _re.search(r'"axes"\s*:\s*\[([^\]]*)\]', output)
+        if axes_match:
+            axes = [a.strip().strip('"').strip("'") for a in axes_match.group(1).split(",")]
+        else:
+            axes = ["PARSE_ERROR"]
+        conf_match = _re.search(r'"confidence"\s*:\s*([\d.]+)', output)
+        confidence = float(conf_match.group(1)) if conf_match else 0.0
+
+        has_crisis = "CRISIS" in axes
+        has_burnout = "BURNOUT" in axes
+        has_checkin = "CHECK-IN" in axes
+        has_engaged = "ENGAGED" in axes
+
+        results.append({
+            "codepath": "test_harness_multi_axis",
+            "source": "corpus",
+            "student_id": sid,
+            "student_name": student["student_name"],
+            "pattern": pattern,
+            "expected_axes": expected_axes,
+            "actual_axes": axes,
+            "confidence": confidence,
+            "has_crisis": has_crisis,
+            "has_burnout": has_burnout,
+            "has_checkin": has_checkin,
+            "has_engaged": has_engaged,
+            "prompt": prompt,
+            "system_prompt": MULTI_AXIS_SYSTEM,
+            "raw_output": output,
+            "time_seconds": elapsed,
+        })
+
+        print(f"  {sid} {student['student_name']:20s} {pattern:20s} "
+              f"axes={axes} conf={confidence:.1f}")
+
+    print(f"\n  --- Wellbeing cases ---")
+    for case in WELLBEING_SIGNAL_CASES:
+        is_control = case["signal_type"].startswith("control")
+        expected_axes = ["ENGAGED"] if is_control else (
+            ["ENGAGED", "BURNOUT"] if "burnout" in case["signal_type"]
+            else ["ENGAGED", "CRISIS"]
+        )
+
+        prompt = MULTI_AXIS_PROMPT.format(
+            student_name=case["name"],
+            submission_text=case["text"],
+        )
+        t0 = time.time()
+        output = send(backend, prompt, MULTI_AXIS_SYSTEM, max_tokens=200)
+        elapsed = round(time.time() - t0, 1)
+
+        axes_match = _re.search(r'"axes"\s*:\s*\[([^\]]*)\]', output)
+        if axes_match:
+            axes = [a.strip().strip('"').strip("'") for a in axes_match.group(1).split(",")]
+        else:
+            axes = ["PARSE_ERROR"]
+        conf_match = _re.search(r'"confidence"\s*:\s*([\d.]+)', output)
+        confidence = float(conf_match.group(1)) if conf_match else 0.0
+
+        has_crisis = "CRISIS" in axes
+        has_burnout = "BURNOUT" in axes
+        has_checkin = "CHECK-IN" in axes
+
+        if is_control:
+            correct = "OK" if not (has_crisis or has_burnout) else "FALSE-FLAG"
+        else:
+            correct = "OK" if (has_crisis or has_burnout) else "MISSED"
+
+        results.append({
+            "codepath": "test_harness_multi_axis",
+            "source": "wellbeing_synthetic",
+            "student_id": case["id"],
+            "student_name": case["name"],
+            "signal_type": case["signal_type"],
+            "expected_axes": expected_axes,
+            "actual_axes": axes,
+            "confidence": confidence,
+            "has_crisis": has_crisis,
+            "has_burnout": has_burnout,
+            "has_checkin": has_checkin,
+            "correct": correct,
+            "prompt": prompt,
+            "system_prompt": MULTI_AXIS_SYSTEM,
+            "raw_output": output,
+            "time_seconds": elapsed,
+        })
+
+        print(f"  {case['id']:5s} {case['name']:22s} axes={axes} [{correct}]")
+
+    # Key results
+    print(f"\n  === Key Results ===")
+    s002 = next((r for r in results if r.get("student_id") == "S002"), None)
+    s029 = next((r for r in results if r.get("student_id") == "S029"), None)
+    if s002:
+        print(f"  S002 (burnout): axes={s002['actual_axes']} — "
+              f"{'CHECK-IN detected!' if s002['has_checkin'] or s002['has_burnout'] else 'Still missed'}")
+    if s029:
+        print(f"  S029 (neurodivergent): axes={s029['actual_axes']} — "
+              f"{'FALSE-FLAG' if s029['has_crisis'] or s029['has_burnout'] else 'Correctly ENGAGED'}")
+
+    wb_signals = [r for r in results if r["source"] == "wellbeing_synthetic" and not r["signal_type"].startswith("control")]
+    wb_controls = [r for r in results if r["source"] == "wellbeing_synthetic" and r["signal_type"].startswith("control")]
+    caught = sum(1 for r in wb_signals if r["has_crisis"] or r["has_burnout"])
+    fp = sum(1 for r in wb_controls if r["has_crisis"] or r["has_burnout"])
+    dual = sum(1 for r in wb_signals if (r["has_crisis"] or r["has_burnout"]) and r.get("has_engaged"))
+    print(f"  WB signals: {caught}/{len(wb_signals)} caught, {dual} dual-tagged (ENGAGED + signal)")
+    print(f"  WB controls: {fp}/{len(wb_controls)} false positives")
+
+    path = save_results("test_o_multi_axis", model_key, results, {
+        "note": "Multi-axis: students can be ENGAGED + CRISIS simultaneously. Adds CHECK-IN for ambiguous cases.",
+        "codepath": "test_harness_multi_axis",
+    })
+    print(f"\n  Results: {path}")
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
 
@@ -2432,6 +2625,8 @@ def _run_single_test(test_id: str, model: str, runs: int):
         test_m_production_detector(model)
     elif test_id == "N":
         test_n_four_axis_submissions(model)
+    elif test_id == "O":
+        test_o_multi_axis(model)
     else:
         log.error("Unknown test: %s", test_id)
         sys.exit(1)
