@@ -3281,6 +3281,141 @@ Raw data: `data/research/raw_outputs/test_m_production_detector_gemma12b_2026-03
 Provenance: `c9f2098` (dirty — Test M added but uncommitted when run started)
 Codepath: `production_concern_detector` (confirmed in result metadata)
 
+## Test L: 4-Axis on Observations — ENGAGED absorbs signals (2026-03-28)
+
+4-axis schema (CRISIS/BURNOUT/ENGAGED/NONE) classifying observation text.
+
+| Case | Expected | Got | Correct? |
+|---|---|---|---|
+| WB01 Rosa (ICE) | CRISIS | **ENGAGED** | MISSED |
+| WB02 Keisha (caregiving) | BURNOUT | **ENGAGED** | MISSED |
+| WB03 Miguel (housing) | CRISIS | CRISIS | OK |
+| WB04 Jasmine (DV) | CRISIS | **ENGAGED** | MISSED |
+| WB05 Tyler (burnout) | BURNOUT | BURNOUT | OK |
+| WB06 Amira (food) | CRISIS | CRISIS | OK |
+| WB07 Sofia (tonal rupture) | CRISIS | **ENGAGED** | MISSED |
+| WB08 Brandon (grief) | CRISIS | BURNOUT | OK (axis wrong) |
+| WB09 Priya (control) | ENGAGED | ENGAGED | OK |
+| WB10 DeAndre (control) | ENGAGED | ENGAGED | OK |
+
+**4/8 signals caught, 0/2 false positives.** WORSE than 3-axis Test I (8/8).
+
+**Analysis**: The ENGAGED category absorbs crisis signals because the
+observation text describes students' intellectual engagement alongside their
+crisis (asset framing). When the model has an ENGAGED option, students who
+are BOTH engaged AND in crisis get classified as ENGAGED — the engagement
+signal is more prominent in observation text that was written to foreground
+strengths.
+
+This is a classification-meets-observation interaction effect: the
+observation format's asset framing, which is its equity strength for
+per-student reading, becomes a liability when a downstream classifier reads
+it. The classification schema needs to be applied EITHER to observations
+(where it must account for asset framing) OR to raw submissions (where the
+signals are unmediated). Applying 4-axis classification to asset-framed
+observations creates a false floor.
+
+**Refinement possibility**: Modify the prompt to instruct "If the student
+is BOTH engaged AND revealing personal crisis/burnout, classify as
+CRISIS/BURNOUT, not ENGAGED." Or allow multi-axis classification. Worth
+testing but suggests a deeper tension between classification and the
+observation architecture's asset framing.
+
+Raw data: `data/research/raw_outputs/test_l_expanded_wellbeing_gemma12b_2026-03-28.json`
+
+## Test N: 4-Axis on Raw Submissions — BEST CLASSIFICATION RESULT (2026-03-28)
+
+Same 4-axis schema (CRISIS/BURNOUT/ENGAGED/NONE) applied directly to raw
+student submissions (not observations). This is the methodological control
+for the "can classification be fixed?" question.
+
+### Corpus Students
+
+| Student | Pattern | Expected | Got | Correct? |
+|---|---|---|---|---|
+| S002 Jordan Kim | burnout | BURNOUT | **ENGAGED** | MISSED |
+| S004 Priya Venkataraman | strong | ENGAGED | ENGAGED | OK |
+| S022 Destiny Williams | righteous anger | ENGAGED | ENGAGED | OK |
+| S023 Yolanda Fuentes | lived exp | ENGAGED | ENGAGED | OK |
+| S028 Imani Drayton | AAVE | ENGAGED | ENGAGED | OK |
+| **S029 Jordan Espinoza** | neurodivergent | ENGAGED | **ENGAGED** | **OK** |
+| S031 Marcus Bell | minimal | ENGAGED | BURNOUT | Debatable |
+
+### Wellbeing Cases
+
+| Case | Expected | Got | Correct? |
+|---|---|---|---|
+| WB01 Rosa (ICE) | CRISIS | CRISIS | OK |
+| WB02 Keisha (caregiving) | BURNOUT | BURNOUT | OK |
+| WB03 Miguel (housing) | CRISIS | CRISIS | OK |
+| WB04 Jasmine (DV) | CRISIS | CRISIS | OK |
+| WB05 Tyler (burnout) | BURNOUT | BURNOUT | OK |
+| WB06 Amira (food) | CRISIS | CRISIS | OK |
+| WB07 Sofia (tonal rupture) | CRISIS | CRISIS | OK |
+| WB08 Brandon (grief) | CRISIS | CRISIS | OK |
+| WB09 Priya (control) | ENGAGED | ENGAGED | OK |
+| WB10 DeAndre (control) | ENGAGED | ENGAGED | OK |
+
+**8/8 wellbeing signals correct. 0/2 false positives. S029 correctly ENGAGED.**
+
+### Analysis — This changes the paper's argument
+
+Test N achieves the same wellbeing sensitivity as generative observations
+(8/8) with zero false positives, using a classification schema. This
+significantly complicates the thesis.
+
+**What Test N proves**: A well-designed multi-option classification schema
+CAN match observation quality on structured wellbeing detection. The binary
+format (concern: true/false) was the specific failure mode, not
+classification in general. With 4 options, the model can express nuance
+that binary forces it to compress.
+
+**What Test N doesn't fix**: S002 (burnout) is STILL classified as ENGAGED.
+The "Idk I had more to say but its late" signal is too subtle for any
+classification prompt to detect at 12B — it requires descriptive reading,
+not categorization. Only the generative observation caught this signal.
+
+**The revised thesis**: Classification format is a spectrum, not a binary.
+- Binary (concern: true/false) → deterministic failure on edge cases (n=25)
+- Production binary + safeguards → better but introduces new FPs (S028)
+- 4-axis classification → fixes S029, catches 8/8 wellbeing, misses S002
+- Generative observation → catches everything including S002, but requires
+  teacher to read prose rather than scan flags
+
+The publishable finding is NOT "classification fails and observation
+succeeds." It's: **"classification schema richness is a primary determinant
+of equity outcomes. Binary classification produces systematic disparate
+impact. Richer schemas reduce but don't eliminate it. Generative
+observation eliminates classification-induced harm entirely but shifts the
+cognitive burden to the teacher-reader. The optimal system likely combines
+both: observations for per-student reading, and 4-axis classification for
+flagging/routing."**
+
+This connects to Suchman's (1987) "Plans and Situated Actions" — the
+richer the schema, the more it can represent of situated reality, but no
+schema fully captures situated meaning. At some point, you need the human
+in the loop reading the actual text.
+
+### Complete comparison matrix (all approaches tested)
+
+| Approach | S029 | S002 | S028 | WB sens. | WB FP | Notes |
+|---|---|---|---|---|---|---|
+| Binary simplified | FLAG 25/25 | CLEAR | CLEAR | 7/8 B, 3/8 C | 0/2 | Test harness only |
+| Production detector | CLEAR | CLEAR | FLAG | 5/8 | 1/2 | Full pipeline |
+| 4-axis on obs (L) | — | — | — | 4/8 | 0/2 | Asset framing masks crisis |
+| **4-axis on subs (N)** | **ENGAGED** | ENGAGED | **ENGAGED** | **8/8** | **0/2** | Best classification |
+| 3-axis on obs (I) | — | — | — | 8/8 | 1/2 | No ENGAGED option |
+| Obs generative (G) | — | caught | — | 8/8 | 0/2* | Catches S002 too |
+
+*keyword evaluator FP, observation text clean
+
+**n=1 for Tests L, N, M. Replication needed before these findings are
+publishable.** Test M replication particularly critical — the S029 CLEAR
+result could flip on a second run if the production detector is sensitive
+to model temperature or prompt variance.
+
+Raw data: `data/research/raw_outputs/test_n_4axis_submissions_gemma12b_2026-03-28_1113.json`
+
 ---
 
 # Session — 2026-03-28
@@ -3733,3 +3868,182 @@ Gemma.
 6. **stepfun/step-3.5-flash:free** — UNTESTED. Chinese lab, 196B/11B MoE.
    Worth testing for linguistic diversity perspective — training data may
    include different cultural framings of race and power.
+
+### Free tier viability: testing artifact vs production concern
+
+The rate limiting (429s on Venice-hosted models) is **primarily a testing
+artifact**, not a production blocker:
+
+**Testing pattern:** 9 sequential requests within ~3 minutes, each
+requiring ~1200 tokens. Looks like automated batch usage → triggers
+per-key rate limits on Venice.ai.
+
+**Production pattern:** A teacher runs enhancement once per assignment,
+roughly weekly. One request with minutes/hours between sessions. Unlikely
+to hit rate limits.
+
+**However, free tier reliability IS a production concern for a different
+reason:** no SLA. Google could discontinue Gemma 27B free hosting. Venice
+could reduce quotas. A teacher depending on this weekly needs a fallback —
+already built in (Tier 2 browser handoff works without any API).
+
+**For the paper:** Frame free tier as "viable for individual teacher use
+but not for institutional deployment." Institutions should self-host
+(Tier 4) or use paid API with privacy agreement (Tier 3). Free tier is
+the accessibility option for teachers without institutional support —
+which, given ed-tech resource distribution, means teachers serving the
+most marginalized students (#ALGORITHMIC_JUSTICE: cost barriers in
+ed-tech reproduce existing inequities).
+
+### Expanded Test K (11:01) — 4 models scored, 5 rate-limited
+
+**CORRECTION:** Earlier reporting used scores from the 10:29 run (6
+models, old list). The 11:01 run with 9 models overwrote the file
+(naming fix applied after). Corrected scores below.
+
+4 of 9 models succeeded. All Venice-hosted models (Llama 70B, Mistral
+Small, Dolphin-Mistral, Hermes 405B) hit 429 rate limits. MiniMax M2.5
+also failed (error, not rate limit). Non-Venice models all succeeded.
+
+| Model | Total | Struct | LangJ | Relat | PedD | AntiS | Words | Time | Provider |
+|-------|-------|--------|-------|-------|------|-------|-------|------|----------|
+| **Gemma 27B** | **8** | 2 | 1 | 3 | 2 | 0 | 674 | 18.1s | Google |
+| **Nemotron 120B** | **7** | 2 | 2 | 1 | 1 | 1 | 803 | 53.2s | NVIDIA |
+| **StepFun 196B** | **7** | 2 | 1 | 1 | 3 | 0 | 595 | 22.3s | StepFun |
+| **Arcee Trinity** | **6** | 2 | 0 | 3 | 1 | 0 | 385 | 4.8s | Arcee |
+| Llama 70B | fail | | | | | | | | Venice 429 |
+| Mistral Small | fail | | | | | | | | Venice 429 |
+| Dolphin-Mistral | fail | | | | | | | | Venice 429 |
+| Hermes 405B | fail | | | | | | | | Venice 429 |
+| MiniMax M2.5 | fail | | | | | | | | error |
+
+**Key finding: each model has a distinct quality profile.**
+
+All 4 scored 2 on structural_naming — every model correctly names
+colorblind erasure and tone policing. The dimensions that differentiate:
+
+**Gemma 27B (score 8, best overall):** Strongest on relational_analysis
+(3) — constructs tension pairs as "sites of learning," explicitly names
+the analytical/experiential divide as "a difference in entry point, not a
+hierarchy of understanding." Good on pedagogical_depth (2) — names
+"capacity vs. engagement" distinction, suggests meta-discussion about
+assumptions. language_justice (1): mentions AAVE and neurodivergent writing
+as valid but uses general framing ("intellectual rigor can manifest in
+diverse registers") rather than specific asset naming.
+
+**Nemotron 120B MoE (score 7):** Strongest analytical precision. Its
+distinction between colorblind as "denial of the relevance of race as a
+structural category" and tone policing as "treats emotional expression as a
+disruption to rational discourse" is the most precise of any model —
+separating denial of *content* from regulation of *form*. language_justice
+(2): explicitly mentions registers and neurodivergent cognitive styles.
+Only model to score on anti_spotlighting (1). Weaker on relational and
+pedagogical dimensions. For teachers with critical theory background, this
+precision is most useful.
+
+**StepFun 196B MoE (score 7):** Strongest on pedagogical_depth (3) —
+uniquely frames the class as having a "bimodal distribution" and notes
+that "deep engagement is not monolithic and may be undervalued by
+conventional academic metrics." Also the only model to explicitly say
+AAVE/neurodivergent analysis "suggests the class's deep engagement...may
+be undervalued by conventional academic metrics" — framing the measurement
+system as the problem, not the student (#DISABILITY_STUDIES,
+#FEMINIST_TECHNOSCIENCE). Chinese lab training data may contribute a
+different perspective on educational assessment norms.
+
+**Arcee Trinity 400B MoE (score 6):** Strongest on relational_analysis
+(3, tied with Gemma) despite shortest output (385 words, 4.8s — fastest
+by far). Zero on language_justice — didn't mention AAVE or neurodivergent
+writing at all. Describes resistant students as "at similar developmental
+stages — both defending against a framework that challenges their
+epistemic comfort zones" — a different framing that collapses the
+colorblind/tone-policing distinction Nemotron carefully maintains.
+Truncated output (385 words suggests provider-side limit or early stop).
+
+**No model scored above 1 on anti_spotlighting** — the keyword patterns
+remain too narrow. All 4 models recommend structural approaches in
+practice (Gemma: "navigate the tensions"; Nemotron: doesn't suggest
+individual interventions; StepFun: "catalysts for metacognitive learning";
+Arcee: "epistemic comfort zones"). The scoring dimension needs wider
+keyword coverage, but the models ARE doing anti-spotlighting.
+
+**Caveats for the paper:**
+- Scores are keyword-based, not human-rated. Language_justice in
+  particular is undercounted — Gemma explicitly discusses AAVE and
+  neurodivergent writing as valid but only matches 1 keyword pattern.
+  Human review of raw outputs is essential.
+- Same prompt across all models, but Gemma gets system prompt folded
+  into user message (Google AI Studio limitation). This may slightly
+  advantage models that receive a proper system prompt.
+- Temperature 0.3 across all models. Variance across runs not tested
+  for cloud models (would require multiple runs per model).
+- Venice-hosted models (5 of 9) consistently rate-limited. This is a
+  testing artifact (rapid sequential requests), not a production issue.
+  Overnight retry needed for Llama 70B, Hermes 405B, Dolphin-Mistral.
+
+### Gemma 27B vs Nemotron 120B — social responsibility comparison
+
+**Privacy (free tier):**
+
+Both are open-weight and self-hostable (the gold standard for data
+sovereignty). On free tier, both route through corporate infrastructure:
+
+- Gemma 27B → Google AI Studio. Google ToS: free-tier inputs may be used
+  for product improvement. Teacher's anonymized patterns could enter
+  training data. Low-risk for our payload (no student data), but cultural
+  patterns about how students in a community engage with race carry
+  information worth considering (#INDIGENOUS_DATA_SOVEREIGNTY).
+
+- Nemotron 120B → NVIDIA API. Similar terms for free tier.
+
+- Venice.ai (Dolphin-Mistral, Hermes 405B): Claims no-logging,
+  no-training-on-inputs. Best privacy posture among free providers — but
+  rate-limited in our testing. Needs off-peak retry.
+
+Self-hosting either model eliminates all third-party data transmission.
+
+**Environmental impact:**
+
+- Gemma 27B: Dense model, 27B params active per token.
+- Nemotron 120B: MoE, ~12B params active per token.
+- StepFun 196B: MoE, ~11B active per token.
+- Arcee Trinity 400B: MoE, ~13B active per token.
+
+**MoE models are more energy-efficient per inference.** Nemotron (~12B
+active), StepFun (~11B active), and Arcee (~13B active) use roughly half
+the compute of Gemma's 27B dense pass. At individual teacher scale
+(weekly), trivial difference. At institutional scale (100+ teachers),
+MoE has meaningfully lower energy footprint. All companies' training
+energy costs are opaque.
+
+**Corporate accountability:**
+
+- Google: Dominant in educational technology (Classroom, Chromebooks,
+  GSuite for Education). Using Gemma further concentrates a teacher's
+  toolchain within Google's ecosystem — even for an anonymized call.
+  History: fired AI ethics researchers (Gebru, Mitchell 2020-21); also
+  funds AI safety research. Strong open-source record (Gemma, T5, BERT).
+
+- NVIDIA: Dominant in AI hardware supply chain. GPUs power both beneficial
+  and harmful AI. Less direct education sector presence. Growing
+  open-source commitment (NeMo, Nemotron). GPUs used in surveillance
+  systems but less direct involvement than Google.
+
+Neither company is unproblematic. The browser handoff path (Tier 2) lets
+teachers choose their own provider — including institutional chatbots they
+already trust.
+
+### File naming fix
+
+`save_results()` now uses `{date}_{HHMM}` timestamps, preventing
+same-day reruns from overwriting prior results.
+
+### Updated enhancement model list (9 models, no GPT)
+
+Removed OpenAI GPT-OSS (corporate objection) and GLM 4.5 (empty
+response). Added MiniMax M2.5, Arcee Trinity 400B, StepFun Flash,
+Dolphin-Mistral (Venice privacy-first). All confirmed $0/$0 via API.
+
+Venice-hosted models (Llama 70B, Mistral Small, Hermes 405B,
+Dolphin-Mistral) and new additions (MiniMax, Arcee, StepFun) still
+need off-peak testing for full comparison.
