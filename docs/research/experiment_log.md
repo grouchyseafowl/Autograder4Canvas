@@ -2105,6 +2105,11 @@ Compared the Gemma 12B pipeline output against two gold standards:
   temperature, students to check in with, 24 coded themes. Misses
   phone/driving detection (per-student architecture can't see cross-student
   patterns). Does NOT construct dialectical tension pairs.
+  **NOTE (2026-03-27):** The "19 off-topic phone essays" and shared-text
+  detection (Ethan Liu / Nadia Petrov) are artifacts of how round 1 test
+  corpus was constructed, NOT real student behavior. These students were
+  retired in the round 2 corpus. Cross-student plagiarism detection is not
+  a meaningful gap to address — do not treat this as a pipeline deficiency.
 
 **Dimension 4 — Qualitative richness:**
 - Opus: "Aiden is essentially asking Destiny to perform calm while
@@ -2724,10 +2729,83 @@ launching long test suites. `caffeinate -i` prevents system sleep during
 active runs. Subprocess isolation means individual failures are contained,
 but the parent needs retry logic for stuck subprocesses (not yet implemented).
 
-## Test F: Extended B/C Stability — in progress (2026-03-27)
+## Test F: Extended B/C Stability — blocked by Metal deadlocks (2026-03-27)
 
-Running 20 iterations of Tests B and C (280 total inferences) to establish
-flag rates at higher n. The n=5 results showed 0% sensitivity on S002
-burnout and 100% false-flag rate on S029 neurodivergent. 20 runs will
-determine whether these rates are truly stable or whether edge cases
-occasionally flip. Results pending.
+Multiple attempts to run n=20 (280 inferences) have failed due to Metal
+deadlocks — both subprocess mode (post-sleep driver issue) and in-process
+mode (memory accumulation or sleep interruption). The n=5 results remain
+the current data point. Running in smaller batches (n=5 per session) and
+accumulating results across sessions is the fallback approach.
+
+## Test I: Tier 2 Wellbeing Classification on Observations (2026-03-28)
+
+Tests whether classifying **observations** (the model's equity-framed
+reading) correctly identifies wellbeing signals — the core question for
+the wellbeing post-pass design.
+
+### Results
+
+| Case | Axis | Tier 2 | Confidence | Correct? |
+|---|---|---|---|---|
+| WB01 Rosa (ICE stress) | CRISIS | BURNOUT* | 0.8 | OK (detected) |
+| WB02 Keisha (teen parent) | BURNOUT | BURNOUT | 0.8 | OK |
+| WB03 Miguel (housing) | CRISIS | CRISIS | 0.9 | OK |
+| WB04 Jasmine (DV) | CRISIS | CRISIS | 0.8 | OK |
+| WB05 Tyler (exhaustion) | BURNOUT | BURNOUT | 0.9 | OK |
+| WB06 Amira (food) | CRISIS | CRISIS | 0.9 | OK |
+| WB07 Sofia (tonal rupture) | CRISIS | CRISIS | 0.8 | OK |
+| WB08 Brandon (grief) | CRISIS | CRISIS | 0.9 | OK |
+| WB09 Priya (control) | CONTROL | **BURNOUT** | **0.6** | **FALSE-FLAG** |
+| WB10 DeAndre (control) | CONTROL | NONE | 0.9 | OK |
+
+*WB01 axis misclassified as BURNOUT (should be CRISIS) but detected.
+
+### Comparison across all approaches
+
+| Format | Signals | False pos. | Notes |
+|---|---|---|---|
+| **Tier 2 (classify obs.)** | **8/8** | **1/2** | Best sensitivity; 1 FP on analytical ICE engagement |
+| Observation keywords (G) | 8/8 | 2/2 | Keyword noise ("eat" in "great") |
+| Binary B on submissions (H) | 7/8 | 0/2 | Missed WB01 ICE entirely |
+| Binary C on submissions (H) | 3/8 | 0/2 | Missed 5/8 — worst sensitivity |
+
+### Analysis
+
+**Classifying observations is better than classifying submissions** — 8/8
+vs 7/8 (B) or 3/8 (C). The equity framing in the observation text helps
+the classifier see through the "engaged student" surface to the underlying
+signal. But it's not immune to false positives.
+
+**WB09 (Priya Sharma) was false-flagged** at confidence 0.6. The observation
+described her as "demonstrating a strong grasp" of intersectionality with
+"particularly insightful" analysis of ICE raids — clearly analytical
+engagement, not personal crisis. But the Tier 2 classifier picked up on the
+ICE/immigration content in the observation and flagged it as BURNOUT.
+
+This is the **same population at risk** from the binary concern detector:
+students in Ethnic Studies writing analytically about immigration,
+poverty, or violence. The students most likely to be false-flagged are
+the ones whose communities are most affected by these issues — students
+writing from proximity to the topics they study. A false "check-in" flag
+on Priya because she analyzed ICE raids academically is exactly the kind
+of surveillance-as-care that critical pedagogy warns about.
+
+**The confidence differential is useful.** WB09 was flagged at 0.6; all
+genuine signals were 0.8-0.9. A confidence threshold of 0.7 would
+eliminate this false positive while retaining all true positives. But
+n=1 — this needs testing at scale before we trust the threshold.
+
+**WB01 axis was wrong.** Rosa's ICE stress was classified as BURNOUT (not
+CRISIS). The distinction matters for teacher response — burnout suggests
+flexibility/support, crisis suggests counselor referral or mandated
+reporting. The axis classification needs prompt refinement.
+
+**The honest assessment**: Tier 2 is promising but not production-ready.
+It improves on both binary classification (better sensitivity) and keyword
+detection (fewer false positives). But the WB09 false-flag shows it hasn't
+fully solved the core problem: distinguishing analytical engagement from
+personal crisis when the topics overlap. More test cases needed, especially
+more controls with topic overlap (students writing analytically about DV,
+homelessness, food insecurity — not just ICE).
+
+Raw data: `data/research/raw_outputs/test_i_tier2_wellbeing_2026-03-28.json`
