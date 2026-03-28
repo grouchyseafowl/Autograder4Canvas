@@ -1,0 +1,67 @@
+{
+  "test_name": "test_k_venice_paid",
+  "date": "2026-03-28",
+  "timestamp": "2026-03-28T11:22:13.834055",
+  "note": "Venice/paid-routing models. Same weights as free tier, paid routing bypasses rate limits. Compare to free-tier results for routing variance assessment.",
+  "results": [
+    {
+      "model_key": "dolphin_mistral_paid",
+      "model_id": "cognitivecomputations/dolphin-mistral-24b-venice-edition",
+      "error": "Error code: 404 - {'error': {'message': 'No endpoints found for cognitivecomputations/dolphin-mistral-24b-venice-edition.', 'code': 404}, 'user_id': 'user_3800p1Xc4Vi1mtiYIHJrObTKuW2'}",
+      "scores": {},
+      "total_score": -1,
+      "routing": "paid"
+    },
+    {
+      "model_key": "hermes_405b_paid",
+      "model_id": "nousresearch/hermes-3-llama-3.1-405b",
+      "cost_note": "Paid \u2014 Venice (no-logging), 405B dense",
+      "scores": {
+        "structural_naming": 2,
+        "language_justice": 0,
+        "relational_analysis": 1,
+        "pedagogical_depth": 2,
+        "anti_spotlighting": 0
+      },
+      "total_score": 5,
+      "word_count": 319,
+      "raw_output": "The patterns in the class's engagement with the Week 6 discussion on intersectionality reveal a range of understandings and experiences. Most of the class is engaging with Crenshaw's framework at a surface level, indicating a basic grasp of the concepts. However, a smaller cluster of 6-8 students demonstrates a deeper personal connection to the material, suggesting that they are relating the theory to their own lives and contexts. This personal-structural bridging is a strong indicator of meaningful learning.\n\nThe tensions between the analytical and experiential engagers, while challenging, present a valuable opportunity for learning. This tension highlights the difference between intellectual understanding and lived experience, a key concept in intersectionality. By bringing this tension into the classroom as a structured discussion, the teacher can help students explore the complexities of intersectionality and the various ways it can be understood and applied.\n\nThe teacher should pay close attention to the two students who are resisting the structural analysis, as their distinct moves require different pedagogical responses. The student using colorblind framing may benefit from a discussion on the importance of acknowledging and addressing structural inequalities, while the student calling for 'calm discussion' may need guidance on understanding the impact of tone policing and the validity of emotional engagement.\n\nThe student showing signs of burnout is a concern that requires a different approach. The teacher should check in with this student and provide support and accommodations as needed to ensure they can continue to engage with the material to the best of their ability.\n\nOverall, the class is showing a range of engagement with the material, from surface-level understanding to deep personal connection. The tensions present in the discussion are productive and can be used to deepen understanding and promote critical thinking. The teacher should focus on addressing the distinct needs of the resistant students and supporting the student experiencing burnout while leveraging the productive tensions to enhance learning for all.",
+      "time_seconds": 14.1,
+      "routing": "paid"
+    },
+    {
+      "model_key": "llama70b_paid",
+      "model_id": "meta-llama/llama-3.3-70b-instruct",
+      "cost_note": "Paid routing, 70B dense",
+      "scores": {
+        "structural_naming": 2,
+        "language_justice": 0,
+        "relational_analysis": 3,
+        "pedagogical_depth": 2,
+        "anti_spotlighting": 0
+      },
+      "total_score": 7,
+      "word_count": 493,
+      "raw_output": "The engagement analysis reveals a complex and dynamic class environment, with students demonstrating various levels of understanding and engagement with the intersectionality framework. The patterns suggest that the class is at a critical juncture, where some students are deeply invested in the material, while others are resisting or struggling to connect with it.\n\nThe presence of students who are making personal-structural connections, using community-grounded language, and extending the framework to current events indicates a strong foundation for critical thinking and analysis. These students are demonstrating a nuanced understanding of intersectionality and its applications, which is a positive sign for the class's overall engagement.\n\nHowever, the resistant students who employ colorblind framing and tone policing moves indicate a need for targeted pedagogical attention. These students are not only resisting the structural analysis but also potentially creating a hostile environment for their peers who are sharing personal experiences and emotions. The teacher should recognize that these students require distinct responses, as their resistance stems from different underlying issues. The colorblind student may need guidance on recognizing and acknowledging the relevance of race and structural analysis, while the tone-policing student may need to understand the impact of their words on others and the importance of creating a safe space for emotional expression.\n\nThe tension between analytical and experiential engagers is a productive one, as it highlights the complexity of intersectionality and the need for both theoretical understanding and personal connection. This tension can be leveraged to create a rich and nuanced discussion, where students can learn from each other's perspectives and approaches. By acknowledging and exploring this tension, the teacher can help students develop a deeper understanding of the framework and its applications.\n\nThe burnout student's submission is a concern, but it is essential to distinguish between engagement quality and capacity issues. The teacher should prioritize supporting this student's well-being and providing resources to help them manage their workload, rather than focusing solely on their engagement with the material.\n\nThe class temperature suggests that the majority of students are engaged with the material, but there are pockets of resistance and disconnection. The teacher should pay attention to the following areas:\n\n1. **Resistant students**: Develop targeted strategies to address the distinct resistance moves, such as colorblind framing and tone policing, to create a more inclusive and safe environment.\n2. **Analytical-experiential tension**: Leverage this tension to create a structured discussion that values both theoretical understanding and personal connection, fostering a deeper understanding of intersectionality.\n3. **Student well-being**: Support the burnout student and be aware of potential capacity issues that may affect other students, providing resources and accommodations as needed.\n4. **Inclusive environment**: Continue to create a safe space for students to share their experiences and emotions, acknowledging the importance of emotional engagement and personal connection in the learning process.\n\nBy attending to these areas, the teacher can foster a more inclusive, supportive, and engaging learning environment, where students can develop a nuanced understanding of intersectionality and its applications.",
+      "time_seconds": 13.5,
+      "routing": "paid"
+    },
+    {
+      "model_key": "mistral_small_paid",
+      "model_id": "mistralai/mistral-small-3.1-24b-instruct",
+      "cost_note": "Paid routing, 24B",
+      "scores": {
+        "structural_naming": 2,
+        "language_justice": 2,
+        "relational_analysis": 2,
+        "pedagogical_depth": 2,
+        "anti_spotlighting": 2
+      },
+      "total_score": 10,
+      "word_count": 645,
+      "raw_output": "### Pedagogical Analysis\n\n#### Understanding of Intersectionality\n- **Surface-Level Engagement**: Most students are engaging with Crenshaw's framework at a surface level, indicating that they have a basic understanding of the concepts but may not yet be applying them deeply or critically. This suggests that while the foundational knowledge is there, there is room for deeper exploration and application.\n- **Deep Personal Connection**: A cluster of 6-8 students are making deep personal connections to the material, which is a strong indicator of meaningful engagement. This suggests that these students are not only understanding the theoretical framework but also relating it to their own experiences, which is crucial for internalizing and applying the concepts.\n- **Resistant Students**: Two students are resisting the structural analysis through distinct moves (colorblind framing and tone policing). This resistance can be seen as an opportunity for further dialogue and critical reflection rather than a barrier. It indicates that these students may need more scaffolding or different approaches to understand the relevance and importance of structural analysis.\n\n#### Tensions and Productive Learning Opportunities\n- **Analytical vs. Experiential Engagement**: The tension between students who approach intersectionality as a theoretical framework and those who experience it as a lived reality is highly productive. This tension can be leveraged to foster a richer understanding of the material. By acknowledging and validating both perspectives, the teacher can facilitate a dialogue that bridges the gap between theory and practice, making the learning experience more holistic and inclusive.\n- **Tone Policing vs. Lived Experience Urgency**: The tension between the call for 'calm discussion' and the urgent expression about family safety highlights a structural power dynamic. This tension can be used to discuss the importance of emotional validity and the ways in which certain voices are silenced or marginalized. It provides an opportunity to explore how power dynamics influence discourse and how to create a more inclusive and respectful learning environment.\n\n#### Areas of Attention\n- **Distinct Pedagogical Responses for Resistant Students**: The two resistant students are making different moves and will require different pedagogical responses. The student using colorblind framing may benefit from activities that emphasize the historical and systemic aspects of race, while the student engaging in tone policing may need guidance on recognizing and validating emotional expressions.\n- **Burnout**: The student showing signs of burnout is not a concern about engagement quality but rather a capacity issue. The teacher should be mindful of this student's workload and emotional well-being, ensuring that they are supported without singling them out. This could involve flexible deadlines, additional resources, or check-ins to assess their needs.\n- **Neurodivergent and Linguistic Diversity**: The student using AAVE and the neurodivergent student are both engaging deeply with the material in ways that might be overlooked if traditional academic standards are applied. Recognizing and valuing these diverse forms of expression can enrich the classroom dynamic and foster a more inclusive learning environment. The teacher should be attentive to these forms of engagement and ensure they are valued and integrated into the classroom discourse.\n- **Class Temperature**: The overall class temperature indicates a good level of engagement, with a mix of surface-level understanding and deep personal connections. The teacher should aim to build on this engagement by encouraging more students to make personal-structural connections and by addressing the tensions in a way that deepens understanding for all students.\n\n#### Conclusion\nThe class is at a stage where they have a foundational understanding of intersectionality, but there is significant room for deeper engagement and critical reflection. The tensions within the class, particularly between analytical and experiential engagement, can be leveraged to foster a more nuanced understanding of the material. The teacher should pay attention to the distinct needs of resistant students, support the student experiencing burnout, and value diverse forms of expression and engagement. By doing so, the teacher can create a more inclusive and enriching learning environment.",
+      "time_seconds": 53.1,
+      "routing": "paid"
+    }
+  ]
+}

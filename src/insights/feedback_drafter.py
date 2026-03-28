@@ -107,63 +107,59 @@ def _build_preprocessing_fragment(meta: Optional[dict]) -> str:
     return "PREPROCESSING CONTEXT:\n" + "\n".join(parts)
 
 
-def _build_concern_context(record: dict) -> str:
-    """Build concern-aware drafting guidance.
+def _build_wellbeing_context(record: dict) -> str:
+    """Build context for wellbeing-aware and observation-aware feedback drafting.
 
-    The feedback drafter needs to know WHAT was flagged so it can avoid
-    validating that behavior.  The student never sees this context — it
-    shapes the draft, not the output.
+    Replaces _build_concern_context(). Reads wellbeing classifier output
+    + observation prose instead of binary concern flags.
 
-    Previous version only provided tone guidance ("write with warmth")
-    without content awareness, allowing feedback to validate the exact
-    behavior that concerns flagged (e.g., Connor Walsh's colorblind
-    framing).  This version passes concern content so the LLM can steer
-    away from validating the flagged behavior.
+    The observation text is passed as context so the LLM can read it for
+    structural power moves (tone policing, colorblind erasure, etc.) —
+    no fragile string matching. The student never sees this context.
     """
-    concerns = record.get("concerns", [])
+    axis = record.get("wellbeing_axis", "NONE")
+    observation = record.get("observation", "")
+    reaching_for = record.get("what_student_is_reaching_for", "")
     register = record.get("emotional_register", "")
 
-    if not concerns and register != "disengaged":
-        return ""
+    parts = []
 
-    lines = []
-    if concerns:
-        lines.append(
-            "CONCERN-AWARE DRAFTING: This student has been flagged for "
-            "teacher attention. Do NOT reference any concerns in the "
-            "feedback — they are for the teacher only. However, you "
-            "MUST avoid praising or validating the specific behavior "
-            "that was flagged. Write with warmth while steering toward "
-            "growth in the flagged area."
+    # Wellbeing-aware tone
+    if axis in ("CRISIS", "BURNOUT"):
+        parts.append(
+            "WELLBEING-AWARE DRAFTING: This student shows signs of "
+            f"{axis.lower()}. Write with extra warmth. Do NOT add "
+            "performance pressure. Do NOT reference the wellbeing "
+            "signal — the student should see only a supportive comment."
         )
-        # Pass content summaries so the LLM knows WHAT to avoid
-        for c in concerns:
-            if isinstance(c, dict):
-                why = c.get("why_flagged", "")
-                passage = c.get("flagged_passage", "")
-            else:
-                why = getattr(c, "why_flagged", "")
-                passage = getattr(c, "flagged_passage", "")
-            if why:
-                lines.append(f"  AVOID VALIDATING: {why[:200]}")
-                if passage:
-                    lines.append(
-                        f"  (Flagged passage: \"{passage[:120]}...\")"
-                    )
-        lines.append(
-            "Find a DIFFERENT strength in the student's work to "
-            "highlight. If the concern involves dismissing others' "
-            "experiences, the growth area could invite the student to "
-            "consider additional perspectives — frame as an invitation, "
-            "not a correction."
+
+    # Pass observation for structural move awareness
+    # The LLM reads the observation to know if tone policing, colorblind
+    # erasure, or other structural moves were identified — and avoids
+    # validating them in the feedback.
+    if observation:
+        parts.append(
+            f"OBSERVATION CONTEXT (for your awareness, NOT for the student):\n"
+            f"{observation}\n\n"
+            "If this observation identifies a structural power move (tone "
+            "policing, colorblind erasure, etc.), do NOT validate or praise "
+            "that framing in your feedback. Redirect gently toward deeper "
+            "engagement with the structural analysis."
         )
-    if register == "disengaged":
-        lines.append(
+
+    # Growth direction from reading-first coding
+    if reaching_for:
+        parts.append(f"GROWTH DIRECTION: {reaching_for}")
+
+    # Disengaged register (from coding) — may overlap with BURNOUT axis
+    if register == "disengaged" and axis not in ("CRISIS", "BURNOUT"):
+        parts.append(
             "TONE GUIDANCE: This student's submission shows signs of "
             "disengagement (shorter than usual, minimal content). Write "
             "with care, not performance pressure. Check in, not push."
         )
-    return "\n".join(lines)
+
+    return "\n\n".join(parts) if parts else ""
 
 
 def _build_style_fragment(style: str, lens: Optional[dict] = None) -> str:
@@ -253,7 +249,7 @@ class FeedbackDrafter:
             concepts_applied=_format_list(coding_record.get("concepts_applied", [])),
             personal_connections=_format_list(coding_record.get("personal_connections", [])),
             readings_referenced=_format_list(coding_record.get("readings_referenced", [])),
-            concern_context=_build_concern_context(coding_record),
+            concern_context=_build_wellbeing_context(coding_record),
             profile_fragment="",
             style_fragment=_build_style_fragment(feedback_style, analysis_lens),
             length_fragment=_build_length_fragment(feedback_length),

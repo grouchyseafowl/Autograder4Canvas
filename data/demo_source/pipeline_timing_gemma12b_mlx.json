@@ -1,18 +1,5 @@
 {
   "ethnic_studies": {
-    "quick_analysis": 12.04,
-    "class_reading": 1135.53,
-    "coding_total": 3185.82,
-    "coding_per_student_avg": 99.06,
-    "concerns": 2875.42,
-    "observations": 2069.61,
-    "themes": 1312.49,
-    "outliers": 420.92,
-    "synthesis": 303.74,
-    "observation_synthesis": 288.78,
-    "feedback": 1512.81,
-    "total": 13216.22,
-    "students": 32,
-    "per_student_total": 413.01
+    "error": "Pipeline returned None \u2014 check logs for errors"
   }
 }

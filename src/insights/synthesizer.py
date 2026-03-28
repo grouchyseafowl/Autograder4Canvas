@@ -446,17 +446,14 @@ def guided_synthesis(
     profile_fragment: str = "",
     settings: Optional[Dict[str, Any]] = None,
 ) -> GuidedSynthesisResult:
-    """Guided Synthesis Chain (A6).
+    """DEPRECATED: Guided Synthesis Chain (A6).
 
-    Replaces the broken open-ended 3-pass synthesis with 4 scoped, guided
-    calls that surface patterns and tensions without prescribing pedagogy.
-    The teacher is the synthesis layer — this provides the diagnosis.
+    Replaced by observation-based synthesis (Stage 8). The 4-axis wellbeing
+    classifier now handles concern detection; observations handle prose
+    synthesis. This function is kept for reference during transition but
+    is no longer called by the pipeline.
 
-    Each call has its own try/except. If Call 3 fails, Calls 1, 2, and 4
-    still complete and produce usable output. (#CRIP_TIME)
-
-    FERPA: Student names appear in LOCAL calls only. Cloud enhancement
-    uses ONLY anonymized pattern descriptions — validated before sending.
+    See docs/research/pipeline_architecture_spec.md for rationale.
     """
     result = GuidedSynthesisResult()
     settings = settings or {}

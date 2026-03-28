@@ -4033,6 +4033,40 @@ Neither company is unproblematic. The browser handoff path (Tier 2) lets
 teachers choose their own provider — including institutional chatbots they
 already trust.
 
+### Design items resolved by testing
+
+**Mycelial/distributed intelligence**: This IS the pipeline architecture.
+The synthesis-first design (class reading → per-student coding →
+observations → synthesis → optional cloud enhancement) is a chain of
+focused calls, each asking the 12B model to do something within its
+capability, composing into richer output than any single call. This was
+the design principle, not a separate feature to implement.
+
+**Language justice at 12B**: Resolved. Per-student: the observation
+prompt's equity floor ("AAVE, multilingual mixing, nonstandard English,
+and neurodivergent writing patterns are VALID ACADEMIC REGISTERS") works —
+Test J confirmed Imani (AAVE) and Jordan (neurodivergent) both get
+asset-framed observations. Class-level meta-framing ("intellectual labor
+undervalued by conventional academic metrics") is an enhancement-tier
+capability — StepFun, Gemma, and Mistral all produce it from anonymized
+patterns. No additional pipeline work needed.
+
+**Dialectical tensions**: Partially resolved. The "Moments for the
+Classroom" section (P1-P7 rewrite) frames tensions structurally without
+naming individual students — "Several students are wrestling with X while
+others approached through Y." Test J confirmed 12B produces this. The
+value is the tension itself (productive disagreement as pedagogy), not
+the student pairing. Enhancement tier adds analytical depth to the
+tensions (Gemma: "not a hierarchy of understanding"; Nemotron: "denial
+of content vs regulation of form"). Verify in P1-P7 re-run output that
+12B produces specific enough tensions to be actionable — if too generic,
+may need prompt refinement.
+
+**Free model browser testing**: Resolved. Test K validated the
+enhancement prompt across 7 models. The chatbot_export.py handoff
+generates the same anonymized format for browser pasting. Browser-
+specific testing (Gemini, Copilot) is a deployment task, not dev.
+
 ### File naming fix
 
 `save_results()` now uses `{date}_{HHMM}` timestamps, preventing
@@ -4494,3 +4528,100 @@ confirming one path, not exploring the model's uncertainty range. Temperature
 0.3 replications needed before publishing stability claims. Planned.
 
 Raw data: `test_o_multi_axis_gemma12b_2026-03-28_1225.json`
+
+### Strategic decisions made during session (not yet documented elsewhere)
+
+**Enhancement UX: three teacher-facing paths, no model names.**
+
+Teachers should choose by what they value, not by model:
+1. "Keep everything on my computer" — Tier 1, no cloud call
+2. "Enhance with a free service" — Gemma 27B free via OpenRouter.
+   Trade-off: Google may use data for product improvement.
+3. "Enhance with a privacy-focused service" — Mistral Small via Venice
+   (paid, ~$0.01/call). No-logging provider.
+4. "Paste into my school's AI tool" — browser handoff, always available.
+
+No model names, no parameter counts, no quality scores in the UI.
+Default: Gemma 27B free. Privacy alternative: Mistral Small paid.
+Browser handoff always visible (most future-proof path — not dependent
+on any specific model or provider).
+
+The enhancement should feel like a second opinion from a colleague, not
+a system upgrade. Local analysis has the student-level detail; enhancement
+has the class-level pedagogical framing. Both visible together.
+
+Full UX spec is a separate task for the GUI agent.
+
+**Multi-provider routing rejected.**
+
+Considered routing enhancement calls to different models per quality
+dimension (Nemotron for structural precision, StepFun for critical
+framing, Mistral for coverage). Rejected — this couples the system to
+specific model behaviors that will shift on the next training run. Free
+tier model list changed between our first and second test runs (Qwen
+72B and DeepSeek V3 disappeared). The enhancement is one ~$0.01 call;
+splitting across 3 providers adds 3 failure points and an assembly step
+for marginal quality gain. Ship one model, document what we tested.
+
+**Wellbeing classifier is course-agnostic by design.**
+
+The 4-axis schema (CRISIS/BURNOUT/ENGAGED/NONE) works regardless of
+subject — a student working closing shifts shows up in Biology lab
+reflections too. The ENGAGED axis description is subject-agnostic:
+"Students who bring personal and community life experience into their
+analysis are often doing the most sophisticated version of the
+assignment."
+
+Where subject matters is the FALSE POSITIVE RISK — highest in courses
+where content overlaps with students' lived circumstances (Ethnic Studies,
+History, Literature, Social Sciences, Health). The ENGAGED axis is most
+critical there. In technical courses (Math, CS), the false-positive risk
+is lower but burnout signals (late submissions, apologies) are the same.
+
+Decision: no teacher-facing configuration for wellbeing detection. The
+schema is universal. If subject-specific false positive patterns emerge
+in real deployment, adapt the prompt internally — that's engineering
+work, not teacher work.
+
+**ENGAGED prompt refined to include "life experience" explicitly.**
+
+The ENGAGED axis description was updated from "community and family
+knowledge used as analytical resource is a form of engagement, not a
+sign of distress" (defensive framing — explaining why it's NOT bad) to
+"students who bring personal and community life experience into their
+analysis are often doing the most sophisticated version of the
+assignment" (asset framing — naming what it IS). This mirrors the
+observation prompt's equity floor: describe what students ARE doing,
+not what they're NOT doing. The defensive framing was an echo of
+deficit thinking — defining community knowledge by its distance from
+a presumed norm (#FEMINIST_TECHNOSCIENCE: whose view of engagement
+is encoded as default?).
+
+**Observation synthesis max_tokens raised 1200 → 2000.**
+
+Required by the addition of 3 new synthesis sections (How Students
+Entered the Material, What's Working in This Assignment, Looking
+Ahead to Next Week) plus the P7 elevated insights block in teacher_lens.
+Applied to both engine.py and generate_demo_insights.py. If the 12B
+model still truncates late sections at 2000 tokens, may need to split
+into two synthesis calls or prioritize sections.
+
+### Known bugs and reproducibility issues
+
+**Test N parser bug**: The stored results in
+`test_n_4axis_submissions_gemma12b_*.json` show `axis=?` and
+`confidence=0.0` in the structured fields because the other agent's
+JSON parser didn't extract the values correctly. The RAW OUTPUT field
+contains the correct JSON (verified by manual extraction across all 4
+runs). Results reported in the experiment log are from manual extraction
+of the raw output, not from the (broken) structured fields. A future
+fix should correct the parser in `test_n_four_axis_submissions()` so
+stored results are self-consistent.
+
+**Test K overwrite**: The first K run (10:29, 6 models) was overwritten
+by the second K run (11:01, 9 models) because `save_results()` used
+only the date in filenames. Fixed by adding `_{HHMM}` timestamps. The
+10:29 data is lost — scores reported for that run were from reading the
+file before overwrite. The 11:01 data (with corrected scores) is the
+canonical K result. Venice paid-routing run saved separately as
+`test_k_venice_paid_2026-03-28_1122.json`.

@@ -6,7 +6,7 @@ Tier logic:
   Medium: 1 combined call per submission
   Deep: 1 full call per submission
 
-Concern detection is ALWAYS separate (see concern_detector.py).
+Wellbeing classification (4-axis) runs as a separate stage on raw submissions.
 """
 
 import json
@@ -768,3 +768,52 @@ def observe_student(
     except Exception as exc:
         log.warning("Observation failed for %s: %s", student_name, exc)
         return ""
+
+
+def classify_wellbeing(
+    backend: BackendConfig,
+    student_name: str,
+    submission_text: str,
+    *,
+    max_tokens: int = 150,
+) -> dict:
+    """Classify a student's submission on the 4-axis wellbeing schema.
+
+    Reads RAW SUBMISSION TEXT (not observations) — Test N showed 8/8,
+    0 FP on raw text. Classifying observations absorbs signals into
+    ENGAGED because observation text is already asset-framed.
+
+    Returns dict with keys: axis, signal, confidence.
+    Returns {"axis": "NONE", "signal": "", "confidence": 0.0} on failure.
+    """
+    from insights.prompts import (
+        WELLBEING_CLASSIFIER_SYSTEM, WELLBEING_CLASSIFIER_PROMPT
+    )
+
+    wc = len(submission_text.split())
+    if wc < 15:
+        return {"axis": "NONE", "signal": "Too brief", "confidence": 0.0}
+
+    prompt = WELLBEING_CLASSIFIER_PROMPT.format(
+        student_name=student_name,
+        submission_text=submission_text,
+    )
+
+    try:
+        raw = send_text(backend, prompt, WELLBEING_CLASSIFIER_SYSTEM,
+                        max_tokens=max_tokens)
+        parsed = _parse_response(raw, student_name, "wellbeing")
+
+        axis = parsed.get("axis", "NONE")
+        if axis not in ("CRISIS", "BURNOUT", "ENGAGED", "NONE"):
+            log.warning("Unexpected wellbeing axis '%s' for %s", axis, student_name)
+            axis = "NONE"
+
+        return {
+            "axis": axis,
+            "signal": parsed.get("signal", ""),
+            "confidence": float(parsed.get("confidence", 0.0)),
+        }
+    except Exception as exc:
+        log.warning("Wellbeing classification failed for %s: %s", student_name, exc)
+        return {"axis": "NONE", "signal": "", "confidence": 0.0}

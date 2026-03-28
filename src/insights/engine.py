@@ -5,8 +5,9 @@ Phase 1 flow:
   data_fetcher → preprocessing pipeline → quick_analyzer → save to insights_store
 
 Phase 2 flow (after quick analysis):
-  LLM backend detection → per-submission coding → concern detection →
-  theme generation → outlier surfacing → synthesis → save all to store
+  LLM backend detection → per-submission coding → wellbeing classification →
+  per-student observations → theme generation → outlier surfacing →
+  observation synthesis → feedback drafting → save all to store
 
 Takes progress_callback for GUI integration.
 Saves intermediaries at each stage for resumability.
@@ -22,7 +23,6 @@ from typing import Callable, Dict, List, Optional
 from insights.data_fetcher import DataFetcher
 from insights.insights_store import InsightsStore
 from insights.models import (
-    ConcernSignal,
     QuickAnalysisResult,
     SubmissionCodingRecord,
 )
@@ -909,12 +909,16 @@ class InsightsEngine:
                 return None
 
             # ----------------------------------------------------------
-            # Stage 5: Concern detection (dedicated pass)
+            # Stage 5: Wellbeing classification (4-axis, reads raw submissions)
+            # Replaces binary concern detection. Classifies each student as
+            # CRISIS / BURNOUT / ENGAGED / NONE. Validated Test N (n=4):
+            # 8/8, 0 FP, 100% stable across runs.
+            # Runs sequentially with observations (MLX single-inference on 16GB).
             # ----------------------------------------------------------
             _stage_t0 = time.time()
-            from insights.concern_detector import detect_concerns
+            from insights.submission_coder import classify_wellbeing
 
-            progress("Running dedicated concern detection...")
+            progress("Running wellbeing classification...")
 
             for i, record in enumerate(coding_records):
                 if self._cancelled:
@@ -922,86 +926,18 @@ class InsightsEngine:
 
                 sid = record.student_id
                 body = texts.get(sid, "")
-                wc = len(body.split())
 
-                progress(f"Concern check {i + 1}/{total}: {record.student_name}...")
+                progress(f"Wellbeing {i + 1}/{total}: {record.student_name}...")
 
-                # Guard: skip LLM concern detection for very short or gibberish submissions
-                quick_sub_concern = qa_result.per_submission.get(sid)
-                if wc < 15 or (quick_sub_concern and quick_sub_concern.is_gibberish):
-                    record.concerns = []
-                    self._store.save_coding(
-                        run_id, sid, record.student_name, record.model_dump_json()
-                    )
-                    continue
-
-                # AI-flagged submissions still get concern detection.
-                # A student in distress might use AI to complete work they
-                # can't manage — skipping them makes them invisible.
-                # The AIC flag is noted separately; concern detection runs
-                # on the actual submitted text regardless of authorship.
-
-                vader_compound = qa_result.sentiments.get(sid, {}).get("compound", 0.0)
-                sig_results = signal_matrix_classify(
-                    body, vader_compound, wc, qa_result.stats.word_count_median
-                )
-                student_signals = [
-                    s for s in qa_result.concern_signals if s.student_id == sid
-                ]
-
-                # Build linguistic context for equity protection
-                _ling_note = ""
-                _sentiment_tier = "high"
-                if quick_sub_concern and hasattr(quick_sub_concern, "linguistic_repertoire"):
-                    _rep = quick_sub_concern.linguistic_repertoire
-                    if _rep:
-                        if hasattr(_rep, "llm_context_note") and _rep.llm_context_note:
-                            _ling_note = _rep.llm_context_note
-                        if hasattr(_rep, "sentiment_tier"):
-                            _sentiment_tier = _rep.sentiment_tier or "high"
-
-                # Exp 1: Prepend sentiment reliability caveat to signal matrix
-                # when VADER is unreliable (AAVE, multilingual, neurodivergent)
-                if _sentiment_tier == "suppressed":
-                    _triggers = (
-                        list(_rep.sentiment_triggers) if _rep and hasattr(_rep, "sentiment_triggers") else []
-                    )
-                    sig_results = [
-                        ("_reliability_note", "sentiment_suppressed", "n/a",
-                         f"VADER sentiment SUPPRESSED ({', '.join(_triggers)}). "
-                         f"Tone-derived signals are unreliable for this student.")
-                    ] + list(sig_results)
-                elif _sentiment_tier == "low":
-                    sig_results = [
-                        ("_reliability_note", "sentiment_low", "n/a",
-                         "Sentiment score has low reliability. Exercise caution with tone-based flags.")
-                    ] + list(sig_results)
-
-                # Combine class reading + linguistic context
-                _combined_context = class_reading
-                if _ling_note:
-                    _combined_context = (
-                        f"{class_reading}\n\nLINGUISTIC NOTE FOR THIS STUDENT: {_ling_note}"
-                        if class_reading
-                        else f"LINGUISTIC NOTE FOR THIS STUDENT: {_ling_note}"
-                    )
-
-                concerns = detect_concerns(
-                    submission_text=body,
+                wb = classify_wellbeing(
+                    backend,
                     student_name=record.student_name,
-                    student_id=sid,
-                    assignment_prompt=assignment_prompt,
-                    signal_matrix_results=sig_results,
-                    concern_signals=student_signals,
-                    tier=model_tier,
-                    backend=backend,
-                    profile_fragment=profile_fragment,
-                    class_context=_combined_context,
+                    submission_text=body,
                 )
+                record.wellbeing_axis = wb["axis"]
+                record.wellbeing_signal = wb["signal"]
+                record.wellbeing_confidence = wb["confidence"]
 
-                record.concerns = concerns
-
-                # Re-save with concerns
                 self._store.save_coding(
                     run_id, sid, record.student_name, record.model_dump_json()
                 )
@@ -1009,10 +945,10 @@ class InsightsEngine:
                 if throttle > 0 and i < total - 1:
                     time.sleep(throttle)
 
-            self._store.complete_stage(run_id, "concerns")
-            self._emit_timing(timing_callback, "concerns", _stage_t0)
+            self._store.complete_stage(run_id, "wellbeing")
+            self._emit_timing(timing_callback, "wellbeing", _stage_t0)
 
-            # Release MLX model between concerns → observations
+            # Release MLX model between wellbeing → observations
             if backend and backend.name == "mlx":
                 self._unload_mlx()
 
@@ -1020,100 +956,7 @@ class InsightsEngine:
                 return None
 
             # ----------------------------------------------------------
-            # Post-Stage-5: Signal matrix concern fallback
-            # If the non-LLM signal matrix flagged a concern category
-            # (essentializing, colorblind, tone policing) but the LLM
-            # concern pass returned nothing, inject a non-LLM-generated
-            # concern record. This hardens the pipeline against model-
-            # specific blind spots — e.g. Qwen3 32B misses essentializing
-            # that the signal matrix catches.
-            # #ALGORITHMIC_JUSTICE: if the non-LLM layer sees harm and the
-            # LLM ignores it, the teacher should still be informed.
-            # ----------------------------------------------------------
-            _CONCERN_CATEGORIES = {"essentializing", "colorblind_ideology", "tone_policing"}
-            _CONCERN_LABELS = {
-                "essentializing": "Essentializing language detected by structural analysis",
-                "colorblind_ideology": "Colorblind ideology detected by structural analysis",
-                "tone_policing": "Tone policing detected by structural analysis",
-            }
-
-            try:
-                for record in coding_records:
-                    if record.concerns:
-                        continue  # LLM already flagged — no fallback needed
-
-                    sid = record.student_id
-                    body = texts.get(sid, "")
-                    if not body or len(body.split()) < 15:
-                        continue
-
-                    vader_compound = qa_result.sentiments.get(sid, {}).get(
-                        "compound", 0.0
-                    )
-                    wc = len(body.split())
-                    sig_results = signal_matrix_classify(
-                        body, vader_compound, wc,
-                        qa_result.stats.word_count_median,
-                    )
-
-                    # Check if signal matrix flagged a concern category
-                    for sig_type, keyword_cat, _, interpretation in sig_results:
-                        if (
-                            sig_type in ("CONCERN", "POSSIBLE CONCERN")
-                            and keyword_cat in _CONCERN_CATEGORIES
-                        ):
-                            # Find the matched text from the regex
-                            from insights.patterns import INSIGHT_PATTERNS
-                            pat = INSIGHT_PATTERNS.get(keyword_cat)
-                            match = pat.search(body) if pat else None
-                            matched_text = match.group(0) if match else ""
-
-                            fallback_concern = ConcernSignal(
-                                student_id=sid,
-                                student_name=record.student_name,
-                                signal_type=sig_type,
-                                keyword_category=keyword_cat,
-                                vader_polarity=classify_vader_polarity(vader_compound),
-                                matched_text=matched_text,
-                                interpretation=interpretation,
-                            )
-
-                            # Convert to ConcernRecord for the coding record
-                            from insights.models import ConcernRecord
-                            record.concerns.append(ConcernRecord(
-                                flagged_passage=matched_text,
-                                surrounding_context=(
-                                    f"[Detected by structural analysis, not LLM. "
-                                    f"The LLM concern pass did not flag this — "
-                                    f"this is a non-LLM fallback.]"
-                                ),
-                                why_flagged=_CONCERN_LABELS.get(
-                                    keyword_cat, interpretation
-                                ),
-                                confidence=0.5,
-                            ))
-
-                            log.info(
-                                "Signal matrix fallback: %s flagged for %s "
-                                "(LLM missed)",
-                                record.student_name, keyword_cat,
-                            )
-
-                    if record.concerns:
-                        self._store.save_coding(
-                            run_id, sid, record.student_name,
-                            record.model_dump_json(),
-                        )
-
-            except Exception as e:
-                log.warning("Signal matrix concern fallback error: %s", e)
-
-            if self._cancelled:
-                return None
-
-            # ----------------------------------------------------------
-            # Stage 5b: Per-student observations (observation-only architecture)
-            # Replaces binary concern detection with generative observations.
+            # Stage 5b: Per-student observations
             # Every student gets a 3-4 sentence observation describing their
             # intellectual reach, emotional engagement, and anything the teacher
             # should notice — including structural power moves.
@@ -1169,140 +1012,6 @@ class InsightsEngine:
 
             if self._cancelled:
                 return None
-
-            # ----------------------------------------------------------
-            # Stage 4b: Deepening pass (experimental — flagged students only)
-            # Runs ONLY for students with concern flags. Asks the 8B to:
-            #   1. Name the rhetorical strategy precisely
-            #   2. Reconsider emotional register given concern context
-            #   3. Surface theme tags in tension with the concern
-            # Results update emotional_register and emotional_notes in-place.
-            # Controlled by settings["insights_deepening_pass"] (default True).
-            # ----------------------------------------------------------
-            deepening_enabled = self._settings.get("insights_deepening_pass", True)
-            flagged = [r for r in coding_records if r.concerns]
-            if deepening_enabled and flagged:
-                from insights.submission_coder import code_deepening
-
-                progress(
-                    f"Deepening pass: reviewing {len(flagged)} flagged "
-                    f"submission(s)..."
-                )
-                for record in flagged:
-                    if self._cancelled:
-                        return None
-
-                    body = texts.get(record.student_id, "")
-                    if not body or len(body.split()) < 15:
-                        continue
-
-                    try:
-                        depth = code_deepening(
-                            submission_text=body,
-                            student_name=record.student_name,
-                            student_id=record.student_id,
-                            coding_record=record,
-                            primary_concern=record.concerns[0],
-                            backend=backend,
-                        )
-
-                        if not depth:
-                            continue
-
-                        rhetorical = depth.get("rhetorical_strategy", "").strip()
-                        revised = depth.get("revised_register", "").strip()
-                        change_reason = depth.get("register_change_reason", "").strip()
-
-                        # Append rhetorical strategy to emotional_notes
-                        if rhetorical:
-                            record.emotional_notes = (
-                                (record.emotional_notes + "\n"
-                                 if record.emotional_notes else "")
-                                + f"[Rhetorical strategy: {rhetorical}]"
-                            )
-
-                        # Only revise register when reason is given and it differs
-                        if (
-                            revised
-                            and change_reason
-                            and revised != record.emotional_register
-                        ):
-                            log.info(
-                                "Deepening pass: %s register %s → %s (%s)",
-                                record.student_name,
-                                record.emotional_register,
-                                revised,
-                                change_reason,
-                            )
-                            record.emotional_register = revised
-                            record.emotional_notes = (
-                                (record.emotional_notes + "\n"
-                                 if record.emotional_notes else "")
-                                + f"[Register revised: {change_reason}]"
-                            )
-
-                        self._store.save_coding(
-                            run_id,
-                            record.student_id,
-                            record.student_name,
-                            record.model_dump_json(),
-                        )
-
-                        if throttle > 0:
-                            time.sleep(throttle)
-
-                    except Exception as e:
-                        log.warning(
-                            "Deepening pass error for %s: %s",
-                            record.student_name, e,
-                        )
-
-            if self._cancelled:
-                return None
-
-            # ----------------------------------------------------------
-            # Post-Stage-5: Theme/Concern contradiction check
-            # Surfaces tensions for teacher review. Never auto-corrects.
-            # #TRANSFORMATIVE_JUSTICE: address potential harm without replicating it
-            # ----------------------------------------------------------
-            try:
-                CONTRADICTION_PATTERNS = [
-                    # (theme_stems, concern_stems) — if theme contains any theme_stem
-                    # AND concern contains any concern_stem → tension flagged
-                    (["celebrat", "appreciat", "honor", "embrac"], ["essentializ", "stereotyp", "flatten", "reduce"]),
-                    (["acknowledg", "complexit", "nuanc", "intersect"], ["tone polic", "dismiss", "silence", "invalid"]),
-                    (["engag", "framework", "theor", "analyz"], ["colorblind", "ignor", "deny", "dismiss structur"]),
-                    (["celebrat", "valu", "divers", "cultur"], ["appropriat", "exoticiz", "fetishiz"]),
-                ]
-
-                for record in coding_records:
-                    if not record.concerns or not record.theme_tags:
-                        continue
-                    notes = []
-                    for concern in record.concerns:
-                        why = (concern.why_flagged or "").lower()
-                        passage = (concern.flagged_passage or "").lower()
-                        concern_text = why + " " + passage
-                        for theme_tag in record.theme_tags:
-                            tag_lower = theme_tag.lower()
-                            for theme_stems, concern_stems in CONTRADICTION_PATTERNS:
-                                theme_match = any(stem in tag_lower for stem in theme_stems)
-                                concern_match = any(stem in concern_text for stem in concern_stems)
-                                if theme_match and concern_match:
-                                    notes.append(
-                                        f"Theme '{theme_tag}' may be in tension with flagged concern: "
-                                        f"{concern.why_flagged}. Teacher review recommended."
-                                    )
-                                    break  # one note per theme/concern pair is enough
-                    record.theme_concern_notes = notes
-                    if notes:
-                        # Re-save record with contradiction notes
-                        self._store.save_coding(
-                            run_id, record.student_id, record.student_name,
-                            record.model_dump_json()
-                        )
-            except Exception as e:
-                log.warning("Theme/concern contradiction check failed: %s", e)
 
             # ----------------------------------------------------------
             # Stage 6: Theme generation
@@ -1370,43 +1079,9 @@ class InsightsEngine:
                 return None
 
             # ----------------------------------------------------------
-            # Stage 8: Guided Synthesis Chain (A6)
-            # Replaces the broken open-ended 3-pass synthesis that crashed
-            # (3/9 sections, JSON parse errors). 4 scoped LLM calls, each
-            # answering ONE question. Each call has its own try/except so
-            # partial results are always better than a crash. (#CRIP_TIME)
-            # ----------------------------------------------------------
-            _stage_t0 = time.time()
-            from insights.synthesizer import guided_synthesis
-
-            progress("Generating synthesis report (guided chain)...")
-
-            synthesis = guided_synthesis(
-                coding_records,
-                tier=model_tier,
-                backend=backend,
-                assignment_name=assignment_name,
-                qa_result=qa_result,
-                profile_fragment=profile_fragment,
-                settings=self._settings,
-            )
-
-            self._store.save_themes(
-                run_id, synthesis_report_json=synthesis.model_dump_json()
-            )
-            self._store.complete_stage(run_id, "synthesis")
-            self._emit_timing(timing_callback, "synthesis", _stage_t0)
-
-            # Emit synthesis for live preview
-            emit_result("stage", {"stage": "SYNTHESIS"})
-            emit_result("synthesis", synthesis.model_dump())
-
-            # ----------------------------------------------------------
-            # Stage 8b: Observation-based synthesis
+            # Stage 8: Observation-based synthesis
             # Reads all per-student observations and produces a teacher-facing
-            # class summary (observation-only architecture). This runs in
-            # parallel with the guided synthesis above — we keep both for
-            # comparison during validation. Eventually this replaces Stage 8.
+            # class summary. Replaces the former guided synthesis chain.
             # ----------------------------------------------------------
             from insights.prompts import (
                 OBSERVATION_SYNTHESIS_SYSTEM_PROMPT,
@@ -1496,6 +1171,7 @@ class InsightsEngine:
                 except Exception as exc:
                     log.warning("Observation synthesis failed: %s", exc)
 
+            self._store.complete_stage(run_id, "synthesis")
             self._emit_timing(timing_callback, "observation_synthesis", _stage_t0)
 
             # ----------------------------------------------------------
@@ -1683,21 +1359,8 @@ class InsightsEngine:
             if self._cancelled:
                 return None
 
-            # Synthesis (guided chain — A6)
-            from insights.synthesizer import guided_synthesis as guided_synth_fn
-            progress("Re-generating synthesis (guided chain)...")
-            synthesis = guided_synth_fn(
-                coding_records,
-                tier=model_tier,
-                backend=backend,
-                assignment_name=assignment_name,
-                qa_result=qa_result,
-                profile_fragment=profile_fragment,
-                settings=self._settings,
-            )
-            self._store.save_themes(
-                run_id, synthesis_report_json=synthesis.model_dump_json()
-            )
+            # Observation synthesis is generated in the main pipeline and
+            # stored directly — no guided synthesis chain to re-run.
             stages_run.append("synthesis")
 
             progress(f"Re-run complete ({', '.join(stages_run)}).")
@@ -1964,12 +1627,10 @@ class InsightsEngine:
                     return None
 
             # ----------------------------------------------------------
-            # If concerns not complete, run concern detection
-            # Submission texts come from stored column or the re-fetch above
+            # If wellbeing classification not complete, run it
             # ----------------------------------------------------------
-            if "concerns" not in completed_set:
+            if "wellbeing" not in completed_set:
                 if not texts:
-                    # Fallback: load texts from stored submission_text column
                     for row in existing_codings:
                         sid = row.get("student_id", "")
                         sub_text = row.get("submission_text", "")
@@ -1977,34 +1638,9 @@ class InsightsEngine:
                             texts[sid] = sub_text
 
                 if texts and coding_records:
-                    from insights.concern_detector import detect_concerns
-                    _resume_class_reading = self._store.get_class_reading(run_id)
+                    from insights.submission_coder import classify_wellbeing
 
-                    # AIC pre-scan for resume path — identify AI submissions
-                    _resume_ai_flags: set = set()
-                    if _HAS_AIC and texts:
-                        try:
-                            _resume_aic = _DishonestyAnalyzer(
-                                profile_id="standard",
-                                context_profile=self._settings.get(
-                                    "context_profile", "high_school"
-                                ),
-                            )
-                            for _sid, _body in texts.items():
-                                try:
-                                    _r = _resume_aic.analyze_text(
-                                        text=_body, student_id=_sid,
-                                        student_name=_sid,
-                                    )
-                                    _cl = _r.adjusted_concern_level or _r.concern_level
-                                    if _cl in ("elevated", "high") or _r.smoking_gun:
-                                        _resume_ai_flags.add(_sid)
-                                except Exception:
-                                    pass
-                        except Exception:
-                            pass
-
-                    progress("Running concern detection...")
+                    progress("Running wellbeing classification...")
                     for i, record in enumerate(coding_records):
                         if self._cancelled:
                             self._stop_sleep_prevention()
@@ -2012,64 +1648,33 @@ class InsightsEngine:
 
                         sid = record.student_id
                         body = texts.get(sid, "")
-                        wc = len(body.split())
+
                         progress(
-                            f"Concern check {i + 1}/{len(coding_records)}: "
+                            f"Wellbeing {i + 1}/{len(coding_records)}: "
                             f"{record.student_name}..."
                         )
 
-                        quick_sub_c = qa_result.per_submission.get(sid) if qa_result else None
-                        if wc < 15 or (quick_sub_c and quick_sub_c.is_gibberish):
-                            record.concerns = []
-                            self._store.save_coding(
-                                run_id, sid, record.student_name, record.model_dump_json()
-                            )
-                            continue
-
-                        # Skip concern detection for AI-flagged submissions
-                        if sid in _resume_ai_flags:
-                            record.concerns = []
-                            self._store.save_coding(
-                                run_id, sid, record.student_name, record.model_dump_json()
-                            )
-                            continue
-
-                        vader_compound = (
-                            qa_result.sentiments.get(sid, {}).get("compound", 0.0)
-                            if qa_result else 0.0
-                        )
-                        median_wc = qa_result.stats.word_count_median if qa_result else 0
-                        sig_results = signal_matrix_classify(
-                            body, vader_compound, wc, median_wc
-                        )
-                        student_signals = [
-                            s for s in (qa_result.concern_signals if qa_result else [])
-                            if s.student_id == sid
-                        ]
-                        concerns = detect_concerns(
-                            submission_text=body,
+                        wb = classify_wellbeing(
+                            backend,
                             student_name=record.student_name,
-                            student_id=sid,
-                            assignment_prompt=assignment_prompt,
-                            signal_matrix_results=sig_results,
-                            concern_signals=student_signals,
-                            tier=model_tier, backend=backend,
-                            profile_fragment=profile_fragment,
-                            class_context=_resume_class_reading,
+                            submission_text=body,
                         )
-                        record.concerns = concerns
+                        record.wellbeing_axis = wb["axis"]
+                        record.wellbeing_signal = wb["signal"]
+                        record.wellbeing_confidence = wb["confidence"]
+
                         self._store.save_coding(
-                            run_id, sid, record.student_name, record.model_dump_json()
+                            run_id, sid, record.student_name,
+                            record.model_dump_json(),
                         )
 
                         if throttle > 0 and i < len(coding_records) - 1:
                             time.sleep(throttle)
 
-                    self._store.complete_stage(run_id, "concerns")
-                    progress("Concern detection complete.")
+                    self._store.complete_stage(run_id, "wellbeing")
+                    progress("Wellbeing classification complete.")
                 else:
-                    progress("Concern detection skipped — submission texts not available.")
-                    self._store.complete_stage(run_id, "concerns")
+                    self._store.complete_stage(run_id, "wellbeing")
 
                 if self._cancelled:
                     self._stop_sleep_prevention()

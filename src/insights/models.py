@@ -106,6 +106,11 @@ class SubmissionCodingRecord(BaseModel):
     # structural power moves.
     observation: Optional[str] = None
 
+    # Wellbeing classifier (4-axis, reads raw submission)
+    wellbeing_axis: Optional[str] = None       # "CRISIS"|"BURNOUT"|"ENGAGED"|"NONE"
+    wellbeing_signal: Optional[str] = None     # brief LLM description
+    wellbeing_confidence: float = 0.0          # 0.0-1.0
+
     # Metadata from non-LLM pass (carried forward for synthesis)
     word_count: int = 0
     cluster_id: Optional[int] = None
