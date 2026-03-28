@@ -2809,3 +2809,33 @@ more controls with topic overlap (students writing analytically about DV,
 homelessness, food insecurity — not just ICE).
 
 Raw data: `data/research/raw_outputs/test_i_tier2_wellbeing_2026-03-28.json`
+
+## Methodological note: prompt provenance (2026-03-28)
+
+Tests A–E saved full prompt and system prompt text in every result record,
+enabling exact reproduction. Tests F–I did NOT — a gap discovered during
+QC. Fixed going forward:
+
+1. **Git provenance**: Every test output now includes `provenance.git_commit`
+   and `provenance.git_dirty` fields. Since prompts are in source files
+   (`src/insights/prompts.py`), the commit hash ties results to the exact
+   prompt text that produced them.
+
+2. **Prompt text**: Tests F, G, H now save `prompt` and `system_prompt`
+   in each result record, matching the Tests A–E convention.
+
+3. **Timestamp**: Added `timestamp` (ISO format) to output metadata for
+   precise chronological ordering.
+
+For existing results (Tests F–I from 2026-03-27/28), the prompts can be
+reconstructed from git history. The relevant commits:
+- `0c67cc5` (2026-03-27): Tests F, G committed with wellbeing signal cases
+- `e848769` (2026-03-27): Test H added
+- `db9c94f` (2026-03-28): Test I results committed
+
+The prompts used were the versions at those commit hashes. The observation
+prompt (`OBSERVATION_SYSTEM_PROMPT` + `OBSERVATION_PROMPT`) and concern
+prompts (`BEST_CONCERN_SYSTEM` + `BEST_CONCERN_PROMPT`, `LENGTH_CONCERN_SYSTEM`
++ `LENGTH_CONCERN_PROMPT`) are all defined in the test script itself
+(`scripts/run_alt_hypothesis_tests.py`), so the commit hash is sufficient
+to reconstruct the exact inputs.

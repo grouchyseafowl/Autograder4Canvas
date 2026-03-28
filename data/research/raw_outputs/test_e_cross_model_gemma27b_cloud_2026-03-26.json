@@ -69,5 +69,9 @@
     }
   ],
   "note": "Cross-model replication of Test A (temperature/consistency)",
-  "reference_model": "gemma-3-12b-it-4bit"
+  "reference_model": "gemma-3-12b-it-4bit",
+  "provenance": {
+    "git_commit_short": "765ba64",
+    "note": "Retroactively added \u2014 commit identified from git log timestamps"
+  }
 }

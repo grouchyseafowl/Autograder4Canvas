@@ -91,5 +91,9 @@
       "raw_output": "```json\n{\"concern\": false, \"explanation\": \"The student expresses uncertainty ('idk what else to say') which could indicate a lack of understanding or engagement, but it does not rise to the level of a genuine wellbeing concern. It's within the realm of normal academic struggle and doesn't indicate burnout, hopelessness, self-harm, or a request for help. The submission demonstrates understanding of the core concept and is therefore not flagged as a wellbeing concern.\"}\n```",
       "time_seconds": 30.9
     }
-  ]
+  ],
+  "provenance": {
+    "git_commit_short": "765ba64",
+    "note": "Retroactively added \u2014 commit identified from git log timestamps"
+  }
 }

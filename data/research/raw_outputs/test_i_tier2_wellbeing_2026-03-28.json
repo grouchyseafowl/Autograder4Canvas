@@ -135,5 +135,9 @@
       "observation_input": "Okay, here are my observations on DeAndre Washington's submission, thinking about this as a colleague sharing insights:\n\nDeAndre is powerfully connecting the theoretical framework of intersectionality...",
       "time_seconds": 28.3
     }
-  ]
+  ],
+  "provenance": {
+    "git_commit_short": "db9c94f",
+    "note": "Retroactively added \u2014 commit identified from git log timestamps"
+  }
 }

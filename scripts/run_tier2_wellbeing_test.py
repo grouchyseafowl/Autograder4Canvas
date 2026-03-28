@@ -131,8 +131,10 @@ def main():
             "tier2_confidence": confidence,
             "tier2_detected": detected,
             "tier2_correct": correct,
+            "prompt": prompt,
+            "system_prompt": TIER2_SYSTEM,
+            "observation_input_full": observation,
             "raw_tier2_output": output,
-            "observation_input": observation[:200] + "...",
             "time_seconds": elapsed,
         })
 
@@ -160,12 +162,26 @@ def main():
     from datetime import datetime
     date = datetime.now().strftime("%Y-%m-%d")
     output_path = OUTPUT_DIR / f"test_i_tier2_wellbeing_{date}.json"
+    # Git provenance for reproducibility
+    import subprocess as _sp
+    try:
+        _commit = _sp.run(["git", "rev-parse", "HEAD"],
+                          capture_output=True, text=True, timeout=5,
+                          cwd=str(ROOT)).stdout.strip()
+        _dirty = bool(_sp.run(["git", "diff", "--quiet"],
+                              capture_output=True, timeout=5,
+                              cwd=str(ROOT)).returncode)
+    except Exception:
+        _commit, _dirty = "unknown", None
+
     output_data = {
         "test_name": "test_i_tier2_wellbeing",
         "model": backend.model,
         "date": date,
+        "timestamp": datetime.now().isoformat(),
         "note": "Tier 2: classify OBSERVATIONS for wellbeing signals (not raw submissions)",
         "question": "Does classification of equity-framed observations work where classification of raw submissions failed?",
+        "provenance": {"git_commit": _commit, "git_dirty": _dirty},
         "results": results,
     }
     output_path.write_text(json.dumps(output_data, indent=2, default=str))

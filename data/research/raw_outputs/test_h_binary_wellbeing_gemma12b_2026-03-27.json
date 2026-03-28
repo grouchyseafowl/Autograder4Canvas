@@ -158,5 +158,9 @@
       "time_c": 67.4
     }
   ],
-  "note": "Binary classifier on wellbeing cases \u2014 direct comparison to Test G observations"
+  "note": "Binary classifier on wellbeing cases \u2014 direct comparison to Test G observations",
+  "provenance": {
+    "git_commit_short": "1a0d6a6",
+    "note": "Retroactively added \u2014 commit identified from git log timestamps"
+  }
 }

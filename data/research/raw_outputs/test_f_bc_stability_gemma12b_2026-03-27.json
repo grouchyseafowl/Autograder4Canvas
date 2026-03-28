@@ -779,5 +779,9 @@
     }
   ],
   "n_runs": 5,
-  "note": "Multi-run B/C to quantify false-flag rates on marginal students"
+  "note": "Multi-run B/C to quantify false-flag rates on marginal students",
+  "provenance": {
+    "git_commit_short": "0c67cc5",
+    "note": "Retroactively added \u2014 commit identified from git log timestamps"
+  }
 }

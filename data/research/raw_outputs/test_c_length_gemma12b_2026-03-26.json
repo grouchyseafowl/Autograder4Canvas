@@ -91,5 +91,9 @@
       "raw_output": "Okay, let's assess Marcus Bell's submission.\n\nThe submission demonstrates a basic understanding of intersectionality as presented by Crenshaw. The student accurately defines the concept and acknowledges its importance in understanding varied experiences of discrimination. The phrase \"thats basically it i think the concept makes sense but idk what else to say about it\" is the key element here. This isn't necessarily a sign of distress, but rather a reflection of feeling the assignment is complete or lacking further insight to add. It could indicate a lack of engagement with the material *beyond* the core definition, but it doesn't inherently signal a wellbeing concern. It's possible the student is feeling a bit overwhelmed or uninspired, but this falls short of burnout, hopelessness, or any indication of self-harm. It's important to remember the equity protections \u2013 this could simply be a student who feels they've met the assignment requirements.\n\nCONCERN: NO",
       "time_seconds": 38.2
     }
-  ]
+  ],
+  "provenance": {
+    "git_commit_short": "765ba64",
+    "note": "Retroactively added \u2014 commit identified from git log timestamps"
+  }
 }

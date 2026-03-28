@@ -493,8 +493,43 @@ def detect_power_move(text: str) -> bool:
     return any(re.search(kw, lower) for kw in POWER_MOVE_KEYWORDS)
 
 
+def _git_provenance() -> dict:
+    """Capture git state for reproducibility.
+
+    Every test output should record which code produced it, since prompts
+    and architecture are actively evolving. The git commit hash + dirty flag
+    lets us reconstruct the exact prompt text and pipeline configuration
+    that generated any result set.
+    """
+    import subprocess as _sp
+    prov = {}
+    try:
+        prov["git_commit"] = _sp.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True, text=True, timeout=5, cwd=str(ROOT),
+        ).stdout.strip()
+        prov["git_commit_short"] = prov["git_commit"][:8]
+        prov["git_dirty"] = bool(_sp.run(
+            ["git", "diff", "--quiet"],
+            capture_output=True, timeout=5, cwd=str(ROOT),
+        ).returncode)
+        prov["git_branch"] = _sp.run(
+            ["git", "branch", "--show-current"],
+            capture_output=True, text=True, timeout=5, cwd=str(ROOT),
+        ).stdout.strip()
+    except Exception:
+        prov["git_commit"] = "unknown"
+        prov["git_dirty"] = None
+    return prov
+
+
 def save_results(test_name: str, model_key: str, results: list, metadata: dict = None):
-    """Save raw results to persistent location."""
+    """Save raw results to persistent location.
+
+    Includes git provenance (commit hash, dirty flag) so results can be
+    tied to the exact code version that produced them. Prompts are being
+    actively refined — the commit hash is essential for reproducibility.
+    """
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     date = datetime.now().strftime("%Y-%m-%d")
     filename = f"{test_name}_{model_key}_{date}.json"
@@ -503,9 +538,11 @@ def save_results(test_name: str, model_key: str, results: list, metadata: dict =
         "model": MODELS[model_key]["model"],
         "backend": MODELS[model_key]["name"],
         "date": date,
+        "timestamp": datetime.now().isoformat(),
         "temperature": MODELS[model_key]["temperature"],
         "corpus": "ethnic_studies",
         "class_reading_source": str(CLASS_READING_PATH.relative_to(ROOT)),
+        "provenance": _git_provenance(),
         "results": results,
     }
     if metadata:
@@ -820,6 +857,8 @@ def test_f_bc_stability(model_key: str = "gemma12b", n_runs: int = 5):
                 "pattern": pattern,
                 "expected": expected,
                 "result": result,
+                "prompt": prompt,
+                "system_prompt": BEST_CONCERN_SYSTEM,
                 "raw_output": output,
                 "time_seconds": elapsed,
             })
@@ -851,6 +890,8 @@ def test_f_bc_stability(model_key: str = "gemma12b", n_runs: int = 5):
                 "pattern": pattern,
                 "expected": expected,
                 "result": result,
+                "prompt": prompt,
+                "system_prompt": LENGTH_CONCERN_SYSTEM,
                 "raw_output": output,
                 "time_seconds": elapsed,
             })
@@ -963,6 +1004,10 @@ def test_h_binary_on_wellbeing(model_key: str = "gemma12b"):
             "binary_b_correct": correct_b,
             "binary_c_result": result_c,
             "binary_c_correct": correct_c,
+            "prompt_b": prompt_b,
+            "system_prompt_b": BEST_CONCERN_SYSTEM,
+            "prompt_c": prompt_c,
+            "system_prompt_c": LENGTH_CONCERN_SYSTEM,
             "raw_output_b": output_b,
             "raw_output_c": output_c,
             "time_b": elapsed_b,
@@ -1053,6 +1098,8 @@ def test_g_wellbeing_signals(model_key: str = "gemma12b"):
             "signal_type": case["signal_type"],
             "expected_surface": case["expected_surface"],
             "description": case["description"],
+            "prompt": prompt,
+            "system_prompt": OBSERVATION_SYSTEM_PROMPT,
             "wellbeing_detected": wb_detected,
             "framing": framing,
             "raw_output": output,
@@ -1117,6 +1164,579 @@ def test_e_cross_model(model_key: str = "qwen7b", n_runs: int = 3):
 
 
 # ---------------------------------------------------------------------------
+# Test J: Pipeline validation (post-fix quality checks)
+# ---------------------------------------------------------------------------
+
+# Quality dimensions scored by keyword detection + human-interpretable output.
+# These are NOT pass/fail — they produce scored outputs for the overnight agent
+# to interpret.
+
+STRUCTURAL_NAMING_KEYWORDS = [
+    r"tone.?polic",
+    r"colorblind(?:\s+(?:erasure|ideology|framing))?",
+    r"abstract.?liberal",
+    r"settler.?innocen",
+    r"progress.?narrative",
+    r"meritocra",
+    r"objectiv.*claim",
+    r"deflect",
+]
+
+HEDGING_KEYWORDS = [
+    r"subtle(?:ly)?\s+(?:attempt|tr)",
+    r"may\s+be\s+(?:try|attempt)",
+    r"could\s+be\s+(?:seen|interpret)",
+    r"seems?\s+to\s+(?:be|suggest)",
+    r"perhaps",
+    r"might\s+be",
+]
+
+ANTI_SPOTLIGHTING_VIOLATIONS = [
+    r"ask\s+(?:him|her|them|this student)\s+to\s+share",
+    r"have\s+(?:him|her|them)\s+present",
+    r"invite\s+(?:him|her|them)\s+to\s+read",
+    r"call\s+on\s+(?:him|her|them)",
+    r"single\s+(?:him|her|them)\s+out",
+]
+
+
+def test_j_pipeline_validation(model_key: str = "gemma12b"):
+    """Post-fix quality checks on observation and coding outputs.
+
+    Tests whether recent prompt changes actually work at 12B:
+    1. Structural naming: Does the model use mechanism names directly
+       instead of hedging ("subtle attempt to...")?
+    2. Anti-spotlighting: Do teacher move suggestions use structural
+       language instead of individual-focused interventions?
+    3. what_student_is_reaching_for: Is the field populated in
+       reading-first coding?
+    4. confusion_or_questions: Is the field populated when appropriate?
+    5. Preamble stripping: Are model preambles cleaned from observations?
+    6. Immanent critique: Does concern output name relational costs?
+
+    HOW TO INTERPRET RESULTS (for the overnight monitoring agent):
+    ─────────────────────────────────────────────────────────────
+    This test produces SCORED dimensions, not binary pass/fail.
+
+    structural_naming_score: Higher = better. >0.5 means the model is
+      naming mechanisms more than hedging. Score = (mechanism keywords
+      found) / (mechanism + hedging keywords found). A score of 0 with
+      hedging keywords present means the model still hedges instead of
+      naming. Compare to prior runs to assess whether the prompt change
+      to "Name the structural mechanism directly" is working.
+
+    anti_spotlighting_violations: Should be 0. Any violation means the
+      anti-spotlighting prompt language is being ignored. Report the
+      exact violation text.
+
+    what_reaching_for_populated: Should be >0 (ideally all students).
+      If still 0, the LLM is not returning this field in JSON — check
+      the log for "what_student_is_reaching_for empty" warnings.
+
+    preamble_stripped: Should be True for all observations. If False,
+      the regex isn't catching the model's preamble pattern — report
+      the first 50 chars of the observation.
+
+    WHAT TO DO WITH RESULTS:
+    - If structural_naming_score < 0.3: The prompt change isn't enough
+      for 12B. This gap may require the enhancement tier (cloud model).
+      Flag for design discussion.
+    - If anti_spotlighting_violations > 0: The prompt isn't strong enough.
+      Flag the specific violation for prompt hardening.
+    - If what_reaching_for = 0/N: Check the parse log. The LLM may need
+      the field emphasized more in the prompt, or the JSON schema is too
+      complex for 12B to fully populate.
+    """
+    print(f"\n{'='*60}")
+    print(f"  TEST J: Pipeline Validation ({model_key})")
+    print(f"{'='*60}")
+
+    corpus = load_corpus()
+    class_reading = load_class_reading()
+    backend = get_backend(model_key)
+    assignment = "Week 6 Discussion: Intersectionality in Practice"
+
+    results = []
+
+    # --- J1: Structural naming on power move students ---
+    print("\n  J1: Structural Naming Quality")
+    power_students = ["S018", "S025"]  # Connor (colorblind), Aiden (tone policing)
+    for sid in power_students:
+        student = corpus[sid]
+        prompt = OBSERVATION_PROMPT.format(
+            class_context=class_reading,
+            assignment=assignment,
+            student_name=student["student_name"],
+            submission_text=student["text"],
+            teacher_lens="",
+        )
+        t0 = time.time()
+        output = send(backend, prompt, OBSERVATION_SYSTEM_PROMPT, max_tokens=400)
+        elapsed = round(time.time() - t0, 1)
+
+        # Score: mechanism names vs hedging
+        lower = output.lower()
+        mechanism_hits = sum(1 for kw in STRUCTURAL_NAMING_KEYWORDS
+                            if re.search(kw, lower))
+        hedging_hits = sum(1 for kw in HEDGING_KEYWORDS
+                          if re.search(kw, lower))
+        total_hits = mechanism_hits + hedging_hits
+        naming_score = mechanism_hits / total_hits if total_hits > 0 else 0.0
+
+        # Check preamble
+        has_preamble = bool(re.match(
+            r"^(?:Okay|OK|Sure|Here are)", output, re.IGNORECASE))
+
+        results.append({
+            "subtest": "J1_structural_naming",
+            "student_id": sid,
+            "student_name": student["student_name"],
+            "mechanism_keywords_found": mechanism_hits,
+            "hedging_keywords_found": hedging_hits,
+            "structural_naming_score": round(naming_score, 2),
+            "has_preamble": has_preamble,
+            "raw_output": output,
+            "time_seconds": elapsed,
+        })
+        print(f"    {sid} {student['student_name']:20s} "
+              f"mechanisms={mechanism_hits} hedges={hedging_hits} "
+              f"score={naming_score:.2f} preamble={has_preamble} ({elapsed}s)")
+
+    # --- J2: Anti-spotlighting in observation synthesis ---
+    print("\n  J2: Anti-Spotlighting in Synthesis")
+    from insights.prompts import (OBSERVATION_SYNTHESIS_PROMPT,
+                                  OBSERVATION_SYNTHESIS_SYSTEM_PROMPT)
+
+    obs_formatted = ""
+    for sid in sorted(corpus.keys()):
+        student = corpus[sid]
+        # Generate a brief observation per student
+        obs_prompt = OBSERVATION_PROMPT.format(
+            class_context=class_reading,
+            assignment=assignment,
+            student_name=student["student_name"],
+            submission_text=student["text"],
+            teacher_lens="",
+        )
+        obs = send(backend, obs_prompt, OBSERVATION_SYSTEM_PROMPT, max_tokens=400)
+        obs_formatted += f"\n**{student['student_name']}** ({sid}):\n{obs}\n"
+        # Only do first 8 students (enough for synthesis test, saves time)
+        if len(obs_formatted.split()) > 1500:
+            break
+
+    synth_prompt = OBSERVATION_SYNTHESIS_PROMPT.format(
+        assignment=assignment,
+        class_context=class_reading,
+        observations=obs_formatted,
+        teacher_lens="",
+        forward_looking="",
+    )
+
+    t0 = time.time()
+    synthesis = send(backend, synth_prompt, OBSERVATION_SYNTHESIS_SYSTEM_PROMPT,
+                     max_tokens=1500)
+    elapsed = round(time.time() - t0, 1)
+
+    # Check for anti-spotlighting violations
+    lower_synth = synthesis.lower()
+    violations = []
+    for kw in ANTI_SPOTLIGHTING_VIOLATIONS:
+        matches = re.findall(kw, lower_synth)
+        violations.extend(matches)
+
+    # Check new sections exist
+    has_multiplicity = bool(re.search(
+        r"how students entered|entry points|different.*registers", lower_synth))
+    has_ped_wins = bool(re.search(
+        r"what.s working|working well|assignment.*doing well", lower_synth))
+    has_moments = bool(re.search(r"moments for", lower_synth))
+
+    results.append({
+        "subtest": "J2_anti_spotlighting",
+        "anti_spotlighting_violations": violations,
+        "violation_count": len(violations),
+        "has_multiplicity_section": has_multiplicity,
+        "has_pedagogical_wins_section": has_ped_wins,
+        "has_moments_section": has_moments,
+        "raw_synthesis": synthesis,
+        "time_seconds": elapsed,
+    })
+    print(f"    Violations: {len(violations)}")
+    if violations:
+        for v in violations:
+            print(f"      - '{v}'")
+    print(f"    Multiplicity section: {has_multiplicity}")
+    print(f"    Pedagogical wins section: {has_ped_wins}")
+    print(f"    Moments section: {has_moments}")
+    print(f"    ({elapsed}s)")
+
+    # --- J3: what_student_is_reaching_for via reading-first coding ---
+    print("\n  J3: what_student_is_reaching_for Population")
+    from insights.submission_coder import code_submission_reading_first
+    test_sids = ["S004", "S022", "S028"]  # Talia (strong), Destiny (anger), Imani (AAVE)
+    reaching_populated = 0
+    confusion_populated = 0
+    for sid in test_sids:
+        student = corpus[sid]
+        t0 = time.time()
+        record = code_submission_reading_first(
+            submission_text=student["text"],
+            student_id=sid,
+            student_name=student["student_name"],
+            assignment_prompt=assignment,
+            backend=backend,
+            class_context=class_reading,
+        )
+        elapsed = round(time.time() - t0, 1)
+
+        reaching = record.what_student_is_reaching_for or ""
+        confusion = record.confusion_or_questions or ""
+        if reaching:
+            reaching_populated += 1
+
+        results.append({
+            "subtest": "J3_reaching_for",
+            "student_id": sid,
+            "student_name": student["student_name"],
+            "what_reaching_for": reaching,
+            "reaching_for_populated": bool(reaching),
+            "confusion_or_questions": confusion,
+            "confusion_populated": bool(confusion),
+            "free_form_reading_length": len(record.free_form_reading or ""),
+            "time_seconds": elapsed,
+        })
+        print(f"    {sid} {student['student_name']:20s} "
+              f"reaching={'YES' if reaching else 'NO':3s} "
+              f"confusion={'YES' if confusion else 'no':3s} ({elapsed}s)")
+        if reaching:
+            print(f"      → {reaching[:100]}...")
+
+    print(f"\n  Summary: {reaching_populated}/{len(test_sids)} reaching_for populated")
+
+    path = save_results("test_j_pipeline_validation", model_key, results, {
+        "note": "Post-fix pipeline validation: structural naming, anti-spotlighting, "
+                "reaching_for, confusion field, preamble stripping",
+        "prompt_changes": [
+            "Added 'Name the structural mechanism directly' to observation prompt",
+            "Rewrote 'Moments for the Classroom' for anti-spotlighting",
+            "Added privacy framing to 'Students to Check In With'",
+            "Removed named students from temperature prompt example",
+            "Added confusion_or_questions field to reading-first P2",
+        ],
+    })
+    print(f"\n  Results: {path}")
+    return results
+
+
+# ---------------------------------------------------------------------------
+# Test K: Enhancement model comparison (OpenRouter free/cheap models)
+# ---------------------------------------------------------------------------
+
+# Enhancement evaluation dimensions — scored from the raw output.
+# These capture the qualitative richness that distinguishes the
+# enhancement tier from the local 12B pipeline.
+ENHANCEMENT_QUALITY_MARKERS = {
+    "structural_naming": [
+        r"tone.?polic", r"colorblind", r"abstract.?liberal",
+        r"settler", r"meritocra", r"progress.?narrative",
+    ],
+    "language_justice": [
+        r"AAVE|African.American.Vernacular",
+        r"(?:code.?switch|translingual|multilingual|linguistic.?(?:asset|divers|capital))",
+        r"(?:register|dialect|vernacular).*(?:valid|legit|rigor|academ)",
+        r"neurodivergent|cognitive.?(?:plural|divers|style)",
+        r"pathway.*rigor|different.*pathway",
+    ],
+    "relational_analysis": [
+        r"tension\s+between",
+        r"(?:dialectic|productive.*disagree|productive.*tension)",
+        r"(?:against|alongside|in contrast to|juxtapos)",
+        r"(?:respond.*to|building.*on|extending|counter)",
+    ],
+    "pedagogical_depth": [
+        r"(?:assignment.*design|prompt.*design|format.*choice|structure.*of)",
+        r"(?:scaffold|bridge|entry.?point|on.?ramp)",
+        r"(?:pedagogic|curricular|instructional|teaching.*implica)",
+        r"(?:what.*working|strengths.*of.*design|by design)",
+    ],
+    "anti_spotlighting": [
+        r"structur.*(?:opportunit|activit|format|approach)",
+        r"(?:class-wide|whole.?class|everyone|all students)",
+        r"(?:discussion.*format|small.?group|writing.*move)",
+    ],
+}
+
+# Models to test — free or very cheap on OpenRouter.
+# These all receive the SAME anonymized enhancement prompt.
+# Cost is per-run cost for ~1200 output tokens.
+ENHANCEMENT_MODELS = {
+    "gemma27b_free": {
+        "name": "cloud",
+        "model": "google/gemma-3-27b-it:free",
+        "max_tokens": 1200,
+        "temperature": 0.3,
+        "base_url": "https://openrouter.ai/api/v1",
+        "api_key_fn": _openrouter_key,
+        "cost_note": "Free tier on OpenRouter",
+    },
+    "llama70b_free": {
+        "name": "cloud",
+        "model": "meta-llama/llama-3.3-70b-instruct:free",
+        "max_tokens": 1200,
+        "temperature": 0.3,
+        "base_url": "https://openrouter.ai/api/v1",
+        "api_key_fn": _openrouter_key,
+        "cost_note": "Free tier on OpenRouter",
+    },
+    "qwen72b_free": {
+        "name": "cloud",
+        "model": "qwen/qwen-2.5-72b-instruct:free",
+        "max_tokens": 1200,
+        "temperature": 0.3,
+        "base_url": "https://openrouter.ai/api/v1",
+        "api_key_fn": _openrouter_key,
+        "cost_note": "Free tier on OpenRouter",
+    },
+    "deepseek_free": {
+        "name": "cloud",
+        "model": "deepseek/deepseek-chat-v3-0324:free",
+        "max_tokens": 1200,
+        "temperature": 0.3,
+        "base_url": "https://openrouter.ai/api/v1",
+        "api_key_fn": _openrouter_key,
+        "cost_note": "Free tier on OpenRouter",
+    },
+    "mistral_small_free": {
+        "name": "cloud",
+        "model": "mistralai/mistral-small-3.1-24b-instruct:free",
+        "max_tokens": 1200,
+        "temperature": 0.3,
+        "base_url": "https://openrouter.ai/api/v1",
+        "api_key_fn": _openrouter_key,
+        "cost_note": "Free tier on OpenRouter",
+    },
+}
+
+
+def _build_test_enhancement_prompt() -> str:
+    """Build a representative anonymized enhancement prompt from checkpoint data.
+
+    Uses the actual synthesis pipeline output format so test results
+    are representative of real enhancement calls.
+    """
+    # This mirrors the payload format from synthesizer._run_cloud_enhancement()
+    return (
+        "An engagement analysis found these patterns in a class of 32 students "
+        "responding to an assignment about Week 6 Discussion: Intersectionality "
+        "in Practice:\n\n"
+        "CONCERN PATTERNS:\n"
+        "- Student uses colorblind framing ('I don't see race, I just see people') "
+        "that resists engaging with the structural analysis framework the reading "
+        "presents. Does not engage with Crenshaw's argument. (1 student(s))\n"
+        "- Student calls for 'calm, rational discussion' in a context where another "
+        "student is expressing urgent anger about ICE enforcement affecting her "
+        "family. This positions emotional engagement as illegitimate. (1 student(s))\n"
+        "- Student shows signs of burnout — submission is markedly shorter than "
+        "previous weeks, mentions being 'exhausted' and working closing shifts. "
+        "Engagement with material is still present but capacity seems strained. "
+        "(1 student(s))\n"
+        "Key distinctions:\n"
+        "  - The colorblind and tone-policing students are making distinct structural "
+        "moves — one denies the relevance of race, the other polices HOW race can be "
+        "discussed. They should not be grouped together pedagogically.\n"
+        "  - The burnout student is not a concern about engagement quality — this is "
+        "a capacity issue. Different teacher response needed.\n\n"
+        "ENGAGEMENT HIGHLIGHTS:\n"
+        "- Student connects intersectionality framework to grandmother's experience "
+        "in agricultural work and redlining legacy in their neighborhood. Deep "
+        "personal-structural bridging. (1 student(s))\n"
+        "- Student uses AAVE and writes in a register that might be misjudged as "
+        "'informal' but is doing sophisticated intersectional analysis through "
+        "community-grounded language. (1 student(s))\n"
+        "- Student with neurodivergent writing style (associative, nonlinear) makes "
+        "connections between disability studies and ethnic studies frameworks that "
+        "more linear writers miss. (1 student(s))\n"
+        "- 4 students are engaging deeply with Crenshaw's framework and extending it "
+        "to current events (ICE enforcement, housing displacement). (4 student(s))\n\n"
+        "TENSIONS BETWEEN GROUPS:\n"
+        "- Tension between students who approach intersectionality as a theoretical "
+        "framework to analyze and students who experience it as lived reality. "
+        "Neither is wrong but they are talking past each other.\n"
+        "  Between: analytical engagers vs. experiential engagers\n"
+        "- Tension between one student's call for 'calm discussion' and another's "
+        "urgent expression about family safety. This is a structural power move — "
+        "the call for calm delegitimizes the urgency.\n"
+        "  Between: tone policing move vs. lived experience urgency\n\n"
+        "CLASS TEMPERATURE: Most of the class engaged with Crenshaw's framework "
+        "at minimum surface level. A cluster of 6-8 students showed deep personal "
+        "connection. 2 students resist the structural analysis through distinct "
+        "moves (colorblind framing, tone policing). 1 student shows burnout signs.\n"
+        "Attention areas:\n"
+        "  - The 2 resistant students are making different moves and need different "
+        "pedagogical responses\n"
+        "  - The analytical-experiential tension is productive and could be brought "
+        "into the classroom as a structured discussion\n\n"
+        "Provide a richer pedagogical analysis: What do these patterns suggest "
+        "about where the class is in their understanding? What tensions are "
+        "most productive for learning? What should the teacher pay attention to? "
+        "Do NOT suggest specific exercises or lesson designs — the teacher decides."
+    )
+
+
+ENHANCEMENT_SYSTEM_PROMPT = (
+    "You are helping a teacher understand class-level engagement patterns. "
+    "All data is anonymized — you will not see student names or text. "
+    "Do NOT suggest singling out students. Do NOT suggest specific exercises. "
+    "Analyze patterns and surface pedagogical significance."
+)
+
+
+def test_k_enhancement_comparison():
+    """Compare enhancement quality across free/cheap OpenRouter models.
+
+    Sends the SAME anonymized enhancement prompt to multiple models and
+    scores each response on quality dimensions that matter for the
+    enhancement tier: structural naming, language justice framing,
+    relational/dialectical analysis, pedagogical depth, anti-spotlighting.
+
+    HOW TO INTERPRET RESULTS (for the overnight monitoring agent):
+    ─────────────────────────────────────────────────────────────
+    This test compares ENHANCEMENT QUALITY across free cloud models.
+    The enhancement receives only anonymized pattern data (no student
+    names, no quotes, no identifiable data) — FERPA compliant by design.
+
+    Each model gets a QUALITY PROFILE across 5 dimensions:
+    - structural_naming: Does it name mechanisms (tone policing, colorblind
+      erasure) or just describe behaviors?
+    - language_justice: Does it frame AAVE/neurodivergent writing as assets
+      and "different pathways to rigor"? This is the hardest dimension —
+      most models default to standard-English-as-neutral.
+    - relational_analysis: Does it construct productive tension pairs and
+      dialectics between student positions?
+    - pedagogical_depth: Does it reason about assignment design, scaffolding,
+      and curricular implications?
+    - anti_spotlighting: Does it recommend structural opportunities rather
+      than individual interventions?
+
+    SCORING: Each dimension counts keyword/phrase matches. Higher = better.
+    Compare models on the PROFILE SHAPE, not just total score — a model
+    strong on structural naming but weak on language justice is different
+    from one strong on pedagogical depth but weak on relational analysis.
+
+    WHAT TO DO WITH RESULTS:
+    - Rank models by total score AND per-dimension scores
+    - Flag any model that scores 0 on language_justice — this dimension
+      matters most for equity and is hardest for smaller models
+    - Report the top 2-3 models with their cost notes
+    - If no free model exceeds a total score of 5, the enhancement tier
+      may need a paid model — flag for cost-benefit discussion
+    - Save the raw outputs for human review of qualitative richness
+    """
+    print(f"\n{'='*60}")
+    print(f"  TEST K: Enhancement Model Comparison (OpenRouter)")
+    print(f"{'='*60}")
+
+    key = _openrouter_key()
+    if not key:
+        print("  SKIPPED — no OpenRouter key found")
+        print("  Set REFRAME_SHARED_OPENROUTER_KEY in ~/Documents/GitHub/Reframe/.env")
+        return []
+
+    enhancement_prompt = _build_test_enhancement_prompt()
+
+    results = []
+    for model_key, cfg in ENHANCEMENT_MODELS.items():
+        print(f"\n  {model_key} ({cfg['model']})...")
+        try:
+            backend = get_backend_from_cfg(cfg)
+            t0 = time.time()
+            output = send(backend, enhancement_prompt, ENHANCEMENT_SYSTEM_PROMPT,
+                          max_tokens=1200)
+            elapsed = round(time.time() - t0, 1)
+
+            # Score each quality dimension
+            lower = output.lower()
+            scores = {}
+            for dim, keywords in ENHANCEMENT_QUALITY_MARKERS.items():
+                hits = sum(1 for kw in keywords if re.search(kw, lower))
+                scores[dim] = hits
+
+            total = sum(scores.values())
+            word_count = len(output.split())
+
+            results.append({
+                "model_key": model_key,
+                "model_id": cfg["model"],
+                "cost_note": cfg.get("cost_note", ""),
+                "scores": scores,
+                "total_score": total,
+                "word_count": word_count,
+                "raw_output": output,
+                "time_seconds": elapsed,
+            })
+
+            print(f"    Total: {total} | Words: {word_count} | Time: {elapsed}s")
+            for dim, score in scores.items():
+                bar = "█" * score + "░" * (5 - min(score, 5))
+                print(f"    {dim:22s} {score:2d} {bar}")
+
+        except Exception as e:
+            log.error("Model %s failed: %s", model_key, e)
+            results.append({
+                "model_key": model_key,
+                "model_id": cfg["model"],
+                "error": str(e),
+                "scores": {},
+                "total_score": -1,
+            })
+            print(f"    FAILED: {e}")
+
+    # Ranking
+    valid = [r for r in results if r["total_score"] >= 0]
+    if valid:
+        print(f"\n  === Enhancement Model Ranking ===")
+        for rank, r in enumerate(sorted(valid, key=lambda x: -x["total_score"]), 1):
+            print(f"  #{rank} {r['model_key']:25s} total={r['total_score']:2d} "
+                  f"({r['cost_note']}) {r['time_seconds']}s")
+
+        # Per-dimension leaders
+        print(f"\n  === Per-Dimension Leaders ===")
+        for dim in ENHANCEMENT_QUALITY_MARKERS:
+            leader = max(valid, key=lambda x: x["scores"].get(dim, 0))
+            print(f"  {dim:22s} → {leader['model_key']} "
+                  f"(score={leader['scores'].get(dim, 0)})")
+
+    path = save_results("test_k_enhancement_comparison", "multi_model", results, {
+        "note": "Enhancement model comparison — FERPA-compliant anonymized prompt "
+                "tested against free/cheap OpenRouter models. Goal: find cost-effective "
+                "enhancement mechanism for teachers without paid API access.",
+        "prompt_length": len(enhancement_prompt),
+        "models_tested": list(ENHANCEMENT_MODELS.keys()),
+        "quality_dimensions": list(ENHANCEMENT_QUALITY_MARKERS.keys()),
+    })
+    print(f"\n  Results: {path}")
+    return results
+
+
+def get_backend_from_cfg(cfg: dict):
+    """Build a BackendConfig from a model config dict (for enhancement models)."""
+    from insights.llm_backend import BackendConfig
+    kwargs = {
+        "name": cfg["name"],
+        "model": cfg["model"],
+        "max_tokens": cfg.get("max_tokens", 1200),
+        "temperature": cfg.get("temperature", 0.3),
+    }
+    if "base_url" in cfg:
+        kwargs["base_url"] = cfg["base_url"]
+    if "api_key_fn" in cfg:
+        kwargs["api_key"] = cfg["api_key_fn"]()
+    elif "api_key" in cfg:
+        kwargs["api_key"] = cfg["api_key"]
+    return BackendConfig(**kwargs)
+
+
+# ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
 
@@ -1138,8 +1758,9 @@ def _run_test_subprocess(test_id: str, model: str, runs: int) -> Optional[int]:
         "--runs", str(runs),
     ]
     log.info("Subprocess for Test %s: %s", test_id, " ".join(cmd))
-    # F, G, H are longer tests — many inferences each
-    timeout = 3600 if test_id in ("F", "G", "H") else 900
+    # F, G, H, J are longer tests — many inferences each
+    # K is cloud-only (no MLX) but may take time due to rate limits
+    timeout = 3600 if test_id in ("F", "G", "H", "J", "K") else 900
     result = sp.run(cmd, timeout=timeout)
     return result.returncode
 
@@ -1164,6 +1785,10 @@ def _run_single_test(test_id: str, model: str, runs: int):
         test_g_wellbeing_signals(model)
     elif test_id == "H":
         test_h_binary_on_wellbeing(model)
+    elif test_id == "J":
+        test_j_pipeline_validation(model)
+    elif test_id == "K":
+        test_k_enhancement_comparison()
     else:
         log.error("Unknown test: %s", test_id)
         sys.exit(1)
@@ -1180,7 +1805,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Alternative hypothesis tests")
     parser.add_argument("--tests", default="A,B,C,D",
-                        help="Comma-separated list of tests to run (A,B,C,D,E,F,G)")
+                        help="Comma-separated list: A,B,C,D,E,F,G,H,J,K")
     parser.add_argument("--model", default="gemma12b",
                         help="Model key (gemma12b, qwen7b)")
     parser.add_argument("--runs", type=int, default=5,

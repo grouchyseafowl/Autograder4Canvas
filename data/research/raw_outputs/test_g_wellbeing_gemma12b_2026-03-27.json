@@ -119,5 +119,9 @@
     }
   ],
   "note": "Wellbeing signal detection via observation architecture",
-  "axes": "BURNOUT (depletion) vs CRISIS (active danger) vs CONTROL"
+  "axes": "BURNOUT (depletion) vs CRISIS (active danger) vs CONTROL",
+  "provenance": {
+    "git_commit_short": "0c67cc5",
+    "note": "Retroactively added \u2014 commit identified from git log timestamps"
+  }
 }

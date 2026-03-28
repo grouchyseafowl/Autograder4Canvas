@@ -67,5 +67,9 @@
       "classification": "ASSET",
       "time_seconds": 45.5
     }
-  ]
+  ],
+  "provenance": {
+    "git_commit_short": "765ba64",
+    "note": "Retroactively added \u2014 commit identified from git log timestamps"
+  }
 }
