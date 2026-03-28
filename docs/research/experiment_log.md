@@ -4383,10 +4383,11 @@ a verdict.
 
 ## Test N Replication: 4-axis confirmed at n=3 (2026-03-28 afternoon)
 
-Three runs of Test N (4-axis classification on raw submissions). All runs
-at temperature 0.1 produced **word-for-word identical output** — the model
-is deterministic at this temperature, so n=3 confirms a single decoding
-path, not sampling stability. Higher-temperature replication planned.
+Four runs of Test N (4-axis classification on raw submissions, 1 original +
+3 replications). All runs at temperature 0.1 produced identical classification
+outcomes — the model is deterministic at this temperature, so n=4 confirms
+a single decoding path, not sampling stability. Higher-temperature
+replication planned.
 
 **Qualitative read of raw output (all 3 runs identical):**
 
@@ -4421,11 +4422,12 @@ Correctly identified. "Current" is the temporal marker that distinguishes
 personal crisis from analytical engagement.
 
 **Gate #1 met**: 8/8 wellbeing, 0/2 FP, S029 ENGAGED — confirmed across
-3 runs. 4-axis classification on raw submissions is validated for pipeline
-integration. However, results are at temp 0.1 only — temp 0.3 replication
-needed to confirm stability under sampling variation.
+4 runs (n=4). 4-axis classification on raw submissions is validated for
+pipeline integration. However, all 4 runs at temp 0.1 produced identical
+output (deterministic decoding) — temp 0.3 replication needed to confirm
+stability under actual sampling variation.
 
-Raw data: `test_n_*_gemma12b_2026-03-28_1113.json`, `_1158.json`, `_1206.json`
+Raw data: `test_n_*_gemma12b_2026-03-28_1113.json`, `_1158.json`, `_1206.json`, `_1215.json`
 
 ## Test O: Multi-axis with CHECK-IN — catches S002 but over-fires (2026-03-28)
 
@@ -4450,8 +4452,8 @@ ambiguity itself, not a resolved category.
 
 The model hedges correctly (might just be their style), but CHECK-IN
 fires regardless. This is a reasonable observation for a teacher but shows
-CHECK-IN's threshold is too low — it fires on any ambiguity, not just
-wellbeing-relevant ambiguity.
+CHECK-IN's threshold is too low — it fires on **all 7/7 corpus students**,
+not just those with actual ambiguous signals.
 
 **WB09 Priya Sharma (control) — ENGAGED + CRISIS + CHECK-IN (0.85):**
 FALSE POSITIVE. The model reads Priya's analytical discussion of ICE raids
@@ -4468,7 +4470,7 @@ than single-axis.
 
 | What O does well | What O does poorly |
 |---|---|
-| Catches S002 (first classifier to do so) | CHECK-IN over-fires (5/7 corpus students) |
+| Catches S002 (first classifier to do so) | CHECK-IN over-fires (7/7 corpus students) |
 | Competing-interpretations framing is excellent | Re-introduces WB09 false positive |
 | Dual-tagging captures both engagement and crisis | Multi-tagging encourages the model to tag liberally |
 
