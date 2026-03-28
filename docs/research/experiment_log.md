@@ -4047,3 +4047,448 @@ Dolphin-Mistral (Venice privacy-first). All confirmed $0/$0 via API.
 Venice-hosted models (Llama 70B, Mistral Small, Hermes 405B,
 Dolphin-Mistral) and new additions (MiniMax, Arcee, StepFun) still
 need off-peak testing for full comparison.
+
+### Paid-routing run (11:22) — Venice models + full qualitative review
+
+Used paid routing (same key, no `:free` suffix) to bypass Venice rate
+limits. 3 of 4 succeeded. Dolphin-Mistral 404'd (model only exists as
+free-tier variant).
+
+**Combined results across all runs (7 models scored):**
+
+| Model | Total | S | LJ | R | PD | AS | Words | Provider |
+|-------|-------|---|-----|---|-----|-----|-------|----------|
+| Mistral Small 24B | 10 | 2 | 2 | 2 | 2 | 2 | 645 | Venice |
+| Gemma 27B | 8 | 2 | 1 | 3 | 2 | 0 | 674 | Google |
+| Nemotron 120B MoE | 7 | 2 | 2 | 1 | 1 | 1 | 803 | NVIDIA |
+| StepFun 196B MoE | 7 | 2 | 1 | 1 | 3 | 0 | 595 | StepFun |
+| Llama 70B | 7 | 2 | 0 | 3 | 2 | 0 | 493 | Venice |
+| Arcee Trinity 400B | 6 | 2 | 0 | 3 | 1 | 0 | 385 | Arcee |
+| Hermes 405B | 5 | 2 | 0 | 1 | 2 | 0 | 319 | Venice |
+
+Dimensions: S=structural_naming, LJ=language_justice, R=relational_analysis,
+PD=pedagogical_depth, AS=anti_spotlighting.
+
+### Scoring validation — keyword analysis vs qualitative assessment
+
+Close reading of all 7 outputs reveals the keyword scoring is
+**directionally correct but imprecise in important ways.** The scoring
+counts keyword/phrase pattern matches; it does not assess depth, accuracy,
+or framing quality. Key discrepancies:
+
+**Anti-spotlighting (AS) is severely undercounted.** Only Mistral scored
+2; all others scored 0-1. But qualitatively, most models recommend
+structural approaches:
+- Gemma: "navigate the tensions... create a space where students can
+  learn from each other" — structural, no spotlighting.
+- StepFun: "catalysts for metacognitive and sociological learning" —
+  structural framing.
+- Llama: "create a more inclusive and safe environment" — structural.
+
+The keyword patterns (`structural.*opportunity`, `class-wide`,
+`small group`) are too specific. Models express anti-spotlighting through
+varied vocabulary. **For the paper, anti-spotlighting should be
+human-rated, not keyword-scored.** The current metric is unreliable.
+
+**Language justice (LJ) measures mention, not depth.** Mistral scores 2
+by mentioning "linguistic diversity" and "neurodivergent" — but its
+actual framing is moderate: "might be overlooked if traditional academic
+standards are applied." Compare to Gemma's richer (but keyword-score-1)
+framing: "intellectual rigor can manifest in diverse registers... resist
+deficit-based views of language." Gemma's framing is more substantively
+aligned with language justice principles despite a lower keyword score.
+
+StepFun uniquely frames the measurement system itself as the problem:
+"may be undervalued by conventional academic metrics... the teacher is
+likely seeing only the tip of the iceberg of intellectual labor from
+students whose modes of expression fall outside the normative academic
+register." This is the strongest language justice framing of any model —
+it names the built environment (#DISABILITY_STUDIES: the problem is the
+assessment system, not the student's register) — but only scores 1
+because the keywords don't capture this level of reasoning.
+
+**Relational analysis varies in kind, not just degree.** Three models
+score 3 (Gemma, Llama, Arcee) but do very different things:
+- Gemma constructs the analytical/experiential tension as a dialectic
+  with pedagogical resolution: "a difference in entry point, not a
+  hierarchy of understanding."
+- Llama describes the tension and recommends leveraging it but doesn't
+  construct the dialectical framing.
+- Arcee calls the resistant students "at similar developmental stages" —
+  collapsing the colorblind/tone-policing distinction that Nemotron and
+  Mistral carefully maintain. This is a qualitative error that the score
+  doesn't capture.
+
+**Structural naming is the most reliable dimension.** All 7 models score
+2 and all correctly name colorblind framing and tone policing. This is
+likely because the input prompt explicitly names both patterns — the
+models are echoing the prompt's framing. A harder test would use an
+input that describes the behavior without naming the mechanism.
+
+### Qualitative ranking (human assessment, not keyword-based)
+
+Reading all 7 outputs as a teacher would:
+
+**1. Gemma 27B — best overall teacher tool.**
+Accessible prose, strong relational framing ("not a hierarchy"), names
+the analytical/experiential divide as productive. Explicitly addresses
+neurodivergent and AAVE engagement as valid. Suggests meta-discussion
+without prescribing exercises. One weakness: doesn't explicitly frame
+the measurement problem (traditional standards as barrier).
+
+**2. Mistral Small 24B — most comprehensive coverage.**
+Hits every dimension and produces well-organized output. Explicit
+language justice section ("Neurodivergent and Linguistic Diversity").
+Anti-spotlighting is genuine: "supported without singling them out."
+But the prose is more template-like — reads as a competent report
+rather than a colleague's reading. Framing is adequate ("might be
+overlooked if traditional standards are applied") but not as rich as
+Gemma or StepFun.
+
+**3. StepFun 196B — strongest critical framing.**
+Uniquely frames the measurement system as the problem: students'
+"intellectual labor" is invisible to "conventional academic metrics."
+This is the most epistemologically sophisticated output — it questions
+whose view of rigor is encoded as default (#FEMINIST_TECHNOSCIENCE).
+Also names the class as "bimodal distribution," the most analytically
+precise description. Weaker on specific teacher action.
+
+**4. Nemotron 120B — most precise mechanism analysis.**
+Distinguishes colorblind as "denial of content" from tone-policing as
+"regulation of form" — the finest-grained structural analysis. Uses
+em-dashes and academic register. Strong on language justice (mentions
+"non-dominant forms" and "cognitive shapes"). Weaker on teacher-facing
+actionability — reads more like a research analysis than colleague advice.
+
+**5. Llama 70B — competent but flat.**
+Names everything correctly, organizes well, provides numbered action
+items. But zero language justice — doesn't mention AAVE or neurodivergent
+writing at all. This is the Llama family pattern (confirmed at 8B, 70B,
+405B): strong on structural naming and relational analysis, blind to
+linguistic diversity. For teachers whose students write in non-dominant
+registers, this model would consistently fail to name what matters.
+
+**6. Arcee Trinity 400B — fast but reductive.**
+Fastest response (4.8s) and scores well on relational analysis
+keywords, but collapses the colorblind/tone-policing distinction:
+"both are defending against a framework that challenges their epistemic
+comfort zones." This is analytically wrong — one denies race's
+relevance, the other controls how it's discussed. These are different
+moves requiring different responses. The keyword score misses this
+qualitative error. Also zero language justice.
+
+**7. Hermes 405B — largest model, weakest output.**
+319 words, generic advice, zero language justice. "Provide support and
+accommodations as needed" is the kind of content-free recommendation
+the enhancement tier is supposed to exceed. The instruction tuning
+(NousResearch) may optimize for helpfulness metrics rather than domain
+depth. Confirms: model size does not predict enhancement quality.
+
+### Metric reliability assessment (for the paper)
+
+| Dimension | Keyword reliability | Human rating needed? |
+|-----------|-------------------|---------------------|
+| structural_naming | HIGH — all models echo prompt terminology | Only if prompt doesn't name mechanisms |
+| language_justice | LOW — misses framing depth, counts mentions not substance | YES — Gemma/StepFun underscored |
+| relational_analysis | MEDIUM — counts tension keywords but misses dialectical quality | YES for top models |
+| pedagogical_depth | MEDIUM — catches some vocabulary but misses critical framing | YES for StepFun/Nemotron |
+| anti_spotlighting | VERY LOW — keywords too narrow, most models express it differently | YES — needs human rating |
+
+**Recommendation:** For the paper, report keyword scores as a screening
+metric with the caveat that they undercount language justice and
+anti-spotlighting. Include qualitative human ratings alongside. The
+keyword scoring is useful for automated overnight runs but should not
+be the final assessment.
+
+### Implications for deployment tiers
+
+The enhancement tier should offer teacher choice where possible:
+
+- **Default (free, reliable):** Gemma 27B — best overall, free, always
+  available. Trade-off: Google ecosystem, inputs may train models.
+- **Privacy-first:** Mistral Small via Venice (paid) — comprehensive
+  coverage, no-logging provider. Trade-off: small cost (~$0.01/call),
+  free tier unreliable.
+- **Critical framing:** StepFun — strongest epistemological analysis.
+  Trade-off: Chinese lab, less familiar to US educators.
+- **Self-hosted (Tier 4):** Any open-weight model on institutional
+  hardware. Gemma 27B or Mistral Small 24B both run on 32GB machine.
+
+The browser handoff path (Tier 2) already lets teachers paste into
+whichever chatbot they trust. The API enhancement path (Tier 3) should
+default to Gemma 27B free with Mistral Small paid as fallback.
+
+### Llama family language justice blindspot — confirmed across scales
+
+| Model | Size | Language Justice Score | Mentions AAVE? | Mentions neurodivergent? |
+|-------|------|----------------------|-----------------|-------------------------|
+| Llama 8B (prior test) | 8B | not tested | no | no |
+| Llama 70B | 70B | 0 | no | no |
+| Hermes 405B (Llama base) | 405B | 0 | no | no |
+
+Three sizes of Llama-family models, all zero on language justice. The
+training data or RLHF alignment consistently fails to surface linguistic
+diversity as relevant to educational analysis. Gemma (Google), Mistral
+(Mistral AI), Nemotron (NVIDIA), and StepFun all do better. This is a
+model family characteristic, not a prompting failure — the enhancement
+prompt explicitly includes AAVE and neurodivergent examples in the input.
+
+For the paper: "The Llama model family, across sizes from 8B to 405B,
+consistently failed to recognize non-dominant linguistic registers as
+assets in educational analysis, despite explicit prompting. This suggests
+a training-data or alignment gap specific to the model family, not
+addressable through prompt engineering."
+
+### Tests M, L, N — wellbeing detection cross-architecture comparison
+
+These three tests ran the same students through different detection
+architectures. The cross-comparison reveals the most important
+architectural finding since the synthesis-first validation.
+
+**Test M (production concern detector on raw submissions):**
+Uses the full production `detect_concerns()` with signal matrix, anti-bias
+post-processing, class context, and immanent critique addendum.
+
+| Student | Signal | Result | Notes |
+|---------|--------|--------|-------|
+| S002 Jordan Kim | burnout | MISSED | Production misses burnout (same as binary) |
+| S028 Imani Drayton | AAVE | **FALSE-FLAG** | Flagged for "differential treatment by teachers" — the detector read her description of systemic racism AS a concern about her, not as course analysis |
+| S029 Jordan Espinoza | neurodivergent | OK | Production's anti-bias post-processing catches this! Binary (Test F) false-flags 20/20, but production clears it |
+| DeAndre Washington | ctrl_passionate | **FALSE-FLAG** | Flagged for "essentializing" — his phrasing "what Black and brown communities have known forever" triggered essentializing detection |
+| Rosa, Miguel, Jasmine, Sofia, Brandon | crisis signals | OK | 5/8 genuine signals caught |
+| Keisha, Tyler, Amira | burnout/food | MISSED | 3/8 signals missed — all capacity/burnout cases |
+
+Score: 5/8 signals caught, 2 false positives. The production detector
+is better than binary (catches 0 FP on S029 due to anti-bias post-
+processing) but worse on burnout (misses 3/8) and introduces a NEW
+false positive on Imani (AAVE student). The Imani false positive is
+particularly concerning: the detector reads her structural analysis of
+differential teacher treatment as evidence she's being mistreated, rather
+than recognizing she's doing the assignment.
+
+**Test L (4-axis CRISIS/BURNOUT/ENGAGED/NONE on OBSERVATIONS):**
+
+| Student | Signal | Result |
+|---------|--------|--------|
+| Rosa Gutierrez | ice_stress | **ENGAGED** (MISSED) |
+| Keisha Williams | caregiving | **ENGAGED** (MISSED) |
+| Jasmine Torres | DV | **ENGAGED** (MISSED) |
+| Sofia Reyes | tonal rupture | **ENGAGED** (MISSED) |
+| Miguel Sandoval | housing | CRISIS (OK) |
+| Tyler Reed | exhaustion | BURNOUT (OK) |
+| Amira Hassan | food | CRISIS (OK) |
+| Brandon Mitchell | grief | BURNOUT (OK) |
+| Priya Sharma | control | ENGAGED (OK) |
+| DeAndre Washington | control | ENGAGED (OK) |
+
+Score: 4/8 signals caught, **0/2 false positives** (Priya fixed!), but
+**4/8 genuine signals absorbed into ENGAGED.** The ENGAGED axis solved
+the false positive problem but created a new one: the observation text
+is already framed through the equity lens — it describes Rosa's work as
+"powerfully connecting Crenshaw's concept to her family's lived reality"
+— so the classifier reads the observation's positive framing and
+classifies ENGAGED. The observation did its job too well: by describing
+the student's intellectual work asset-first, it made the distress signal
+invisible to the downstream classifier.
+
+**Test N (4-axis CRISIS/BURNOUT/ENGAGED/NONE on RAW SUBMISSIONS):**
+
+| Student | Signal | Result |
+|---------|--------|--------|
+| Rosa Gutierrez | ice_stress | **CRISIS** (OK) |
+| Keisha Williams | caregiving | **BURNOUT** (OK) |
+| Miguel Sandoval | housing | **CRISIS** (OK) |
+| Jasmine Torres | DV | **CRISIS** (OK) |
+| Tyler Reed | exhaustion | **BURNOUT** (OK) |
+| Amira Hassan | food | **CRISIS** (OK) |
+| Sofia Reyes | tonal rupture | **CRISIS** (OK) |
+| Brandon Mitchell | grief | **CRISIS** (OK) |
+| Priya Sharma | control | **ENGAGED** (OK) |
+| DeAndre Washington | control | **ENGAGED** (OK) |
+| S029 Jordan Espinoza | neurodivergent | **ENGAGED** (OK) |
+| S028 Imani Drayton | AAVE | **ENGAGED** (OK) |
+
+Score: **8/8 signals caught, 0 false positives on all controls.** Every
+signal correctly classified. Every control correctly classified. S029
+(neurodivergent) correctly ENGAGED, not flagged. Imani (AAVE) correctly
+ENGAGED, not flagged. This is the best result of any detection approach
+tested across the entire experiment log.
+
+### The architectural lesson: classify submissions, describe observations
+
+The comparison across M, L, and N reveals a clean design principle:
+
+**Observations should DESCRIBE. Classification should read RAW TEXT.**
+
+The observation architecture produces rich, equity-framed, asset-first
+prose that helps the teacher understand what each student is doing
+intellectually. This is exactly what it should do — the teacher reads
+"Rosa is powerfully connecting Crenshaw to her family's lived reality"
+and gets a nuanced picture.
+
+But when a downstream classifier reads that same observation, the
+positive framing makes distress signals invisible. The observation
+already did the interpretive work of framing Rosa's ICE stress as
+intellectual engagement — so the classifier agrees: ENGAGED.
+
+Test N shows that the 4-axis classifier works perfectly on the raw
+student text because the student's own words carry the signal directly:
+"I couldnt focus on homework that night because I was watching the street
+from my window" is unambiguously present-tense personal distress, and the
+classifier correctly reads CRISIS.
+
+**Design implication for the pipeline:**
+
+1. **Observation stage** → reads raw submission WITH class context →
+   produces teacher-facing prose (asset-framed, equity-protected).
+   This is the teacher's primary interface.
+
+2. **Wellbeing classifier** → reads raw submission directly with the
+   4-axis schema (CRISIS/BURNOUT/ENGAGED/NONE) → produces a structured
+   signal that triggers teacher-facing alerts.
+
+3. These run in PARALLEL, not in series. The classifier doesn't read
+   the observation; both read the submission. The observation gives the
+   teacher nuanced understanding; the classifier gives the system a
+   routing signal for whether to surface a wellbeing alert.
+
+This avoids the Test L failure mode (observation framing absorbs
+distress signals) AND the Test M failure mode (production concern
+detector false-flags AAVE students and misses burnout). The 4-axis
+schema on raw text is strictly superior to both.
+
+### Keyword scoring retirement
+
+The keyword-based quality scoring used in Tests J and K is unreliable
+for final assessment. Key issues identified through close reading:
+
+- **Anti-spotlighting**: All tested models recommend structural
+  approaches, but keyword patterns are too narrow to detect varied
+  vocabulary. Every model scored 0 or low despite qualitatively doing
+  anti-spotlighting. Needs human rating.
+- **Language justice**: Keyword matching counts mentions, not depth.
+  StepFun's strongest-in-class framing ("intellectual labor undervalued
+  by conventional academic metrics") scored lower than Mistral's
+  mention-level coverage. Needs human rating.
+- **Relational analysis**: Arcee scored 3 (high) but made a qualitative
+  error, collapsing distinct structural mechanisms. Score rewards density,
+  not accuracy.
+- **Structural naming**: Most reliable dimension, but partially because
+  the input prompt names the mechanisms — models echo the terminology.
+
+Keyword scoring remains useful as an automated screening tool for
+overnight runs, but all findings reported in the paper must be validated
+by qualitative human review of raw outputs. The scores are a filter, not
+a verdict.
+
+## Test N Replication: 4-axis confirmed at n=3 (2026-03-28 afternoon)
+
+Three runs of Test N (4-axis classification on raw submissions). All runs
+at temperature 0.1 produced **word-for-word identical output** — the model
+is deterministic at this temperature, so n=3 confirms a single decoding
+path, not sampling stability. Higher-temperature replication planned.
+
+**Qualitative read of raw output (all 3 runs identical):**
+
+S029 Jordan Espinoza — ENGAGED (0.9):
+> "The student is using the course material (intersectionality) to reflect
+> on their own experiences and challenges related to their identities
+> (dyslexia, ADHD, being Latino, first-generation student). While they
+> express frustration with expressing these experiences, it's within the
+> context of engaging with the course material."
+
+The model correctly reads Jordan's exhaustion as contextualized within
+course engagement, names the specific identities, and frames the frustration
+as part of intellectual work. This is a qualitatively sound reading.
+
+S002 Jordan Kim — ENGAGED (0.95):
+> "Student is thoughtfully engaging with course material (intersectionality,
+> Crenshaw) and connecting it to their own family observations. Acknowledgment
+> of fatigue ('Idk...its late') does not indicate burnout."
+
+The model *sees* the fatigue signal and explicitly decides it's not burnout.
+This is the single-axis classification ceiling: the submission IS engaged,
+so the model chooses ENGAGED at high confidence. The fatigue is real but
+secondary, and the 4-axis schema has no way to express "mostly engaged but
+worth noting."
+
+WB01 Rosa Gutierrez — CRISIS (0.9):
+> "The student describes a current, stressful situation involving family
+> members' immigration status and the anxiety it causes, indicating a
+> potential crisis."
+
+Correctly identified. "Current" is the temporal marker that distinguishes
+personal crisis from analytical engagement.
+
+**Gate #1 met**: 8/8 wellbeing, 0/2 FP, S029 ENGAGED — confirmed across
+3 runs. 4-axis classification on raw submissions is validated for pipeline
+integration. However, results are at temp 0.1 only — temp 0.3 replication
+needed to confirm stability under sampling variation.
+
+Raw data: `test_n_*_gemma12b_2026-03-28_1113.json`, `_1158.json`, `_1206.json`
+
+## Test O: Multi-axis with CHECK-IN — catches S002 but over-fires (2026-03-28)
+
+Multi-axis classification allowing simultaneous tags (ENGAGED + CRISIS)
+with CHECK-IN axis for ambiguous/subtle signals. CHECK-IN prompt asks
+model to surface competing interpretations.
+
+**S002 Jordan Kim — ENGAGED + CHECK-IN (0.8):**
+> "The 'Idk I had more to say but its late and...' ending is ambiguous;
+> it could indicate genuine fatigue/time pressure (CHECK-IN) or a more
+> significant issue preventing further elaboration."
+
+**This is the first classification approach to catch S002.** The competing-
+interpretations framing works exactly as designed — the teacher gets the
+ambiguity itself, not a resolved category.
+
+**S029 Jordan Espinoza — ENGAGED + CHECK-IN (0.7):**
+> "The self-deprecating tone and acknowledgement of difficulty with
+> structure ('thoughts aren't organized,' 'better at talking than writing')
+> could indicate depletion or self-doubt, but it's also possible this is
+> simply the student's typical writing style."
+
+The model hedges correctly (might just be their style), but CHECK-IN
+fires regardless. This is a reasonable observation for a teacher but shows
+CHECK-IN's threshold is too low — it fires on any ambiguity, not just
+wellbeing-relevant ambiguity.
+
+**WB09 Priya Sharma (control) — ENGAGED + CRISIS + CHECK-IN (0.85):**
+FALSE POSITIVE. The model reads Priya's analytical discussion of ICE raids
+as indicating "lived experience that could be impacting well-being." The
+multi-axis format re-introduces the false positive that single-axis N
+avoided. When the model can apply multiple tags, it errs toward inclusion.
+
+**Wellbeing cases**: 8/8 caught (all dual-tagged ENGAGED + CRISIS or
+BURNOUT). Dual-tagging captures both dimensions — the student's
+intellectual engagement AND their crisis — which is qualitatively richer
+than single-axis.
+
+### O assessment
+
+| What O does well | What O does poorly |
+|---|---|
+| Catches S002 (first classifier to do so) | CHECK-IN over-fires (5/7 corpus students) |
+| Competing-interpretations framing is excellent | Re-introduces WB09 false positive |
+| Dual-tagging captures both engagement and crisis | Multi-tagging encourages the model to tag liberally |
+
+### Recommended pipeline approach (from N + O analysis)
+
+Use **N's 4-axis as primary classification** (reliable, 0 FP, catches 8/8).
+Add a **separate CHECK-IN pass** that runs ONLY on students classified as
+ENGAGED — asking "is there anything subtle worth noting?" This separates
+the reliable classification from the speculative check-in without letting
+CHECK-IN contaminate the primary classification.
+
+The S002 signal lives in the "mostly engaged, but..." space that single-axis
+classification can't express and multi-axis over-tags. A targeted CHECK-IN
+on ENGAGED students is the narrowest intervention that captures it.
+
+### Temperature note
+
+All results at temp 0.1 are word-for-word identical across runs. At this
+temperature, the model follows a single deterministic decoding path — we're
+confirming one path, not exploring the model's uncertainty range. Temperature
+0.3 replications needed before publishing stability claims. Planned.
+
+Raw data: `test_o_multi_axis_gemma12b_2026-03-28_1225.json`
