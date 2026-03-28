@@ -7,8 +7,12 @@
 #   caffeinate -i ./scripts/run_test_queue.sh
 #
 # Queue:
-#   1. Test F (n=5) x4 batches = 20 total runs for rate stability
-#   2. Test I: Tier 2 wellbeing classification (observation→alert)
+#   1. Full pipeline re-run (with all prompt fixes applied)
+#   2. Test J: Pipeline validation (structural naming, anti-spotlighting,
+#      what_reaching_for, confusion field, preamble stripping)
+#   3. Test K: Enhancement model comparison (free OpenRouter models)
+#   4. Test F (n=5) x4 batches = 20 total runs for rate stability
+#   5. Test I: Tier 2 wellbeing classification (observation→alert)
 
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -64,7 +68,37 @@ run_test() {
     return $rc
 }
 
-# --- Test F batches (n=5 each, 4 batches = 20 total) ---
+# --- Step 1: Full pipeline re-run (with all prompt fixes) ---
+# This regenerates the baked demo JSON with:
+#   - reading-first coding (populates what_student_is_reaching_for)
+#   - preamble stripping on observations
+#   - anti-spotlighting in observation synthesis
+#   - multiplicity + pedagogical wins sections
+#   - confusion_or_questions field
+#   - structural naming in observation prompt
+run_test "Pipeline re-run (all fixes)" 18000 \
+    scripts/generate_demo_insights.py --course ethnic_studies
+
+sleep 15  # longer pause after full pipeline — lots of Metal allocation
+
+# --- Step 2: Test J — Pipeline validation ---
+# Tests whether the prompt changes actually work at 12B:
+# structural naming quality, anti-spotlighting, what_reaching_for,
+# preamble stripping. See test docstring for interpretation guide.
+run_test "J: Pipeline validation" 3600 \
+    scripts/run_alt_hypothesis_tests.py --tests J --no-subprocess
+
+sleep 10
+
+# --- Step 3: Test K — Enhancement model comparison (cloud, no MLX) ---
+# Tests anonymized enhancement prompt against free OpenRouter models.
+# NO MLX required — all calls go to cloud. Safe to run after Metal tests.
+# Scores models on: structural naming, language justice, relational
+# analysis, pedagogical depth, anti-spotlighting.
+run_test "K: Enhancement model comparison" 1800 \
+    scripts/run_alt_hypothesis_tests.py --tests K --no-subprocess
+
+# --- Step 4: Test F batches (if time permits) ---
 for batch in 1 2 3 4; do
     run_test "F batch $batch/4 (n=5)" 2400 \
         scripts/run_alt_hypothesis_tests.py --tests F --runs 5 --no-subprocess
@@ -72,13 +106,22 @@ for batch in 1 2 3 4; do
     sleep 10
 done
 
-# --- Test I: Tier 2 wellbeing classification on observations ---
-# This tests whether classifying OBSERVATIONS (not raw submissions)
-# correctly identifies wellbeing signals without false-flagging engaged students.
+# --- Step 5: Test I — Tier 2 wellbeing classification on observations ---
 run_test "I: Tier 2 wellbeing classification" 1800 \
     scripts/run_tier2_wellbeing_test.py
 
 echo "" | tee -a "$LOG"
 echo "═══════════════════════════════════════════════" | tee -a "$LOG"
 echo "  Queue complete. Log: $LOG" | tee -a "$LOG"
+echo "" | tee -a "$LOG"
+echo "  RESULTS INTERPRETATION GUIDE:" | tee -a "$LOG"
+echo "  Pipeline re-run: Check data/demo_baked/checkpoints/ for" | tee -a "$LOG"
+echo "    updated ethnic_studies_*_coding.json. Verify" | tee -a "$LOG"
+echo "    what_student_is_reaching_for is populated (was 0/32)." | tee -a "$LOG"
+echo "  Test J: See test docstring for scoring interpretation." | tee -a "$LOG"
+echo "    Key metrics: structural_naming_score, violation_count," | tee -a "$LOG"
+echo "    reaching_for populated count." | tee -a "$LOG"
+echo "  Test K: Rank models by total score AND per-dimension." | tee -a "$LOG"
+echo "    Language justice dimension is hardest — flag models" | tee -a "$LOG"
+echo "    scoring 0 there." | tee -a "$LOG"
 echo "═══════════════════════════════════════════════" | tee -a "$LOG"

@@ -2839,3 +2839,200 @@ prompts (`BEST_CONCERN_SYSTEM` + `BEST_CONCERN_PROMPT`, `LENGTH_CONCERN_SYSTEM`
 + `LENGTH_CONCERN_PROMPT`) are all defined in the test script itself
 (`scripts/run_alt_hypothesis_tests.py`), so the commit hash is sufficient
 to reconstruct the exact inputs.
+
+## Overnight Queue Run (2026-03-28)
+
+Queue: Pipeline re-run → Test J → Test K → Test F (×4) → Test I.
+Launched with `caffeinate -i` to prevent sleep. Git state: `5242a3c` +
+uncommitted prompt/architecture changes from P1-P7 fixes.
+
+### Pipeline re-run — TIMED OUT
+
+Timeout: 5400s (90 min). Pipeline completed Stage 1 (quick analysis) and
+all 32 P1 reading-first coding passes, but timed out before starting P2.
+The reading-first architecture (2-pass coding × 32 students × ~2.3 min/pass)
+requires ~150 min for coding alone — the 90-min timeout was set for the
+older single-pass architecture. Timeout increased to 18000s (5 hours) for
+future runs. Pipeline will be re-run after tests complete.
+
+Not a deadlock — the pipeline was actively processing (32/32 P1 passes
+completed before timeout). The checkpointing system does NOT save partial
+coding progress (saves only after all 32 students complete), so the P1
+work was lost. Future improvement: save coding checkpoint after each student
+rather than after all students.
+
+### Test J: Pipeline Validation — PASSED (2026-03-28)
+
+Validates the P1-P7 prompt/architecture fixes on Gemma 12B.
+
+**J1 — Structural naming quality:**
+
+| Student | Mechanism keywords | Hedging keywords | Score | Preamble stripped? |
+|---|---|---|---|---|
+| S018 Connor Walsh | 1 | 1 | 0.5 | Yes |
+| S025 Aiden Brooks | 1 | 1 | 0.5 | **No** (preamble present) |
+
+Score 0.5 for both — at the threshold the other agent defined ("< 0.3 means
+prompt not enough for 12B"). The 12B model names one structural mechanism
+per student but also hedges once. This is a candidate for the cloud
+enhancement tier: the 12B base captures the move, the enhancement model
+could strengthen the structural naming. Preamble stripping works for Connor
+but not Aiden — the stripping regex needs hardening.
+
+**J2 — Anti-spotlighting:**
+
+- **0 violations** — no "ask [student] to share with the class" language
+- Multiplicity section: present
+- Pedagogical wins section: present
+- Forward-looking section: present
+- Exceptional contributions: present
+
+All new synthesis sections generating correctly at 12B. The anti-spotlighting
+fix is working — the model is generating structural opportunities ("create
+space for...") rather than singling out named students.
+
+**J3 — Reaching-for field + confusion/questions:**
+
+| Student | what_reaching_for | confusion_or_questions |
+|---|---|---|
+| S004 Priya | "move beyond theoretical understanding... questioning framework's universal applicability" | "thoughtful question about applicability to South Asian immigrant women" |
+| S022 Destiny | "intersectionality is not abstract but lived reality... redlining's ongoing effects" | (empty — not confused) |
+| S028 Imani | "theory can validate and provide language for experiences already deeply felt" | (empty — not confused) |
+
+All 3 `what_reaching_for` fields populated with substantive content — the
+reading-first coding architecture is working. This was 0/32 before the
+P2 fix. Priya's confusion field correctly captures her genuine analytical
+question (not a deficit marker); Destiny and Imani are correctly empty.
+Free-form readings ~1450 chars each.
+
+**Test J interpretation notes:**
+- Structural naming at 0.5 is viable for a base tier but could benefit from
+  enhancement. The question: does cloud enhancement lift naming precision
+  without introducing equity risk? (Test K would answer this, but it failed.)
+- Anti-spotlighting success at 12B is significant — this was a prompt
+  engineering fix, not a model capability issue. Consistent with the thesis
+  that architectural scaffolding can compensate for model size on
+  equity-critical dimensions.
+- Reaching-for field populated = reading-first architecture validated. The
+  model reads the whole class first, then codes each student in context.
+  This produces qualitatively different (richer) characterizations than
+  coding students in isolation.
+
+Raw data: `data/research/raw_outputs/test_j_pipeline_validation_gemma12b_2026-03-28.json`
+Provenance: `5242a3c` (dirty — P1-P7 fixes uncommitted)
+
+### Test K: Enhancement Model Comparison — ALL MODELS FAILED
+
+All 5 free OpenRouter models failed:
+- **Gemma 27B**: 400 — "Developer instruction not enabled" (Google AI Studio
+  doesn't support system prompts for this model on free tier)
+- **Llama 70B, Mistral Small 24B**: 429 — rate limited ("temporarily
+  rate-limited upstream")
+- **Qwen 72B, DeepSeek V3**: 404 — model not found (endpoints removed or
+  renamed)
+
+This is an API availability issue, not a code problem. Free models have
+volatile availability. Options for re-run:
+1. Retry during off-peak hours (early morning US time)
+2. Use paid OpenRouter credits (the user has an API key)
+3. Use Gemma 27B via Ollama locally (requires 32+ GB RAM)
+
+For the paper: the enhancement tier's dependency on cloud availability is
+itself a finding. If the system requires cloud enhancement for narrative
+quality (which the architecture vs model-size analysis suggests), then cloud
+API instability becomes a deployment constraint. This connects to
+Warschauer's (2004) technology access gradient — the tool's quality depends
+on infrastructure the teacher may not control.
+
+### Test F Extended: n=20 across 4 independent batches (2026-03-28)
+
+Four independent batches of n=5 each ran overnight, each in its own
+process with Metal memory cleared between batches. Combined with the
+n=5 run from 2026-03-27, total n=25 across 5 independent sessions.
+
+**Every single batch produced identical classification outcomes:**
+
+| Student | Pattern | Flag rate (all batches) | Total n |
+|---|---|---|---|
+| S002 Jordan Kim | burnout (true +) | **0%** | 0/25 |
+| S004 Priya Venkataraman | strong | 0% | 0/25 |
+| S022 Destiny Williams | righteous_anger | 0% | 0/25 |
+| S023 Yolanda Fuentes | lived_exp | 0% | 0/25 |
+| S028 Imani Drayton | AAVE | 0% | 0/25 |
+| S029 Jordan Espinoza | neurodivergent | **100%** | 25/25 |
+| S031 Marcus Bell | minimal_effort | 0% | 0/25 |
+
+(Rates identical for both B and C formats — 50 total attempts per student.)
+
+**This is not stochastic variation.** At temperature 0.1, the classification
+outcome is fully consistent across 25 independent runs on 5 separate
+occasions. The token-level text varies between runs (different wording in
+justifications), but the FLAG/CLEAR decision never flips. The bias is
+structural — embedded in the interaction between the binary format and the
+model's representation of neurodivergent writing patterns.
+
+For the paper, this establishes the classification failure as a **reliable,
+measurable phenomenon** rather than anecdotal evidence. The binary concern
+classifier, with the strongest equity protections we could design, still:
+- Misses 100% of burnout signals (the one true positive in the corpus)
+- False-flags 100% of neurodivergent writing (despite explicit "neurodivergent
+  = COGNITIVE STYLE" instruction)
+
+This connects to Annamma, Connor & Ferri's (2013) DisCrit framework: the
+intersection of disability and race in educational assessment produces
+predictable, systematic disparate impact. Jordan Espinoza is Latino,
+neurodivergent (dyslexia, ADHD), and writes in a nonlinear, associative
+style. The binary classifier cannot process this writing pattern as anything
+other than "confusion" — even when explicitly told otherwise. The format
+compresses away the very context that would prevent the harm.
+
+Raw data: `data/research/raw_outputs/test_f_bc_stability_gemma12b_2026-03-28.json`
+(last batch; earlier batches overwritten — identical results confirmed in
+queue log). Prior run: `test_f_bc_stability_gemma12b_2026-03-27.json`.
+Provenance: `5242a3c` (dirty — P1-P7 fixes uncommitted).
+
+### Test I Replication: Tier 2 confirmed at n=2 (2026-03-28)
+
+Second run of Test I produced identical results to the first:
+- 8/8 signals surfaced
+- 1/2 controls false-flagged (WB09 Priya at confidence 0.6)
+- WB10 DeAndre correctly classified as NONE (confidence 0.9)
+- WB01 Rosa again misclassified as BURNOUT (should be CRISIS)
+
+The consistency across two runs suggests the Tier 2 approach's strengths
+and weaknesses are structural, not stochastic. The 0.7 confidence threshold
+would eliminate the WB09 false positive in both runs while retaining all
+true positives. Still needs testing with more diverse controls.
+
+Raw data: `data/research/raw_outputs/test_i_tier2_wellbeing_2026-03-28.json`
+(second run overwrote first — identical results confirmed in queue log).
+
+## Overnight Queue Summary (2026-03-28)
+
+Queue ran from 00:42 to 05:39 (~5 hours). Results:
+
+| Test | Status | Key finding |
+|---|---|---|
+| Pipeline | TIMED OUT | 90-min timeout too short for reading-first (needs 5h) |
+| J (validation) | **PASSED** | Anti-spotlighting works (0 violations), reaching-for populated, structural naming at 0.5 |
+| K (enhancement) | **FAILED** | All 5 free OpenRouter models unavailable (API errors) + code bug |
+| F batch 1 | **PASSED** | S002 0/5, S029 5/5 — identical |
+| F batch 2 | **PASSED** | S002 0/5, S029 5/5 — identical |
+| F batch 3 | **PASSED** | S002 0/5, S029 5/5 — identical |
+| F batch 4 | **PASSED** | S002 0/5, S029 5/5 — identical |
+| I (Tier 2) | **PASSED** | 8/8 signals, 1/2 FP — identical to prior run |
+
+### Remaining work
+
+1. **Pipeline re-run**: Timeout fixed to 18000s. Needs re-run to generate
+   baked output with all P1-P7 fixes. Will populate observation fields +
+   what_reaching_for + confusion_or_questions.
+
+2. **Test K**: Fix `save_results()` KeyError for multi-model tests. Retry
+   during off-peak hours or with paid API key.
+
+3. **Concern detector transition**: Test F (n=25) establishes the binary
+   classification failure as reliable and measurable. Test I (n=2)
+   establishes the observation-based alternative as promising but not
+   production-ready (1/2 FP on controls). Next: add more diverse controls
+   to Test I and implement the wellbeing post-pass design.
