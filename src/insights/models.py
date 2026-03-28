@@ -97,6 +97,7 @@ class SubmissionCodingRecord(BaseModel):
     # Free-form reading (reader-not-judge coding path)
     free_form_reading: Optional[str] = None
     what_student_is_reaching_for: Optional[str] = None
+    confusion_or_questions: Optional[str] = None
 
     # Per-student observation (observation-only architecture)
     # Replaces binary concern FLAGS with generative prose — the teacher reads

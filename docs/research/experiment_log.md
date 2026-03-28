@@ -3140,3 +3140,217 @@ This test is methodologically necessary before the paper can claim the
 format itself — not just a particular prompt implementation — is the
 variable. Without it, a reviewer could reasonably argue that better prompt
 engineering would fix the binary approach.
+
+---
+
+# Session — 2026-03-28
+
+## Overnight test queue results
+
+Queue ran 00:43–05:29. Metal warmup succeeded. Results:
+
+### Pipeline re-run: TIMED OUT at 5400s
+
+Pipeline completed Stage 1 (quick analysis) and all 32 reading-first
+codings in Stage 2 (P1 readings 1300-1600 chars each, ~2.3 min/student).
+Timed out before reaching Stage 3+. Reading-first coding confirmed to work
+at scale — all 32 students processed. Timeout was too tight; corrected to
+18000s for next run.
+
+**Coding now uses `code_submission_reading_first`** (reading-first path)
+instead of `code_submission()`. This was the root cause of
+what_student_is_reaching_for being NULL (0/32) — the old coding function
+never asked for this field. Not a parse bug, just the wrong function.
+
+### Test J (pipeline validation): STRONG RESULTS
+
+All prompt fixes validated on Gemma 12B MLX:
+
+| Subtest | Result | Detail |
+|---------|--------|--------|
+| J1 Connor (colorblind) | Score 1.00 | Named "**colorblind erasure**" directly |
+| J1 Aiden (tone policing) | Score 1.00 | Named "**Structural Power Move: Tone Policing.**" |
+| J1 Connor preamble | Stripped | No preamble in output |
+| J1 Aiden preamble | NOT stripped | "Okay, here's what I'm noticing..." survived — regex fixed post-test |
+| J2 Anti-spotlighting | 0 violations | All synthesis teacher moves are structural |
+| J2 Multiplicity section | Present | "How Students Entered the Material" generated |
+| J2 Pedagogical wins | Present | "What's Working in This Assignment" generated |
+| J2 Forward-looking | Present | Looking Ahead to Omi & Winant generated |
+| J2 Exceptional contributions | Present | Named 3 students with specific moves |
+| J3 Priya reaching_for | YES | "attempting to move beyond theoretical understanding to apply it to a specific, complex family experience" |
+| J3 Destiny reaching_for | YES | "attempting to demonstrate that intersectionality is not an abstract concept but a lived reality" |
+| J3 Imani reaching_for | YES | "attempting to articulate how a theoretical framework can validate and provide language for experiences already deeply felt" |
+| J3 Priya confusion | YES | "raises a thoughtful question about applicability of Crenshaw's framework to South Asian immigrant women" — correctly distinguished curiosity from confusion |
+| J3 Destiny/Imani confusion | No | Correctly empty |
+
+**Structural naming scoring artifact:** Initial scoring gave 0.50 because
+hedging keywords matched pedagogical intent-contextualizing ("While his
+intention may be to promote respect") rather than actual mechanism hedging.
+Refined keywords eliminate false matches — both students score 1.00. The
+prompt change worked. The 12B model names mechanisms directly AND provides
+teacher-useful intent context. This is arguably better than pure labeling.
+
+**Test J limitations (noted in results):** J2 used ~10 students (not 32)
+and no P7 insight ranking in teacher_lens. Section presence is validated
+but synthesis richness may differ from production.
+
+### Test K (enhancement models): ALL FAILED
+
+All 5 free OpenRouter models failed at 02:44:
+- Gemma 27B: 400 — "Developer instruction not enabled" (Google AI Studio
+  doesn't accept system prompts via free tier)
+- Llama 70B: 429 rate limited
+- Qwen 72B: 404 model not found (`:free` variant discontinued)
+- DeepSeek V3: 404 model not found
+- Mistral Small: 429 rate limited
+
+Plus a code bug: `save_results()` crashed on `multi_model` KeyError.
+
+**Fixes applied:**
+- `save_results()` uses `.get()` instead of direct dict access
+- Gemma 27B: system prompt folded into user message
+- Retry logic with exponential backoff for 429s
+- Model list updated to 6 confirmed-available free models (queried API):
+  Gemma 27B, Llama 70B, Mistral Small 24B, Nemotron 120B MoE, GLM 4.5,
+  Hermes 405B
+
+### Test F (B/C stability at n=20): DEFINITIVE
+
+4 batches × 5 runs = 20 total. Perfectly deterministic:
+
+| Student | Type | Both B & C, all 20 runs |
+|---------|------|-------------------------|
+| S002 Jordan Kim | burnout | **Never detected (0/20)** |
+| S004 Priya | strong | Correct CLEAR (20/20) |
+| S022 Destiny | righteous anger | Correct CLEAR (20/20) |
+| S023 Yolanda | lived experience | Correct CLEAR (20/20) |
+| S028 Imani | AAVE | Correct CLEAR (20/20) |
+| S029 Jordan E. | neurodivergent | **Always false-flagged (20/20)** |
+| S031 Marcus | minimal effort | Correct CLEAR (20/20) |
+
+Binary concern classification is deterministically wrong on the two
+cases that matter most: **100% false-flag rate on neurodivergent writing**
+(the student bears the cost of a built environment designed for one
+neurotype — #DISABILITY_STUDIES) and **0% sensitivity on burnout**
+(the student running on empty is invisible to a system designed for
+binary "fine/not-fine" — #CRIP_TIME: who defines the pace?).
+
+The observation architecture replaces this. The binary detector is not
+unreliable — it is reliably wrong on exactly the students who are most
+harmed by misclassification.
+
+### Test I (Tier 2 wellbeing on observations): 8/8 signals, 1 FP
+
+| Student | Signal | Result | Conf | Correct |
+|---------|--------|--------|------|---------|
+| Rosa Gutierrez | ICE stress | BURNOUT | 0.8 | OK |
+| Keisha Williams | Caregiving | BURNOUT | 0.8 | OK |
+| Miguel Sandoval | Housing | CRISIS | 0.9 | OK |
+| Jasmine Torres | DV-adjacent | CRISIS | 0.8 | OK |
+| Tyler Reed | Exhaustion | BURNOUT | 0.9 | OK |
+| Amira Hassan | Food insecurity | CRISIS | 0.95 | OK |
+| Sofia Reyes | Tonal rupture | CRISIS | 0.8 | OK |
+| Brandon Mitchell | Grief/loss | CRISIS | 0.9 | OK |
+| Priya Sharma | Control (analytical) | BURNOUT | 0.6 | **FALSE-FLAG** |
+| DeAndre Washington | Control (passionate) | NONE | 0.9 | OK |
+
+Correctly distinguishes BURNOUT (depletion) from CRISIS (active danger).
+Confidence levels meaningful: genuine signals 0.8-0.95, false positive 0.6.
+
+**Priya Sharma false positive analysis:** Priya writes analytically about
+ICE raids in her community. The observation itself says "I don't see any
+immediate red flags" but the classifier read "emotional labor" into the
+topic and flagged BURNOUT at 0.6. This is the #COMMUNITY_CULTURAL_WEALTH
+problem: the classifier can't distinguish "writing about ICE as course
+material using community knowledge" from "personally affected by ICE." A
+student's community knowledge — drawn from family, neighborhood, cultural
+institutions — is an analytical resource, not a distress signal. The
+3-axis schema (BURNOUT/CRISIS/NONE) gives the model no category for
+"engaged via community knowledge," so it stretches BURNOUT to fit.
+
+**Design response: 4-axis expanded schema (Test L)**
+
+Added ENGAGED axis: CRISIS | BURNOUT | ENGAGED | NONE.
+
+ENGAGED covers students doing intellectual work on difficult material,
+including drawing on community/family experience as analytical resource.
+Community knowledge folded into ENGAGED rather than a separate axis to
+avoid creating a "special track" that marks students of color's analytical
+work as different-from-normal engagement (#ETHNIC_STUDIES: a separate
+category for community-grounded analysis risks encoding whiteness-as-
+default-engagement while marking everything else as requiring explanation).
+
+Test L implemented and queued. Expected: Priya shifts from FALSE-FLAG
+BURNOUT to ENGAGED. Critical check: Rosa Gutierrez (ICE stress, REAL
+personal circumstance) must remain BURNOUT, not be absorbed into ENGAGED.
+The distinction is whether the difficult content describes the student's
+OWN present-tense circumstances beyond the assignment, or course material
+they're engaging with intellectually — even from personal experience.
+
+## Changes implemented this session
+
+### Pipeline gap fixes (P1-P7 from pipeline_gaps_plan.md)
+
+| Priority | Gap | Implementation |
+|----------|-----|----------------|
+| P1 | Observation architecture | Pipeline integration: reading-first coding, shared `observe_student()` |
+| P2 | Executive summary narrative | Observation synthesis prompt now produces 9 sections at 2000 max_tokens |
+| P3 | Forward-looking | `OBSERVATION_SYNTHESIS_FORWARD_LOOKING` wired into demo generator + engine |
+| P4 | Multiplicity narrative | "How Students Entered the Material" section added to observation synthesis |
+| P5 | Pedagogical wins | "What's Working in This Assignment" section added |
+| P6 | Questions/confusions | `confusion_or_questions` field added to reading-first P2 coding + model |
+| P7 | Elevated individual insights | `_insight_score()` ranking composite feeds synthesis via teacher_lens |
+
+### Anti-spotlighting (3 prompt locations)
+
+1. "Moments for the Classroom" rewritten: describe intellectual tensions,
+   not named students to call on. Frame as structural activities.
+2. "Students to Check In With" gets privacy framing: "PRIVATE and
+   CARE-FOCUSED. Never suggest addressing publicly."
+3. Temperature prompt example: removed named students (Connor, Aiden,
+   Brittany) from example JSON.
+
+Sections that still name specific students (correctly): Exceptional
+Contributions, Students to Check In With, Structural Power Moves. The
+teacher needs to know WHO — anti-spotlighting is about the recommended
+RESPONSE being structural, not about hiding student identity from the
+teacher.
+
+### Structural naming
+
+Added to observation prompt: "When you identify a structural power move,
+NAME THE MECHANISM directly: say 'tone policing,' 'colorblind erasure,' or
+'abstract liberalism' — not 'a subtle attempt to...' or 'may be trying to...'"
+
+Test J confirmed: 12B now names mechanisms directly ("**colorblind erasure**",
+"**Tone Policing**") while also contextualizing student intent — better
+than pure labeling for teacher use.
+
+### Other fixes
+
+- Preamble stripping: two-pass regex handles both period-terminated and
+  colon-terminated preambles
+- `what_student_is_reaching_for` diagnostic logging
+- Observation synthesis embedded in baked JSON (was separate .md file)
+- Phone/driving detection documented as round-1 corpus artifact in this log
+- Dual-pipeline consistency fixes: teacher_lens in observe_student(),
+  teacher_lens_block construction, max_tokens alignment
+
+### Dual-pipeline problem resolved
+
+`generate_demo_insights.py` refactored to call `engine.run_from_submissions()`
+directly instead of reimplementing every pipeline stage independently. This
+eliminates the dual-source-of-truth problem documented in pipeline_gaps_plan.md.
+All engine changes (reading-first coding, observation architecture, P7
+insight ranking, P3 forward-looking, preamble stripping) now flow through
+a single codepath. The demo generator is a thin wrapper: load corpus → call
+engine → extract from store → assemble baked JSON.
+
+### Test infrastructure additions
+
+- **Test J**: Pipeline validation (structural naming, anti-spotlighting,
+  reaching_for, confusion, preamble, new sections)
+- **Test K**: Enhancement model comparison (6 free OpenRouter models,
+  scored on 5 quality dimensions)
+- **Test L**: Expanded wellbeing classifier (4-axis CRISIS/BURNOUT/
+  ENGAGED/NONE, comparison to Test I 3-axis)

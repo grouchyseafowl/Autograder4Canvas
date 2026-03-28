@@ -535,8 +535,16 @@ class InsightsStore:
 
     def get_themes(self, run_id: str) -> Optional[Dict]:
         """Get themes/outliers/synthesis data for a run."""
+        # Ensure observation_synthesis column exists (added 2026-03-25)
+        try:
+            self._conn.execute(
+                "ALTER TABLE insights_themes ADD COLUMN observation_synthesis TEXT"
+            )
+        except Exception:
+            pass  # column already exists
         row = self._conn.execute(
-            "SELECT theme_set, outlier_report, synthesis_report "
+            "SELECT theme_set, outlier_report, synthesis_report, "
+            "observation_synthesis "
             "FROM insights_themes WHERE run_id = ?",
             (run_id,),
         ).fetchone()

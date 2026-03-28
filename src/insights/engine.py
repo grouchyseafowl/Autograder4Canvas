@@ -178,6 +178,11 @@ class InsightsEngine:
                     )
             log.info("Sleep prevention stopped (standby restored)")
 
+    def _emit_timing(self, timing_callback, stage_name, start_time):
+        """Emit timing if callback is set."""
+        if timing_callback:
+            timing_callback(stage_name, round(time.time() - start_time, 2))
+
     def run_analysis(
         self,
         *,
@@ -198,9 +203,112 @@ class InsightsEngine:
     ) -> Optional[str]:
         """Run the full analysis pipeline for one assignment.
 
-        Args:
-            progress_callback: called with status strings
-            result_callback: called with (result_type, data_dict) for live preview
+        Fetches data from Canvas, preprocesses, then delegates to
+        run_from_submissions() for the analysis pipeline.
+
+        Returns the run_id on success, None on failure/cancellation.
+        """
+        progress = progress_callback or (lambda msg: None)
+
+        # ----------------------------------------------------------
+        # Stage 1: Data fetch
+        # ----------------------------------------------------------
+        progress(f"Fetching submissions for {assignment_name} ({course_name})...")
+
+        fetcher = DataFetcher(self._api)
+
+        if is_discussion:
+            assign_info = fetcher.fetch_assignment_info(course_id, assignment_id)
+            topic_id = None
+            if assign_info:
+                topic_id = assign_info.get("discussion_topic", {}).get("id")
+            if not topic_id:
+                topic_id = assignment_id
+                log.info("No discussion_topic.id found, trying assignment_id as topic_id")
+            raw_submissions = fetcher.fetch_discussion_entries(
+                course_id, topic_id
+            )
+        else:
+            raw_submissions = fetcher.fetch_submissions(
+                course_id, assignment_id
+            )
+
+        if not raw_submissions:
+            progress("No submissions found.")
+            return None
+
+        progress(f"Found {len(raw_submissions)} submissions.")
+
+        # ----------------------------------------------------------
+        # Stage 2: Preprocessing (translation + transcription)
+        # ----------------------------------------------------------
+        progress("Preprocessing submissions...")
+        submissions = self._preprocess(
+            raw_submissions,
+            translate_enabled=translate_enabled,
+            transcribe_enabled=transcribe_enabled,
+            progress=progress,
+        )
+
+        # Fetch assignment description for vocabulary overlap check
+        assignment_description = ""
+        try:
+            if self._api:
+                _desc_fetcher = DataFetcher(self._api)
+                assign_info = _desc_fetcher.fetch_assignment_info(
+                    course_id, assignment_id
+                )
+                if assign_info:
+                    raw_desc = assign_info.get("description", "")
+                    if raw_desc:
+                        assignment_description = _strip_html(raw_desc)
+        except Exception as e:
+            log.debug("Could not fetch assignment description: %s", e)
+
+        # Delegate to the core pipeline
+        return self.run_from_submissions(
+            submissions=submissions,
+            course_id=str(course_id),
+            course_name=course_name,
+            assignment_id=str(assignment_id),
+            assignment_name=assignment_name,
+            assignment_description=assignment_description,
+            model_tier=model_tier,
+            teacher_context=teacher_context,
+            analysis_lens=analysis_lens,
+            teacher_interests=teacher_interests,
+            progress_callback=progress_callback,
+            result_callback=result_callback,
+            course_profile_id=course_profile_id,
+            next_week_topic=self._settings.get("insights_next_week_topic", ""),
+            skip_feedback=not self._settings.get("insights_draft_feedback", False),
+        )
+
+    def run_from_submissions(
+        self,
+        *,
+        submissions: List[Dict],
+        course_id: str = "0",
+        course_name: str = "",
+        assignment_id: str = "0",
+        assignment_name: str = "",
+        assignment_description: str = "",
+        model_tier: str = "lightweight",
+        teacher_context: str = "",
+        analysis_lens: Optional[Dict] = None,
+        teacher_interests: Optional[list] = None,
+        progress_callback: Optional[Callable] = None,
+        result_callback: Optional[Callable] = None,
+        course_profile_id: str = "default",
+        next_week_topic: str = "",
+        skip_feedback: bool = False,
+        timing_callback: Optional[Callable] = None,
+        backend_override=None,
+    ) -> Optional[str]:
+        """Run the analysis pipeline on pre-loaded submissions.
+
+        This is the core pipeline. run_analysis() fetches from Canvas and
+        delegates here. Scripts can call this directly with corpus data.
 
         Returns the run_id on success, None on failure/cancellation.
         """
@@ -214,98 +322,31 @@ class InsightsEngine:
         profile_mgr = TeacherProfileManager(self._store, course_profile_id)
         profile_fragment = profile_mgr.get_full_profile_fragment()
 
-        # Create run record
         run_id = self._store.generate_run_id()
+        total = len(submissions)
+
+        # Create run in store
+        self._store.create_run(
+            run_id=run_id,
+            course_id=course_id,
+            course_name=course_name,
+            assignment_id=assignment_id,
+            assignment_name=assignment_name,
+            model_tier=model_tier,
+            total_submissions=total,
+            teacher_context=teacher_context,
+            analysis_lens_config=analysis_lens,
+            course_profile_id=course_profile_id,
+        )
+        self._store.complete_stage(run_id, "data_fetch")
+        self._store.complete_stage(run_id, "preprocessing")
 
         try:
-            # ----------------------------------------------------------
-            # Stage 1: Data fetch
-            # ----------------------------------------------------------
-            progress(f"Fetching submissions for {assignment_name} ({course_name})...")
-            if self._cancelled:
-                return None
-
-            fetcher = DataFetcher(self._api)
-
-            if is_discussion:
-                # Canvas discussion assignments have a separate topic_id
-                # Fetch assignment info to get the linked topic_id
-                assign_info = fetcher.fetch_assignment_info(course_id, assignment_id)
-                topic_id = None
-                if assign_info:
-                    topic_id = assign_info.get("discussion_topic", {}).get("id")
-                if not topic_id:
-                    # Fallback: try using assignment_id as topic_id
-                    topic_id = assignment_id
-                    log.info("No discussion_topic.id found, trying assignment_id as topic_id")
-                raw_submissions = fetcher.fetch_discussion_entries(
-                    course_id, topic_id
-                )
-            else:
-                raw_submissions = fetcher.fetch_submissions(
-                    course_id, assignment_id
-                )
-
-            if not raw_submissions:
-                progress("No submissions found.")
-                return None
-
-            total = len(raw_submissions)
-            progress(f"Found {total} submissions.")
-
-            # Create run in store
-            self._store.create_run(
-                run_id=run_id,
-                course_id=str(course_id),
-                course_name=course_name,
-                assignment_id=str(assignment_id),
-                assignment_name=assignment_name,
-                model_tier=model_tier,
-                total_submissions=total,
-                teacher_context=teacher_context,
-                analysis_lens_config=analysis_lens,
-                course_profile_id=course_profile_id,
-            )
-            self._store.complete_stage(run_id, "data_fetch")
-
-            if self._cancelled:
-                return None
-
-            # ----------------------------------------------------------
-            # Stage 2: Preprocessing (translation + transcription)
-            # ----------------------------------------------------------
-            progress("Preprocessing submissions...")
-            submissions = self._preprocess(
-                raw_submissions,
-                translate_enabled=translate_enabled,
-                transcribe_enabled=transcribe_enabled,
-                progress=progress,
-            )
-            self._store.complete_stage(run_id, "preprocessing")
-
-            if self._cancelled:
-                return None
-
             # ----------------------------------------------------------
             # Stage 3: Quick Analysis (non-LLM)
             # ----------------------------------------------------------
 
-            # Fetch assignment description for vocabulary overlap check
-            # (foundation for Mechanism 2: Assignment Context Awareness).
-            assignment_description = ""
-            try:
-                if self._api:
-                    _desc_fetcher = DataFetcher(self._api)
-                    assign_info = _desc_fetcher.fetch_assignment_info(
-                        course_id, assignment_id
-                    )
-                    if assign_info:
-                        raw_desc = assign_info.get("description", "")
-                        if raw_desc:
-                            assignment_description = _strip_html(raw_desc)
-            except Exception as e:
-                log.debug("Could not fetch assignment description: %s", e)
-
+            _stage_t0 = time.time()
             progress("Running Quick Analysis...")
             analyzer = QuickAnalyzer(
                 progress_callback=progress,
@@ -322,6 +363,7 @@ class InsightsEngine:
             # Save quick analysis result
             self._store.save_quick_analysis(run_id, qa_result.model_dump_json())
             self._store.complete_stage(run_id, "quick_analysis")
+            self._emit_timing(timing_callback, "quick_analysis", _stage_t0)
 
             if self._cancelled:
                 return None
@@ -332,7 +374,10 @@ class InsightsEngine:
             # Detect available LLM backend
             from insights.llm_backend import auto_detect_backend
 
-            backend = auto_detect_backend(model_tier, self._settings)
+            if backend_override is not None:
+                backend = backend_override
+            else:
+                backend = auto_detect_backend(model_tier, self._settings)
 
             if backend is None:
                 # No LLM available — complete with Quick Analysis only
@@ -374,6 +419,7 @@ class InsightsEngine:
             # invisible when students are read in isolation — the class reading
             # makes them visible by surfacing the full relational field first.
             # ----------------------------------------------------------
+            _stage_t0 = time.time()
             from insights.class_reader import (
                 generate_class_reading,
                 is_reflective_assignment,
@@ -484,9 +530,12 @@ class InsightsEngine:
                     log.warning("Class reading failed (non-fatal): %s", _cr_err)
                     progress("Class reading failed — using basic stats.")
 
+            self._emit_timing(timing_callback, "class_reading", _stage_t0)
+
             # ----------------------------------------------------------
             # Stage 4: Per-submission coding
             # ----------------------------------------------------------
+            _stage_t0 = time.time()
             from insights.submission_coder import code_submission, code_submission_reading_first
 
             progress("Coding submissions with LLM...")
@@ -747,6 +796,7 @@ class InsightsEngine:
                     time.sleep(throttle)
 
             self._store.complete_stage(run_id, "coding")
+            self._emit_timing(timing_callback, "coding_total", _stage_t0)
 
             # Release MLX model between stages to prevent Metal memory
             # fragmentation on 16 GB machines.  Costs ~15-20s reload but
@@ -860,6 +910,7 @@ class InsightsEngine:
             # ----------------------------------------------------------
             # Stage 5: Concern detection (dedicated pass)
             # ----------------------------------------------------------
+            _stage_t0 = time.time()
             from insights.concern_detector import detect_concerns
 
             progress("Running dedicated concern detection...")
@@ -958,6 +1009,7 @@ class InsightsEngine:
                     time.sleep(throttle)
 
             self._store.complete_stage(run_id, "concerns")
+            self._emit_timing(timing_callback, "concerns", _stage_t0)
 
             # Release MLX model between concerns → observations
             if backend and backend.name == "mlx":
@@ -1066,6 +1118,7 @@ class InsightsEngine:
             # should notice — including structural power moves.
             # Results stored as observation field on each coding record.
             # ----------------------------------------------------------
+            _stage_t0 = time.time()
             from insights.submission_coder import observe_student
 
             progress("Generating per-student observations...")
@@ -1107,6 +1160,7 @@ class InsightsEngine:
                     time.sleep(throttle)
 
             self._store.complete_stage(run_id, "observations")
+            self._emit_timing(timing_callback, "observations", _stage_t0)
 
             # Release MLX model between observations → themes
             if backend and backend.name == "mlx":
@@ -1252,6 +1306,7 @@ class InsightsEngine:
             # ----------------------------------------------------------
             # Stage 6: Theme generation
             # ----------------------------------------------------------
+            _stage_t0 = time.time()
             from insights.theme_generator import generate_themes
 
             progress("Generating themes...")
@@ -1270,6 +1325,7 @@ class InsightsEngine:
                 run_id, theme_set_json=theme_set.model_dump_json()
             )
             self._store.complete_stage(run_id, "themes")
+            self._emit_timing(timing_callback, "themes", _stage_t0)
 
             # Emit themes and contradictions for live preview
             emit_result("stage", {"stage": "THEMES IDENTIFIED"})
@@ -1284,6 +1340,7 @@ class InsightsEngine:
             # ----------------------------------------------------------
             # Stage 7: Outlier surfacing
             # ----------------------------------------------------------
+            _stage_t0 = time.time()
             from insights.theme_generator import surface_outliers
 
             progress("Surfacing outliers...")
@@ -1301,6 +1358,7 @@ class InsightsEngine:
                 run_id, outlier_report_json=outlier_report.model_dump_json()
             )
             self._store.complete_stage(run_id, "outliers")
+            self._emit_timing(timing_callback, "outliers", _stage_t0)
 
             # Emit outliers for live preview
             emit_result("stage", {"stage": "OUTLIERS — UNIQUE VOICES"})
@@ -1317,6 +1375,7 @@ class InsightsEngine:
             # answering ONE question. Each call has its own try/except so
             # partial results are always better than a crash. (#CRIP_TIME)
             # ----------------------------------------------------------
+            _stage_t0 = time.time()
             from insights.synthesizer import guided_synthesis
 
             progress("Generating synthesis report (guided chain)...")
@@ -1335,6 +1394,7 @@ class InsightsEngine:
                 run_id, synthesis_report_json=synthesis.model_dump_json()
             )
             self._store.complete_stage(run_id, "synthesis")
+            self._emit_timing(timing_callback, "synthesis", _stage_t0)
 
             # Emit synthesis for live preview
             emit_result("stage", {"stage": "SYNTHESIS"})
@@ -1353,6 +1413,7 @@ class InsightsEngine:
                 OBSERVATION_SYNTHESIS_FORWARD_LOOKING,
             )
 
+            _stage_t0 = time.time()
             if observations_map:
                 progress("Generating observation-based class summary...")
 
@@ -1362,8 +1423,49 @@ class InsightsEngine:
                     _name = _rec.student_name if _rec else sid
                     _obs_formatted += f"\n**{_name}** ({sid}):\n{obs}\n"
 
+                # P7: Elevated insights — pre-rank students for synthesis
+                def _insight_score(rec):
+                    score = 0
+                    reaching = rec.what_student_is_reaching_for or ""
+                    if reaching:
+                        score += min(len(reaching.split()) / 15, 2.0)
+                    score += min(len(rec.notable_quotes), 3)
+                    score += min(len(rec.concepts_applied), 2)
+                    score += min(len(rec.personal_connections), 2)
+                    if rec.emotional_register in ("passionate", "urgent", "personal"):
+                        score += 0.5
+                    return score
+
+                _ranked = sorted(coding_records, key=_insight_score, reverse=True)
+                _top = _ranked[:8]
+                _insight_block = ""
+                if any(_insight_score(r) > 1 for r in _top):
+                    _il = ["ELEVATED INSIGHTS (students with richest engagement signals):"]
+                    for r in _top:
+                        s = _insight_score(r)
+                        if s <= 1:
+                            break
+                        reaching = r.what_student_is_reaching_for or ""
+                        _il.append(
+                            f"- {r.student_name}: reaching_for={'yes' if reaching else 'no'}, "
+                            f"quotes={len(r.notable_quotes)}, concepts={len(r.concepts_applied)}, "
+                            f"register={r.emotional_register or 'unknown'}"
+                        )
+                        if reaching:
+                            _il.append(f"  → {reaching}")
+                    _insight_block = "\n".join(_il) + "\n"
+
+                _combined_lens = _teacher_lens
+                if _insight_block:
+                    _combined_lens += (
+                        "\nTEACHER LENS — Pre-ranked engagement signals from coding stage:\n"
+                        + _insight_block
+                        + "Use this to inform your Exceptional Contributions section, but "
+                        "trust your own reading of the observations over these signals.\n"
+                    )
+
                 _fwd = ""
-                _next_week = self._settings.get("insights_next_week_topic", "")
+                _next_week = next_week_topic or self._settings.get("insights_next_week_topic", "")
                 if _next_week:
                     _fwd = OBSERVATION_SYNTHESIS_FORWARD_LOOKING.format(
                         next_week_topic=_next_week
@@ -1373,7 +1475,7 @@ class InsightsEngine:
                     assignment=assignment_prompt,
                     class_context=class_reading,
                     observations=_obs_formatted,
-                    teacher_lens=_teacher_lens,
+                    teacher_lens=_combined_lens,
                     forward_looking=_fwd,
                 )
 
@@ -1381,7 +1483,7 @@ class InsightsEngine:
                     obs_synthesis = send_text(
                         backend, _synth_prompt,
                         OBSERVATION_SYNTHESIS_SYSTEM_PROMPT,
-                        max_tokens=1200,
+                        max_tokens=2000,
                     )
 
                     # Store as a special synthesis record
@@ -1393,10 +1495,13 @@ class InsightsEngine:
                 except Exception as exc:
                     log.warning("Observation synthesis failed: %s", exc)
 
+            self._emit_timing(timing_callback, "observation_synthesis", _stage_t0)
+
             # ----------------------------------------------------------
             # Stage 9: Draft student feedback (if enabled)
             # ----------------------------------------------------------
-            if self._settings.get("insights_draft_feedback", False) and backend:
+            _stage_t0 = time.time()
+            if not skip_feedback and backend:
                 from insights.feedback_drafter import FeedbackDrafter
 
                 progress("Drafting feedback for students...")
@@ -1449,6 +1554,7 @@ class InsightsEngine:
                         time.sleep(throttle)
 
                 self._store.complete_stage(run_id, "feedback")
+            self._emit_timing(timing_callback, "feedback", _stage_t0)
 
             # ----------------------------------------------------------
             # Complete run
@@ -1468,6 +1574,7 @@ class InsightsEngine:
             progress(f"Error: {e}")
             self._stop_sleep_prevention()
             return None
+
 
     def run_partial(
         self,

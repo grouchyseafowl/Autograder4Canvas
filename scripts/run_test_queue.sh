@@ -130,8 +130,17 @@ for batch in 1 2 3 4; do
     sleep 10
 done
 
-# --- Step 5: Test I — Tier 2 wellbeing classification on observations ---
-run_test "I: Tier 2 wellbeing classification" "$TEST_T" \
+# --- Step 5: Test L — Expanded wellbeing classifier (4-axis) ---
+# Tests CRISIS/BURNOUT/ENGAGED/NONE schema. Should fix Test I's
+# false positive on Priya (analytical engagement misread as burnout).
+# Runs on MLX — needs observations from Test G.
+run_test "L: Expanded wellbeing classifier" "$TEST_T" \
+    scripts/run_alt_hypothesis_tests.py --tests L --no-subprocess
+
+sleep 10
+
+# --- Step 6: Test I — Original Tier 2 for comparison baseline ---
+run_test "I: Tier 2 wellbeing (3-axis baseline)" "$TEST_T" \
     scripts/run_tier2_wellbeing_test.py
 
 echo "" | tee -a "$LOG"
@@ -144,8 +153,12 @@ echo "    updated ethnic_studies_*_coding.json. Verify" | tee -a "$LOG"
 echo "    what_student_is_reaching_for is populated (was 0/32)." | tee -a "$LOG"
 echo "  Test J: See test docstring for scoring interpretation." | tee -a "$LOG"
 echo "    Key metrics: structural_naming_score, violation_count," | tee -a "$LOG"
-echo "    reaching_for populated count." | tee -a "$LOG"
+echo "    reaching_for populated count. Note: J2 uses ~10 students" | tee -a "$LOG"
+echo "    (not 32) and no P7 insight ranking." | tee -a "$LOG"
 echo "  Test K: Rank models by total score AND per-dimension." | tee -a "$LOG"
 echo "    Language justice dimension is hardest — flag models" | tee -a "$LOG"
 echo "    scoring 0 there." | tee -a "$LOG"
+echo "  Test L vs I: Compare false positive rates. L should have" | tee -a "$LOG"
+echo "    0/2 FP (vs I's 1/2). If ENGAGED absorbed BURNOUT cases," | tee -a "$LOG"
+echo "    the prompt needs refinement." | tee -a "$LOG"
 echo "═══════════════════════════════════════════════" | tee -a "$LOG"

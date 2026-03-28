@@ -2,8 +2,8 @@
 """
 Generate Demo Insights — Steps 4+7 of the DAIGT Testing Brief.
 
-Runs the full InsightsEngine pipeline (stage-by-stage, bypassing DataFetcher)
-on the assembled demo corpus. Captures wall-clock timing at each stage.
+Runs the full InsightsEngine pipeline via run_from_submissions() on the
+assembled demo corpus. Captures wall-clock timing at each stage.
 Outputs baked JSON files to src/demo_assets/.
 
 Usage:
@@ -15,9 +15,8 @@ import json
 import logging
 import os
 import sys
-import time
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 # Add src/ to path
 ROOT = Path(__file__).resolve().parent.parent
@@ -26,64 +25,6 @@ sys.path.insert(0, str(ROOT / "src"))
 CORPUS_DIR = ROOT / "data" / "demo_corpus"
 ASSETS_DIR = ROOT / "src" / "demo_assets"
 TIMING_PATH = ROOT / "data" / "demo_source" / "pipeline_timing.json"
-CHECKPOINTS_DIR = ROOT / "data" / "demo_baked" / "checkpoints"
-
-
-# ──────────────────────────────────────────────────────────────
-# Checkpoint helpers
-# ──────────────────────────────────────────────────────────────
-
-def _ckpt_path(course_key: str, stage: str) -> Path:
-    return CHECKPOINTS_DIR / f"{course_key}_{stage}.json"
-
-
-def _sanitize_for_json(obj):
-    """Recursively remove lone surrogates and null bytes that break json.loads."""
-    if isinstance(obj, str):
-        # Replace lone surrogates (U+D800–U+DFFF) and null bytes with replacement char
-        return obj.encode("utf-8", errors="replace").decode("utf-8").replace("\x00", "\ufffd")
-    if isinstance(obj, dict):
-        return {k: _sanitize_for_json(v) for k, v in obj.items()}
-    if isinstance(obj, list):
-        return [_sanitize_for_json(v) for v in obj]
-    return obj
-
-
-def _save_ckpt(course_key: str, stage: str, data: dict) -> None:
-    CHECKPOINTS_DIR.mkdir(parents=True, exist_ok=True)
-    try:
-        text = json.dumps(_sanitize_for_json(data), default=str)
-    except (ValueError, UnicodeEncodeError) as e:
-        log.warning("Checkpoint sanitization needed for %s_%s: %s", course_key, stage, e)
-        text = json.dumps(data, default=str, ensure_ascii=True)
-    _ckpt_path(course_key, stage).write_text(text)
-    log.info("Checkpoint saved: %s_%s", course_key, stage)
-
-
-def _load_ckpt(course_key: str, stage: str) -> Optional[dict]:
-    p = _ckpt_path(course_key, stage)
-    if p.exists():
-        try:
-            return json.loads(p.read_text())
-        except json.JSONDecodeError as e:
-            log.warning("Checkpoint %s_%s is corrupted (%s) — discarding", course_key, stage, e)
-            p.unlink()
-    return None
-
-
-def _has_any_checkpoint(course_key: str) -> bool:
-    return any(_ckpt_path(course_key, s).exists()
-               for s in ("quick_analysis", "coding", "concerns", "observations", "themes",
-                         "outliers", "synthesis", "feedback"))
-
-
-def _clear_checkpoints(course_key: str) -> None:
-    for s in ("quick_analysis", "coding", "concerns", "observations", "themes",
-              "outliers", "synthesis", "feedback"):
-        p = _ckpt_path(course_key, s)
-        if p.exists():
-            p.unlink()
-    log.info("Checkpoints cleared for %s", course_key)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -108,6 +49,11 @@ COURSES = {
             "intersectionality theory applied to everyday life. Complete/incomplete grading — "
             "150 word minimum. I'm looking for genuine engagement with the concepts, not "
             "polished academic writing."
+        ),
+        "next_week_topic": (
+            "Week 7: Racial Formation — Omi & Winant's framework. Students will read "
+            "an excerpt on how race is socially constructed through political struggle "
+            "and institutional practice."
         ),
         "corpus_file": "ethnic_studies.json",
         "output_file": "insights_ethnic_studies.json",
@@ -136,35 +82,23 @@ COURSES = {
 
 def run_pipeline(course_key: str, small_batch: int = 0,
                  backend_override=None, output_suffix: str = "",
-                 resume: bool = False, tier_override: Optional[str] = None) -> dict:
-    """Run the full Insights pipeline for one course, capturing timing.
+                 tier_override: Optional[str] = None) -> dict:
+    """Run the full Insights pipeline for one course via InsightsEngine.
 
     Args:
-        backend_override: Optional BackendConfig to use instead of default Ollama.
+        backend_override: Optional BackendConfig to use instead of default.
         output_suffix: If set, appended to output filename (e.g., "_sonnet").
     """
     cfg = COURSES[course_key]
-    timing = {}
+    timing: Dict = {}
 
-    # Each (course, suffix) pair gets its own checkpoint namespace so concurrent
-    # runs of the same course don't collide (e.g. _llama70b vs _qwen3_32b).
-    run_key = f"{course_key}{output_suffix}" if output_suffix else course_key
-
-    # Auto-detect resume if checkpoints exist
-    if not resume and _has_any_checkpoint(run_key):
-        resume = True
-        log.info("Checkpoints found for %s — resuming automatically. "
-                 "Use --no-resume to force a fresh run.", course_key)
-
-    if resume:
-        print(f"\n  [RESUME MODE] Loading checkpoints for {course_key}...")
-
-    # Load corpus
+    # ── Load corpus ──
     corpus_path = CORPUS_DIR / cfg["corpus_file"]
     corpus = json.loads(corpus_path.read_text())
     if small_batch > 0:
         corpus = corpus[:small_batch]
     total = len(corpus)
+
     print(f"\n{'═'*60}")
     print(f"  Pipeline: {cfg['course_name']}")
     print(f"  Students: {total}")
@@ -183,651 +117,161 @@ def run_pipeline(course_key: str, small_batch: int = 0,
             "due_at": "2026-03-08T23:59:00Z",
         })
 
-    # ── Stage 1: Quick Analysis (non-LLM) ──
-    from insights.quick_analyzer import QuickAnalyzer
-    from insights.models import QuickAnalysisResult
-
-    ckpt = _load_ckpt(run_key, "quick_analysis") if resume else None
-    if ckpt:
-        qa_result = QuickAnalysisResult.model_validate(ckpt["result"])
-        timing["quick_analysis"] = ckpt["timing"]
-        print(f"\n[Stage 1] Quick Analysis... [RESUMED in {timing['quick_analysis']}s — "
-              f"{qa_result.stats.total_submissions} submissions, "
-              f"{len(qa_result.clusters)} clusters, "
-              f"{len(qa_result.concern_signals)} concern signals]")
-    else:
-        print("\n[Stage 1] Quick Analysis...")
-        t0 = time.time()
-        qa = QuickAnalyzer()
-        qa_result = qa.analyze(
-            submissions,
-            assignment_id=cfg["assignment_id"],
-            assignment_name=cfg["assignment_name"],
-            course_id=cfg["course_id"],
-            course_name=cfg["course_name"],
-        )
-        timing["quick_analysis"] = round(time.time() - t0, 2)
-        _save_ckpt(run_key, "quick_analysis",
-                   {"result": json.loads(qa_result.model_dump_json()), "timing": timing["quick_analysis"]})
-        print(f"  Done: {timing['quick_analysis']}s — "
-              f"{qa_result.stats.total_submissions} submissions, "
-              f"{len(qa_result.clusters)} clusters, "
-              f"{len(qa_result.concern_signals)} concern signals")
-
-    # ── Detect LLM backend ──
-    from insights.llm_backend import BackendConfig, auto_detect_backend
+    # ── Build engine ──
     from settings import load_settings
+    from insights.engine import InsightsEngine
+    from insights.insights_store import InsightsStore
 
-    # Always load settings — needed for guided_synthesis cloud enhancement
     user_settings = load_settings()
+    store = InsightsStore()
+    engine = InsightsEngine(api=None, store=store, settings=user_settings)
 
-    if backend_override:
-        backend = backend_override
-    else:
-        # Use the user's configured backend (from GUI settings)
-        backend = auto_detect_backend("lightweight", user_settings)
-        if backend is None:
-            # Fallback to hardcoded Ollama if nothing detected
-            log.warning("No backend detected from settings, falling back to Ollama")
-            backend = BackendConfig(
-                name="ollama",
-                model="llama3.1:8b",
-                base_url="http://localhost:11434",
-            )
-
-    # Determine tier from backend (or use explicit override)
+    # ── Determine tier ──
     if tier_override:
         tier = tier_override
-    elif backend.name == "cloud" and "sonnet" in backend.model:
-        tier = "medium"
-    elif backend.name == "cloud" and "opus" in backend.model:
-        tier = "deep_thinking"
+    elif backend_override and backend_override.name == "cloud":
+        if "sonnet" in backend_override.model:
+            tier = "medium"
+        elif "opus" in backend_override.model:
+            tier = "deep_thinking"
+        else:
+            tier = "medium"
     else:
         tier = "lightweight"
 
-    print(f"\n[LLM Backend] {backend.name} / {backend.model} (tier={tier})")
+    print(f"\n[LLM Backend] "
+          f"{backend_override.name if backend_override else 'auto'} / "
+          f"{backend_override.model if backend_override else 'auto-detect'} "
+          f"(tier={tier})")
 
-    # ── Stage 2: Per-submission coding ──
-    from insights.submission_coder import code_submission
-    from insights.models import SubmissionCodingRecord, PerSubmissionSummary
-    from insights.patterns import signal_matrix_classify
-    import re
+    # ── Timing capture ──
+    def on_timing(stage_name, elapsed):
+        timing[stage_name] = elapsed
 
-    def _strip_html(text):
-        return re.sub(r"<[^>]+>", " ", text)
-
-    # Build text/meta maps
-    texts: Dict[str, str] = {}
-    meta: Dict[str, dict] = {}
-    for sub in submissions:
-        sid = str(sub["student_id"])
-        texts[sid] = _strip_html(sub.get("body", ""))
-        meta[sid] = sub
-
-    assignment_prompt = f"Assignment: {cfg['assignment_name']}"
-    course_name = cfg.get("course_name", "")
-    teacher_context = cfg.get("teacher_context", "")
-
-    # ── Stage 1.5: Class Reading (synthesis-first) ──
-    from insights.class_reader import generate_class_reading, is_reflective_assignment
-
-    _skip_class_reading = not is_reflective_assignment(
-        cfg.get("assignment_name", ""), cfg.get("teacher_context", "")
-    )
-    if _skip_class_reading:
-        print("  Non-reflective assignment — skipping class reading.")
-
-    # Pre-scan for AI-generated submissions (skip if class reading is skipped)
-    _ai_flagged_ids: set = set()
-    if not _skip_class_reading:
-        try:
-            from Academic_Dishonesty_Check_v2 import DishonestyAnalyzer as _DAnalyzer
-            _prescan = _DAnalyzer(profile_id="standard", context_profile="high_school")
-            for _sid, _body in texts.items():
-                try:
-                    _res = _prescan.analyze_text(
-                        text=_body,
-                        student_id=_sid,
-                        student_name=meta.get(_sid, {}).get("student_name", _sid),
-                    )
-                    _cl = _res.adjusted_concern_level or _res.concern_level
-                    if _cl in ("elevated", "high") or _res.smoking_gun:
-                        _ai_flagged_ids.add(_sid)
-                except Exception:
-                    pass
-            if _ai_flagged_ids:
-                print(f"  AIC pre-scan: {len(_ai_flagged_ids)} submissions flagged as likely AI-generated")
-        except ImportError:
-            pass  # AIC not available
-
-    class_reading = ""
-    ckpt_cr = _load_ckpt(run_key, "class_reading") if resume else None
-    if not _skip_class_reading:
-        if ckpt_cr:
-            class_reading = ckpt_cr.get("class_reading", "")
-            print(f"\n[Stage 1.5] Class Reading... [RESUMED — {len(class_reading)} chars]")
-        else:
-            print("\n[Stage 1.5] Reading class as a community...")
-            t0 = time.time()
-
-            # Build cluster map from QA results
-            _cluster_map: Dict[str, int] = {}
-            for ps in qa_result.per_submission.values():
-                if hasattr(ps, "cluster_id") and ps.cluster_id is not None:
-                    _cluster_map[ps.student_id] = ps.cluster_id
-
-            # Build quick summaries for signal-guided extraction
-            _quick_sums = {
-                sid: qa_result.per_submission[sid]
-                for sid in texts if sid in qa_result.per_submission
-            }
-
-            try:
-                class_reading = generate_class_reading(
-                    submissions=texts,
-                    submission_names={sid: meta[sid].get("student_name", f"Student {sid}") for sid in texts},
-                    assignment_prompt=assignment_prompt,
-                    course_name=course_name,
-                    backend=backend,
-                    teacher_context=teacher_context,
-                    cluster_assignments=_cluster_map if _cluster_map else None,
-                    quick_summaries=_quick_sums if _quick_sums else None,
-                    ai_flagged_ids=_ai_flagged_ids if _ai_flagged_ids else None,
-                )
-            except Exception as e:
-                print(f"  Class reading failed (non-fatal): {e}")
-                class_reading = ""
-
-            elapsed = time.time() - t0
-            timing["class_reading"] = round(elapsed, 2)
-            if class_reading:
-                print(f"  Done: {elapsed:.1f}s — {len(class_reading.split())} words")
-                _save_ckpt(run_key, "class_reading", {"class_reading": class_reading, "timing": elapsed})
-            else:
-                print(f"  Empty/failed ({elapsed:.1f}s) — using basic stats fallback")
-
-    ckpt = _load_ckpt(run_key, "coding") if resume else None
-    if ckpt:
-        coding_records: List[SubmissionCodingRecord] = [
-            SubmissionCodingRecord.model_validate(r) for r in ckpt["records"]
-        ]
-        timing["coding_total"] = ckpt["timing"]
-        timing["coding_per_student_avg"] = ckpt.get("per_student_avg", 0)
-        print(f"\n[Stage 2] Coding... [RESUMED — {len(coding_records)} records, "
-              f"{timing['coding_total']}s]")
-    else:
-        print(f"\n[Stage 2] Coding {total} submissions...")
-        t0 = time.time()
-        coding_records = []
-        per_student_times = []
-
-        for i, (sid, body) in enumerate(texts.items()):
-            sub_meta = meta[sid]
-            name = sub_meta.get("student_name", f"Student {sid}")
-            wc = len(body.split())
-
-            vader_compound = qa_result.sentiments.get(sid, {}).get("compound", 0.0)
-            sig_results = signal_matrix_classify(
-                body, vader_compound, wc, qa_result.stats.word_count_median
-            )
-            student_signals = [
-                s for s in qa_result.concern_signals if s.student_id == sid
-            ]
-            quick_sub = qa_result.per_submission.get(sid)
-
-            if wc < 15:
-                coding_records.append(SubmissionCodingRecord(
-                    student_id=sid, student_name=name,
-                    theme_tags=["insufficient text for analysis"],
-                    theme_confidence={"insufficient text for analysis": 1.0},
-                    emotional_register="", emotional_notes=f"only {wc} words",
-                    notable_quotes=[], word_count=wc,
-                ))
-                continue
-
-            if quick_sub and quick_sub.is_gibberish:
-                print(f"  [{i+1}/{total}] {name} — skipped (gibberish: {quick_sub.gibberish_reason})")
-                coding_records.append(SubmissionCodingRecord(
-                    student_id=sid, student_name=name,
-                    theme_tags=["non-analyzable text"],
-                    theme_confidence={"non-analyzable text": 1.0},
-                    emotional_register="",
-                    emotional_notes=f"Gibberish gate: {quick_sub.gibberish_detail}",
-                    notable_quotes=[], word_count=wc,
-                ))
-                continue
-
-            st = time.time()
-            record = code_submission(
-                submission_text=body,
-                student_id=sid,
-                student_name=name,
-                assignment_prompt=assignment_prompt,
-                quick_summary=quick_sub,
-                signal_matrix_results=sig_results,
-                tier=tier,
-                backend=backend,
-                class_context=class_reading,
-            )
-            per_student_times.append(time.time() - st)
-            # Copy truncation flag from QuickAnalysis (engine.py does this;
-            # this script must mirror it).
-            if quick_sub and quick_sub.is_possibly_truncated:
-                record.is_possibly_truncated = True
-                record.truncation_note = quick_sub.truncation_note
-            coding_records.append(record)
-
-            if (i + 1) % 5 == 0 or i == total - 1:
-                avg = sum(per_student_times) / len(per_student_times)
-                print(f"  Coded {i+1}/{total} — last: {per_student_times[-1]:.1f}s, avg: {avg:.1f}s")
-
-            if i < total - 1:
-                time.sleep(0.5)
-
-        timing["coding_total"] = round(time.time() - t0, 2)
-        if per_student_times:
-            timing["coding_per_student_avg"] = round(
-                sum(per_student_times) / len(per_student_times), 2
-            )
-        _save_ckpt(run_key, "coding", {
-            "records": [r.model_dump() for r in coding_records],
-            "timing": timing["coding_total"],
-            "per_student_avg": timing.get("coding_per_student_avg", 0),
-        })
-        print(f"  Coding complete: {timing['coding_total']}s "
-              f"(avg {timing.get('coding_per_student_avg', 0)}s/student)")
-
-    # Release MLX model between coding → concerns
-    if backend and backend.name == "mlx":
-        from insights.llm_backend import unload_mlx_model
-        unload_mlx_model()
-
-    # ── Stage 3: Concern detection ──
-    from insights.concern_detector import detect_concerns
-
-    ckpt = _load_ckpt(run_key, "concerns") if resume else None
-    if ckpt:
-        # Merge concern flags back into coding_records
-        concern_map = {c["student_id"]: c["concerns"] for c in ckpt["records"]}
-        for record in coding_records:
-            if record.student_id in concern_map:
-                from insights.models import ConcernRecord
-                record.concerns = [ConcernRecord.model_validate(c)
-                                   for c in concern_map[record.student_id]]
-        timing["concerns"] = ckpt["timing"]
-        concern_count = sum(len(r.concerns) for r in coding_records)
-        print(f"\n[Stage 3] Concern detection... [RESUMED — {concern_count} flags, "
-              f"{timing['concerns']}s]")
-    else:
-        print(f"\n[Stage 3] Concern detection...")
-        t0 = time.time()
-        for i, record in enumerate(coding_records):
-            sid = record.student_id
-            body = texts.get(sid, "")
-            wc = len(body.split())
-            if wc < 15:
-                record.concerns = []
-                continue
-
-            # AI-flagged students still get concern detection — a student
-            # in distress might use AI to complete work they can't manage.
-
-            vader_compound = qa_result.sentiments.get(sid, {}).get("compound", 0.0)
-            sig_results = signal_matrix_classify(
-                body, vader_compound, wc, qa_result.stats.word_count_median
-            )
-            student_signals = [
-                s for s in qa_result.concern_signals if s.student_id == sid
-            ]
-
-            # Build linguistic context for equity protection
-            quick_sub_c = qa_result.per_submission.get(sid)
-            _ling_note = ""
-            _sentiment_tier = "high"
-            if quick_sub_c and hasattr(quick_sub_c, "linguistic_repertoire"):
-                _rep = quick_sub_c.linguistic_repertoire
-                if _rep:
-                    if hasattr(_rep, "llm_context_note") and _rep.llm_context_note:
-                        _ling_note = _rep.llm_context_note
-                    if hasattr(_rep, "sentiment_tier"):
-                        _sentiment_tier = _rep.sentiment_tier or "high"
-
-            _combined_ctx = class_reading
-            if _ling_note:
-                _combined_ctx = (
-                    f"{class_reading}\n\nLINGUISTIC NOTE FOR THIS STUDENT: {_ling_note}"
-                    if class_reading
-                    else f"LINGUISTIC NOTE FOR THIS STUDENT: {_ling_note}"
-                )
-
-            concerns = detect_concerns(
-                submission_text=body,
-                student_name=record.student_name,
-                student_id=sid,
-                assignment_prompt=assignment_prompt,
-                signal_matrix_results=sig_results,
-                concern_signals=student_signals,
-                tier=tier,
-                backend=backend,
-                class_context=_combined_ctx,
-            )
-            record.concerns = concerns
-
-            if (i + 1) % 10 == 0 or i == total - 1:
-                print(f"  Checked {i+1}/{total}")
-
-        timing["concerns"] = round(time.time() - t0, 2)
-        concern_count = sum(len(r.concerns) for r in coding_records)
-        _save_ckpt(run_key, "concerns", {
-            "records": [{"student_id": r.student_id,
-                         "concerns": [c.model_dump() for c in r.concerns]}
-                        for r in coding_records],
-            "timing": timing["concerns"],
-        })
-        print(f"  Concerns complete: {timing['concerns']}s — {concern_count} total flags")
-
-    # Release MLX model between stages to prevent Metal deadlock on 16 GB
-    if backend and backend.name == "mlx":
-        from insights.llm_backend import unload_mlx_model
-        unload_mlx_model()
-
-    # ── Stage 3b: Per-student observations (observation-only architecture) ──
-    # Uses shared observe_student() — single source of truth with engine.py
-    from insights.submission_coder import observe_student
-
-    ckpt = _load_ckpt(run_key, "observations") if resume else None
-    if ckpt:
-        obs_map = ckpt.get("observations", {})
-        for record in coding_records:
-            if record.student_id in obs_map:
-                record.observation = obs_map[record.student_id]
-        timing["observations"] = ckpt["timing"]
-        print(f"\n[Stage 3b] Observations... [RESUMED — {len(obs_map)} observations, "
-              f"{timing['observations']}s]")
-    else:
-        print(f"\n[Stage 3b] Per-student observations...")
-        t0 = time.time()
-        obs_map = {}
-        for i, record in enumerate(coding_records):
-            sid = record.student_id
-            body = texts.get(sid, "")
-
-            obs_text = observe_student(
-                backend,
-                student_name=record.student_name,
-                submission_text=body,
-                class_context=class_reading,
-                assignment=assignment_prompt,
-                is_ai_flagged=(sid in _ai_flagged_ids),
-            )
-            obs_map[sid] = obs_text
-            record.observation = obs_text
-
-            if (i + 1) % 5 == 0 or i == total - 1:
-                print(f"  Observed {i+1}/{total}")
-
-        timing["observations"] = round(time.time() - t0, 2)
-        _save_ckpt(run_key, "observations", {
-            "observations": obs_map,
-            "timing": timing["observations"],
-        })
-        obs_count = sum(1 for v in obs_map.values() if v)
-        print(f"  Observations complete: {timing['observations']}s — {obs_count} observations")
-
-    # Release MLX model between observations → themes
-    if backend and backend.name == "mlx":
-        from insights.llm_backend import unload_mlx_model
-        unload_mlx_model()
-
-    # ── Stage 4: Theme generation ──
-    from insights.theme_generator import generate_themes
-    from insights.models import ThemeSet
-
-    ckpt = _load_ckpt(run_key, "themes") if resume else None
-    if ckpt:
-        theme_set = ThemeSet.model_validate(ckpt["theme_set"])
-        timing["themes"] = ckpt["timing"]
-        print(f"\n[Stage 4] Theme generation... [RESUMED — {len(theme_set.themes)} themes, "
-              f"{timing['themes']}s]")
-    else:
-        print(f"\n[Stage 4] Theme generation...")
-        t0 = time.time()
-        theme_set = generate_themes(
-            coding_records,
-            tier=tier,
-            backend=backend,
-            assignment_name=cfg["assignment_name"],
-        )
-        timing["themes"] = round(time.time() - t0, 2)
-        _save_ckpt(run_key, "themes", {
-            "theme_set": json.loads(theme_set.model_dump_json()),
-            "timing": timing["themes"],
-        })
-        print(f"  Themes complete: {timing['themes']}s — "
-              f"{len(theme_set.themes)} themes, "
-              f"{len(theme_set.contradictions)} contradictions")
-
-    # ── Stage 5: Outlier surfacing ──
-    from insights.theme_generator import surface_outliers
-    from insights.models import OutlierReport
-
-    ckpt = _load_ckpt(run_key, "outliers") if resume else None
-    if ckpt:
-        outlier_report = OutlierReport.model_validate(ckpt["outlier_report"])
-        timing["outliers"] = ckpt["timing"]
-        print(f"\n[Stage 5] Outlier surfacing... [RESUMED — {len(outlier_report.outliers)} outliers, "
-              f"{timing['outliers']}s]")
-    else:
-        print(f"\n[Stage 5] Outlier surfacing...")
-        t0 = time.time()
-        outlier_report = surface_outliers(
-            theme_set,
-            coding_records,
-            qa_result.embedding_outlier_ids,
-            tier=tier,
-            backend=backend,
-            assignment_name=cfg["assignment_name"],
-        )
-        timing["outliers"] = round(time.time() - t0, 2)
-        _save_ckpt(run_key, "outliers", {
-            "outlier_report": json.loads(outlier_report.model_dump_json()),
-            "timing": timing["outliers"],
-        })
-        print(f"  Outliers complete: {timing['outliers']}s — "
-              f"{len(outlier_report.outliers)} outliers")
-
-    # ── Stage 6: Synthesis ──
-    from insights.synthesizer import guided_synthesis
-    from insights.models import GuidedSynthesisResult
-
-    ckpt = _load_ckpt(run_key, "synthesis") if resume else None
-    if ckpt:
-        synthesis = GuidedSynthesisResult.model_validate(ckpt["synthesis"])
-        timing["synthesis"] = ckpt["timing"]
-        print(f"\n[Stage 6] Synthesis... [RESUMED — {timing['synthesis']}s]")
-    else:
-        print(f"\n[Stage 6] Synthesis report (guided)...")
-        t0 = time.time()
-        synthesis = guided_synthesis(
-            coding_records,
-            tier=tier,
-            backend=backend,
-            assignment_name=cfg["assignment_name"],
-            qa_result=qa_result,
-            settings=user_settings,
-        )
-        timing["synthesis"] = round(time.time() - t0, 2)
-        _save_ckpt(run_key, "synthesis", {
-            "synthesis": json.loads(synthesis.model_dump_json()),
-            "timing": timing["synthesis"],
-        })
-        print(f"  Synthesis complete: {timing['synthesis']}s — "
-              f"{synthesis.calls_completed}/{synthesis.calls_attempted} calls completed")
-
-    # ── Stage 6b: Observation-based synthesis ──
-    from insights.prompts import (
-        OBSERVATION_SYNTHESIS_SYSTEM_PROMPT,
-        OBSERVATION_SYNTHESIS_PROMPT,
+    # ── Run the pipeline ──
+    run_id = engine.run_from_submissions(
+        submissions=submissions,
+        course_id=cfg.get("course_id", "0"),
+        course_name=cfg.get("course_name", ""),
+        assignment_id=cfg.get("assignment_id", "0"),
+        assignment_name=cfg.get("assignment_name", ""),
+        model_tier=tier,
+        teacher_context=cfg.get("teacher_context", ""),
+        next_week_topic=cfg.get("next_week_topic", ""),
+        progress_callback=lambda msg: print(f"  {msg}"),
+        timing_callback=on_timing,
+        backend_override=backend_override,
     )
 
-    if obs_map and any(v for v in obs_map.values()):
-        print(f"\n[Stage 6b] Observation-based class summary...")
-        t0 = time.time()
+    if run_id is None:
+        raise RuntimeError("Pipeline returned None — check logs for errors")
 
-        _obs_formatted = ""
-        for record in coding_records:
-            obs = obs_map.get(record.student_id, "")
-            if obs:
-                _obs_formatted += f"\n**{record.student_name}** ({record.student_id}):\n{obs}\n"
-
-        _synth_prompt = OBSERVATION_SYNTHESIS_PROMPT.format(
-            assignment=assignment_prompt,
-            class_context=class_reading,
-            observations=_obs_formatted,
-            teacher_lens="",
-            forward_looking="",
-        )
-
-        try:
-            obs_synthesis = _send_text(
-                backend, _synth_prompt,
-                OBSERVATION_SYNTHESIS_SYSTEM_PROMPT,
-                max_tokens=1200,
-            )
-            timing["observation_synthesis"] = round(time.time() - t0, 2)
-            print(f"  Observation synthesis complete: {timing['observation_synthesis']}s — "
-                  f"{len(obs_synthesis.split())} words")
-
-            # Save to persistent location (not /tmp)
-            _obs_synth_dir = ROOT / "data" / "research" / "raw_outputs"
-            _obs_synth_dir.mkdir(parents=True, exist_ok=True)
-            _obs_synth_path = _obs_synth_dir / f"observation_synthesis_{run_key}.md"
-            with open(_obs_synth_path, "w") as f:
-                f.write(f"# Observation-Based Class Summary\n")
-                f.write(f"*Generated from {sum(1 for v in obs_map.values() if v)} observations, "
-                        f"{backend.model}*\n\n")
-                f.write(obs_synthesis)
-            print(f"  Saved to {_obs_synth_path}")
-        except Exception as exc:
-            log.warning("Observation synthesis failed: %s", exc)
-            timing["observation_synthesis"] = round(time.time() - t0, 2)
-    else:
-        print("\n[Stage 6b] Observation synthesis... [SKIPPED — no observations]")
-
-    # ── Stage 7: Draft feedback ──
-    from insights.feedback_drafter import FeedbackDrafter
-
-    ckpt = _load_ckpt(run_key, "feedback") if resume else None
-    if ckpt:
-        feedback_rows = ckpt["rows"]
-        timing["feedback"] = ckpt["timing"]
-        print(f"\n[Stage 7] Feedback... [RESUMED — {len(feedback_rows)} drafts, "
-              f"{timing['feedback']}s]")
-    else:
-        print(f"\n[Stage 7] Drafting feedback...")
-        t0 = time.time()
-        drafter = FeedbackDrafter()
-        feedback_rows = []
-
-        for i, record in enumerate(coding_records):
-            draft = drafter.draft_feedback(
-                coding_record=record.model_dump(),
-                assignment_prompt=assignment_prompt,
-                tier=tier,
-                backend=backend,
-            )
-            feedback_rows.append({
-                "run_id": cfg["run_id"],
-                "student_id": record.student_id,
-                "student_name": record.student_name,
-                "draft_text": draft.feedback_text,
-                "approved_text": None,
-                "status": "pending",
-                "confidence": round(draft.confidence, 2),
-                "posted_at": None,
-            })
-
-            if (i + 1) % 10 == 0 or i == total - 1:
-                print(f"  Drafted {i+1}/{total}")
-
-        timing["feedback"] = round(time.time() - t0, 2)
-        _save_ckpt(run_key, "feedback", {
-            "rows": feedback_rows,
-            "timing": timing["feedback"],
-        })
-        print(f"  Feedback complete: {timing['feedback']}s")
-
-    # ── Total timing ──
-    timing["total"] = round(sum(v for v in timing.values() if isinstance(v, (int, float))), 2)
-    timing["students"] = total
-    timing["per_student_total"] = round(timing["total"] / total, 2)
-
-    print(f"\n{'─'*40}")
-    print(f"  TOTAL: {timing['total']}s ({timing['per_student_total']}s/student)")
-    for stage, t in timing.items():
-        if stage not in ("total", "students", "per_student_total", "coding_per_student_avg"):
-            print(f"    {stage}: {t}s")
-    print(f"{'─'*40}")
-
-    # ── Guided synthesis reliability check ──
-    if synthesis.calls_completed == 0:
-        log.warning(
-            "Guided synthesis: 0/%d calls completed — synthesis_report will be empty",
-            synthesis.calls_attempted,
-        )
+    # ── Extract results from store ──
+    run_data = store.get_run(run_id) or {}
+    codings_rows = store.get_codings(run_id)
+    themes_data = store.get_themes(run_id) or {}
+    feedback_rows = store.get_feedback(run_id)
 
     # ── Assemble baked JSON ──
-    stages_completed = [
-        "data_fetch", "preprocessing", "quick_analysis",
-        "coding", "concerns", "themes", "outliers", "synthesis",
-    ]
+    # Preserve same structure as before for GUI compatibility.
+
+    # Parse stages_completed from store (stored as JSON string)
+    stages_str = run_data.get("stages_completed", "[]")
+    if isinstance(stages_str, str):
+        try:
+            stages_completed = json.loads(stages_str)
+        except (json.JSONDecodeError, TypeError):
+            stages_completed = []
+    else:
+        stages_completed = stages_str or []
+
+    # Parse pipeline_confidence
+    conf_str = run_data.get("pipeline_confidence", "{}")
+    if isinstance(conf_str, str):
+        try:
+            pipeline_confidence = json.loads(conf_str)
+        except (json.JSONDecodeError, TypeError):
+            pipeline_confidence = {}
+    else:
+        pipeline_confidence = conf_str or {}
 
     run_record = {
-        "run_id": cfg["run_id"],
+        "run_id": run_id,
         "course_id": cfg["course_id"],
         "course_name": cfg["course_name"],
         "assignment_id": cfg["assignment_id"],
         "assignment_name": cfg["assignment_name"],
-        "started_at": "2026-03-08T16:45:00+00:00",
-        "completed_at": "2026-03-08T17:12:00+00:00",
+        "started_at": run_data.get("started_at", ""),
+        "completed_at": run_data.get("completed_at", ""),
         "model_tier": tier,
-        "model_name": backend.model,
+        "model_name": (backend_override.model if backend_override
+                       else run_data.get("model_name", "")),
         "total_submissions": total,
         "stages_completed": stages_completed,
-        "pipeline_confidence": {"overall": 0.82},
-        "teacher_context": cfg["teacher_context"],
-        "analysis_lens_config": {"lens": "equity_attention"},
-        "quick_analysis": qa_result.model_dump_json(),
+        "pipeline_confidence": pipeline_confidence,
+        "teacher_context": cfg.get("teacher_context", ""),
+        "analysis_lens_config": run_data.get("analysis_lens_config"),
+        "quick_analysis": run_data.get("quick_analysis", ""),
     }
 
+    # Build texts map for submission text in baked JSON
+    texts = {str(s["student_id"]): s.get("body", s.get("text", ""))
+             for s in corpus}
+
     codings_list = []
-    for record in coding_records:
-        sid = record.student_id
+    for row in codings_rows:
+        # coding_record may be a JSON string or dict depending on store
+        cr = row.get("coding_record", {})
+        if isinstance(cr, str):
+            try:
+                cr = json.loads(cr)
+            except (json.JSONDecodeError, TypeError):
+                cr = {}
         codings_list.append({
-            "run_id": cfg["run_id"],
-            "student_id": sid,
-            "student_name": record.student_name,
-            "coding_record": record.model_dump(),
-            "submission_text": texts.get(sid, ""),
+            "run_id": run_id,
+            "student_id": row["student_id"],
+            "student_name": row.get("student_name", ""),
+            "coding_record": cr,
+            "submission_text": row.get("submission_text",
+                                       texts.get(row["student_id"], "")),
             "teacher_edited": 0,
             "teacher_edits": None,
             "teacher_notes": None,
         })
 
-    themes_record = {
-        "theme_set": theme_set.model_dump_json(),
-        "outlier_report": outlier_report.model_dump_json(),
-        "synthesis_report": synthesis.model_dump_json(),
-    }
+    themes_record = {}
+    if themes_data:
+        themes_record = {
+            "theme_set": themes_data.get("theme_set", ""),
+            "outlier_report": themes_data.get("outlier_report", ""),
+            "synthesis_report": themes_data.get("synthesis_report", ""),
+        }
+
+    obs_synthesis = themes_data.get("observation_synthesis", "")
+
+    # Build feedback rows in baked format
+    baked_feedback = []
+    for row in feedback_rows:
+        baked_feedback.append({
+            "run_id": run_id,
+            "student_id": row.get("student_id", ""),
+            "student_name": row.get("student_name", ""),
+            "draft_text": row.get("draft_text", ""),
+            "approved_text": row.get("approved_text"),
+            "status": row.get("status", "pending"),
+            "confidence": row.get("confidence", 0),
+            "posted_at": row.get("posted_at"),
+        })
 
     demo_json = {
         "run": run_record,
         "codings": codings_list,
         "themes": themes_record,
-        "feedback": feedback_rows,
+        "feedback": baked_feedback,
+        "observation_synthesis": obs_synthesis,
     }
 
-    # Save
+    # ── Save ──
     ASSETS_DIR.mkdir(parents=True, exist_ok=True)
     out_name = cfg["output_file"]
     if output_suffix:
@@ -836,6 +280,22 @@ def run_pipeline(course_key: str, small_batch: int = 0,
     out_path.write_text(json.dumps(demo_json, indent=2, default=str))
     print(f"\n  Saved baked JSON: {out_path}")
     print(f"  File size: {out_path.stat().st_size / 1024:.0f} KB")
+
+    # ── Timing summary ──
+    timing["total"] = round(sum(
+        v for v in timing.values() if isinstance(v, (int, float))), 2)
+    timing["students"] = total
+    timing["per_student_total"] = round(
+        timing["total"] / max(total, 1), 2)
+
+    print(f"\n{'─'*40}")
+    print(f"  TOTAL: {timing['total']}s "
+          f"({timing['per_student_total']}s/student)")
+    for stage, t in timing.items():
+        if stage not in ("total", "students", "per_student_total",
+                         "coding_per_student_avg"):
+            print(f"    {stage}: {t}s")
+    print(f"{'─'*40}")
 
     return timing
 
@@ -867,8 +327,6 @@ def main():
                         help="Override prompt tier (default: auto-detect from backend)")
     parser.add_argument("--output-suffix", default="",
                         help="Suffix for output files (e.g., '_sonnet')")
-    parser.add_argument("--no-resume", action="store_true",
-                        help="Force fresh run even if checkpoints exist")
     args = parser.parse_args()
 
     # Build backend config
@@ -938,9 +396,6 @@ def main():
         output_suffix = output_suffix or "_deepseek"
         tier_override = tier_override or "medium"
     elif args.backend == "openai-compat":
-        # Generic OpenAI-compatible backend for any cloud provider
-        # (Groq, Together.ai, OpenRouter, etc.)
-        # Set env vars: CLOUD_API_URL, CLOUD_API_KEY, CLOUD_MODEL
         cloud_url = os.environ.get("CLOUD_API_URL", "")
         cloud_key = os.environ.get("CLOUD_API_KEY", "")
         cloud_model = os.environ.get("CLOUD_MODEL", "")
@@ -955,7 +410,6 @@ def main():
             api_key=cloud_key,
             api_format="openai",
         )
-        # Use model name slug as suffix if not set
         model_slug = cloud_model.split("/")[-1].split(":")[0].lower()
         output_suffix = output_suffix or f"_{model_slug}"
         tier_override = tier_override or "medium"
@@ -966,26 +420,18 @@ def main():
                else [args.course])
 
     for course_key in courses:
-        run_key = f"{course_key}{output_suffix}" if output_suffix else course_key
-        if args.no_resume:
-            _clear_checkpoints(run_key)
         try:
             timing = run_pipeline(
                 course_key,
                 small_batch=args.small_batch,
                 backend_override=backend_override,
                 output_suffix=output_suffix,
-                resume=not args.no_resume,
                 tier_override=tier_override,
             )
             all_timing[course_key] = timing
-            # Clear checkpoints on success — run is complete
-            _clear_checkpoints(run_key)
         except Exception as e:
             log.exception(f"Pipeline failed for {course_key}: {e}")
             all_timing[course_key] = {"error": str(e)}
-            print(f"\n  ⚠ Checkpoints preserved in {CHECKPOINTS_DIR}/{run_key}_*.json")
-            print(f"    Re-run without --no-resume to pick up from last completed stage.")
 
     # Save timing report
     timing_path = TIMING_PATH

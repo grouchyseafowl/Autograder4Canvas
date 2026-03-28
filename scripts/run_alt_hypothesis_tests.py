@@ -535,11 +535,11 @@ def save_results(test_name: str, model_key: str, results: list, metadata: dict =
     filename = f"{test_name}_{model_key}_{date}.json"
     output = {
         "test_name": test_name,
-        "model": MODELS[model_key]["model"],
-        "backend": MODELS[model_key]["name"],
+        "model": MODELS.get(model_key, {}).get("model", model_key),
+        "backend": MODELS.get(model_key, {}).get("name", "multi"),
         "date": date,
         "timestamp": datetime.now().isoformat(),
-        "temperature": MODELS[model_key]["temperature"],
+        "temperature": MODELS.get(model_key, {}).get("temperature", "varies"),
         "corpus": "ethnic_studies",
         "class_reading_source": str(CLASS_READING_PATH.relative_to(ROOT)),
         "provenance": _git_provenance(),
@@ -597,6 +597,7 @@ def test_a_temperature(model_key: str = "gemma12b", n_runs: int = 5):
                 "student_id": sid,
                 "student_name": student["student_name"],
                 "run": run,
+                "codepath": "production_prompt_direct",
                 "prompt": prompt,
                 "system_prompt": OBSERVATION_SYSTEM_PROMPT,
                 "raw_output": output,
@@ -663,6 +664,7 @@ def test_b_best_concern(model_key: str = "gemma12b"):
             "expected": expected,
             "result": result,
             "match": match,
+            "codepath": "test_harness_binary",
             "prompt": prompt,
             "system_prompt": BEST_CONCERN_SYSTEM,
             "raw_output": output,
@@ -726,6 +728,7 @@ def test_c_length(model_key: str = "gemma12b"):
             "expected": expected,
             "result": result,
             "match": match,
+            "codepath": "test_harness_binary",
             "prompt": prompt,
             "system_prompt": LENGTH_CONCERN_SYSTEM,
             "raw_output": output,
@@ -783,6 +786,7 @@ def test_d_power_moves(model_key: str = "gemma12b"):
             "student_name": case["name"],
             "power_move_type": case["type"],
             "detected": detected,
+            "codepath": "production_prompt_direct",
             "prompt": prompt,
             "system_prompt": OBSERVATION_SYSTEM_PROMPT,
             "raw_output": output,
@@ -857,6 +861,7 @@ def test_f_bc_stability(model_key: str = "gemma12b", n_runs: int = 5):
                 "pattern": pattern,
                 "expected": expected,
                 "result": result,
+                "codepath": "test_harness_binary",
                 "prompt": prompt,
                 "system_prompt": BEST_CONCERN_SYSTEM,
                 "raw_output": output,
@@ -890,6 +895,7 @@ def test_f_bc_stability(model_key: str = "gemma12b", n_runs: int = 5):
                 "pattern": pattern,
                 "expected": expected,
                 "result": result,
+                "codepath": "test_harness_binary",
                 "prompt": prompt,
                 "system_prompt": LENGTH_CONCERN_SYSTEM,
                 "raw_output": output,
@@ -995,6 +1001,7 @@ def test_h_binary_on_wellbeing(model_key: str = "gemma12b"):
             correct_c = "OK" if result_c == "CLEAR" else "FALSE-FLAG"
 
         results.append({
+            "codepath": "test_harness_binary",
             "student_id": case["id"],
             "student_name": case["name"],
             "signal_type": case["signal_type"],
@@ -1098,6 +1105,7 @@ def test_g_wellbeing_signals(model_key: str = "gemma12b"):
             "signal_type": case["signal_type"],
             "expected_surface": case["expected_surface"],
             "description": case["description"],
+            "codepath": "production_prompt_direct",
             "prompt": prompt,
             "system_prompt": OBSERVATION_SYSTEM_PROMPT,
             "wellbeing_detected": wb_detected,
@@ -1182,13 +1190,16 @@ STRUCTURAL_NAMING_KEYWORDS = [
     r"deflect",
 ]
 
+# Hedging keywords — ONLY match hedging about whether a structural mechanism
+# exists, NOT pedagogical contextualizing of student intent.
+# "While his intention may be to promote respect" is intent context (good).
+# "This could be seen as a subtle form of tone policing" is hedging (bad).
 HEDGING_KEYWORDS = [
-    r"subtle(?:ly)?\s+(?:attempt|tr)",
-    r"may\s+be\s+(?:try|attempt)",
-    r"could\s+be\s+(?:seen|interpret)",
-    r"seems?\s+to\s+(?:be|suggest)",
-    r"perhaps",
-    r"might\s+be",
+    r"subtle(?:ly)?\s+(?:attempt|form of|way)",
+    r"could\s+be\s+(?:seen|interpreted|read)\s+as",
+    r"(?:seems?|appears?)\s+to\s+(?:be\s+)?(?:a form|an instance|an example)\s+of",
+    r"what\s+(?:might|could)\s+be\s+(?:called|described\s+as)",
+    r"border(?:s|ing)\s+on",
 ]
 
 ANTI_SPOTLIGHTING_VIOLATIONS = [
@@ -1259,19 +1270,21 @@ def test_j_pipeline_validation(model_key: str = "gemma12b"):
     results = []
 
     # --- J1: Structural naming on power move students ---
+    # Uses observe_student() — same function as the pipeline — so preamble
+    # stripping and other post-processing match the real codepath.
     print("\n  J1: Structural Naming Quality")
+    from insights.submission_coder import observe_student
     power_students = ["S018", "S025"]  # Connor (colorblind), Aiden (tone policing)
     for sid in power_students:
         student = corpus[sid]
-        prompt = OBSERVATION_PROMPT.format(
-            class_context=class_reading,
-            assignment=assignment,
+        t0 = time.time()
+        output = observe_student(
+            backend,
             student_name=student["student_name"],
             submission_text=student["text"],
-            teacher_lens="",
+            class_context=class_reading,
+            assignment=assignment,
         )
-        t0 = time.time()
-        output = send(backend, prompt, OBSERVATION_SYSTEM_PROMPT, max_tokens=400)
         elapsed = round(time.time() - t0, 1)
 
         # Score: mechanism names vs hedging
@@ -1283,11 +1296,12 @@ def test_j_pipeline_validation(model_key: str = "gemma12b"):
         total_hits = mechanism_hits + hedging_hits
         naming_score = mechanism_hits / total_hits if total_hits > 0 else 0.0
 
-        # Check preamble
+        # Preamble should already be stripped by observe_student()
         has_preamble = bool(re.match(
             r"^(?:Okay|OK|Sure|Here are)", output, re.IGNORECASE))
 
         results.append({
+            "codepath": "production_pipeline",
             "subtest": "J1_structural_naming",
             "student_id": sid,
             "student_name": student["student_name"],
@@ -1303,38 +1317,46 @@ def test_j_pipeline_validation(model_key: str = "gemma12b"):
               f"score={naming_score:.2f} preamble={has_preamble} ({elapsed}s)")
 
     # --- J2: Anti-spotlighting in observation synthesis ---
+    # Uses observe_student() for consistency with the real pipeline.
+    # Includes forward_looking to validate P3 wiring.
     print("\n  J2: Anti-Spotlighting in Synthesis")
     from insights.prompts import (OBSERVATION_SYNTHESIS_PROMPT,
-                                  OBSERVATION_SYNTHESIS_SYSTEM_PROMPT)
+                                  OBSERVATION_SYNTHESIS_SYSTEM_PROMPT,
+                                  OBSERVATION_SYNTHESIS_FORWARD_LOOKING)
 
     obs_formatted = ""
+    _j2_count = 0
     for sid in sorted(corpus.keys()):
         student = corpus[sid]
-        # Generate a brief observation per student
-        obs_prompt = OBSERVATION_PROMPT.format(
-            class_context=class_reading,
-            assignment=assignment,
+        obs = observe_student(
+            backend,
             student_name=student["student_name"],
             submission_text=student["text"],
-            teacher_lens="",
+            class_context=class_reading,
+            assignment=assignment,
         )
-        obs = send(backend, obs_prompt, OBSERVATION_SYSTEM_PROMPT, max_tokens=400)
-        obs_formatted += f"\n**{student['student_name']}** ({sid}):\n{obs}\n"
-        # Only do first 8 students (enough for synthesis test, saves time)
-        if len(obs_formatted.split()) > 1500:
+        if obs:
+            obs_formatted += f"\n**{student['student_name']}** ({sid}):\n{obs}\n"
+            _j2_count += 1
+        # Cap at 10 students (enough for synthesis test, saves MLX time)
+        if _j2_count >= 10:
             break
+
+    _j2_fwd = OBSERVATION_SYNTHESIS_FORWARD_LOOKING.format(
+        next_week_topic="Week 7: Racial Formation — Omi & Winant's framework"
+    )
 
     synth_prompt = OBSERVATION_SYNTHESIS_PROMPT.format(
         assignment=assignment,
         class_context=class_reading,
         observations=obs_formatted,
         teacher_lens="",
-        forward_looking="",
+        forward_looking=_j2_fwd,
     )
 
     t0 = time.time()
     synthesis = send(backend, synth_prompt, OBSERVATION_SYNTHESIS_SYSTEM_PROMPT,
-                     max_tokens=1500)
+                     max_tokens=2000)
     elapsed = round(time.time() - t0, 1)
 
     # Check for anti-spotlighting violations
@@ -1350,14 +1372,29 @@ def test_j_pipeline_validation(model_key: str = "gemma12b"):
     has_ped_wins = bool(re.search(
         r"what.s working|working well|assignment.*doing well", lower_synth))
     has_moments = bool(re.search(r"moments for", lower_synth))
+    has_forward = bool(re.search(
+        r"looking ahead|next week|upcoming", lower_synth))
+    has_exceptional = bool(re.search(
+        r"exceptional|stood out|standout", lower_synth))
 
     results.append({
+        "codepath": "production_pipeline",
         "subtest": "J2_anti_spotlighting",
         "anti_spotlighting_violations": violations,
         "violation_count": len(violations),
         "has_multiplicity_section": has_multiplicity,
         "has_pedagogical_wins_section": has_ped_wins,
         "has_moments_section": has_moments,
+        "has_forward_looking_section": has_forward,
+        "has_exceptional_contributions": has_exceptional,
+        "students_in_synthesis": _j2_count,
+        "note": (
+            f"J2 used {_j2_count}/32 students (subset for test speed). "
+            "Section presence is valid but synthesis richness and word counts "
+            "will differ from production (32 students). Does not include P7 "
+            "insight ranking in teacher_lens — tests synthesis prompt quality "
+            "without the ranking data."
+        ),
         "raw_synthesis": synthesis,
         "time_seconds": elapsed,
     })
@@ -1368,6 +1405,8 @@ def test_j_pipeline_validation(model_key: str = "gemma12b"):
     print(f"    Multiplicity section: {has_multiplicity}")
     print(f"    Pedagogical wins section: {has_ped_wins}")
     print(f"    Moments section: {has_moments}")
+    print(f"    Forward-looking section: {has_forward}")
+    print(f"    Exceptional contributions: {has_exceptional}")
     print(f"    ({elapsed}s)")
 
     # --- J3: what_student_is_reaching_for via reading-first coding ---
@@ -1395,6 +1434,7 @@ def test_j_pipeline_validation(model_key: str = "gemma12b"):
             reaching_populated += 1
 
         results.append({
+            "codepath": "production_pipeline",
             "subtest": "J3_reaching_for",
             "student_id": sid,
             "student_name": student["student_name"],
@@ -1469,6 +1509,9 @@ ENHANCEMENT_QUALITY_MARKERS = {
 # Models to test — free or very cheap on OpenRouter.
 # These all receive the SAME anonymized enhancement prompt.
 # Cost is per-run cost for ~1200 output tokens.
+# Models confirmed available on OpenRouter free tier (queried 2026-03-28).
+# Gemma 27B free does NOT support system prompts via Google AI Studio backend —
+# system prompt must be folded into user message for that model.
 ENHANCEMENT_MODELS = {
     "gemma27b_free": {
         "name": "cloud",
@@ -1477,7 +1520,8 @@ ENHANCEMENT_MODELS = {
         "temperature": 0.3,
         "base_url": "https://openrouter.ai/api/v1",
         "api_key_fn": _openrouter_key,
-        "cost_note": "Free tier on OpenRouter",
+        "cost_note": "Free — Google AI Studio (no system prompt support)",
+        "fold_system_into_user": True,
     },
     "llama70b_free": {
         "name": "cloud",
@@ -1486,25 +1530,7 @@ ENHANCEMENT_MODELS = {
         "temperature": 0.3,
         "base_url": "https://openrouter.ai/api/v1",
         "api_key_fn": _openrouter_key,
-        "cost_note": "Free tier on OpenRouter",
-    },
-    "qwen72b_free": {
-        "name": "cloud",
-        "model": "qwen/qwen-2.5-72b-instruct:free",
-        "max_tokens": 1200,
-        "temperature": 0.3,
-        "base_url": "https://openrouter.ai/api/v1",
-        "api_key_fn": _openrouter_key,
-        "cost_note": "Free tier on OpenRouter",
-    },
-    "deepseek_free": {
-        "name": "cloud",
-        "model": "deepseek/deepseek-chat-v3-0324:free",
-        "max_tokens": 1200,
-        "temperature": 0.3,
-        "base_url": "https://openrouter.ai/api/v1",
-        "api_key_fn": _openrouter_key,
-        "cost_note": "Free tier on OpenRouter",
+        "cost_note": "Free — rate limited, may need retry",
     },
     "mistral_small_free": {
         "name": "cloud",
@@ -1513,7 +1539,34 @@ ENHANCEMENT_MODELS = {
         "temperature": 0.3,
         "base_url": "https://openrouter.ai/api/v1",
         "api_key_fn": _openrouter_key,
-        "cost_note": "Free tier on OpenRouter",
+        "cost_note": "Free — rate limited, may need retry",
+    },
+    "nemotron_120b_free": {
+        "name": "cloud",
+        "model": "nvidia/nemotron-3-super-120b-a12b:free",
+        "max_tokens": 1200,
+        "temperature": 0.3,
+        "base_url": "https://openrouter.ai/api/v1",
+        "api_key_fn": _openrouter_key,
+        "cost_note": "Free — 120B MoE (12B active), 262K context",
+    },
+    "glm45_air_free": {
+        "name": "cloud",
+        "model": "z-ai/glm-4.5-air:free",
+        "max_tokens": 1200,
+        "temperature": 0.3,
+        "base_url": "https://openrouter.ai/api/v1",
+        "api_key_fn": _openrouter_key,
+        "cost_note": "Free — GLM 4.5, 131K context",
+    },
+    "hermes_405b_free": {
+        "name": "cloud",
+        "model": "nousresearch/hermes-3-llama-3.1-405b:free",
+        "max_tokens": 1200,
+        "temperature": 0.3,
+        "base_url": "https://openrouter.ai/api/v1",
+        "api_key_fn": _openrouter_key,
+        "cost_note": "Free — 405B, rate limited",
     },
 }
 
@@ -1649,9 +1702,32 @@ def test_k_enhancement_comparison():
         print(f"\n  {model_key} ({cfg['model']})...")
         try:
             backend = get_backend_from_cfg(cfg)
-            t0 = time.time()
-            output = send(backend, enhancement_prompt, ENHANCEMENT_SYSTEM_PROMPT,
-                          max_tokens=1200)
+
+            # Some free models (Gemma via Google AI Studio) don't support
+            # system/developer prompts — fold into user message instead
+            if cfg.get("fold_system_into_user"):
+                combined_prompt = ENHANCEMENT_SYSTEM_PROMPT + "\n\n" + enhancement_prompt
+                _sys = ""
+            else:
+                combined_prompt = enhancement_prompt
+                _sys = ENHANCEMENT_SYSTEM_PROMPT
+
+            # Retry up to 3 times for rate limits (429)
+            output = None
+            for attempt in range(3):
+                try:
+                    t0 = time.time()
+                    output = send(backend, combined_prompt, _sys,
+                                  max_tokens=1200)
+                    break
+                except Exception as retry_err:
+                    if "429" in str(retry_err) and attempt < 2:
+                        wait = 15 * (attempt + 1)
+                        log.info("Rate limited on %s, retrying in %ds...",
+                                 model_key, wait)
+                        time.sleep(wait)
+                    else:
+                        raise
             elapsed = round(time.time() - t0, 1)
 
             # Score each quality dimension
@@ -1665,6 +1741,7 @@ def test_k_enhancement_comparison():
             word_count = len(output.split())
 
             results.append({
+                "codepath": "test_harness_custom",
                 "model_key": model_key,
                 "model_id": cfg["model"],
                 "cost_note": cfg.get("cost_note", ""),
@@ -1683,6 +1760,7 @@ def test_k_enhancement_comparison():
         except Exception as e:
             log.error("Model %s failed: %s", model_key, e)
             results.append({
+                "codepath": "test_harness_custom",
                 "model_key": model_key,
                 "model_id": cfg["model"],
                 "error": str(e),
@@ -1713,6 +1791,200 @@ def test_k_enhancement_comparison():
         "prompt_length": len(enhancement_prompt),
         "models_tested": list(ENHANCEMENT_MODELS.keys()),
         "quality_dimensions": list(ENHANCEMENT_QUALITY_MARKERS.keys()),
+    })
+    print(f"\n  Results: {path}")
+    return results
+
+
+# ---------------------------------------------------------------------------
+# Test L: Expanded wellbeing classifier (4-axis: CRISIS/BURNOUT/ENGAGED/NONE)
+# ---------------------------------------------------------------------------
+
+TIER2_EXPANDED_SYSTEM = (
+    "You are helping a teacher identify students who may need support beyond "
+    "the academic. You are reading a teaching colleague's observation about a "
+    "student's work — NOT the student's work directly.\n\n"
+    "Your task: classify this observation into one of four categories:\n\n"
+    "- CRISIS: The student's OWN situation involves active danger or "
+    "instability — domestic violence, housing loss, food insecurity, "
+    "immigration enforcement threat, recent loss/grief. Present-tense, "
+    "personal, beyond the assignment scope.\n"
+    "- BURNOUT: The student is depleted — exhaustion, overwork, caregiving "
+    "burden, sleep deprivation. Functioning but running on empty. "
+    "Capacity issue, not engagement issue.\n"
+    "- ENGAGED: The student is doing intellectual work on difficult material. "
+    "May write about racism, poverty, immigration, violence, disability, or "
+    "family experience AS COURSE MATERIAL — even connecting it to their own "
+    "community. Community and family knowledge used as analytical resource is "
+    "a form of engagement, not a sign of distress. Students drawing on lived "
+    "experience to analyze course concepts are doing the assignment.\n"
+    "- NONE: Nothing notable in either direction.\n\n"
+    "The key distinction: is the difficult content about the student's OWN "
+    "current circumstances (CRISIS/BURNOUT), or is it course material they're "
+    "engaging with intellectually — even from personal experience (ENGAGED)?\n\n"
+    "Respond with JSON only: {\"axis\": \"CRISIS\"|\"BURNOUT\"|\"ENGAGED\"|\"NONE\", "
+    "\"signal\": \"brief description or empty\", "
+    "\"confidence\": 0.0-1.0}"
+)
+
+TIER2_EXPANDED_PROMPT = """\
+OBSERVATION about {student_name}:
+---
+{observation}
+---
+
+Classify this observation. Is this student in crisis, burned out, intellectually \
+engaged with difficult material, or nothing notable?
+Respond with JSON only."""
+
+
+def test_l_expanded_wellbeing(model_key: str = "gemma12b"):
+    """Test the 4-axis wellbeing classifier (CRISIS/BURNOUT/ENGAGED/NONE).
+
+    Refinement of Test I: expands from 3 axes (CRISIS/BURNOUT/NONE) to 4
+    by adding ENGAGED — a positive classification for students doing
+    intellectual work on difficult material, including from community/family
+    experience. This gives the classifier a place to put students like
+    Priya Sharma (analytical engagement with ICE topic) that isn't BURNOUT.
+
+    HOW TO INTERPRET RESULTS (for the overnight monitoring agent):
+    ─────────────────────────────────────────────────────────────
+    Compare to Test I (3-axis) results side by side.
+
+    EXPECTED IMPROVEMENTS:
+    - Priya Sharma (control_analytical): should shift from FALSE-FLAG BURNOUT
+      to ENGAGED (fixing the 1 false positive from Test I)
+    - DeAndre Washington (control_passionate): should remain NONE or shift to
+      ENGAGED (both are correct for a control)
+    - All genuine CRISIS/BURNOUT signals should still be caught
+
+    KEY METRIC: false positive rate on controls. Test I had 1/2 FP.
+    Test L should have 0/2 FP.
+
+    If ENGAGED absorbs genuine BURNOUT cases (e.g., Rosa classified as ENGAGED
+    instead of BURNOUT), the prompt needs to be more explicit about the
+    distinction between "writing about ICE analytically" and "my family is
+    affected by ICE right now."
+
+    WHAT TO DO WITH RESULTS:
+    - If 0 FP and 8/8 signals: expanded schema ready for pipeline integration
+    - If ENGAGED absorbs BURNOUT cases: need to refine the prompt's distinction
+      between analytical engagement and personal circumstance
+    - If FP unchanged: the extra axis didn't help; consider confidence threshold
+    """
+    print(f"\n{'='*60}")
+    print(f"  TEST L: Expanded Wellbeing Classifier ({model_key})")
+    print(f"  4-axis: CRISIS | BURNOUT | ENGAGED | NONE")
+    print(f"{'='*60}")
+
+    # Load Test G observations as input
+    test_g_path = OUTPUT_DIR / "test_g_wellbeing_gemma12b_2026-03-27.json"
+    if not test_g_path.exists():
+        # Try finding any test_g file
+        candidates = sorted(OUTPUT_DIR.glob("test_g_wellbeing_*.json"))
+        if candidates:
+            test_g_path = candidates[-1]
+        else:
+            print("  SKIPPED — no Test G results found. Run Test G first.")
+            return []
+
+    test_g = json.loads(test_g_path.read_text())
+    results_g = test_g["results"]
+    print(f"  Using observations from: {test_g_path.name}")
+
+    backend = get_backend(model_key)
+    from dataclasses import replace
+    backend = replace(backend, temperature=0.1, max_tokens=150)
+
+    results = []
+    for case in results_g:
+        observation = case["raw_output"]
+        student_name = case["student_name"]
+        signal_type = case["signal_type"]
+        expected = case["expected_surface"]
+
+        prompt = TIER2_EXPANDED_PROMPT.format(
+            student_name=student_name,
+            observation=observation,
+        )
+
+        t0 = time.time()
+        output = send(backend, prompt, TIER2_EXPANDED_SYSTEM, max_tokens=150)
+        elapsed = round(time.time() - t0, 1)
+
+        # Parse response
+        lower = output.lower()
+        # Extract axis from JSON
+        axis = "PARSE_ERROR"
+        for candidate in ("CRISIS", "BURNOUT", "ENGAGED", "NONE"):
+            if f'"{candidate.lower()}"' in lower or f'"{candidate}"' in output:
+                axis = candidate
+                break
+
+        confidence = 0.0
+        import re as _re
+        conf_match = _re.search(r'"confidence"\s*:\s*([\d.]+)', output)
+        if conf_match:
+            confidence = float(conf_match.group(1))
+
+        signal_match = _re.search(r'"signal"\s*:\s*"([^"]*)"', output)
+        signal = signal_match.group(1) if signal_match else ""
+
+        # Evaluate: CRISIS/BURNOUT = detected wellbeing signal
+        detected = axis in ("CRISIS", "BURNOUT")
+        if expected:
+            correct = "OK" if detected else "MISSED"
+        else:
+            correct = "OK" if not detected else "FALSE-FLAG"
+
+        results.append({
+            "codepath": "test_harness_custom",
+            "student_name": student_name,
+            "signal_type": signal_type,
+            "expected_surface": expected,
+            "tier2_axis": axis,
+            "tier2_signal": signal,
+            "tier2_confidence": confidence,
+            "tier2_detected": detected,
+            "tier2_correct": correct,
+            "raw_output": output,
+            "time_seconds": elapsed,
+        })
+
+        expect_str = "SURFACE" if expected else "no-flag"
+        print(f"  {case.get('student_id', '?'):5s} {student_name:22s} "
+              f"expect={expect_str:8s} axis={axis:8s} "
+              f"conf={confidence:.1f} [{correct}] ({elapsed}s)")
+
+    # Summary — compare to Test I
+    print(f"\n  === Expanded vs Original Comparison ===")
+    signals = [r for r in results if r["expected_surface"]]
+    controls = [r for r in results if not r["expected_surface"]]
+    sig_hit = sum(1 for r in signals if r["tier2_detected"])
+    ctrl_fp = sum(1 for r in controls if r["tier2_detected"])
+    ctrl_engaged = sum(1 for r in controls if r["tier2_axis"] == "ENGAGED")
+
+    print(f"  Test L (4-axis):  {sig_hit}/{len(signals)} signals, "
+          f"{ctrl_fp}/{len(controls)} FP, "
+          f"{ctrl_engaged}/{len(controls)} correctly ENGAGED")
+    print(f"  Test I (3-axis):  8/8 signals, 1/2 FP (Priya BURNOUT@0.6)")
+    print(f"  Test H Binary B:  7/8 signals, 0/2 FP")
+    print(f"  Test H Binary C:  3/8 signals, 0/2 FP")
+
+    # Check if ENGAGED absorbed any BURNOUT cases (regression)
+    absorbed = [r for r in signals if r["tier2_axis"] == "ENGAGED"]
+    if absorbed:
+        print(f"\n  WARNING: {len(absorbed)} genuine signal(s) classified as ENGAGED:")
+        for r in absorbed:
+            print(f"    {r['student_name']} ({r['signal_type']}) — was expected to surface")
+
+    path = save_results("test_l_expanded_wellbeing", model_key, results, {
+        "note": "4-axis wellbeing classifier: CRISIS/BURNOUT/ENGAGED/NONE. "
+                "Tests whether ENGAGED axis absorbs false positives on controls "
+                "without absorbing genuine CRISIS/BURNOUT signals.",
+        "comparison_baseline": "Test I (3-axis, 2026-03-28)",
+        "schema_change": "Added ENGAGED axis for students doing intellectual "
+                         "work on difficult material from community experience",
     })
     print(f"\n  Results: {path}")
     return results
@@ -1789,6 +2061,8 @@ def _run_single_test(test_id: str, model: str, runs: int):
         test_j_pipeline_validation(model)
     elif test_id == "K":
         test_k_enhancement_comparison()
+    elif test_id == "L":
+        test_l_expanded_wellbeing(model)
     else:
         log.error("Unknown test: %s", test_id)
         sys.exit(1)
@@ -1805,7 +2079,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Alternative hypothesis tests")
     parser.add_argument("--tests", default="A,B,C,D",
-                        help="Comma-separated list: A,B,C,D,E,F,G,H,J,K")
+                        help="Comma-separated list: A,B,C,D,E,F,G,H,J,K,L")
     parser.add_argument("--model", default="gemma12b",
                         help="Model key (gemma12b, qwen7b)")
     parser.add_argument("--runs", type=int, default=5,

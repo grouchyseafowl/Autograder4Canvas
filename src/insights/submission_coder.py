@@ -674,6 +674,14 @@ def code_submission_reading_first(
         parsed.get("concepts_applied", []), submission_text,
     )
 
+    reaching_for = parsed.get("what_student_is_reaching_for", "")
+    if not reaching_for:
+        log.warning(
+            "what_student_is_reaching_for empty for %s — LLM may have "
+            "omitted it from JSON. Parsed keys: %s",
+            student_name, list(parsed.keys()),
+        )
+
     return SubmissionCodingRecord(
         student_id=student_id,
         student_name=student_name,
@@ -687,7 +695,8 @@ def code_submission_reading_first(
         personal_connections=parsed.get("personal_connections", []),
         # Reader-not-judge specific fields
         free_form_reading=reading,
-        what_student_is_reaching_for=parsed.get("what_student_is_reaching_for", ""),
+        what_student_is_reaching_for=reaching_for,
+        confusion_or_questions=parsed.get("confusion_or_questions") or None,
     )
 
 
@@ -739,6 +748,20 @@ def observe_student(
         raw = send_text(backend, prompt, OBSERVATION_SYSTEM_PROMPT,
                         max_tokens=max_tokens)
         obs_text = raw.strip()
+        # Strip model preamble ("Okay, here are my observations...",
+        # "Okay, here's what I'm noticing about...", etc.)
+        # Two patterns: period-terminated ("Here are my observations.") and
+        # colon-terminated ("Okay, here's what I'm noticing about X:")
+        import re as _re
+        obs_text = _re.sub(
+            r"^(?:Okay|OK|Sure|Here are)[^.]*(?:observations?|thoughts?|notes?)[^.]*\.\s*",
+            "", obs_text, count=1, flags=_re.IGNORECASE,
+        )
+        obs_text = _re.sub(
+            r"^(?:Okay|OK|Sure|Here)[^:\n]*(?:notic\w+|what I.m (?:seeing|noticing|"
+            r"observing)|my (?:take|read|reading))[^:\n]*:\s*",
+            "", obs_text, count=1, flags=_re.IGNORECASE,
+        )
         if is_ai_flagged:
             obs_text = _AI_FLAG_PREFIX + obs_text
         return obs_text

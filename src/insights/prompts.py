@@ -330,7 +330,9 @@ Respond with JSON:
   "emotional_notes": "brief explanation grounded in your reading",
   "readings_referenced": ["specific texts/authors mentioned"],
   "concepts_applied": ["course concepts the student actually uses"],
-  "personal_connections": ["connections to lived experience"]
+  "personal_connections": ["connections to lived experience"],
+  "confusion_or_questions": "null OR brief note if the student appears confused \
+about the assignment expectations or raises a question others might share"
 }}
 
 RULES:
@@ -340,6 +342,10 @@ RULES:
 return empty lists — don't guess
 - what_student_is_reaching_for should capture the student's intellectual \
 project, not summarize the submission
+- confusion_or_questions: Only populate if the student seems genuinely confused \
+about what the assignment is asking — distinct from choosing not to engage \
+deeply or from engaging in a non-standard register. If a student is doing the \
+work in their own way, that is not confusion
 {lens_fragment}"""
 
 # ---------------------------------------------------------------------------
@@ -1353,9 +1359,10 @@ showed strong engagement through lived experience and transnational framing. \
 structural analysis — these students are not confused, they are working \
 from a different ideological starting point.",
   "attention_areas": [
-    "The 3 flagged students (Connor, Aiden, Brittany) need individual \
-engagement — they are not all making the same move and should not be \
-grouped together in a class response",
+    "The 3 flagged students are making distinct moves (colorblind framing, \
+tone policing, meritocracy narrative) and should not be grouped together \
+in a class-wide response — each pattern warrants a different structural \
+pedagogical approach",
     "The gap between surface-level engagement and the 4 strong engagers \
 suggests the assignment may need a bridge — something connecting the \
 abstract framework to students' own starting points"
@@ -1810,6 +1817,11 @@ If something stands out — whether an exceptional insight, a sign of struggle, 
 interesting intellectual move, a structural power move, or a shift in tone — name
 it specifically.
 
+When you identify a structural power move, NAME THE MECHANISM directly: say
+"tone policing," "colorblind erasure," or "abstract liberalism" — not "a subtle
+attempt to..." or "may be trying to..." The teacher needs the structural term
+so they can address the PATTERN, not just the individual moment.
+
 Do NOT categorize, label, or flag. Just describe what you see."""
 
 OBSERVATION_SYNTHESIS_SYSTEM_PROMPT = (
@@ -1871,12 +1883,36 @@ the student might benefit from the instructor's attention. For each:
 Do NOT include students whose passionate engagement with difficult material
 might be mistaken for distress — that's engagement, not concern.
 
+IMPORTANT: Check-ins should be PRIVATE and CARE-FOCUSED. Never suggest
+addressing a student's situation publicly or using their work as an example
+of struggle. The goal is quiet, individual support — not visibility.
+
+## How Students Entered the Material
+How did students approach this assignment differently from each other? Describe
+the range of ENTRY POINTS — emotional registers (urgent vs. analytical vs.
+reflective), types of connections (personal experience vs. textual analysis vs.
+current events), and modes of application (abstract theory vs. concrete example).
+Name specific students in each category so the teacher can see the multiplicity.
+
+This diversity of approaches is itself a pedagogical resource — name it as such.
+
+## What's Working in This Assignment
+Based on the patterns you see, what is this assignment doing well? What about
+the prompt design, reading selection, or format is producing the engagement you
+observed? Be specific — "students are engaged" is not enough. Name what in the
+assignment structure is generating the intellectual work you described above.
+If nothing stands out, skip this section.
+
 ## Moments for the Classroom
-Are there 1-2 moments from student writing that could spark productive class
-conversation? These could be tensions between student perspectives, a question
-someone raised that others would benefit from, or a connection between students'
-ideas that they may not see yet. Name the students involved and what makes the
-moment generative.
+Are there 1-2 tensions, questions, or connections across student writing that
+could spark productive class conversation? Describe the INTELLECTUAL TENSION or
+IDEA, not the individual students. The teacher should be able to design a
+structural activity (discussion prompt, small-group exercise, writing move)
+around the tension itself — without singling out any student to share,
+present, or represent a position.
+
+Frame as: "Several students are wrestling with X while others approached through
+Y — this tension could..." NOT as "Ask Student A to share their essay."
 
 ## Structural Power Moves to Address
 Did any student responses contain structural power moves — language that appears
