@@ -33,16 +33,27 @@ Run 0cb5b7e8 in the InsightsStore has 32/32 students coded (P1+P2 complete).
 Resume skips coding and runs: wellbeing classification → observations →
 themes → outliers → synthesis → feedback.
 
-To resume:
-```
-caffeinate -i python3 scripts/generate_demo_insights.py --course ethnic_studies --resume-run 0cb5b7e8
-```
-(If that flag doesn't exist, check how the demo generator handles resume —
-the engine's `resume_run()` method takes a run_id. The other agent may have
-wired this differently.)
+The demo generator has auto-resume logic (`_find_incomplete_run()` at line 94)
+that picks the most recent incomplete run and calls `engine.resume_run()`.
 
-**Alternative**: The other agent building the 4-axis system may launch this
-themselves. Coordinate — don't both launch it.
+**WARNING**: There are 3 runs in the store:
+- `0cb5b7e8` (Mar 28 19:46) — 32/32 coded, no downstream stages. THIS IS THE ONE WE WANT.
+- `6a5ff72f` (Mar 28 21:09) — quick_analysis only, incomplete
+- `48dc3560` (Mar 28 19:46) — quick_analysis only, incomplete
+
+The auto-resume will pick `6a5ff72f` (most recent incomplete), NOT `0cb5b7e8`.
+You need to either:
+1. Ask the implementation agent if they added a `--resume-run <id>` flag
+2. Or delete/mark the newer incomplete runs so auto-resume finds 0cb5b7e8
+3. Or manually call `engine.resume_run(run_id="0cb5b7e8...")` in a script
+
+**Coordinate with the implementation agent** — they found this data and know
+the store state. Don't both launch the pipeline.
+
+To launch (once you've confirmed the resume target):
+```
+caffeinate -i python3 scripts/generate_demo_insights.py --course ethnic_studies
+```
 
 ### 3. Test K retry (late evening when Venice quotas reset)
 ```
