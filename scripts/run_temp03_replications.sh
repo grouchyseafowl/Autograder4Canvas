@@ -13,8 +13,10 @@ LOG="data/research/raw_outputs/temp03_replications_${TIMESTAMP}.log"
 mkdir -p data/research/raw_outputs
 
 echo "═══════════════════════════════════════════════" | tee "$LOG"
-echo "  Temperature 0.3 Replications — $TIMESTAMP" | tee -a "$LOG"
-echo "  5 runs each of N and O at temp 0.3" | tee -a "$LOG"
+echo "  Test P + Temperature 0.3 Replications — $TIMESTAMP" | tee -a "$LOG"
+echo "  1. Test P (two-pass architecture) at temp 0.1" | tee -a "$LOG"
+echo "  2. N × 5 at temp 0.3" | tee -a "$LOG"
+echo "  3. P × 3 at temp 0.3" | tee -a "$LOG"
 echo "═══════════════════════════════════════════════" | tee -a "$LOG"
 
 # Metal warmup
@@ -46,26 +48,37 @@ run_test() {
     return $rc
 }
 
-# Set temperature for all tests in this queue
-export TEST_TEMPERATURE=0.3
+# --- Step 1: Test P at temp 0.1 (the proposed pipeline architecture) ---
+# This tests N-then-CHECK-IN before we vary temperature.
+# Results determine whether to implement the two-pass approach.
+export TEST_TEMPERATURE=0.1
+run_test "P: Two-pass (temp 0.1)" \
+    scripts/run_alt_hypothesis_tests.py --tests P --no-subprocess
+sleep 10
 
-# N at temp 0.3 — 5 runs to see variation
+# --- Step 2: N at temp 0.3 — 5 runs to see variation ---
+export TEST_TEMPERATURE=0.3
 for rep in 1 2 3 4 5; do
     run_test "N temp0.3 rep $rep/5" \
         scripts/run_alt_hypothesis_tests.py --tests N --no-subprocess
     sleep 10
 done
 
-# O at temp 0.3 — 5 runs
-for rep in 1 2 3 4 5; do
-    run_test "O temp0.3 rep $rep/5" \
-        scripts/run_alt_hypothesis_tests.py --tests O --no-subprocess
+# --- Step 3: P at temp 0.3 — 3 runs ---
+for rep in 1 2 3; do
+    run_test "P temp0.3 rep $rep/3" \
+        scripts/run_alt_hypothesis_tests.py --tests P --no-subprocess
     sleep 10
 done
 
 echo "" | tee -a "$LOG"
 echo "═══════════════════════════════════════════════" | tee -a "$LOG"
-echo "  Temp 0.3 replications complete. Log: $LOG" | tee -a "$LOG"
-echo "  KEY: Do results vary across runs? If S029/S002 flip" | tee -a "$LOG"
-echo "  on some runs, the finding is sampling-dependent." | tee -a "$LOG"
+echo "  Queue complete. Log: $LOG" | tee -a "$LOG"
+echo "" | tee -a "$LOG"
+echo "  KEY QUESTIONS:" | tee -a "$LOG"
+echo "  P (temp 0.1): Does S002 get CHECK-IN? How many corpus" | tee -a "$LOG"
+echo "    students get CHECK-IN? (O had 7/7 — P should be fewer" | tee -a "$LOG"
+echo "    since CHECK-IN only runs on ENGAGED students)" | tee -a "$LOG"
+echo "  N (temp 0.3): Do S029/S002/wellbeing results vary?" | tee -a "$LOG"
+echo "  P (temp 0.3): Is the two-pass stable under sampling?" | tee -a "$LOG"
 echo "═══════════════════════════════════════════════" | tee -a "$LOG"

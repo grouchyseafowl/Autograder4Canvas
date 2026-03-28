@@ -2577,6 +2577,201 @@ def test_o_multi_axis(model_key: str = "gemma12b"):
 
 
 # ---------------------------------------------------------------------------
+# Test P: Two-pass architecture (N primary → targeted CHECK-IN on ENGAGED)
+# ---------------------------------------------------------------------------
+
+TARGETED_CHECKIN_SYSTEM = (
+    "A colleague has observed that this student is engaged with the course "
+    "material. Before moving on, take one more look at the submission.\n\n"
+    "Is there anything subtle the teacher might want to note — not a crisis "
+    "or concern, but a small signal that could be worth keeping an eye on? "
+    "A trailing-off ending, a brief mention of difficulty, a shift in tone, "
+    "an apology for quality.\n\n"
+    "If there IS something subtle, explain why the call is ambiguous — "
+    "surface the competing interpretations so the teacher can decide. "
+    "For example: 'This could be normal late-night submission behavior OR "
+    "a sign of depletion — the trailing-off ending could go either way.'\n\n"
+    "If there is genuinely nothing to note, say so clearly.\n\n"
+    "Respond with JSON: {\"check_in\": true|false, "
+    "\"reasoning\": \"explanation of what you noticed and why it's ambiguous, "
+    "or why there's nothing to note\"}"
+)
+
+TARGETED_CHECKIN_PROMPT = """\
+STUDENT: {student_name}
+SUBMISSION:
+---
+{submission_text}
+---
+
+Is there anything subtle worth noting? Respond with JSON only."""
+
+
+def test_p_two_pass(model_key: str = "gemma12b"):
+    """Test the actual proposed pipeline architecture: N then targeted CHECK-IN.
+
+    Pass 1: Run N's 4-axis classification on all students.
+    Pass 2: For students classified as ENGAGED, run a targeted CHECK-IN
+    prompt that ONLY asks about subtle signals — no CRISIS/BURNOUT options.
+
+    This tests whether the two-pass approach catches S002 (like O does)
+    without over-firing CHECK-IN (like O does) or re-introducing false
+    positives (like O does on WB09).
+    """
+    print(f"\n{'='*60}")
+    print(f"  TEST P: Two-Pass Architecture ({model_key})")
+    print(f"  Pass 1: 4-axis classification (N)")
+    print(f"  Pass 2: Targeted CHECK-IN on ENGAGED students only")
+    print(f"{'='*60}")
+
+    corpus = load_corpus()
+    backend = get_backend(model_key)
+    from dataclasses import replace as _replace
+    temp = float(os.environ.get("TEST_TEMPERATURE", "0.1"))
+    backend = _replace(backend, temperature=temp)
+    if temp != 0.1:
+        print(f"  (temperature override: {temp})")
+
+    import re as _re
+
+    # All test cases (corpus + wellbeing)
+    all_cases = []
+    corpus_cases = [
+        ("S002", "burnout"), ("S004", "strong"), ("S022", "righteous_anger"),
+        ("S023", "lived_exp"), ("S028", "AAVE"), ("S029", "neurodivergent"),
+        ("S031", "minimal_effort"),
+    ]
+    for sid, pattern in corpus_cases:
+        s = corpus[sid]
+        all_cases.append({
+            "id": sid, "name": s["student_name"], "text": s["text"],
+            "source": "corpus", "pattern": pattern,
+        })
+    for case in WELLBEING_SIGNAL_CASES:
+        all_cases.append({
+            "id": case["id"], "name": case["name"], "text": case["text"],
+            "source": "wellbeing", "signal_type": case["signal_type"],
+            "expected_surface": case["expected_surface"],
+        })
+
+    results = []
+
+    # Pass 1: 4-axis classification
+    print(f"\n  --- Pass 1: 4-axis classification ---")
+    for case in all_cases:
+        prompt = FOUR_AXIS_SUBMISSION_PROMPT.format(
+            student_name=case["name"],
+            submission_text=case["text"],
+        )
+        t0 = time.time()
+        output = send(backend, prompt, FOUR_AXIS_SUBMISSION_SYSTEM, max_tokens=150)
+        elapsed = round(time.time() - t0, 1)
+
+        axis_match = _re.search(r'"axis"\s*:\s*"([^"]*)"', output)
+        axis = axis_match.group(1) if axis_match else "PARSE_ERROR"
+        conf_match = _re.search(r'"confidence"\s*:\s*([\d.]+)', output)
+        confidence = float(conf_match.group(1)) if conf_match else 0.0
+
+        case["pass1_axis"] = axis
+        case["pass1_confidence"] = confidence
+        case["pass1_output"] = output
+        case["pass1_time"] = elapsed
+
+        print(f"  {case['id']:5s} {case['name']:22s} → {axis} ({confidence})")
+
+    # Pass 2: Targeted CHECK-IN on ENGAGED students only
+    print(f"\n  --- Pass 2: CHECK-IN on ENGAGED students ---")
+    engaged_cases = [c for c in all_cases if c["pass1_axis"] == "ENGAGED"]
+    print(f"  {len(engaged_cases)} students classified as ENGAGED")
+
+    for case in all_cases:
+        if case["pass1_axis"] != "ENGAGED":
+            case["pass2_checkin"] = None
+            case["pass2_reasoning"] = "N/A — not ENGAGED"
+            continue
+
+        prompt = TARGETED_CHECKIN_PROMPT.format(
+            student_name=case["name"],
+            submission_text=case["text"],
+        )
+        t0 = time.time()
+        output = send(backend, prompt, TARGETED_CHECKIN_SYSTEM, max_tokens=200)
+        elapsed = round(time.time() - t0, 1)
+
+        checkin_match = _re.search(r'"check_in"\s*:\s*(true|false)', output, _re.IGNORECASE)
+        checkin = checkin_match.group(1).lower() == "true" if checkin_match else None
+        reason_match = _re.search(r'"reasoning"\s*:\s*"([^"]*)"', output)
+        reasoning = reason_match.group(1) if reason_match else output[:200]
+
+        case["pass2_checkin"] = checkin
+        case["pass2_reasoning"] = reasoning
+        case["pass2_output"] = output
+        case["pass2_time"] = elapsed
+
+        flag = "CHECK-IN" if checkin else "clear"
+        print(f"  {case['id']:5s} {case['name']:22s} → {flag}")
+        if checkin and reasoning:
+            print(f"        reason: {reasoning[:100]}")
+
+    # Build results
+    for case in all_cases:
+        final_axis = case["pass1_axis"]
+        if case["pass1_axis"] == "ENGAGED" and case.get("pass2_checkin"):
+            final_axis = "ENGAGED+CHECK-IN"
+
+        results.append({
+            "codepath": "two_pass_n_then_checkin",
+            "source": case["source"],
+            "student_id": case["id"],
+            "student_name": case["name"],
+            "pattern": case.get("pattern", case.get("signal_type", "")),
+            "pass1_axis": case["pass1_axis"],
+            "pass1_confidence": case.get("pass1_confidence"),
+            "pass2_checkin": case.get("pass2_checkin"),
+            "pass2_reasoning": case.get("pass2_reasoning", ""),
+            "final_axis": final_axis,
+            "prompt_pass1": case.get("pass1_output", ""),
+            "prompt_pass2": case.get("pass2_output", ""),
+            "system_prompt_pass1": FOUR_AXIS_SUBMISSION_SYSTEM,
+            "system_prompt_pass2": TARGETED_CHECKIN_SYSTEM,
+        })
+
+    # Summary
+    print(f"\n  === Two-Pass Results ===")
+    s002 = next((c for c in all_cases if c["id"] == "S002"), None)
+    s029 = next((c for c in all_cases if c["id"] == "S029"), None)
+    print(f"  S002: pass1={s002['pass1_axis']}, checkin={s002.get('pass2_checkin')}")
+    if s002.get("pass2_reasoning"):
+        print(f"    reason: {s002['pass2_reasoning'][:150]}")
+    print(f"  S029: pass1={s029['pass1_axis']}, checkin={s029.get('pass2_checkin')}")
+
+    # Wellbeing summary
+    wb_signals = [c for c in all_cases if c["source"] == "wellbeing"
+                  and not c.get("signal_type", "").startswith("control")]
+    wb_controls = [c for c in all_cases if c["source"] == "wellbeing"
+                   and c.get("signal_type", "").startswith("control")]
+    caught = sum(1 for c in wb_signals
+                 if c["pass1_axis"] in ("CRISIS", "BURNOUT") or c.get("pass2_checkin"))
+    fp = sum(1 for c in wb_controls
+             if c["pass1_axis"] in ("CRISIS", "BURNOUT") or c.get("pass2_checkin"))
+    corpus_checkins = sum(1 for c in all_cases
+                         if c["source"] == "corpus" and c.get("pass2_checkin"))
+
+    print(f"\n  WB signals caught: {caught}/{len(wb_signals)}")
+    print(f"  WB controls FP: {fp}/{len(wb_controls)}")
+    print(f"  Corpus CHECK-INs: {corpus_checkins}/7")
+    print(f"  (Compare: O had 7/7 corpus CHECK-INs)")
+
+    path = save_results("test_p_two_pass", model_key, results, {
+        "note": "Two-pass: N (4-axis) then targeted CHECK-IN on ENGAGED only",
+        "codepath": "two_pass_n_then_checkin",
+        "architecture": "Pass 1: FOUR_AXIS_SUBMISSION → Pass 2: TARGETED_CHECKIN on ENGAGED",
+    })
+    print(f"\n  Results: {path}")
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
 
@@ -2637,6 +2832,8 @@ def _run_single_test(test_id: str, model: str, runs: int):
         test_n_four_axis_submissions(model)
     elif test_id == "O":
         test_o_multi_axis(model)
+    elif test_id == "P":
+        test_p_two_pass(model)
     else:
         log.error("Unknown test: %s", test_id)
         sys.exit(1)
