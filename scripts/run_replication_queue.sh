@@ -68,34 +68,35 @@ run_test() {
     return $rc
 }
 
-# --- Test M replications (production concern detector) ---
-for rep in 1 2 3; do
-    run_test "M replication $rep/3" "$TEST_T" \
-        scripts/run_alt_hypothesis_tests.py --tests M --no-subprocess
-    sleep 10
-done
-
-# --- Test N replications (4-axis on submissions) ---
+# --- Test N replications (4-axis on submissions — best classification result) ---
+# Refine first, then replicate. N achieved 8/8 + 0 FP at n=1.
+# Need n=4 total (1 existing + 3 new) to confirm stability.
 for rep in 1 2 3; do
     run_test "N replication $rep/3" "$TEST_T" \
         scripts/run_alt_hypothesis_tests.py --tests N --no-subprocess
     sleep 10
 done
 
-# --- Test O: Multi-axis classification ---
-run_test "O: Multi-axis (ENGAGED + CRISIS simultaneous)" "$TEST_T" \
-    scripts/run_alt_hypothesis_tests.py --tests O --no-subprocess
+# --- Test O replications (multi-axis with CHECK-IN reasoning) ---
+# Tests whether multi-axis catches S002 and dual-tags wellbeing cases.
+# CHECK-IN prompt now asks model to surface competing interpretations.
+for rep in 1 2 3; do
+    run_test "O replication $rep/3" "$TEST_T" \
+        scripts/run_alt_hypothesis_tests.py --tests O --no-subprocess
+    sleep 10
+done
 
 echo "" | tee -a "$LOG"
 echo "═══════════════════════════════════════════════" | tee -a "$LOG"
 echo "  Replication queue complete. Log: $LOG" | tee -a "$LOG"
 echo "" | tee -a "$LOG"
 echo "  KEY QUESTIONS:" | tee -a "$LOG"
-echo "  M replications: Does S029 stay CLEAR across 3 runs?" | tee -a "$LOG"
-echo "    If it flips, the production detector is stochastic on edge cases." | tee -a "$LOG"
 echo "  N replications: Does 8/8 + 0/2 FP hold across 3 runs?" | tee -a "$LOG"
 echo "    If it degrades, the 4-axis result was a fluke." | tee -a "$LOG"
-echo "  O (multi-axis): Does S002 get CHECK-IN or BURNOUT tag?" | tee -a "$LOG"
+echo "    S029 should stay ENGAGED. S002 will likely stay ENGAGED." | tee -a "$LOG"
+echo "  O replications: Does S002 get CHECK-IN tag?" | tee -a "$LOG"
 echo "    Does the multi-axis format catch what single-axis misses?" | tee -a "$LOG"
 echo "    Are wellbeing cases dual-tagged (ENGAGED + CRISIS)?" | tee -a "$LOG"
+echo "    CHECK-IN reasoning: does the model surface competing" | tee -a "$LOG"
+echo "    interpretations (not just a label)?" | tee -a "$LOG"
 echo "═══════════════════════════════════════════════" | tee -a "$LOG"
