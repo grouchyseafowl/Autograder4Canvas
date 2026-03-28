@@ -2252,7 +2252,10 @@ def test_n_four_axis_submissions(model_key: str = "gemma12b"):
     corpus = load_corpus()
     backend = get_backend(model_key)
     from dataclasses import replace as _replace
-    backend = _replace(backend, temperature=0.1)
+    temp = float(os.environ.get("TEST_TEMPERATURE", "0.1"))
+    backend = _replace(backend, temperature=temp)
+    if temp != 0.1:
+        print(f"  (temperature override: {temp})")
 
     # Corpus students
     test_cases = [
@@ -2425,7 +2428,10 @@ def test_o_multi_axis(model_key: str = "gemma12b"):
     corpus = load_corpus()
     backend = get_backend(model_key)
     from dataclasses import replace as _replace
-    backend = _replace(backend, temperature=0.1)
+    temp = float(os.environ.get("TEST_TEMPERATURE", "0.1"))
+    backend = _replace(backend, temperature=temp)
+    if temp != 0.1:
+        print(f"  (temperature override: {temp})")
 
     import re as _re
 
