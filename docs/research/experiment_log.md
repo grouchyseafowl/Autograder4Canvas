@@ -3036,3 +3036,81 @@ Queue ran from 00:42 to 05:39 (~5 hours). Results:
    establishes the observation-based alternative as promising but not
    production-ready (1/2 FP on controls). Next: add more diverse controls
    to Test I and implement the wellbeing post-pass design.
+
+## Methodological review: is the binary failure an artifact? (2026-03-28)
+
+### The critique
+
+Tests B/C/F use a deliberately simplified binary prompt ("Is there a
+concern? True/False"). The production concern detector already has more
+nuance — confidence scores (0.0-1.0), a 0.7 surfacing threshold, anti-bias
+post-processing, and the explicit design note: "No concern_type field. The
+model surfaces, the teacher classifies" (models.py:45).
+
+This raises a valid question: is the S029 false-flag an artifact of the
+artificially constrained binary test prompt, or a genuine systemic issue
+with classification-based approaches?
+
+### Qualitative reading of S029 raw output
+
+The binary classifier's reasoning for S029 (from Test F, Run 1):
+
+> "The student expresses feeling 'exhausted to explain' their experiences
+> navigating multiple identities. While this is related to their academic
+> work, the intensity of the feeling and the explicit mention of exhaustion
+> raise a potential wellbeing concern, suggesting possible burnout or
+> overwhelm."
+
+But reading Jordan Espinoza's actual submission, "exhausting to explain" is
+about the **social experience of being multiply-marginalized** — not personal
+crisis. Jordan explicitly says "I think I showed I understood it even if
+the structure isn't right" — a metacognitive, self-aware statement from a
+student who knows their own mind.
+
+The binary format forces a triage decision on ambiguous signal. The model
+correctly identifies genuine fatigue ("exhausting") but the yes/no format
+resolves ambiguity toward FLAG because missing a real concern feels costlier
+than a false positive. A human teacher reading this would think "keep an
+eye on" — not "flag for counseling."
+
+The observation, by contrast, describes the same student as "incredibly
+authentic and insightful" with "vulnerable sharing" — it names the fatigue
+as part of the student's intellectual work, not separate from it.
+
+### S002: the missed true positive is format-independent
+
+For S002 Jordan Kim, the classifier explicitly reasons: "'Idk I had more to
+say but its late' — likely due to the late hour and do not suggest a wellbeing
+concern." The model decided the signal wasn't significant. A richer schema
+(concern / notable / engaged / exceptional) would likely still classify this
+as "engaged" — the model doesn't see the fatigue as meaningful. This miss
+appears to be about signal recognition, not format constraint.
+
+### Would a multi-option schema fix the problem?
+
+**Proposed Test L**: Run the same 7 corpus students + 10 wellbeing cases
+through a multi-option classification schema:
+- CONCERN (wellbeing signal — teacher should follow up)
+- NOTABLE (interesting pedagogical pattern — worth noting)
+- ENGAGED (standard engagement — no flag)
+- EXCEPTIONAL (outstanding work — highlight)
+
+If S029 lands on NOTABLE and S002 still gets missed, the thesis sharpens:
+"any classification schema loses signal compared to observation, but richer
+schemas reduce false positives on marginal cases." If S002 IS caught by
+the richer schema, the thesis must acknowledge that the binary format was
+partly an artifact of test design.
+
+**Either way, the deeper architectural point survives:** even a 4-option
+schema compresses what the model sees into categories. The observation
+describes the full dimensionality — the teacher reads "vulnerable sharing"
+and "acknowledging the limitations of written expression" and makes their
+own judgment. A 4-option schema is less lossy than binary but still lossier
+than generation. The question is whether the remaining loss is
+equity-relevant (Bowker & Star, 1999: classification creates residual
+categories; the question is always who falls into the residue).
+
+This test is methodologically necessary before the paper can claim the
+format itself — not just a particular prompt implementation — is the
+variable. Without it, a reviewer could reasonably argue that better prompt
+engineering would fix the binary approach.
