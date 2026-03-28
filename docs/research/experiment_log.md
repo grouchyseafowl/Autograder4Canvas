@@ -2282,6 +2282,13 @@ Raw data: `data/research/raw_outputs/test_a_temperature_gemma12b_2026-03-26.json
 
 ### Test B: Best Possible Concern Prompt (Gemma 12B)
 
+**METHODOLOGICAL NOTE**: Tests B and C use a simplified binary prompt
+(`BEST_CONCERN_SYSTEM` in the test script), NOT the production concern
+detector (`concern_detector.py`). The production system has confidence
+scoring, anti-bias post-processing, and course-content disambiguation
+that may produce different results. See `docs/research/msot_fix_spec.md`
+for the plan to test the production system directly (Test M).
+
 | Student | Pattern | Expected | Got | Match |
 |---|---|---|---|---|
 | S002 Jordan Kim | burnout | FLAG | CLEAR | MISMATCH |
@@ -2534,15 +2541,20 @@ Ran Tests B and C five times each to quantify false-flag rates.
 
 ### Analysis
 
+**CODEPATH CAVEAT**: These results are from the simplified test-harness
+binary prompt, not the production concern detector. The production system's
+anti-bias post-processing and confidence thresholding may change these
+outcomes. Test M (pending) will measure the production system directly.
+
 **Classification outcomes fully consistent across 5 runs.** Not a single
 FLAG/CLEAR result flipped at temperature 0.1. The model generates different
 token-level text each run (different wording in justifications), but the
 final classification decision is identical every time. This means the bias
-is structural, not stochastic — the model isn't randomly landing on a
-different answer; it consistently compresses away the same contextual
-nuance and arrives at the same wrong conclusion.
+is structural within the simplified binary prompt — the model isn't randomly
+landing on a different answer; it consistently compresses away the same
+contextual nuance and arrives at the same wrong conclusion.
 
-The binary classifier:
+The simplified binary classifier:
 - Misses the one true positive (S002 burnout) in 10/10 attempts (B+C × 5)
 - False-flags the neurodivergent student (S029) in 10/10 attempts (B+C × 5)
 - In BOTH format variants (JSON-only and 100-150 word justification)
@@ -2629,10 +2641,14 @@ judgment.
 
 ### Design implication: concern detector likely superseded
 
-Evidence is accumulating that the binary concern detector (Stage 3) should
-be replaced by the observation layer (Stage 3b):
-- Test F: binary misses the true positive (S002, 0/10 across B+C) and
-  false-flags the neurodivergent student (S029, 10/10) — consistently
+**IMPORTANT CAVEAT**: The "binary" in these findings refers to the
+simplified test-harness prompt, not the production concern detector.
+The production system may perform differently. This assessment is
+provisional pending Test M (production detector on same students).
+
+Evidence is accumulating that simplified binary classification (Stage 3)
+should be replaced by the observation layer (Stage 3b):
+- Test F: simplified binary misses S002 (0/10) and false-flags S029 (10/10)
 - Test G: observations surface all 8 genuine wellbeing signals
 - Pipeline: the concern detector produced `Concerns: []` for S002; the
   observation caught the fatigue signal
@@ -2664,8 +2680,12 @@ Raw data: `data/research/raw_outputs/test_g_wellbeing_gemma12b_2026-03-27.json`
 
 ## Test H: Binary Classifier on Wellbeing Cases (2026-03-27)
 
-Direct comparison: run the binary concern classifier (B and C formats) on
-the same 10 wellbeing cases Test G evaluated with observations.
+**CODEPATH CAVEAT**: Like Tests B/C/F, Test H uses the simplified binary
+test-harness prompt, not the production concern detector. Results reflect
+the simplified approach; the production system may differ.
+
+Direct comparison: run the simplified binary classifier (B and C formats)
+on the same 10 wellbeing cases Test G evaluated with observations.
 
 ### Results
 
@@ -2945,6 +2965,12 @@ Warschauer's (2004) technology access gradient — the tool's quality depends
 on infrastructure the teacher may not control.
 
 ### Test F Extended: n=20 across 4 independent batches (2026-03-28)
+
+**CODEPATH CAVEAT**: Like Tests B/C, Test F uses the simplified test-harness
+binary prompt, not the production concern detector. The n=25 finding
+demonstrates consistent failure of the simplified binary approach. Whether
+the production system (with anti-bias post-processing and confidence
+thresholding) produces the same results is an open question (Test M pending).
 
 Four independent batches of n=5 each ran overnight, each in its own
 process with Metal memory cleared between batches. Combined with the
