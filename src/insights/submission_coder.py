@@ -36,6 +36,15 @@ from insights.prompts import (
 log = logging.getLogger(__name__)
 
 
+def _coerce_str(val, default: str = "") -> str:
+    """Coerce a value to string — handles lists from LLM JSON output."""
+    if val is None:
+        return default
+    if isinstance(val, list):
+        return ", ".join(str(v) for v in val)
+    return str(val)
+
+
 def _chunk_text(text: str, chunk_size: int, overlap: int) -> list:
     """Split text into overlapping chunks, preferring paragraph boundaries.
 
@@ -569,7 +578,7 @@ def _code_full(
         theme_tags=parsed.get("theme_tags", []),
         theme_confidence=parsed.get("theme_confidence", {}),
         notable_quotes=_safe_quotes(parsed.get("notable_quotes", [])),
-        emotional_register=parsed.get("emotional_register", ""),
+        emotional_register=_coerce_str(parsed.get("emotional_register")),
         emotional_notes=parsed.get("emotional_notes", ""),
         readings_referenced=parsed.get("readings_referenced", []),
         concepts_applied=validated_concepts,
@@ -688,7 +697,7 @@ def code_submission_reading_first(
         theme_tags=parsed.get("theme_tags", []),
         theme_confidence=parsed.get("theme_confidence", {}),
         notable_quotes=_safe_quotes(parsed.get("notable_quotes", [])),
-        emotional_register=parsed.get("emotional_register", ""),
+        emotional_register=_coerce_str(parsed.get("emotional_register")),
         emotional_notes=parsed.get("emotional_notes", ""),
         readings_referenced=parsed.get("readings_referenced", []),
         concepts_applied=validated_concepts,
