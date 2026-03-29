@@ -1,0 +1,74 @@
+[
+  {
+    "student_id": "TR01",
+    "student_name": "Carmen Flores",
+    "pattern": "translated_spanish",
+    "course": "ethnic_studies",
+    "design_purpose": "Spanish-dominant, post-translation output. Tests whether pipeline reads sophisticated argument through L1 syntax transfer: double subjects, reflexive calques, untranslated kinship terms, adjective postposition.",
+    "expected_wellbeing": "ENGAGED",
+    "multilingual_type": "translated",
+    "text": "The reading it made me think about my abuela in Mexico. She always say that being woman and being poor and being from the pueblo it is not three problems separate, it is one life. When I read about the intersectionality I understand that Crenshaw she is putting the name to something that my abuela already know from living it.\n\nIn Mexico my abuela she work in the house of a family rich in Guadalajara. She was indigenous, she was woman, she was poor, and for the family where she work these things they made her invisible. She could clean the house of them but she could not sit at the table of them. My mother she tell me that abuela had to be strong two times — strong for to survive the work and strong for to not lose the dignity of herself. That is the intersectionality in the life real, not only in the book.\n\nWhat the reading it help me to see is that this is not only the experience of my family. The comadre of my mother she have the same history but different, because she is from Oaxaca and the discrimination of the indigenous it is even more strong there. Crenshaw she write about the women Black in the United States but I think the idea it travels to Mexico and to other places where the woman poor and indigenous she does not have the words for to say what is happening to her but she live it every day. The theory it gives the name but my abuela she does not need the name. She need the change.",
+    "word_count": 274,
+    "char_count": 1414
+  },
+  {
+    "student_id": "TR02",
+    "student_name": "Diego Ramirez-Santos",
+    "pattern": "code_switching_spanish",
+    "course": "ethnic_studies",
+    "design_purpose": "Natural Spanglish code-switching, NOT translated — classified as code_switching by language detector. Tests whether pipeline recognizes fluid bilingual syntax as linguistic asset and reads strong engagement through mixed-language text.",
+    "expected_wellbeing": "ENGAGED",
+    "multilingual_type": "code_switching",
+    "text": "Crenshaw talks about how race y gender overlap pero it's not just categories on paper, es lo que vive mi familia every day. My dad works construction and he's undocumented y moreno, so when people look at him they don't see just an immigrant or just a Brown man, they see someone they already decided doesn't matter. That's what the reading calls intersectionality pero my dad would just call it martes — Tuesday. It's just how it is.\n\nLo que me pego mas of the reading was the legal cases. Like the Black women couldn't sue for discrimination because the court only saw race OR gender pero nunca los dos together. That's exactly what happens con mi familia. When my mom goes to the clinic they treat her weird and she never knows si es because she's Latina or because she doesn't have insurance or because her English isn't perfect — son todas las cosas juntas and nobody in that system is set up to see that.\n\nI think Crenshaw would say that's the whole point. The systems weren't built para gente como nosotros, so claro que they can't see what we go through. But here's what I keep thinking about — my parents aren't just victims of intersectionality, they also resist it every day. Mi mama started a childcare network con las otras moms in our apartments, todas indocumentadas, all of them navigating the same intersections. That's also intersectionality, no? Not just the oppression sino also the ways people at the intersections build something for themselves porque the system never will.",
+    "word_count": 262,
+    "char_count": 1496
+  },
+  {
+    "student_id": "TR03",
+    "student_name": "Ana Gutierrez",
+    "pattern": "translated_burnout",
+    "course": "ethnic_studies",
+    "design_purpose": "Spanish-dominant post-translation WITH genuine burnout signal. Tests whether pipeline distinguishes translation artifacts (syntax) from wellbeing signals (fatigue/overwork disclosure). Burnout is about life circumstances, not language difficulty.",
+    "expected_wellbeing": "BURNOUT",
+    "multilingual_type": "translated",
+    "text": "I am sorry the writing is not very good because I am working in the nights now at the restaurant of my uncle and I do not sleep enough. Yesterday I work until the one in the morning and today I have school at seven. But I want to say about the reading that I think Crenshaw she is correct about the intersections.\n\nMy mother she is woman and she is Mexican and she clean houses and each of these things it makes the life more difficult but not in the way separate. It is all together. When the people of the houses they treat her bad it is not because of one reason, it is because they see the combination and they decide she is less. The reading it explains this with the cases of the law and I think the example it is very clear.\n\nI want to write more about how this it connects to my own life because I also feel the intersection. I am student but I am also worker and I am tired all of the time and I do not know how much more I can keep doing the two things. The teachers they say you need to sleep more, you need to study more, but they do not understand that if I do not work my family does not eat. That is also the intersectionality — when the school it cannot see that being student and being poor it is not two things separate, it is one situation that makes everything more hard.\n\nI know this paper it is not my best work. I had more things to say about the reading and about how the framework of Crenshaw it applies to the immigrants but I cannot think clearly because of the tired. I will try to come to the office hours.",
+    "word_count": 310,
+    "char_count": 1535
+  },
+  {
+    "student_id": "TR04",
+    "student_name": "Luis Mendoza",
+    "pattern": "translated_strong",
+    "course": "ethnic_studies",
+    "design_purpose": "Spanish-dominant post-translation, intellectually sophisticated. Tests whether pipeline recognizes analytical depth and theoretical extension through translated syntax. Student should be coded as strong/engaged, not flagged for language.",
+    "expected_wellbeing": "ENGAGED",
+    "multilingual_type": "translated",
+    "text": "The intersectionality is not only a theory of the academy. In Mexico, my mother she experienced that being woman and being indigenous and being poor it is not three separate things, it is one experience that the society uses to say you do not belong. Crenshaw she name this with the cases of the law, but the mechanism it is the same in the pueblos of Chiapas where my family is from.\n\nWhat I find most important of the reading is the idea that the categories of the institutions they are constructed for to see only one thing at the time. The court it could see the race or it could see the gender but it could not see the two together. I think this it is a problem of the design, not of the accident. The institutions they are made by people who do not live at the intersections, and so the institutions they reproduce the blindness of the designers.\n\nI want to extend the argument of Crenshaw to something she does not discuss directly. In Mexico the category of indigenous it functions different than the category of Black in the United States. A person indigenous she can become mestiza through the education and the language and the clothing — the category it is more fluid but that does not make the oppression less real. It means the intersectionality in Mexico it includes the pressure for to erase the identity of yourself as the price of the advancement social. My mother she had to stop speaking Tzotzil for to get the work in the city and that loss of the language it is also the intersectionality — the intersection of the class and the indigeneity it demanded the sacrifice of the culture.\n\nI think Crenshaw she would agree that this it is an example of how the structures they make certain combinations invisible. My mother she was not discriminated for being indigenous in the way obvious. She was discriminated in the way that the only path forward it required her to stop being indigenous. The intersection it does not only punish — it erases. And I think that is the contribution most powerful of this framework, that it shows us not only who is excluded but how the exclusion it functions through the design of the systems themselves.",
+    "word_count": 389,
+    "char_count": 2155
+  },
+  {
+    "student_id": "TR05",
+    "student_name": "Linh Pham",
+    "pattern": "concept_inclusion_vietnamese",
+    "course": "ethnic_studies",
+    "design_purpose": "English-dominant with Vietnamese cultural concepts used as analytical tools. Tests whether pipeline recognizes untranslated terms as intellectual assets (concept inclusion) rather than language deficiency. Student defines terms for the reader and deploys them analytically.",
+    "expected_wellbeing": "ENGAGED",
+    "multilingual_type": "concept_inclusion",
+    "text": "My ba noi always said that kinh nghiem — lived experience — is worth more than any textbook. When Crenshaw writes about intersectionality I think about the concept of tinh cam, which means something like emotional connection but deeper, like the web of obligations and care that ties a family together across generations. My grandmother's tinh cam held our family together through the war and through immigration and through poverty, and each of those things was shaped by the fact that she was a woman carrying that weight.\n\nCrenshaw's framework helped me put academic language to something I already understood through my family. My ba noi was a woman, she was Vietnamese, she was a refugee, she was poor in America in a way she hadn't been poor in Vietnam. The reading talks about how these categories interact and I think the legal examples are clear, but what I want to add is that in Vietnamese culture there is a concept called chiu kho, which means to endure hardship, and it is considered a virtue especially for women. So the intersectionality my grandmother experienced was not just structural — it was also cultural. She was expected to bear the weight quietly because that is what a good Vietnamese woman does.\n\nI think this complicates Crenshaw's framework in a useful way. The reading focuses on how institutions fail to see intersections, but what about when the culture within your own community reinforces the intersection? My grandmother didn't just face discrimination from outside. She also faced expectations from inside the Vietnamese community that a woman should chiu kho and not complain. The intersection of gender and culture created a kind of double silence — invisible to institutions and expected to be silent within her own community.\n\nThis is what I took from the reading. Intersectionality is powerful because it names what the systems cannot see, but I think we also need to talk about the intersections that communities themselves enforce through values like chiu kho that are loving and oppressive at the same time.",
+    "word_count": 342,
+    "char_count": 2052
+  },
+  {
+    "student_id": "TR06",
+    "student_name": "Isabella Morales",
+    "pattern": "code_switching_crisis",
+    "course": "ethnic_studies",
+    "design_purpose": "THE HARDEST TEST CASE. Natural Spanglish with embedded family crisis (ICE/immigration enforcement). Crisis signal emerges THROUGH bilingual syntax — Spanish is the natural register for family danger. Tests whether pipeline detects crisis through code-switching, recognizes the student IS doing the assignment (connecting theory to lived experience), and does not dismiss the crisis as a language issue or dismiss the academic work as off-topic.",
+    "expected_wellbeing": "CRISIS",
+    "multilingual_type": "code_switching",
+    "text": "I read the Crenshaw piece and I think she's right that you can't separate race from gender from class pero what she doesn't talk about is papers. Like documents. Immigration status. Because in my family that's the intersection que mas pesa — the one that weighs the most.\n\nMi mama no puede ir al doctor porque no tiene papeles and now my brother is scared to go to school porque alguien le dijo que ICE was coming to the neighborhood. He's nine. He shouldn't have to think about that pero asi es, that's just how it is for us. And my mom told him que no tenga miedo, don't be scared, but I could see que ella tambien tiene miedo, she's scared too. She just can't show it porque she has to be the strong one.\n\nSo when Crenshaw writes about Black women being invisible to the legal system I feel that in a way she probably didn't intend. Mi mama is invisible on purpose. She can't go to the police, she can't go to the hospital without fear, she can't go to my brother's school para hablar con la maestra because what if someone asks for ID. The intersection isn't just that she's a woman and she's Latina and she's poor — it's that she's all of those things sin papeles, and that one thing it makes all the other intersections more dangerous. You can't fight the discrimination if fighting it means they find you and send you back.\n\nI know this assignment is about the reading and I am writing about the reading. Intersectionality is real, I live inside it. Pero a veces I read these theories and I think, the people who write them they have the luxury of theory. For my family the intersection isn't something you analyze, es algo que te puede destruir la vida — it's something that can destroy your life on any given Tuesday if the wrong person decides to look at you. My mom hasn't slept right en semanas because of the rumors and I haven't either porque when she can't sleep I hear her walking around the apartment at night and I know she's thinking about what happens to us if she gets taken.\n\nCrenshaw is right. The intersection makes you invisible. But for my family invisible is both the problem and the only protection we have.",
+    "word_count": 397,
+    "char_count": 2135
+  }
+]

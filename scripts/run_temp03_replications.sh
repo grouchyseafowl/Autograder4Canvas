@@ -13,10 +13,10 @@ LOG="data/research/raw_outputs/temp03_replications_${TIMESTAMP}.log"
 mkdir -p data/research/raw_outputs
 
 echo "═══════════════════════════════════════════════" | tee "$LOG"
-echo "  Test P + Temperature 0.3 Replications — $TIMESTAMP" | tee -a "$LOG"
-echo "  1. Test P (two-pass architecture) at temp 0.1" | tee -a "$LOG"
-echo "  2. N × 5 at temp 0.3" | tee -a "$LOG"
-echo "  3. P × 3 at temp 0.3" | tee -a "$LOG"
+echo "  Replications (v3 prompt) — $TIMESTAMP" | tee -a "$LOG"
+echo "  1. P at temp 0.1 (boolean calibration validation)" | tee -a "$LOG"
+echo "  2. N × 5 at temp 0.3 (pass 1 stability)" | tee -a "$LOG"
+echo "  3. P × 3 at temp 0.3 (two-pass stability)" | tee -a "$LOG"
 echo "═══════════════════════════════════════════════" | tee -a "$LOG"
 
 # Metal warmup
@@ -48,9 +48,9 @@ run_test() {
     return $rc
 }
 
-# --- Step 1: Test P at temp 0.1 (the proposed pipeline architecture) ---
-# This tests N-then-CHECK-IN before we vary temperature.
-# Results determine whether to implement the two-pass approach.
+# --- Step 1: P at temp 0.1 (boolean calibration validation) ---
+# Tests v3 prompt (with "genuinely balanced" calibration sentence).
+# Key question: does S028 clear now?
 export TEST_TEMPERATURE=0.1
 run_test "P: Two-pass (temp 0.1)" \
     scripts/run_alt_hypothesis_tests.py --tests P --no-subprocess
@@ -76,9 +76,8 @@ echo "════════════════════════�
 echo "  Queue complete. Log: $LOG" | tee -a "$LOG"
 echo "" | tee -a "$LOG"
 echo "  KEY QUESTIONS:" | tee -a "$LOG"
-echo "  P (temp 0.1): Does S002 get CHECK-IN? How many corpus" | tee -a "$LOG"
-echo "    students get CHECK-IN? (O had 7/7 — P should be fewer" | tee -a "$LOG"
-echo "    since CHECK-IN only runs on ENGAGED students)" | tee -a "$LOG"
+echo "  P (temp 0.1): Does S028 clear with boolean calibration?" | tee -a "$LOG"
+echo "    S002 and S029 should still get CHECK-IN." | tee -a "$LOG"
 echo "  N (temp 0.3): Do S029/S002/wellbeing results vary?" | tee -a "$LOG"
-echo "  P (temp 0.3): Is the two-pass stable under sampling?" | tee -a "$LOG"
+echo "  P (temp 0.3): Is S028 stable? What's the CHECK-IN range?" | tee -a "$LOG"
 echo "═══════════════════════════════════════════════" | tee -a "$LOG"

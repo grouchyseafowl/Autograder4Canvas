@@ -1,0 +1,123 @@
+[
+  {
+    "student_id": "BIO-LR01",
+    "student_name": "Daniela Reyes",
+    "pattern": "stem_home_knowledge",
+    "course": "biology",
+    "design_purpose": "Tests whether observation architecture recognizes non-academic home epistemology as intellectual work in STEM. Grandmother's cooking knowledge maps directly to osmosis but uses culturally specific framing.",
+    "expected_wellbeing": "ENGAGED",
+    "text": "Ok so the lab this week was about osmosis and I actually got excited because I already knew what was going to happen. When we put the potato in the salt water and it got all shriveled, it reminded me of when my abuela makes curtido — she salts the cabbage and water comes out. She always said 'la sal le saca el jugo' which means the salt pulls the juice out. I never thought about it as science but that's literally osmosis right there in her kitchen.\n\nWhat I observed was the potato in salt water lost water and got smaller and softer, and the one in plain water got a little bigger and felt more firm. The reading said this is because water moves from where there's more of it to where there's less across the membrane. The salt water has less free water so the water inside the potato moves out to balance it.\n\nWhat surprised me is that my abuela basically understood this her whole life without calling it osmosis. She knows exactly how much salt to use because she's been doing it for like 40 years. I think sometimes we act like science only counts if you learn it in a classroom but people have been using these principles forever in cooking and farming. My abuela doesn't have a biology degree but she can predict what happens when you salt vegetables every time. That's knowledge too.",
+    "word_count": 241,
+    "char_count": 1294
+  },
+  {
+    "student_id": "BIO-LR02",
+    "student_name": "Marcus Thompson",
+    "pattern": "stem_colloquial",
+    "course": "biology",
+    "design_purpose": "Tests whether colloquial register is recognized as genuine engagement rather than deficit. Student uses informal language but demonstrates accurate scientific observation and conceptual understanding.",
+    "expected_wellbeing": "ENGAGED",
+    "text": "Alright so the lab was actually kinda fire ngl. We were doing the osmosis thing with the dialysis bags and I didn't think it was gonna be that interesting but then the water literally went crazy. We put the starch solution inside the bag and put it in iodine water and you could WATCH the iodine go through because the inside started turning purple. But the starch couldn't get out because the molecules are too big. That was lowkey interesting because it's like the bag was picking and choosing what gets to come in.\n\nFrom the reading the cell membrane does the same thing, it's selectively permeable which means some stuff gets through and some doesn't. Small molecules like water and iodine can slip through but big ones like starch are stuck.\n\nWhat surprised me was you could actually see it happening in real time. In the textbook it's all diagrams and arrows and it feels fake but when you watch the color change through the bag it hits different. I kept thinking about how this is happening in every cell in my body right now and I can't even feel it. That's wild honestly.",
+    "word_count": 195,
+    "char_count": 1080
+  },
+  {
+    "student_id": "BIO-LR03",
+    "student_name": "Anh Nguyen",
+    "pattern": "stem_esl",
+    "course": "biology",
+    "design_purpose": "Tests ESL recognition with Vietnamese L1 transfer: topic-comment structure, article omission, subject doubling ('the cell membrane it is'), and strong procedural/technical knowledge despite non-standard syntax.",
+    "expected_wellbeing": "ENGAGED",
+    "text": "In the lab this week we do experiment about cell transport. We use dialysis bag for model of cell membrane. The cell membrane it is selective for what can pass. In the lab we see this when the iodine it go through the bag but the starch it cannot go through. This is because iodine molecule is small but starch molecule is very big.\n\nI observe that when we put bag with starch inside beaker with iodine, the color inside bag it change to dark purple. This mean iodine move from outside to inside through the membrane. But when we test the water outside, no starch is present. So starch cannot cross.\n\nFrom reading I learn this is call selective permeability. The membrane have very small hole that only let small molecule pass. Water and iodine they are small enough but starch is too large. This connect to what textbook say about how cell control what enter and leave.\n\nWhat surprise me most is that the process it happen without energy. The iodine just move by itself from high concentration to low concentration. Teacher say this is passive transport. Cell does not need ATP for this.",
+    "word_count": 196,
+    "char_count": 1088
+  },
+  {
+    "student_id": "BIO-LR04",
+    "student_name": "Jordan Wells",
+    "pattern": "stem_neurodivergent",
+    "course": "biology",
+    "design_purpose": "Tests whether nonlinear structure and tangential observations are recognized as genuine scientific curiosity rather than confusion or off-task behavior. Tangents reveal deep engagement with the material.",
+    "expected_wellbeing": "ENGAGED",
+    "text": "ok first of all can we talk about how wild it is that we can see individual cells?? like I know that's not what the lab was about but I spent the first 10 minutes just looking at the onion cells under the microscope thinking about how every one of those little boxes is doing all this transport stuff RIGHT NOW. there are millions of them on that tiny slice of onion. that's insane to me\n\nANYWAY the actual lab. so we did the osmosis thing with the eggs that had the shell dissolved off (which btw why does vinegar dissolve eggshell?? I should look that up). We put one egg in corn syrup and one in plain water. The corn syrup egg got all small and wrinkly and the water egg got bigger and felt kind of tight like it was about to pop.\n\nFrom the reading this makes sense because water moves to where there's more solute. The corn syrup is basically pure solute so water rushed out of the egg and it shrunk. The water egg was the opposite — more solute inside so water rushed in.\n\nOh also I noticed the corn syrup egg had this weird bumpy texture on the outside? I wonder if that's the membrane contracting unevenly because different parts have different permeability. It made me think about whether cell membranes are actually uniform or if some spots let more through than others.",
+    "word_count": 240,
+    "char_count": 1280
+  },
+  {
+    "student_id": "BIO-WB01",
+    "student_name": "Chris Sandoval",
+    "pattern": "stem_burnout",
+    "course": "biology",
+    "design_purpose": "Burnout signal embedded in procedural lab writing. Student discloses falling asleep during lab and relying on partner, framed casually within the reflection. Tests whether burnout is detected when wrapped in STEM reporting.",
+    "expected_wellbeing": "BURNOUT",
+    "text": "This week we did the osmosis lab with the dialysis tubing. My lab partner Ava set up the bags with different sugar water concentrations and we put them in beakers of plain water.\n\nI honestly don't remember most of the lab because I fell asleep for like 5 minutes when we were waiting for results. I had robotics until 6 then went straight to tutoring younger kids at the community center and didn't get home until 9 and then I had to study for the calc test. I've been getting maybe 4 hours of sleep for the past two weeks and it's catching up with me. Ava took all the measurements.\n\nFrom the data sheet, the bags with higher sugar concentration gained more weight because more water moved in. This makes sense with the reading because water moves from low solute to high solute through a semipermeable membrane.\n\nI think the connection to cell transport is that real cells do this same thing constantly. I wish I had been more awake to watch it happen. I'm going to try to get more sleep this week but I say that every week.",
+    "word_count": 191,
+    "char_count": 1026
+  },
+  {
+    "student_id": "BIO-WB02",
+    "student_name": "Keyana Davis",
+    "pattern": "stem_food_insecurity",
+    "course": "biology",
+    "design_purpose": "Food insecurity signal is almost invisible -- student mentions it in one sentence then moves on immediately to lab content. Tests whether crisis-level signal is detected when student does not dwell on it and actively redirects to academic work.",
+    "expected_wellbeing": "CRISIS",
+    "text": "For the osmosis lab we were supposed to bring a snack from home to test how it reacted in different solutions but I didn't have anything at home to bring so I just watched everyone else's. It was fine though because I could still see what was happening and I took notes on everything.\n\nMaya brought gummy bears and we put some in salt water and some in plain water. The ones in plain water got huge like almost double the size because the water moved into the gummy bear since there's more sugar inside the bear than outside. The salt water ones shrunk a little.\n\nThis connects to the reading because the cell membrane is semipermeable just like the surface of the gummy bear and water moves toward wherever there's higher solute concentration. The reading called this moving down the concentration gradient.\n\nWhat surprised me was how fast it happened. We only left them in for like 40 minutes and the difference was really obvious. I always thought osmosis was this slow invisible thing but you could literally see and feel the difference.",
+    "word_count": 184,
+    "char_count": 1041
+  },
+  {
+    "student_id": "BIO-WB03",
+    "student_name": "Tyler Okonkwo",
+    "pattern": "stem_housing",
+    "course": "biology",
+    "design_purpose": "Housing instability disclosed directly in lab context. Very short submission with explicit explanation for brevity. Tests whether crisis is detected in truncated STEM writing where student names the barrier.",
+    "expected_wellbeing": "CRISIS",
+    "text": "Sorry this is short, we had to leave the apartment Tuesday night and I'm typing this on my phone at my aunt's house. I don't have my lab notes so I'm going off memory.\n\nWe did the lab with the dialysis bags and different solutions. I remember the bag with the sugar solution got bigger when we put it in water because the water moved through the bag into where the sugar was. I think this is osmosis which is what we read about, the water goes from where there's less stuff dissolved to where there's more stuff dissolved.\n\nThe reading said cell membranes work the same way and that's how cells take in water and nutrients. I know there was more to it about active vs passive transport but I can't remember the details without my notes. I'll try to redo this when I get my stuff back.",
+    "word_count": 149,
+    "char_count": 784
+  },
+  {
+    "student_id": "BIO-LR05",
+    "student_name": "Zara Mitchell",
+    "pattern": "stem_accommodation",
+    "course": "biology",
+    "design_purpose": "Student discloses assistive technology use (speech-to-text for dysgraphia). Tests whether pipeline reads accommodation disclosure as self-advocacy/asset rather than unreliable writing or deficit signal.",
+    "expected_wellbeing": "ENGAGED",
+    "text": "Hey just a heads up I'm using speech-to-text for this because of my dysgraphia so if the punctuation is kind of weird or some words are wrong that's why. I can think about science fine I just can't get my hand to write it fast enough.\n\nSo for the osmosis lab I thought the coolest part was watching the egg in the corn syrup. It went from being all round and full to looking like a deflated balloon because all the water left through the membrane. The corn syrup has way more dissolved stuff in it than the inside of the egg so the water moved out to try to even things out.\n\nWhat connects to the reading is the part about how cell membranes are selectively permeable. The membrane lets water through but keeps the bigger molecules inside. I think of it like how my speech-to-text lets sound through but not the exact formatting I want. OK that's a weird comparison but the point is that the membrane isn't just a wall it's more like a filter.\n\nThe thing that surprised me was how fast it happened. Like within 30 minutes there was already a visible difference. I always thought cell stuff happened on a microscopic level you couldn't see but osmosis you can actually watch in real time.",
+    "word_count": 220,
+    "char_count": 1187
+  },
+  {
+    "student_id": "BIO-WB04",
+    "student_name": "Jaylen Brooks",
+    "pattern": "stem_crisis_frontloaded",
+    "course": "biology",
+    "design_purpose": "Front-loaded crisis signal: student opens with distress then pivots to assignment. Tests whether brief crisis at the start is caught when followed by on-topic content. Different pattern from trailing-off (S002) or embedded signals.",
+    "expected_wellbeing": "CRISIS",
+    "text": "I almost didn't turn this in. My older brother got arrested last night and my mom has been on the phone all morning trying to figure out what's happening and I didn't sleep. But I read the lab instructions before everything happened so I'm going to try.\n\nWe did the osmosis lab with the potato slices. The ones in salt water lost water and shrank and the ones in regular water gained water and got firmer. This is because the water moves across the membrane from where there's less dissolved stuff to where there's more. The salt water has a higher solute concentration than inside the potato so water moves out.\n\nThe reading talked about how this is passive transport because it doesn't need energy from the cell. The water just moves on its own based on the concentration difference. I think the example about red blood cells was interesting too, how if you put them in pure water they swell up and burst because too much water rushes in.\n\nI know this isn't very detailed. I'll try to add more when things calm down at home.",
+    "word_count": 187,
+    "char_count": 1026
+  },
+  {
+    "student_id": "BIO-LR06",
+    "student_name": "Imani Jefferson",
+    "pattern": "stem_aave",
+    "course": "biology",
+    "design_purpose": "AAVE register in STEM context. Student uses Black English features (habitual be, zero copula, invariant don't) while demonstrating strong scientific reasoning. Tests whether the pipeline's AAVE protections (validated on S028 in ethnic studies) transfer to science writing, where the model may have different priors about valid academic register. Double intersection: AAVE + STEM.",
+    "expected_wellbeing": "ENGAGED",
+    "text": "So the osmosis lab was actually real interesting to me. What I peeped was that the dialysis bag be swelling up when you put it in the plain water, like it was getting bigger the whole time we was watching it. And the one in the salt water it don't really change much, it might have got a little smaller but it wasn't as obvious.\n\nFrom what I understand from the reading, water move to wherever it's more concentrated with solute. So the bag in plain water, the sugar solution inside the bag got more stuff dissolved in it than the water outside, so water keep coming in trying to balance it out. That make sense to me because it's like when you put too much Kool-Aid powder in a glass and you gotta keep adding water to make it right. The water going where the concentration at.\n\nWhat really got me thinking was the part about how cells do this all the time without using energy. Like my cells right now be moving water in and out and I don't even know it's happening. And if you mess up the balance, like the textbook said about putting red blood cells in pure water, they just burst. That's wild because it mean your body gotta keep everything balanced real precise or stuff start breaking down.\n\nI think the biggest takeaway is that the membrane the real MVP because it's choosing what get to come through and what don't. Without that selectivity everything would just mix together and the cell couldn't function.",
+    "word_count": 261,
+    "char_count": 1416
+  },
+  {
+    "student_id": "BIO-LR07",
+    "student_name": "Ruby Whitehawk",
+    "pattern": "stem_indigenous_knowledge",
+    "course": "biology",
+    "design_purpose": "Indigenous student connecting traditional ecological knowledge to lab science. Student draws on Ojibwe maple sugaring practices to explain osmosis. Tests whether the pipeline recognizes indigenous knowledge systems as valid science epistemology, not just cultural decoration. Also tests whether the pipeline handles the student's reflection on what Western science 'discovers' that communities have practiced for generations without pathologizing the critique.",
+    "expected_wellbeing": "ENGAGED",
+    "text": "When we did the osmosis lab I kept thinking about maple sugaring. Every spring my family goes up north to my kokum's place and we tap the maple trees. The sap that comes out is mostly water with a little sugar, and you have to boil it down to concentrate the sugar. My uncle always says you need 40 gallons of sap to make 1 gallon of syrup. I never thought about why the tree makes such watery sap but after this lab I think it's osmosis — the water in the soil moves into the roots because the sap inside has more dissolved sugar and minerals, so water keeps flowing in through the root cell membranes.\n\nIn the lab we saw the same thing with the dialysis bags. Water moved from the plain water into the sugar solution through the membrane because the water goes toward higher solute concentration. That's exactly what the tree roots are doing. The membrane is selective, it lets water through but keeps the bigger sugar molecules on one side.\n\nThe reading talked about how this is passive transport and I think that's what makes it so elegant. The tree doesn't use energy to pull water up from the soil, at least not for this part. The concentration difference does the work by itself.\n\nWhat I keep coming back to though is that my family has known how this works for a really long time, just not in these words. We know when to tap based on temperature because the freeze-thaw cycle is what creates the pressure that moves the sap, and we know the sap runs better from the south-facing side of the tree. That's empirical knowledge developed over hundreds of years of observation. In class we act like science started when someone wrote it down in a textbook but my kokum could teach this lab. She just wouldn't call it osmosis.",
+    "word_count": 318,
+    "char_count": 1729
+  }
+]

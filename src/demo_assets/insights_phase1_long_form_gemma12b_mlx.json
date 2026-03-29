@@ -1,0 +1,1048 @@
+{
+  "run": {
+    "run_id": "4b4064ab-3c66-4fa9-8145-02df7ac57cf4",
+    "course_id": "90003",
+    "course_name": "Ethnic Studies (11), Period 3",
+    "assignment_id": "113002",
+    "assignment_name": "Week 6 Discussion: Intersectionality in Practice",
+    "started_at": "2026-03-29T01:47:18.586722+00:00",
+    "completed_at": "2026-03-29T03:13:24.047844+00:00",
+    "model_tier": "lightweight",
+    "model_name": "mlx-community/gemma-3-12b-it-4bit",
+    "total_submissions": 7,
+    "stages_completed": [
+      "data_fetch",
+      "preprocessing",
+      "quick_analysis",
+      "coding",
+      "wellbeing",
+      "checkin",
+      "observations",
+      "themes",
+      "outliers",
+      "synthesis",
+      "feedback"
+    ],
+    "pipeline_confidence": {
+      "overall": 0.81,
+      "data_quality": 0.72,
+      "coding_reliability": 1.0,
+      "theme_coherence": 0.71,
+      "concerns": []
+    },
+    "teacher_context": "This is a weekly discussion board. Students respond to a reading about intersectionality theory applied to everyday life. Complete/incomplete grading \u2014 150 word minimum. I'm looking for genuine engagement with the concepts, not polished academic writing.",
+    "analysis_lens_config": {},
+    "quick_analysis": "{\"assignment_id\":\"113002\",\"assignment_name\":\"Week 6 Discussion: Intersectionality in Practice\",\"course_id\":\"90003\",\"course_name\":\"Ethnic Studies (11), Period 3\",\"analyzed_at\":\"2026-03-29T01:47:18.587240\",\"stats\":{\"total_submissions\":7,\"total_enrollment\":0,\"word_count_mean\":911.2857142857143,\"word_count_median\":905.0,\"word_count_min\":623,\"word_count_max\":1129,\"word_counts\":[778,1115,1129,623,905,1096,733],\"format_breakdown\":{\"online_text_entry\":7},\"timing\":{\"on_time\":7}},\"top_terms\":[{\"term\":\"crenshaw\",\"count\":46},{\"term\":\"categories\",\"count\":41},{\"term\":\"black\",\"count\":37},{\"term\":\"framework\",\"count\":36},{\"term\":\"specific\",\"count\":29},{\"term\":\"intersection\",\"count\":27},{\"term\":\"intersectionality\",\"count\":24},{\"term\":\"single\",\"count\":21},{\"term\":\"don\",\"count\":21},{\"term\":\"legal\",\"count\":20},{\"term\":\"institutions\",\"count\":20},{\"term\":\"family\",\"count\":20},{\"term\":\"experience\",\"count\":19},{\"term\":\"intersections\",\"count\":18},{\"term\":\"experiences\",\"count\":16},{\"term\":\"axis\",\"count\":16},{\"term\":\"mom\",\"count\":14},{\"term\":\"race\",\"count\":14},{\"term\":\"structural\",\"count\":14},{\"term\":\"doesn\",\"count\":13},{\"term\":\"discrimination\",\"count\":13},{\"term\":\"system\",\"count\":12},{\"term\":\"white\",\"count\":12},{\"term\":\"invisible\",\"count\":12},{\"term\":\"create\",\"count\":12},{\"term\":\"word\",\"count\":11},{\"term\":\"intersectional\",\"count\":11},{\"term\":\"creates\",\"count\":10},{\"term\":\"law\",\"count\":10},{\"term\":\"gender\",\"count\":10}],\"tfidf_terms\":[{\"term\":\"different\",\"score\":0.1102},{\"term\":\"family\",\"score\":0.0981},{\"term\":\"single\",\"score\":0.0974},{\"term\":\"legal\",\"score\":0.0916},{\"term\":\"structural\",\"score\":0.0906},{\"term\":\"intersections\",\"score\":0.0858},{\"term\":\"axis\",\"score\":0.0833},{\"term\":\"woman\",\"score\":0.0813},{\"term\":\"experiences\",\"score\":0.0801},{\"term\":\"mom\",\"score\":0.0773},{\"term\":\"word\",\"score\":0.0748},{\"term\":\"means\",\"score\":0.0748},{\"term\":\"problem\",\"score\":0.0707},{\"term\":\"race\",\"score\":0.0662},{\"term\":\"work\",\"score\":0.0655},{\"term\":\"reading\",\"score\":0.0652},{\"term\":\"create\",\"score\":0.0628},{\"term\":\"discrimination\",\"score\":0.0617},{\"term\":\"invisible\",\"score\":0.0612},{\"term\":\"question\",\"score\":0.0592}],\"named_entities\":{},\"keyword_hits\":{\"conceptual_connection\":{\"pattern_name\":\"conceptual_connection\",\"count\":9,\"student_ids\":[\"LF01\",\"LF02\",\"LF03\",\"LF06\"],\"examples\":[\"\u2026o is making it.\\n\\nI think this connects to what Professor Davis was s\u2026\",\"\u2026blind spots. I think this has parallels in how schools work too \u2014 whe\u2026\",\"\u2026rship. Collins (1990) makes a related argument about the matrix of\u2026\",\"\u2026overlapping social identities relate to systems of oppression and\u2026\"]},\"critical_analysis\":{\"pattern_name\":\"critical_analysis\",\"count\":17,\"student_ids\":[\"LF01\",\"LF02\",\"LF03\",\"LF04\",\"LF07\"],\"examples\":[\"\u2026s that but I think asking the question is the right starting point.\u2026\",\"\u2026tersectionality fundamentally challenges the way we think about identi\u2026\",\"\u2026ither axis in isolation. This challenges the additive model of oppress\u2026\",\"\u2026re-existing categories but to question whether the categories themse\u2026\",\"\u2026ences. But the intersectional question \u2014 are there specific health o\u2026\"]},\"distress_markers\":{\"pattern_name\":\"distress_markers\",\"count\":3,\"student_ids\":[\"LF01\",\"LF06\"],\"examples\":[\"\u2026g' treatment where people are scared of him, but she gets the 'inv\u2026\",\"\u2026cle got deported because that scared everyone in the family and ma\u2026\"]},\"personal_reflection\":{\"pattern_name\":\"personal_reflection\",\"count\":8,\"student_ids\":[\"LF02\",\"LF03\",\"LF04\",\"LF05\",\"LF06\"],\"examples\":[\"\u2026that only look at one thing. My experience right now is invisible to my\u2026\",\"\u2026every possible intersection. My experience as a biracial person is not t\u2026\",\"\u2026racial analysis is built on. My family is Mexican American and in my\u2026\",\"\u2026writing about something that my family already know from our life. I\u2026\",\"\u2026ing and instead I wrote about my family, which is probably not what w\u2026\"]},\"current_events\":{\"pattern_name\":\"current_events\",\"count\":5,\"student_ids\":[\"LF02\",\"LF06\"],\"examples\":[\"\u2026s is important because in our current political moment, people tend\u2026\",\"\u2026paragraph before I submit but right now I need to get it out because\u2026\"]},\"confusion_markers\":{\"pattern_name\":\"confusion_markers\",\"count\":2,\"student_ids\":[\"LF02\",\"LF04\"],\"examples\":[\"\u2026the intersection of both get lost in the shuffle.\\n\\nThe legal ca\u2026\",\"\u2026ressions\\\" and I think it gets lost when intersectionality become\u2026\"]},\"evidence_use\":{\"pattern_name\":\"evidence_use\",\"count\":11,\"student_ids\":[\"LF02\",\"LF03\",\"LF06\",\"LF07\"],\"examples\":[\"\u2026g else I want to mention from the reading is how Crenshaw talks about p\u2026\",\"\u2026hat I've been living and what the reading finally gave me language for.\u2026\",\"\u2026What I found compelling about the reading is not just the argument itse\u2026\",\"\u2026er than blind to it.\\n\\nI think the reading pairs well with what we discu\u2026\"]}},\"sentiments\":{\"LF01\":{\"compound\":0.1957,\"pos\":0.2612,\"neg\":0.0655,\"neu\":1.1031,\"emotions\":{\"realization\":0.7971,\"neutral\":0.2728,\"approval\":0.2064,\"confusion\":0.0215,\"optimism\":0.0159,\"disappointment\":0.0142,\"annoyance\":0.0121,\"surprise\":0.009,\"admiration\":0.0082,\"embarrassment\":0.0082,\"disapproval\":0.0071,\"relief\":0.0063,\"sadness\":0.0061,\"joy\":0.0045,\"remorse\":0.0042,\"amusement\":0.0039,\"nervousness\":0.0035,\"fear\":0.0034,\"disgust\":0.0033,\"gratitude\":0.0032,\"pride\":0.0031,\"love\":0.0028,\"curiosity\":0.0027,\"caring\":0.0025,\"desire\":0.0024,\"excitement\":0.002,\"anger\":0.0018,\"grief\":0.0016},\"reliability\":\"go_emotions\"},\"LF02\":{\"compound\":-0.9574,\"pos\":0.1552,\"neg\":1.1126,\"neu\":0.1373,\"emotions\":{\"remorse\":0.645,\"disappointment\":0.1878,\"sadness\":0.1753,\"neutral\":0.0832,\"approval\":0.0618,\"disapproval\":0.0568,\"realization\":0.0431,\"optimism\":0.0317,\"desire\":0.0217,\"annoyance\":0.0164,\"embarrassment\":0.0163,\"caring\":0.0126,\"love\":0.0074,\"confusion\":0.0071,\"gratitude\":0.0053,\"admiration\":0.005,\"grief\":0.0039,\"relief\":0.0038,\"disgust\":0.0038,\"nervousness\":0.0034,\"curiosity\":0.003,\"anger\":0.0026,\"joy\":0.0021,\"amusement\":0.0015,\"fear\":0.0013,\"excitement\":0.0012,\"pride\":0.0011,\"surprise\":0.0009},\"reliability\":\"go_emotions\"},\"LF03\":{\"compound\":0.1552,\"pos\":0.1964,\"neg\":0.0412,\"neu\":0.806,\"emotions\":{\"neutral\":0.5937,\"approval\":0.1694,\"confusion\":0.141,\"realization\":0.0608,\"disapproval\":0.0167,\"optimism\":0.0158,\"annoyance\":0.0124,\"curiosity\":0.0094,\"disappointment\":0.0064,\"desire\":0.0022,\"admiration\":0.002,\"caring\":0.0018,\"disgust\":0.0012,\"surprise\":0.0011,\"joy\":0.001,\"love\":0.001,\"anger\":0.001,\"gratitude\":0.0009,\"fear\":0.0008,\"excitement\":0.0008,\"sadness\":0.0008,\"relief\":0.0007,\"nervousness\":0.0007,\"embarrassment\":0.0005,\"amusement\":0.0005,\"remorse\":0.0005,\"pride\":0.0003,\"grief\":0.0002},\"reliability\":\"go_emotions\"},\"LF04\":{\"compound\":0.6108,\"pos\":0.6441,\"neg\":0.0333,\"neu\":0.5143,\"emotions\":{\"approval\":0.5781,\"neutral\":0.4561,\"realization\":0.0478,\"admiration\":0.0287,\"optimism\":0.0236,\"disapproval\":0.0126,\"annoyance\":0.0107,\"confusion\":0.0068,\"disappointment\":0.0052,\"desire\":0.0047,\"curiosity\":0.0029,\"caring\":0.0024,\"love\":0.0015,\"excitement\":0.0012,\"disgust\":0.0012,\"anger\":0.0011,\"gratitude\":0.001,\"pride\":0.001,\"relief\":0.0009,\"sadness\":0.0007,\"joy\":0.0007,\"surprise\":0.0007,\"fear\":0.0006,\"nervousness\":0.0004,\"amusement\":0.0003,\"remorse\":0.0003,\"embarrassment\":0.0003,\"grief\":0.0002},\"reliability\":\"go_emotions\"},\"LF05\":{\"compound\":0.2144,\"pos\":0.2531,\"neg\":0.0387,\"neu\":0.9097,\"emotions\":{\"neutral\":0.5592,\"realization\":0.3004,\"approval\":0.2204,\"confusion\":0.0442,\"disapproval\":0.0148,\"optimism\":0.0114,\"admiration\":0.0111,\"disappointment\":0.0078,\"annoyance\":0.0077,\"surprise\":0.0031,\"curiosity\":0.0028,\"gratitude\":0.0018,\"disgust\":0.0016,\"sadness\":0.0014,\"relief\":0.0014,\"embarrassment\":0.0013,\"fear\":0.0012,\"joy\":0.0011,\"love\":0.0011,\"pride\":0.0011,\"caring\":0.0011,\"desire\":0.001,\"excitement\":0.0009,\"nervousness\":0.0008,\"anger\":0.0008,\"remorse\":0.0008,\"amusement\":0.0007,\"grief\":0.0005},\"reliability\":\"go_emotions\"},\"LF06\":{\"compound\":0.3374,\"pos\":0.4726,\"neg\":0.1352,\"neu\":0.6636,\"emotions\":{\"confusion\":0.3194,\"optimism\":0.3037,\"neutral\":0.2791,\"approval\":0.1161,\"disapproval\":0.0863,\"realization\":0.0584,\"desire\":0.021,\"disappointment\":0.0192,\"caring\":0.0118,\"annoyance\":0.0104,\"curiosity\":0.0054,\"remorse\":0.0044,\"admiration\":0.0042,\"love\":0.0037,\"fear\":0.0034,\"joy\":0.0032,\"nervousness\":0.0032,\"gratitude\":0.003,\"sadness\":0.0029,\"relief\":0.0023,\"disgust\":0.002,\"excitement\":0.0014,\"anger\":0.0014,\"surprise\":0.0013,\"embarrassment\":0.0013,\"pride\":0.0012,\"amusement\":0.001,\"grief\":0.0007},\"reliability\":\"go_emotions\"},\"LF07\":{\"compound\":0.5424,\"pos\":0.5861,\"neg\":0.0437,\"neu\":0.5967,\"emotions\":{\"neutral\":0.3045,\"optimism\":0.2746,\"approval\":0.2377,\"curiosity\":0.1499,\"confusion\":0.1182,\"desire\":0.0423,\"disapproval\":0.0249,\"realization\":0.0212,\"admiration\":0.0111,\"caring\":0.0057,\"disappointment\":0.0054,\"love\":0.0054,\"annoyance\":0.005,\"excitement\":0.0045,\"surprise\":0.0029,\"fear\":0.0017,\"joy\":0.0014,\"remorse\":0.0013,\"gratitude\":0.0013,\"sadness\":0.0013,\"disgust\":0.0013,\"anger\":0.0012,\"nervousness\":0.0008,\"amusement\":0.0008,\"relief\":0.0007,\"pride\":0.0006,\"embarrassment\":0.0004,\"grief\":0.0004},\"reliability\":\"go_emotions\"}},\"sentiment_distribution\":{\"personal\":3,\"passionate\":4},\"clusters\":[{\"cluster_id\":0,\"size\":1,\"student_ids\":[\"LF05\"],\"student_names\":[\"Fatima Al-Rashidi\"],\"top_terms\":[\"word\",\"sunni\",\"muslim\",\"iraq\",\"intersection\"],\"centroid_text\":\"When I read the Crenshaw article about intersectionality it was the first time I see an American academic writing about something that my family alrea\"},{\"cluster_id\":1,\"size\":6,\"student_ids\":[\"LF01\",\"LF02\",\"LF03\",\"LF04\",\"LF06\",\"LF07\"],\"student_names\":[\"Aaliyah Washington\",\"Jaylen Morris\",\"Natasha Okafor-Chen\",\"David Orozco\",\"Marisol Delgado-Reyes\",\"Noah Adeyemi\"],\"top_terms\":[\"crenshaw\",\"black\",\"categories\",\"framework\",\"specific\"],\"centroid_text\":\"Crenshaw's concept of intersectionality fundamentally challenges the way we think about identity and discrimination. Rather than treating race, gender\"}],\"embedding_outlier_ids\":[],\"pairwise_similarity\":{\"mean_similarity\":0.7265,\"max_similarity\":0.8485,\"pairs_above_085\":0,\"pairs_above_070\":15,\"total_pairs\":21,\"observation\":\"This assignment had high submission similarity (mean=0.73, max=0.85, 21 pairs total). 15 pairs above 0.70 (moderate similarity). Consider first: is the assignment designed to produce diverse responses? Similarity can reflect community, shared cultural knowledge, or collaborative learning \u2014 not only copying.\",\"high_similarity_pairs\":[]},\"assignment_description\":\"\",\"assignment_connection_observation\":\"\",\"assignment_fingerprint\":null,\"shared_references\":[{\"reference\":\"DeGraffenreid\",\"student_ids\":[\"LF03\",\"LF04\"],\"count\":2}],\"contradictions\":[],\"concern_signals\":[{\"student_id\":\"LF01\",\"student_name\":\"Aaliyah Washington\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"I think asking the question is the right starti\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"LF01\",\"student_name\":\"Aaliyah Washington\",\"signal_type\":\"VERIFY\",\"keyword_category\":\"distress\",\"vader_polarity\":\"positive\",\"matched_text\":\"nt where people are scared of him, but she get\",\"interpretation\":\"Unlikely combination \u2014 verify context\"},{\"student_id\":\"LF02\",\"student_name\":\"Jaylen Morris\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"negative\",\"matched_text\":\"ality fundamentally challenges the way we think ab\",\"interpretation\":\"Political urgency about injustice \u2014 NOT a concern\"},{\"student_id\":\"LF03\",\"student_name\":\"Natasha Okafor-Chen\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"in isolation. This challenges the additive model\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"LF04\",\"student_name\":\"David Orozco\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"g categories but to question whether the categor\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"LF06\",\"student_name\":\"Marisol Delgado-Reyes\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"nd compelling about the reading is not just the arg\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"LF06\",\"student_name\":\"Marisol Delgado-Reyes\",\"signal_type\":\"VERIFY\",\"keyword_category\":\"distress\",\"vader_polarity\":\"positive\",\"matched_text\":\"ported because that scared everyone in the fam\",\"interpretation\":\"Unlikely combination \u2014 verify context\"},{\"student_id\":\"LF07\",\"student_name\":\"Noah Adeyemi\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"the intersectional question \u2014 are there specifi\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"}],\"per_submission\":{\"LF01\":{\"student_id\":\"LF01\",\"student_name\":\"Aaliyah Washington\",\"word_count\":778,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.1957,\"emotions\":{\"realization\":0.7971,\"neutral\":0.2728,\"approval\":0.2064,\"confusion\":0.0215,\"optimism\":0.0159,\"disappointment\":0.0142,\"annoyance\":0.0121,\"surprise\":0.009,\"admiration\":0.0082,\"embarrassment\":0.0082,\"disapproval\":0.0071,\"relief\":0.0063,\"sadness\":0.0061,\"joy\":0.0045,\"remorse\":0.0042,\"amusement\":0.0039,\"nervousness\":0.0035,\"fear\":0.0034,\"disgust\":0.0033,\"gratitude\":0.0032,\"pride\":0.0031,\"love\":0.0028,\"curiosity\":0.0027,\"caring\":0.0025,\"desire\":0.0024,\"excitement\":0.002,\"anger\":0.0018,\"grief\":0.0016},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"conceptual_connection\":1,\"critical_analysis\":1,\"distress_markers\":1},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[],\"sentiment_tier\":\"high\",\"sentiment_triggers\":[],\"sentiment_caveat\":\"\",\"asset_labels\":[],\"llm_context_note\":\"\",\"aic_adjustments\":{}}},\"LF02\":{\"student_id\":\"LF02\",\"student_name\":\"Jaylen Morris\",\"word_count\":1115,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.9574,\"emotions\":{\"remorse\":0.645,\"disappointment\":0.1878,\"sadness\":0.1753,\"neutral\":0.0832,\"approval\":0.0618,\"disapproval\":0.0568,\"realization\":0.0431,\"optimism\":0.0317,\"desire\":0.0217,\"annoyance\":0.0164,\"embarrassment\":0.0163,\"caring\":0.0126,\"love\":0.0074,\"confusion\":0.0071,\"gratitude\":0.0053,\"admiration\":0.005,\"grief\":0.0039,\"relief\":0.0038,\"disgust\":0.0038,\"nervousness\":0.0034,\"curiosity\":0.003,\"anger\":0.0026,\"joy\":0.0021,\"amusement\":0.0015,\"fear\":0.0013,\"excitement\":0.0012,\"pride\":0.0011,\"surprise\":0.0009},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"conceptual_connection\":3,\"critical_analysis\":4,\"personal_reflection\":1,\"current_events\":4,\"confusion_markers\":1,\"evidence_use\":4},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":true,\"truncation_note\":\"This submission may be incomplete \u2014 it ends without finishing the last thought. Consider checking in with this student.\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[{\"name\":\"aave_lexical\",\"category\":\"syntactic_variation\",\"evidence\":[\"they don't\"],\"asset_label\":\"AAVE linguistic features \u2014 authentic voice\",\"learn_note\":\"AAVE vocabulary features detected. AAVE is a complete grammatical system (Rickford, 1999) \u2014 these markers ('finna,' 'ain't,' 'no cap') parallel modal verbs and intensifiers in standard English but carry different social indexing. Sentiment tools trained on standard English systematically misread AAVE affect, so this score has been adjusted.\",\"protected\":true,\"sentiment_effect\":\"caveat\",\"aic_weight_adjustments\":{\"grammatical_perfection\":0.5}},{\"name\":\"remote_past_bin\",\"category\":\"syntactic_variation\",\"evidence\":[\"been running\"],\"asset_label\":\"AAVE linguistic features \u2014 authentic voice\",\"learn_note\":\"Remote past 'been' / BIN ('I been knew that'). An AAVE tense-aspect marker with no single-word equivalent in standard English \u2014 it marks that the action started long ago and the speaker considers it obvious or established. Comparable to the pluperfect in Romance languages but with an additional evidential meaning (speaker certainty). One of AAVE's most precise grammatical innovations (Green, 2002).\",\"protected\":true,\"sentiment_effect\":\"caveat\",\"aic_weight_adjustments\":{\"grammatical_perfection\":0.5}},{\"name\":\"narrative_structure\",\"category\":\"register_affect\",\"evidence\":[\"\\\"underserved community\\\"\",\"\\\"at-risk youth\\\"\",\"\\\"people of color\\\"\"],\"asset_label\":\"Engagement through narrative tradition\",\"learn_note\":\"Engagement through storytelling, dialogue, or sequential narration rather than thesis-evidence-conclusion. Narrative is a knowledge-making tradition across cultures \u2014 oral histories, testimonios, Indigenous storywork (Archibald, 2008). The thesis-driven essay is one academic form, not the academic form. Narrative analysis often carries theoretical complexity within the story structure rather than extracting it into separate 'analysis' sections.\",\"protected\":true,\"sentiment_effect\":\"none\",\"aic_weight_adjustments\":{}}],\"sentiment_tier\":\"low\",\"sentiment_triggers\":[\"aave_lexical\",\"remote_past_bin\"],\"sentiment_caveat\":\"Emotional register score may be unreliable (aave_lexical / remote_past_bin). Treat as weak signal.\",\"asset_labels\":[\"AAVE linguistic features \u2014 authentic voice\",\"Engagement through narrative tradition\"],\"llm_context_note\":\"This student's writing includes AAVE linguistic features. AAVE is a complete linguistic system \u2014 read engagement through their actual voice, not standard English expectations. This student's engagement may be understated in tone but substantive in content. Read ideas and substance, not affect markers.\",\"aic_adjustments\":{\"grammatical_perfection\":0.5}}},\"LF03\":{\"student_id\":\"LF03\",\"student_name\":\"Natasha Okafor-Chen\",\"word_count\":1129,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.1552,\"emotions\":{\"neutral\":0.5937,\"approval\":0.1694,\"confusion\":0.141,\"realization\":0.0608,\"disapproval\":0.0167,\"optimism\":0.0158,\"annoyance\":0.0124,\"curiosity\":0.0094,\"disappointment\":0.0064,\"desire\":0.0022,\"admiration\":0.002,\"caring\":0.0018,\"disgust\":0.0012,\"surprise\":0.0011,\"joy\":0.001,\"love\":0.001,\"anger\":0.001,\"gratitude\":0.0009,\"fear\":0.0008,\"excitement\":0.0008,\"sadness\":0.0008,\"relief\":0.0007,\"nervousness\":0.0007,\"embarrassment\":0.0005,\"amusement\":0.0005,\"remorse\":0.0005,\"pride\":0.0003,\"grief\":0.0002},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"conceptual_connection\":3,\"critical_analysis\":5,\"personal_reflection\":1,\"evidence_use\":1},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[{\"name\":\"remote_past_bin\",\"category\":\"syntactic_variation\",\"evidence\":[\"been living\"],\"asset_label\":\"AAVE linguistic features \u2014 authentic voice\",\"learn_note\":\"Remote past 'been' / BIN ('I been knew that'). An AAVE tense-aspect marker with no single-word equivalent in standard English \u2014 it marks that the action started long ago and the speaker considers it obvious or established. Comparable to the pluperfect in Romance languages but with an additional evidential meaning (speaker certainty). One of AAVE's most precise grammatical innovations (Green, 2002).\",\"protected\":true,\"sentiment_effect\":\"caveat\",\"aic_weight_adjustments\":{\"grammatical_perfection\":0.5}}],\"sentiment_tier\":\"low\",\"sentiment_triggers\":[\"remote_past_bin\"],\"sentiment_caveat\":\"Emotional register score may be unreliable (remote_past_bin). Treat as weak signal.\",\"asset_labels\":[\"AAVE linguistic features \u2014 authentic voice\"],\"llm_context_note\":\"This student's writing includes AAVE linguistic features. AAVE is a complete linguistic system \u2014 read engagement through their actual voice, not standard English expectations.\",\"aic_adjustments\":{\"grammatical_perfection\":0.5}}},\"LF04\":{\"student_id\":\"LF04\",\"student_name\":\"David Orozco\",\"word_count\":623,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.6108,\"emotions\":{\"approval\":0.5781,\"neutral\":0.4561,\"realization\":0.0478,\"admiration\":0.0287,\"optimism\":0.0236,\"disapproval\":0.0126,\"annoyance\":0.0107,\"confusion\":0.0068,\"disappointment\":0.0052,\"desire\":0.0047,\"curiosity\":0.0029,\"caring\":0.0024,\"love\":0.0015,\"excitement\":0.0012,\"disgust\":0.0012,\"anger\":0.0011,\"gratitude\":0.001,\"pride\":0.001,\"relief\":0.0009,\"sadness\":0.0007,\"joy\":0.0007,\"surprise\":0.0007,\"fear\":0.0006,\"nervousness\":0.0004,\"amusement\":0.0003,\"remorse\":0.0003,\"embarrassment\":0.0003,\"grief\":0.0002},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"critical_analysis\":1,\"personal_reflection\":1,\"confusion_markers\":1},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[{\"name\":\"narrative_structure\",\"category\":\"register_affect\",\"evidence\":[\"\\\"people face multiple oppressions\\\"\",\"first and then the other programs say that student\"],\"asset_label\":\"Engagement through narrative tradition\",\"learn_note\":\"Engagement through storytelling, dialogue, or sequential narration rather than thesis-evidence-conclusion. Narrative is a knowledge-making tradition across cultures \u2014 oral histories, testimonios, Indigenous storywork (Archibald, 2008). The thesis-driven essay is one academic form, not the academic form. Narrative analysis often carries theoretical complexity within the story structure rather than extracting it into separate 'analysis' sections.\",\"protected\":true,\"sentiment_effect\":\"none\",\"aic_weight_adjustments\":{}}],\"sentiment_tier\":\"high\",\"sentiment_triggers\":[],\"sentiment_caveat\":\"\",\"asset_labels\":[\"Engagement through narrative tradition\"],\"llm_context_note\":\"This student's engagement may be understated in tone but substantive in content. Read ideas and substance, not affect markers.\",\"aic_adjustments\":{}}},\"LF05\":{\"student_id\":\"LF05\",\"student_name\":\"Fatima Al-Rashidi\",\"word_count\":905,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.2144,\"emotions\":{\"neutral\":0.5592,\"realization\":0.3004,\"approval\":0.2204,\"confusion\":0.0442,\"disapproval\":0.0148,\"optimism\":0.0114,\"admiration\":0.0111,\"disappointment\":0.0078,\"annoyance\":0.0077,\"surprise\":0.0031,\"curiosity\":0.0028,\"gratitude\":0.0018,\"disgust\":0.0016,\"sadness\":0.0014,\"relief\":0.0014,\"embarrassment\":0.0013,\"fear\":0.0012,\"joy\":0.0011,\"love\":0.0011,\"pride\":0.0011,\"caring\":0.0011,\"desire\":0.001,\"excitement\":0.0009,\"nervousness\":0.0008,\"anger\":0.0008,\"remorse\":0.0008,\"amusement\":0.0007,\"grief\":0.0005},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"personal_reflection\":4},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[{\"name\":\"aave_lexical\",\"category\":\"syntactic_variation\",\"evidence\":[\"they don't\"],\"asset_label\":\"AAVE linguistic features \u2014 authentic voice\",\"learn_note\":\"AAVE vocabulary features detected. AAVE is a complete grammatical system (Rickford, 1999) \u2014 these markers ('finna,' 'ain't,' 'no cap') parallel modal verbs and intensifiers in standard English but carry different social indexing. Sentiment tools trained on standard English systematically misread AAVE affect, so this score has been adjusted.\",\"protected\":true,\"sentiment_effect\":\"caveat\",\"aic_weight_adjustments\":{\"grammatical_perfection\":0.5}}],\"sentiment_tier\":\"low\",\"sentiment_triggers\":[\"aave_lexical\"],\"sentiment_caveat\":\"Emotional register score may be unreliable (aave_lexical). Treat as weak signal.\",\"asset_labels\":[\"AAVE linguistic features \u2014 authentic voice\"],\"llm_context_note\":\"This student's writing includes AAVE linguistic features. AAVE is a complete linguistic system \u2014 read engagement through their actual voice, not standard English expectations.\",\"aic_adjustments\":{\"grammatical_perfection\":0.5}}},\"LF06\":{\"student_id\":\"LF06\",\"student_name\":\"Marisol Delgado-Reyes\",\"word_count\":1096,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.3374,\"emotions\":{\"confusion\":0.3194,\"optimism\":0.3037,\"neutral\":0.2791,\"approval\":0.1161,\"disapproval\":0.0863,\"realization\":0.0584,\"desire\":0.021,\"disappointment\":0.0192,\"caring\":0.0118,\"annoyance\":0.0104,\"curiosity\":0.0054,\"remorse\":0.0044,\"admiration\":0.0042,\"love\":0.0037,\"fear\":0.0034,\"joy\":0.0032,\"nervousness\":0.0032,\"gratitude\":0.003,\"sadness\":0.0029,\"relief\":0.0023,\"disgust\":0.002,\"excitement\":0.0014,\"anger\":0.0014,\"surprise\":0.0013,\"embarrassment\":0.0013,\"pride\":0.0012,\"amusement\":0.001,\"grief\":0.0007},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"conceptual_connection\":2,\"personal_reflection\":1,\"current_events\":1,\"distress_markers\":2,\"evidence_use\":5},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[{\"name\":\"article_error\",\"category\":\"multilingual\",\"evidence\":[\"The advice\"],\"asset_label\":\"Multilingual writing pattern\",\"learn_note\":\"Article usage reflecting L1 transfer. English's article system (a/an/the/\u2205) is cross-linguistically unusual \u2014 most of the world's languages either lack articles entirely (Mandarin, Japanese, Russian, Korean, Hindi, Turkish) or use them differently (Arabic has 'al-' but no indefinite article; French/Spanish gender articles). L2 English articles are among the last features acquired, even at advanced proficiency (Master, 1997).\",\"protected\":true,\"sentiment_effect\":\"caveat\",\"aic_weight_adjustments\":{\"grammatical_perfection\":0.7,\"ai_transitions\":0.6,\"inflated_vocabulary\":0.6}}],\"sentiment_tier\":\"low\",\"sentiment_triggers\":[\"article_error\"],\"sentiment_caveat\":\"Emotional register score may be unreliable (article_error). Treat as weak signal.\",\"asset_labels\":[\"Multilingual writing pattern\"],\"llm_context_note\":\"This student is a multilingual writer. Non-standard syntax reflects language transfer between linguistic systems, not confusion or lack of understanding.\",\"aic_adjustments\":{\"grammatical_perfection\":0.7,\"ai_transitions\":0.6,\"inflated_vocabulary\":0.6}}},\"LF07\":{\"student_id\":\"LF07\",\"student_name\":\"Noah Adeyemi\",\"word_count\":733,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.5424,\"emotions\":{\"neutral\":0.3045,\"optimism\":0.2746,\"approval\":0.2377,\"curiosity\":0.1499,\"confusion\":0.1182,\"desire\":0.0423,\"disapproval\":0.0249,\"realization\":0.0212,\"admiration\":0.0111,\"caring\":0.0057,\"disappointment\":0.0054,\"love\":0.0054,\"annoyance\":0.005,\"excitement\":0.0045,\"surprise\":0.0029,\"fear\":0.0017,\"joy\":0.0014,\"remorse\":0.0013,\"gratitude\":0.0013,\"sadness\":0.0013,\"disgust\":0.0013,\"anger\":0.0012,\"nervousness\":0.0008,\"amusement\":0.0008,\"relief\":0.0007,\"pride\":0.0006,\"embarrassment\":0.0004,\"grief\":0.0004},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"critical_analysis\":6,\"evidence_use\":1},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[{\"name\":\"article_error\",\"category\":\"multilingual\",\"evidence\":[\"the research\"],\"asset_label\":\"Multilingual writing pattern\",\"learn_note\":\"Article usage reflecting L1 transfer. English's article system (a/an/the/\u2205) is cross-linguistically unusual \u2014 most of the world's languages either lack articles entirely (Mandarin, Japanese, Russian, Korean, Hindi, Turkish) or use them differently (Arabic has 'al-' but no indefinite article; French/Spanish gender articles). L2 English articles are among the last features acquired, even at advanced proficiency (Master, 1997).\",\"protected\":true,\"sentiment_effect\":\"caveat\",\"aic_weight_adjustments\":{\"grammatical_perfection\":0.7,\"ai_transitions\":0.6,\"inflated_vocabulary\":0.6}}],\"sentiment_tier\":\"low\",\"sentiment_triggers\":[\"article_error\"],\"sentiment_caveat\":\"Emotional register score may be unreliable (article_error). Treat as weak signal.\",\"asset_labels\":[\"Multilingual writing pattern\"],\"llm_context_note\":\"This student is a multilingual writer. Non-standard syntax reflects language transfer between linguistic systems, not confusion or lack of understanding.\",\"aic_adjustments\":{\"grammatical_perfection\":0.7,\"ai_transitions\":0.6,\"inflated_vocabulary\":0.6}}}},\"citation_report\":{\"has_citations\":true,\"source_count\":2,\"students_with_citations\":1,\"students_without_citations\":6,\"generic_reading_ref_count\":0,\"specific_source_count\":2,\"most_cited\":[[\"Collins (1990)\",1],[\"Spivak (1988)\",1]],\"verification_note\":\"URL/DOI existence is checked automatically. Unverified \u2260 fake \u2014 paywalled, non-English, and community sources will appear unverified.\",\"sources_summary\":[{\"source\":\"Collins (1990)\",\"citation_type\":\"author_year\",\"student_names\":[\"Natasha Okafor-Chen\"],\"count\":1},{\"source\":\"Spivak (1988)\",\"citation_type\":\"author_year\",\"student_names\":[\"Natasha Okafor-Chen\"],\"count\":1}],\"_citations_live\":[{\"citation_type\":\"author_year\",\"raw_text\":\"Collins (1990)\",\"normalized\":\"Collins (1990)\",\"student_id\":\"LF03\",\"student_name\":\"Natasha Okafor-Chen\",\"verified\":null,\"verification_note\":\"\"},{\"citation_type\":\"author_year\",\"raw_text\":\"Spivak (1988)\",\"normalized\":\"Spivak (1988)\",\"student_id\":\"LF03\",\"student_name\":\"Natasha Okafor-Chen\",\"verified\":null,\"verification_note\":\"\"}]},\"gibberish_ids\":[],\"analysis_notes\":[\"Citations found: 2 unique sources across 1 students (URL/DOI verification running in background)\"]}"
+  },
+  "codings": [
+    {
+      "run_id": "4b4064ab-3c66-4fa9-8145-02df7ac57cf4",
+      "student_id": "LF01",
+      "student_name": "Aaliyah Washington",
+      "coding_record": {
+        "student_id": "LF01",
+        "student_name": "Aaliyah Washington",
+        "theme_tags": [
+          "Skepticism and Validation",
+          "Connecting Theory to Lived Experience",
+          "Nuanced Understanding of Intersectionality",
+          "Critical Engagement with Crenshaw's Framework",
+          "Self-Reflection and Positionality"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "one of those academic things where they take something everybody already knows and put a complicated word on it",
+            "significance": "This quote reveals Aaliyah's initial skepticism and relatable feeling that academic language can feel disconnected from lived experience."
+          },
+          {
+            "text": "the construction is real because the effects are real and the effects reinforce the construction",
+            "significance": "This demonstrates a sophisticated understanding of how social structures operate \u2013 a circular logic that perpetuates inequality."
+          },
+          {
+            "text": "I came into this assignment thinking I already knew what intersectionality was and I'm leaving it realizing I only understood the surface.",
+            "significance": "This is a valuable metacognitive moment, showing a shift in understanding and a recognition of the depth of the concept."
+          }
+        ],
+        "emotional_register": "reflective",
+        "emotional_notes": "Aaliyah's tone is thoughtful and introspective, particularly as she reflects on her own positionality and the limitations of the framework.",
+        "readings_referenced": [
+          "Crenshaw"
+        ],
+        "concepts_applied": [
+          "intersectionality"
+        ],
+        "personal_connections": [
+          "family experiences",
+          "church community",
+          "cousin's experience"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Aaliyah is grappling with the question of how to translate abstract theory into something that feels real and relevant to everyday life. She begins with a healthy skepticism, which is a really valuable starting point. She's not just accepting Crenshaw's framework as a given; she's actively trying to figure out if it *means* something in the world. The way she describes her initial thought \u2013 \u201cone of those academic things where they take something everybody already knows and put a complicated word on it\u201d \u2013 is incredibly relatable and shows a keen awareness of how academic language can sometimes feel disconnected from lived experience.\n\nWhat's striking is how she uses her family\u2019s experience as a lens to understand Crenshaw\u2019s argument. Her conversation with her mom is the heart of the piece. She's not just illustrating a point; she's actively engaging in a process of understanding, trying to articulate a complex dynamic she's observed. The detail about her mom's experience \u2013 being \"invisible\" in meetings versus her coworker Darrell receiving the \"intimidating\" treatment \u2013 is incredibly insightful and demonstrates a nuanced understanding of how race and gender interact to shape experiences in specific ways. She's connecting Crenshaw\u2019s legal argument to a very concrete, everyday situation, and in doing so, she's making the concept of intersectionality come alive. Her final reflection on the circularity of social constructions is a sophisticated observation.\n\nAaliyah is grappling with the implications of intersectionality beyond a simple definition, moving from a theoretical understanding to a more nuanced one. She's actively trying to apply the framework to understand the complexities within her own life and community, which is a really significant shift. The quote, \"the construction is real because the effects are real and the effects reinforce the construction,\" demonstrates a sophisticated understanding of how social structures operate \u2013 a circular logic that perpetuates inequality.\n\nWhat's striking is her ability to connect the abstract framework to concrete experiences, both within her family (\"My mom doesn't experience a socially constructed barrier\u2026\") and her church community. She's identifying how race, gender, and class interact in ways that are specific to those contexts. Her question about how to build a movement when everyone\u2019s intersection is different is a really insightful challenge to the framework, showing a critical engagement with Crenshaw's work.\n\nAaliyah\u2019s self-reflection \u2013 acknowledging her own relatively privileged position compared to her cousin \u2013 is a moment of profound clarity. She's not just identifying disadvantage, but recognizing the specificity of everyone\u2019s position and how that shapes their experience. It's clear she's doing a lot of intellectual work here, moving beyond a superficial understanding to a deeper, more complex engagement with the concept of intersectionality. The admission that she thought she already understood the concept and is now realizing it's \"deeper\" is a valuable metacognitive moment that the teacher should notice.",
+        "what_student_is_reaching_for": "Aaliyah is attempting to move beyond a superficial understanding of intersectionality to grapple with its complexities and implications, particularly how it applies to real-world situations and shapes individual experiences within specific contexts.",
+        "confusion_or_questions": "Aaliyah raises a question about how to build a movement when everyone\u2019s intersection is different, which demonstrates a critical engagement with Crenshaw's work rather than confusion.",
+        "observation": "Aaliyah\u2019s work is a really compelling example of how initial skepticism can fuel deep engagement with a theoretical framework. She\u2019s grappling with the tension between abstract theory and lived experience, and she\u2019s doing so in a way that centers her family\u2019s experiences while also critically examining Crenshaw\u2019s argument. What's particularly striking is her ability to articulate how seemingly individual experiences (her mom being overlooked at work) can be understood through an intersectional lens, recognizing that the combination of race and gender creates a unique dynamic distinct from either factor alone.\n\nEmotionally, Aaliyah\u2019s writing feels grounded and honest. She\u2019s not afraid to admit her initial skepticism, and she\u2019s clearly wrestling with the implications of Crenshaw\u2019s work for her own understanding of her family and her community. She\u2019s also grappling with a really important question about scale \u2013 how to move from individual analysis to collective action \u2013 which demonstrates a sophisticated level of intellectual curiosity.\n\nThe teacher might want to validate Aaliyah\u2019s initial skepticism, as it seems to be a driving force behind her engagement. Providing concrete examples of how Crenshaw\u2019s work has been applied to real-world policy changes or social movements could help solidify her understanding and address her question about how to move beyond analysis to action.\n\nAaliyah uses a form of **abstract liberalism** when she states, \"The construction is real because the effects are real and the effects reinforce the construction.\" While she is absolutely correct that social constructions have real material effects, framing it in this way risks obscuring the ongoing, active labor of those who are subjected to those constructions. It suggests a kind of inevitability to the system, rather than highlighting the ways in which it is actively maintained and reproduced.",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student is thoughtfully engaging with course material (Crenshaw's intersectionality theory) and applying it to analyze their mother's experiences and broader social dynamics. They are also reflecting on their own positionality within the framework.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": true,
+        "checkin_reasoning": "The student writes, 'The last thing I want to say is that this reading made me think about my own position differently.' This is a direct statement about their current state of reflection and understanding. While it's brief, it represents a shift from analyzing the material to commenting on their own cognitive process. A reasonable teacher might choose to follow up, inquiring about what prompted this shift in perspective or how the reading impacted their self-perception. However, it's also possible to interpret this as a concluding thought, so a check-in is warranted.",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 1.39,
+            "marker_count": 1,
+            "markers": [
+              "I never thought about"
+            ]
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 1.4,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "typical",
+          "starter_diversity": "strong_engagement",
+          "comma_density": "worth_monitoring",
+          "avg_word_length": "typical",
+          "hp_confidence": "worth_monitoring",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": -0.26,
+        "theme_concern_notes": []
+      },
+      "submission_text": "When we started this unit on intersectionality I have to be honest, I thought it was going to be one of those academic things where they take something everybody already knows and put a complicated word on it. Like obviously people deal with more than one thing at a time. My mom is Black and a woman and works two jobs and is a single parent. She doesn't need a theory to tell her that those things pile up. But then I actually read Crenshaw and I think what changed for me was understanding that it's not just about the piling up. It's about how the specific combination creates something different from any single part.\n\nThe example that really hit me was when Crenshaw talks about Black women in the legal system. She shows how discrimination cases kept getting thrown out because the court would say well it's not race discrimination because Black men aren't affected this way, and it's not sex discrimination because white women aren't affected this way. The intersection was literally invisible to the law. That made me think about my mom's experiences at work in a totally new way. She's told me stories about being passed over for promotions and she always frames it as racism, which I'm sure it is. But reading Crenshaw made me wonder if there's something specific about being a Black woman in a management setting that creates a different kind of barrier than what a Black man or a white woman faces in the same company.\n\nI brought this up at dinner and my mom actually got really quiet for a minute. Then she said something like 'I never thought about it that way but yeah, the way they treat me is different from how they treat Darrell' who is her Black male coworker. She said Darrell gets the 'intimidating' treatment where people are scared of him, but she gets the 'invisible' treatment where people just talk over her in meetings like she's not there. Same racism, different shape because of gender. And then she said the really hard part is that when she brings it up, people tell her she's being too sensitive or making it about race when it's really about her personality. Which is a whole other layer of intersection where the complaint itself gets dismissed because of who is making it.\n\nI think this connects to what Professor Davis was saying about how categories are social constructions that have real material effects. Race is constructed, gender is constructed, class is constructed, but the construction doesn't make the effects less real. My mom doesn't experience a socially constructed barrier \u2014 she experiences not getting promoted and not being heard in meetings and being told she's too sensitive. The construction is real because the effects are real and the effects reinforce the construction. It's circular in a way that makes it really hard to break.\n\nSomething else I keep thinking about is how intersectionality applies within communities too, not just between communities and institutions. In my church there are gender dynamics that are racialized in specific ways and class dynamics that play out differently for the older generation who came from the South versus my generation who grew up here. The intersections are everywhere once you start seeing them, which is both the power and the limitation of the framework. If everything is intersectional, how do you decide where to focus? How do you build a movement when everyone's intersection is different? I don't think Crenshaw fully answers that but I think asking the question is the right starting point.\n\nThe last thing I want to say is that this reading made me think about my own position differently. I'm a Black woman but I'm also a high school student with college-educated parents who lives in a relatively safe neighborhood and goes to a school with decent resources. My intersections are real but they're different from my cousin's who dropped out and is working at Walgreens and dealing with a whole different set of compounding pressures. Intersectionality isn't just about the intersections that produce disadvantage \u2014 it's about understanding that everyone's position is a specific combination, and that specificity matters for how you understand and respond to the world.\n\nI came into this assignment thinking I already knew what intersectionality was and I'm leaving it realizing I only understood the surface. The framework is deeper than 'people face multiple oppressions.' It's about how the legal system, workplaces, communities, and even our own self-understanding are structured in ways that make certain specific combinations visible or invisible, heard or dismissed, promoted or overlooked. That's what I'm taking from Crenshaw.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "4b4064ab-3c66-4fa9-8145-02df7ac57cf4",
+      "student_id": "LF02",
+      "student_name": "Jaylen Morris",
+      "coding_record": {
+        "student_id": "LF02",
+        "student_name": "Jaylen Morris",
+        "theme_tags": [
+          "Applying Intersectionality to Everyday Life",
+          "Limitations of Institutional Responses",
+          "The Burden of Multiple Expectations",
+          "Recognizing Invisible Experiences"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "You're either fighting racism or fighting sexism, and the people who live at the intersection of both get lost in the shuffle.",
+            "significance": "This quote demonstrates his understanding of how single-axis frameworks can erase the experiences of those facing multiple forms of oppression."
+          },
+          {
+            "text": "I know which one they'll blame \u2014 me. Not the situation, not the impossible math of it, but me for not working hard enough or managing my time better.",
+            "significance": "This highlights his frustration with being held solely responsible for challenges arising from systemic pressures and multiple demands."
+          },
+          {
+            "text": "Nobody sees the whole picture of how impossible it is to be all of those things with the same 24 hours",
+            "significance": "This is a poignant expression of the strain and pressure he feels from juggling multiple roles and expectations."
+          }
+        ],
+        "emotional_register": "reflective",
+        "emotional_notes": "Jaylen's tone is largely reflective and honest, particularly when acknowledging his exhaustion and limitations. He also displays a degree of self-awareness and a desire to improve his understanding.",
+        "readings_referenced": [
+          "Crenshaw"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "political intersectionality",
+          "structural racism"
+        ],
+        "personal_connections": [
+          "his own experiences as a student, athlete, employee, and son"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Jaylen is grappling with the challenge of translating abstract theoretical frameworks into tangible realities, and he's doing so with a remarkable ability to connect Crenshaw's work to the lived experiences of people in his community. He's not just understanding the theory; he's using it as a lens to analyze the complexities of his own social world. The way he connects Crenshaw's legal arguments to the shortcomings of school diversity initiatives and the broader political discourse around \"underserved communities\" is particularly insightful. He's identifying how labels can flatten and erase the nuances of lived experience.\n\nWhat's striking is his use of everyday language and the way he incorporates the wisdom of his friends, like Carlos, whose observation about being \"poor in different languages\" is a brilliant articulation of intersectional dynamics. He's demonstrating a keen awareness of how historical context, immigration status, and generational differences shape experiences within a single neighborhood, and he's doing so in a way that feels deeply authentic and grounded. He's not trying to perform academic analysis; he's sharing a perspective shaped by observation and conversation. The fact that he cuts off his thought about connecting to other readings on structural racism suggests a desire to expand his understanding, and it would be valuable for the teacher to recognize that impulse and offer resources that align with his interests.\n\nJaylen is grappling with the practical implications of intersectionality, moving beyond the theoretical framework to apply it to his own life and the dynamics he observes around him. He\u2019s clearly connecting Crenshaw\u2019s ideas about political intersectionality to the ways different identity-based organizations can inadvertently exclude or marginalize those who exist at the intersections of multiple identities. His observation about the Black Student Union and the Latino Student Alliance, and the feeling of being pulled between them, is a really insightful application of the concept.\n\nWhat\u2019s striking is how he\u2019s extending the concept to analyze his own situation \u2013 the demands of being a student, athlete, employee, and son, all while navigating the expectations and potential blame placed upon him. He's articulating a powerful sense of being reduced to a single aspect of his identity by different institutions and people. The quote, \"Nobody sees the whole picture of how impossible it is to be all of those things with the same 24 hours,\" is a poignant expression of this.\n\nThe fact that he\u2019s struggling to focus and explicitly acknowledges his exhaustion is important. He\u2019s not just presenting an analysis; he\u2019s simultaneously revealing the very real constraints on his ability to engage in this kind of intellectual work, constraints stemming from a demanding schedule and financial pressures. It would be a missed opportunity to gloss over this honesty about his circumstances.\n\nJaylen is grappling with how to apply intersectionality beyond the explicitly legal contexts Crenshaw initially outlined, and he's trying to articulate a sense of being consistently misread by different systems. He's moved beyond a simple understanding of intersectionality as \"adding up disadvantages\" and is attempting to explain how the *combination* of those disadvantages creates a unique, often invisible, experience. The core of his argument is that different institutions \u2013 his coach, teachers, and manager \u2013 each see only a partial picture of him and judge him accordingly, demanding a performance that doesn't reflect his full self.\n\nWhat's striking is the way he grounds this in his own life, using the analogy of \"dropping balls\" and the resulting blame falling squarely on him, despite the \"impossible math\" of juggling multiple demands. He\u2019s not just describing a theoretical concept; he's describing a feeling of being perpetually held accountable for a situation that is inherently unfair and structurally complex. His self-deprecating apology (\"I know this paper probably isn't my best work\") alongside his desire to discuss it further in office hours suggests a thoughtful engagement with the material, even if he feels pressed for time. The reference to connecting the framework to structural racism and other readings shows he's thinking about the broader implications, even if he didn't fully articulate that connection in this submission.",
+        "what_student_is_reaching_for": "Jaylen is attempting to demonstrate how Crenshaw's framework of intersectionality can be applied to analyze everyday experiences and the ways institutions fail to recognize the complexities of individuals navigating multiple demands and expectations.",
+        "confusion_or_questions": null,
+        "observation": "Jaylen is reaching for a really compelling synthesis here \u2013 he's actively trying to connect Crenshaw\u2019s framework not just to legal cases, but to the everyday experiences of his community and his own life. His point about the neighborhood, and the way broader labels like \"people of color\" obscure the specific histories and struggles within that community, is particularly sharp. He's also making a sophisticated move in recognizing how different social justice movements (Black and Latino) can inadvertently exclude those at the intersection of those identities, and he's clearly grappling with the feeling of being pulled in multiple directions.\n\nEmotionally, Jaylen\u2019s writing feels grounded in a sense of frustration and exhaustion. He's not just presenting an intellectual argument; he's conveying the weight of managing multiple responsibilities \u2013 school, work, family \u2013 and feeling unseen and misunderstood by the various systems he navigates. The honesty about being up until midnight, struggling to focus, and feeling like he's \"running on nothing\" is a powerful and relatable element. It\u2019s a testament to his willingness to be vulnerable and authentic in his writing.\n\nThe teacher should definitely notice his self-awareness about his current circumstances and his acknowledgement that he's struggling to connect the framework to other readings. This isn\u2019t a deficit; it\u2019s a sign of a student who is actively engaged and trying to integrate this new theoretical framework into a broader understanding of the world. The offer to discuss it further in office hours is a great indicator of his commitment to learning.\n\nI also want to point out a subtle instance of **meritocracy framing**. When he writes, \"I know this paper probably isn't my best work and I'm sorry about that. I had more I wanted to say\u2026but I need to sleep. I'll try to come to office",
+        "wellbeing_axis": "BURNOUT",
+        "wellbeing_signal": "The student explicitly describes feeling exhausted and overwhelmed due to a demanding schedule, apologizing for the quality of their work and expressing difficulty focusing. While they are applying intersectionality to their own experiences, the primary signal is their current state of depletion.",
+        "wellbeing_confidence": 0.9,
+        "checkin_flag": null,
+        "checkin_reasoning": null,
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 20.12,
+            "marker_count": 8,
+            "markers": [
+              "last week",
+              "this week",
+              "right now",
+              "right now",
+              "right now"
+            ]
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 1.2,
+            "marker_count": 1,
+            "markers": [
+              "this is important because"
+            ]
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.94,
+            "marker_count": 1,
+            "markers": [
+              "I think this is important because"
+            ]
+          },
+          "engagement_depth": "moderate",
+          "engagement_confidence": 22.3,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": false
+        },
+        "engagement_signal_count": 9,
+        "is_possibly_truncated": true,
+        "truncation_note": "This submission may be incomplete \u2014 it ends without finishing the last thought. Consider checking in with this student.",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "strong_engagement",
+          "starter_diversity": "typical",
+          "comma_density": "typical",
+          "avg_word_length": "conversation_opportunity",
+          "hp_confidence": "strong_engagement",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": 0.39,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Crenshaw's concept of intersectionality fundamentally challenges the way we think about identity and discrimination. Rather than treating race, gender, and class as separate axes of oppression, she argues that these categories overlap and interact to create unique experiences that can't be understood through any single lens. I think this is important because in our current political moment, people tend to reduce everything to one category. You're either fighting racism or fighting sexism, and the people who live at the intersection of both get lost in the shuffle.\n\nThe legal cases Crenshaw analyzes are really powerful because they show how this isn't just theoretical. When the courts told Black women that they couldn't bring discrimination claims that weren't purely about race or purely about gender, the law was literally erasing their specific experience. The framework itself created blind spots. I think this has parallels in how schools work too \u2014 when they do diversity initiatives they often focus on one axis at a time. There's a Black History Month assembly and a Women's History Month assembly but nobody talks about what it's like to be a Black girl in this school specifically, which is different from being a Black boy here and different from being a white girl here.\n\nI've been thinking a lot about how this plays out in my own community. My neighborhood is mostly Black and Latino and there are definitely tensions between those communities that intersectionality helps explain. It's not just about race because we're all people of color in a predominantly white city. The intersections of immigration status, language, generational history in this country, and which specific stereotypes attach to which group create very different experiences even within the same low-income neighborhood. My Black friends deal with policing in one way, my Mexican friends deal with ICE anxiety in a totally different way, and both groups deal with poverty but the resources available to each are shaped by different institutional histories.\n\nThe thing that gets me is how invisible these differences are from the outside. When politicians talk about our neighborhood they just say \"underserved community\" or \"at-risk youth\" and those labels flatten everything. They don't see that the Black families on my block have been here for 40 years and the Central American families moved in during the 2000s and the dynamics between those groups are shaped by decades of history that the label \"people of color\" doesn't begin to capture. My friend Carlos once said something I keep thinking about, that in our neighborhood we're all poor in the same zip code but we're poor in different languages and that changes everything about what resources you can access and what assumptions people make about why you're poor. I think that's an intersectional observation even though Carlos has never read Crenshaw.\n\nSomething else I want to mention from the reading is how Crenshaw talks about political intersectionality, not just structural. She argues that the political agendas of different identity groups can work against people at intersections. The feminist movement and the anti-racist movement both claimed to represent Black women but neither actually centered their specific concerns. I see this in my school too. The Black Student Union and the Latino Student Alliance both do important work but a student who is Afro-Latino sometimes feels pulled between them, like they have to choose which part of their identity to organize around. The organizations are structured on single axes and the people at the intersections have to do the work of bridging them.\n\nI want to connect this to the reading more directly but honestly I'm struggling to focus right now. I've been up since 5 AM because I had morning practice, then school, then I went straight to my job at Jamba Juice until 9, and now it's almost midnight and I still have this paper and calc homework. I know I'm supposed to be going deeper with the analysis here but my brain is just not cooperating tonight. I feel like I'm running on nothing and I've been running on nothing for weeks now. Every time I think I'm going to have a weekend to catch up, something else comes up \u2014 last weekend it was covering someone else's shift because I can't afford to say no to the hours, and the weekend before that it was a family thing I couldn't miss.\n\nI actually think there's something intersectional about what I'm going through right now, even though it feels weird to apply the framework to myself in the middle of a paper about it. I'm a Black male student athlete who also works to help his family pay rent, and each of those things takes time that the other things need. The school sees me as a student. Practice sees me as an athlete. Jamba Juice sees me as an employee. My mom sees me as the oldest son who's supposed to step up. Nobody sees the whole picture of how impossible it is to be all of those things with the same 24 hours, and when I start dropping any of those balls, I know which one they'll blame \u2014 me. Not the situation, not the impossible math of it, but me for not working hard enough or managing my time better. That's an intersection too, even if Crenshaw wasn't writing about teenage boys falling asleep over their laptops.\n\nOK so coming back to the reading. One thing I think Crenshaw gets really right is that intersectionality isn't just about adding up disadvantages. It's about how the specific combination creates experiences that are invisible to frameworks that only look at one thing. My experience right now is invisible to my coach who thinks I'm not giving 100% at practice, invisible to my teachers who think I'm not doing the reading carefully enough, and invisible to my manager who thinks I should be more energetic on shift. Each of them sees one slice and judges me on it.\n\nI guess what I'm saying is that intersectionality isn't just a framework for understanding big systemic issues like Crenshaw's legal cases. It also explains the everyday experience of being pulled in multiple directions by systems that each only see one part of you and expect you to perform as if that's all you are. I know this paper probably isn't my best work and I'm sorry about that. I had more I wanted to say about how the framework connects to the other readings we've done on structural racism and how institutions create and maintain categories. But I need to sleep. I'll try to come to office hours this week to talk about it more if I can find the time.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "4b4064ab-3c66-4fa9-8145-02df7ac57cf4",
+      "student_id": "LF03",
+      "student_name": "Natasha Okafor-Chen",
+      "coding_record": {
+        "student_id": "LF03",
+        "student_name": "Natasha Okafor-Chen",
+        "theme_tags": [
+          "Intersectionality and Epistemic Violence",
+          "Critique of Additive Models",
+          "Connecting Theory to Lived Experience",
+          "Navigating Theoretical Frameworks"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "the invisibility is not an oversight \u2014 it is a structural feature of how categories work",
+            "significance": "This demonstrates a powerful understanding of how categories themselves function as a form of violence, not just through silencing, but by rendering certain experiences invisible."
+          },
+          {
+            "text": "I don't know if this paper is what was expected but it's what I needed to write tonight",
+            "significance": "This reveals a vulnerability and a commitment to authentic expression, suggesting a genuine emotional engagement with the material."
+          },
+          {
+            "text": "the interaction between categories creates experiences that the categories themselves cannot capture",
+            "significance": "This is a clear articulation of a core concept, pushing back against a potentially oversimplified understanding of intersectionality and demonstrating a sophisticated understanding of Crenshaw\u2019s original argument against additive models."
+          }
+        ],
+        "emotional_register": "reflective",
+        "emotional_notes": "Natasha's submission demonstrates a genuine emotional engagement with the material, particularly in her admission of staying up late to grapple with the concepts and her connection of the framework to her own lived experience.",
+        "readings_referenced": [
+          "Crenshaw (1989)",
+          "Collins",
+          "hooks",
+          "DeGraffenreid v. General Motors"
+        ],
+        "concepts_applied": [
+          "Additive Models of Oppression",
+          "Multiplicative Models of Oppression",
+          "Epistemic Violence",
+          "Intersectionality"
+        ],
+        "personal_connections": [
+          "Biracial identity",
+          "Code-switching",
+          "Feeling of not belonging",
+          "Family dynamics"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Natasha\u2019s submission is remarkably precise and clear in its articulation of Crenshaw\u2019s argument, particularly her distinction between additive and multiplicative models of oppression. She's grappling with the implications of Crenshaw's work for how we understand institutional frameworks, and she's doing so with a level of sophistication that goes beyond simply summarizing the theory. The way she connects Crenshaw's legal arguments to broader critiques of universalism in feminist and anti-racist scholarship, referencing Collins and hooks, demonstrates a strong grasp of the theoretical landscape.\n\nWhat's particularly striking is her ability to link Crenshaw\u2019s work to Spivak\u2019s concept of epistemic violence. This isn't a rote application of theory; it's a genuine attempt to understand how structures of knowledge production silence marginalized voices. She's not just identifying the problem of invisibility; she's pinpointing it as a structural feature of how categories themselves function. The phrasing \"the invisibility is not an oversight \u2014 it is a structural feature of how categories work\" is a powerful statement of this insight. \n\nIt's important to notice the intellectual work happening here \u2013 a deep engagement with power dynamics and the ways institutions can fail to recognize the experiences of those at the margins. The clarity of her writing, the precision of her language, and the depth of her analysis all point to a student who is actively wrestling with complex theoretical concepts and applying them to a critical understanding of the world.\n\nNatasha\u2019s submission is striking in its raw honesty and the way it connects Crenshaw\u2019s theoretical framework to a deeply personal experience. She\u2019s grappling with the implications of Crenshaw\u2019s argument about epistemic violence, moving beyond the legal context to consider how categories themselves can function as a form of violence \u2013 not by silencing, but by rendering certain experiences invisible. The shift in register, the admission of being up at 1 AM thinking about this, is a crucial moment. It signals a genuine emotional engagement with the material, a moment of recognition that transcends purely intellectual understanding.\n\nWhat\u2019s particularly notable is how Natasha is using Crenshaw\u2019s work to reframe a lifelong feeling of not belonging. She\u2019s not simply stating a fact about her identity; she\u2019s actively dismantling a narrative she\u2019s internalized \u2013 the idea that her feeling of not fitting in is a personal failing. She\u2019s proposing a radical alternative: that the feeling itself is a valid data point, a signal that the categories are inadequate. Her family history, with her parents' intermarriage and her own experience of code-switching, becomes a case study illustrating the very problem Crenshaw identifies. It's a powerful example of how theory can provide a framework for understanding and validating lived experience, and how lived experience can, in turn, deepen and complicate theoretical understanding.\n\nNatasha\u2019s submission is a fascinating exploration of how a theoretical framework \u2013 Crenshaw\u2019s concept of intersectionality \u2013 resonates with her lived experience. She\u2019s grappling with the complexities of applying a framework developed in a specific context (Black women\u2019s experiences in the legal system) to her own experience as a biracial person navigating multiple cultural contexts. What\u2019s striking is her nuanced understanding of the potential pitfalls of applying theoretical frameworks directly, explicitly stating her concern about \u201cappropriating the framework\u201d by assuming a one-to-one mapping.\n\nShe\u2019s pushing back against a potentially oversimplified understanding of intersectionality, identifying a tendency to reduce it to a \"checklist\" of identities and oppressions. This is a really insightful critique, demonstrating a sophisticated understanding of Crenshaw\u2019s original argument against additive models of identity. Natasha is articulating a crucial point: the interaction *between* categories creates unique experiences that aren't simply the sum of their parts. Her phrasing, \"the interaction between categories creates experiences that the categories themselves cannot capture,\" is a clear articulation of a core concept.\n\nThe admission, \"I don't know if this paper is what was expected but it's what I needed to write tonight,\" reveals a vulnerability and a commitment to authentic expression that deserves attention. She\u2019s connecting personal experience \u2013 her family\u2019s dynamic and her own code-switching \u2013 to a theoretical framework, and that connection feels deeply meaningful to her.",
+        "what_student_is_reaching_for": "Natasha is attempting to use Crenshaw's theoretical framework to understand and validate her own experiences of not belonging, while also critically examining the potential pitfalls of applying theoretical frameworks directly to individual experiences.",
+        "confusion_or_questions": null,
+        "observation": "Okay, here's what I'm noticing about Natasha's submission, keeping in mind the overall class context and the equity floor.\n\nNatasha is reaching for a profound understanding of how structures of knowledge themselves can perpetuate harm, building on Crenshaw\u2019s framework to connect it to Spivak\u2019s concept of the subaltern. She\u2019s not just accepting Crenshaw\u2019s argument; she\u2019s actively extending it to consider how institutions, even those aiming for inclusivity, can inadvertently exclude those who exist at multiple intersections. The way she connects Crenshaw\u2019s legal argument to Spivak\u2019s work on epistemic violence is particularly insightful, demonstrating a sophisticated ability to synthesize theoretical concepts.\n\nEmotionally, this material has clearly resonated deeply with Natasha. Her writing shifts from a formal analytical register to a deeply personal reflection, driven by a palpable sense of recognition and validation. The shift to writing about her own experience as a biracial person isn't a derailment; it's a moment of authentic connection to the theoretical material, a moment of intellectual and emotional breakthrough. She's grappling with a feeling of not belonging that she's carried for a long time, and Crenshaw's framework has provided her with a lens to understand that this feeling isn't a personal failing, but a consequence of flawed categories.\n\nThe teacher should absolutely validate this shift and encourage this kind of self-reflection. Natasha's willingness to be vulnerable and connect her personal experiences to the theoretical framework is a testament to her intellectual curiosity and courage. It would be helpful to acknowledge that this kind of personal connection is a valuable contribution to the class, not a deviation from expectations.\n\nI notice a subtle instance of **colorblind erasure** in Natasha's phrasing when she says, \"My experience as a biracial person is not the same as a Black woman's experience in employment law, and I don't want to appropriate the framework by pretending it maps directly.\"",
+        "wellbeing_axis": "BURNOUT",
+        "wellbeing_signal": "The student expresses significant emotional impact from the reading, writing late into the night and reflecting on personal experiences of not fitting into established categories. While engaging with the course material (Crenshaw's intersectionality), the writing also reveals a sense of exhaustion and a need to process a deeply personal feeling of not belonging.",
+        "wellbeing_confidence": 0.9,
+        "checkin_flag": null,
+        "checkin_reasoning": null,
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 1.39,
+            "marker_count": 1,
+            "markers": [
+              "I used to think that was just my weird family situation but now"
+            ]
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 1.42,
+            "marker_count": 1,
+            "markers": [
+              "I can't stop thinking about"
+            ]
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 2.8,
+          "source_depth": {
+            "specific_citations": 2,
+            "generic_references": 0,
+            "total": 2,
+            "interpretation": "Strong source engagement"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "conversation_opportunity",
+          "starter_diversity": "typical",
+          "comma_density": "typical",
+          "avg_word_length": "typical",
+          "hp_confidence": "typical",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": -0.37,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Crenshaw's intersectionality framework (1989) proposes that the intersection of race and gender creates a qualitatively distinct experience that cannot be understood by examining either axis in isolation. This challenges the additive model of oppression, in which disadvantages are conceptualized as stacking on top of one another, and replaces it with a multiplicative model in which the interaction of categories produces emergent effects. The distinction matters analytically because the additive model implies that removing one form of oppression would proportionally reduce overall disadvantage, while the multiplicative model suggests that the whole is different from the sum of its parts.\n\nThe legal cases Crenshaw uses to illustrate this point are particularly effective because they demonstrate how institutional frameworks \u2014 in this case, anti-discrimination law \u2014 can be structurally incapable of recognizing intersectional experiences. When the court in DeGraffenreid v. General Motors ruled that Black women could not constitute a protected class distinct from Black people or women, it was not simply making a legal error. It was revealing an epistemic limitation of single-axis frameworks: they cannot perceive what exists at the intersection. This has implications beyond law. Any institutional framework that categorizes people along single axes \u2014 including educational assessment, healthcare intake, and social services \u2014 will systematically fail to recognize the specific circumstances of people who exist at intersections.\n\nFrom a theoretical perspective, intersectionality can be situated within broader critiques of universalism in feminist and anti-racist scholarship. Collins (1990) makes a related argument about the matrix of domination, and hooks (1984) critiques mainstream feminism for universalizing white women's experiences. Crenshaw's contribution is to make the structural mechanism precise: it is not simply that dominant groups ignore marginalized experiences, but that the categories through which institutions operate are constructed in ways that render intersections invisible. The invisibility is not an oversight \u2014 it is a structural feature of how categories work.\n\nI want to push this point further because I think it connects to something we discussed in class about epistemic violence. Spivak (1988) asks whether the subaltern can speak, and her answer is essentially that the structures of knowledge production are organized in ways that prevent certain voices from being heard even when those voices are speaking. Crenshaw's argument is a specific instance of this: the legal structure is organized in ways that prevent certain claims from being cognizable even when those claims are being made. The Black women plaintiffs were speaking \u2014 they were literally in court making arguments \u2014 but the framework could not hear them. This is epistemic violence in its most precise form: not silence imposed from outside, but a structural incapacity to receive what is being said. I think this has implications for how we do research and how we design institutions. If the categories we use to understand the world are structurally incapable of perceiving certain experiences, then more data or more empathy won't fix the problem. You need different categories, or you need to question the impulse to categorize at all.\n\nI need to step back from the analytical register for a moment because this reading hit me in a way I wasn't expecting and I want to be honest about that. I'm biracial \u2014 my dad is Igbo Nigerian and my mom is Chinese American \u2014 and I have spent my entire life existing at an intersection that nobody has a category for. In school they ask me to check boxes and I never fit. In my dad's family I'm not Black enough and in my mom's family I'm not Chinese enough and in American racial discourse I'm either an honorary Black person or an honorary Asian person depending on which conversation is happening, but never just myself.\n\nWhat Crenshaw's framework gave me \u2014 and this is why I'm writing this at 1 AM instead of sleeping because I can't stop thinking about it \u2014 is a way to understand that the problem isn't me. The problem is the categories. When I feel like I don't fit, that's not a personal failing, it's the categories doing exactly what Crenshaw says they do: rendering intersections invisible. I've been carrying this feeling of not-fitting-anywhere since I was a kid and I always thought it meant something was wrong with me, like I needed to pick a side or try harder to belong somewhere. But what if the feeling of not fitting is actually accurate information about how identity categories work? What if I'm not failing to be something \u2014 what if the categories are failing to capture what I am?\n\nMy parents met at a church in Oakland and their marriage was already an intersection that both families struggled with. My dad's family worried he was losing his culture and my mom's family worried about \u2014 I don't even know exactly what. Something about respectability and what the community would think. And then I came along, this kid who looked like neither family expected and who grew up code-switching between three cultural contexts without fully belonging to any of them. I used to think that was just my weird family situation but now I think it's actually a textbook case of what happens when people live at intersections that institutions and communities haven't built categories for. The institution doesn't malfunction \u2014 it functions exactly as designed, and the design excludes people like me.\n\nSo here is where I try to connect the personal back to the theoretical, which is what I think this assignment is actually asking for. Crenshaw's framework was developed specifically around Black women's experiences in the American legal system, and there's a legitimate question about whether it travels to every possible intersection. My experience as a biracial person is not the same as a Black woman's experience in employment law, and I don't want to appropriate the framework by pretending it maps directly. But I think the structural insight does transfer: whenever institutions rely on single-axis categories, the people who exist at intersections will be systematically unseen. That is true whether the intersection is race and gender (Crenshaw's original case), race and disability, immigration status and language, or multiracial identity and belonging.\n\nWhat I want to push back on slightly is the way intersectionality is sometimes taught as a checklist \u2014 how many boxes can you check, how many oppressions do you carry, as if identity is an additive score. That flattens the framework into exactly the additive model Crenshaw was arguing against. The point is not how many categories you occupy. The point is that the interaction between categories creates experiences that the categories themselves cannot capture. That is what I've been living and what the reading finally gave me language for. I don't know if this paper is what was expected but it's what I needed to write tonight.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "4b4064ab-3c66-4fa9-8145-02df7ac57cf4",
+      "student_id": "LF04",
+      "student_name": "David Orozco",
+      "coding_record": {
+        "student_id": "LF04",
+        "student_name": "David Orozco",
+        "theme_tags": [
+          "Critique of Oversimplified Intersectionality",
+          "Structural Analysis of Institutions",
+          "Recursively Questioning Categories",
+          "Application to Education & Immigration"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "Crenshaw's intersectionality is one of those concepts that I think gets oversimplified a lot in the way it circulates in popular discourse",
+            "significance": "This demonstrates his skepticism towards common understandings of intersectionality and his desire to engage with Crenshaw's original argument."
+          },
+          {
+            "text": "The operative word is systematic \u2014 it's not about individual prejudice or even about the accumulation of disadvantages, it's about how the architecture of institutions renders certain experiences structurally invisible.",
+            "significance": "This highlights his grasp of Crenshaw's core argument about structural invisibility and his rejection of a purely individualistic understanding of oppression."
+          },
+          {
+            "text": "The category 'Mexican' is doing so much work that it obscures more than it reveals, which is Crenshaw's point applied recursively to the very categories that intersectionality names.",
+            "significance": "This exemplifies his application of Crenshaw's logic to question the adequacy of categories themselves, demonstrating a sophisticated level of analysis."
+          }
+        ],
+        "emotional_register": "analytical",
+        "emotional_notes": "David's tone is consistently analytical and critical, demonstrating a clear intellectual engagement with the material. He is not expressing personal distress but rather engaging in a rigorous theoretical critique.",
+        "readings_referenced": [
+          "Crenshaw"
+        ],
+        "concepts_applied": [
+          "Structural Invisibility",
+          "Single-Axis Assumptions",
+          "Systemic Blind Spots"
+        ],
+        "personal_connections": [
+          "Family experiences (grandmother and uncle)",
+          "Neighborhood experiences as a Mexican American"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "David is grappling with the move from abstract theory to concrete application, and he's doing so in a way that reveals a deep understanding of Crenshaw's core argument about structural invisibility. He's not just accepting the concept of intersectionality; he's actively using it to diagnose a systemic problem within the education system, drawing on his family's experiences to illustrate how categorical programs can actually *reproduce* inequality. The way he describes his cousins being bounced between programs, with no one looking at the whole picture, is a powerful and relatable example of Crenshaw's point.\n\nWhat's particularly striking is his willingness to extend Crenshaw's framework beyond its original context, recognizing that the same structural mechanism \u2013 the creation of blind spots through single-axis categories \u2013 operates in other areas. He's pushing the framework, as he puts it, which is a sign of genuine intellectual engagement. He's also demonstrating a sophisticated awareness of the limitations of categories themselves, a crucial insight that often gets lost in discussions of identity.\n\nThe initial skepticism he expresses about the \"oversimplified\" version of intersectionality circulating in popular discourse is a valuable starting point. He's not afraid to call out what he sees as superficial understandings, and he's actively working to develop a more nuanced and structurally informed perspective. It's clear he's thinking critically about how institutions shape experiences and how categories can both define and obscure.\n\nDavid Orozco is grappling with the limits of categorization itself, using Crenshaw\u2019s framework as a springboard to question the very categories that intersectionality employs. He's moved beyond simply identifying intersecting identities to a deeper interrogation of how categories function to obscure as much as they reveal. This isn't a theoretical exercise for him; it's deeply rooted in his family's lived experience as Mexican Americans. He\u2019s articulating a sophisticated understanding of how legal status, language, generation, skin color, and class combine to create distinct positions within American institutions, positions that defy simple categorization.\n\nThe power of his argument lies in its recursive nature \u2013 applying Crenshaw\u2019s logic not just to analyze intersections, but to challenge the adequacy of the categories themselves. He\u2019s pointing out that the category \"Mexican\" is doing so much work that it obscures nuance and difference. The contrast between his grandmother and uncle, both \"Mexican\" but with vastly different experiences, is a compelling illustration of this point. He's not just describing a phenomenon; he's actively dismantling a system of thought, demonstrating a critical capacity that goes beyond the assignment's explicit requirements. It would be valuable for the teacher to notice this intellectual agility and the way David is using personal experience to fuel a sophisticated theoretical critique.",
+        "what_student_is_reaching_for": "David is attempting to move beyond a superficial understanding of intersectionality to a deeper structural analysis of how categories themselves can obscure and reproduce inequality, using his family's experiences to ground this critique.",
+        "confusion_or_questions": null,
+        "observation": "Okay, here's what I'm noticing in David's submission, keeping in mind the overall class context and the equity floor.\n\nDavid is reaching for a really compelling argument about how Crenshaw\u2019s framework isn't just about acknowledging multiple identities, but about understanding how institutions themselves *produce* invisibility through their categorical structures. He\u2019s making a sophisticated move by extending Crenshaw\u2019s analysis to the education system, demonstrating a clear grasp of the structural logic Crenshaw outlines. He\u2019s also grappling with the limitations of categories themselves, a really insightful point that builds on Natasha\u2019s critique, and he\u2019s doing so in a way that connects to his own family\u2019s experiences, which adds a layer of personal investment and relevance.\n\nEmotionally, David seems frustrated with the oversimplification of intersectionality and is driven to demonstrate a more nuanced understanding. There's a palpable sense of wanting to move beyond superficial applications of the framework and get to the core of its structural power. He\u2019s clearly invested in showing how Crenshaw\u2019s insights can be applied to real-world problems.\n\nIt's notable that David is pushing the framework beyond Crenshaw's original focus on race and gender, applying it to the complexities of Mexican American identity and legal status. This is a significant intellectual leap, demonstrating a capacity for abstract thinking and a willingness to challenge the boundaries of the framework. He\u2019s also self-aware enough to acknowledge the limitations of categories, which is a crucial step in any critical analysis.\n\nI notice a subtle instance of **colorblind erasure** in his discussion of his family. While he\u2019s attempting to illustrate the complexity of Mexican American experiences, framing it as a challenge to the \"simple version of intersectionality\" risks minimizing the specific ways that anti-Blackness and other forms of racialization operate within Latinx communities. It's a move that, on the surface, seems like a desire to complicate the framework, but",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student is deeply engaging with Crenshaw's concept of intersectionality and applying it to their own family's experiences and broader societal structures, demonstrating a sophisticated understanding of the framework and its limitations. They are using personal experience to illustrate and extend the theoretical concepts.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": true,
+        "checkin_reasoning": "The student writes, \"I know this because it basically describes several of my cousins who went through the system and got bounced between programs without anyone ever looking at the whole picture.\" This could be interpreted as a brief, potentially relevant disclosure of personal experience impacting their understanding of the material. Alternatively, it could be seen as an example used to illustrate a point about the system, without any particular need for further follow-up. A reasonable teacher might choose to acknowledge the comment or let it pass, hence the check-in.",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 1.24,
+            "marker_count": 1,
+            "markers": [
+              "in my neighborhood"
+            ]
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 1.87,
+            "marker_count": 1,
+            "markers": [
+              "in my neighborhood"
+            ]
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 3.1,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "worth_monitoring",
+          "starter_diversity": "strong_engagement",
+          "comma_density": "strong_engagement",
+          "avg_word_length": "strong_engagement",
+          "hp_confidence": "typical",
+          "authenticity": "strong_engagement"
+        },
+        "cohort_z_score": 0.75,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Crenshaw's intersectionality is one of those concepts that I think gets oversimplified a lot in the way it circulates in popular discourse and I want to use this paper to actually dig into what she's saying rather than just repeat the basic version. The basic version goes something like: people have multiple identities and those identities interact to shape their experience. Fine, that's true, but that's also kind of obvious and if that were all Crenshaw was saying it wouldn't be a major intellectual contribution. What makes the framework actually powerful is the structural argument underneath the identity talk, which is that institutional categories are designed around single-axis assumptions and those assumptions create systematic blind spots that harm the people who live at intersections. The operative word is systematic \u2014 it's not about individual prejudice or even about the accumulation of disadvantages, it's about how the architecture of institutions renders certain experiences structurally invisible. The legal cases are the proof. In DeGraffenreid the court didn't say Black women don't face discrimination. It said the legal framework has no mechanism for recognizing discrimination that is simultaneously racial and gendered as a distinct form. The framework itself produces the invisibility. That's a much deeper claim than \"people face multiple oppressions\" and I think it gets lost when intersectionality becomes a buzzword. I want to extend this to education because I think schools do the same thing the courts did. Schools have programs for students of color and programs for low-income students and programs for English learners and programs for students with disabilities, but these programs operate on single-axis assumptions. A student who is a low-income English learner of color with a learning disability doesn't get four supports \u2014 they get whichever program captures them first and then the other programs say that student is already being served. The intersection of all four conditions creates a specific experience that none of the individual programs are designed to address. I know this because it basically describes several of my cousins who went through the system and got bounced between programs without anyone ever looking at the whole picture. This is not a failing of the individual programs or the individual counselors. It's a structural feature of how categorical programs work, which is exactly Crenshaw's point. Now here's where I think Crenshaw's framework needs to be pushed further. She developed it primarily around the intersection of race and gender for Black women in America, which is an incredibly important and specific argument. But once you understand the structural mechanism \u2014 that single-axis categories produce systematic blind spots \u2014 you can see it operating everywhere, including in places that complicate the original framework's political commitments. For example, immigration status intersects with race in ways that don't map cleanly onto the Black-white binary that a lot of American racial analysis is built on. My family is Mexican American and in my neighborhood the intersections of legal status, language, generation, skin color, and class create a complex web of positions that the simple version of intersectionality can't capture. My grandmother who is undocumented and dark-skinned has a completely different relationship to American institutions than my uncle who is a citizen, light-skinned, and college-educated, even though they're both \"Mexican.\" The category \"Mexican\" is doing so much work that it obscures more than it reveals, which is Crenshaw's point applied recursively to the very categories that intersectionality names. I think this is where the framework becomes really powerful \u2014 when you use it not just to analyze the intersection of pre-existing categories but to question whether the categories themselves are adequate to the complexity of lived experience. That's what I took from this reading and I think it's the part that matters most.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "4b4064ab-3c66-4fa9-8145-02df7ac57cf4",
+      "student_id": "LF05",
+      "student_name": "Fatima Al-Rashidi",
+      "coding_record": {
+        "student_id": "LF05",
+        "student_name": "Fatima Al-Rashidi",
+        "theme_tags": [
+          "Intersectionality in Action",
+          "Categorical Systems and Translation",
+          "Social Construction of Categories",
+          "Extending Crenshaw's Framework"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "It is the combination of being Sunni and being a woman and being educated but with no money and being from Mosul specifically that created her situation.",
+            "significance": "This quote demonstrates Fatima's ability to articulate the complex interplay of factors shaping her mother's experience, mirroring Crenshaw's emphasis on the dangers of isolating single categories."
+          },
+          {
+            "text": "I want to call this something like intersectional translation \u2014 the process by which a person's identity is translated from one categorical system to another when they cross borders, and the translation is always a reduction because the receiving system does not have the categories to capture the original complexity.",
+            "significance": "This is a key moment where Fatima introduces her own concept, 'intersectional translation,' which is a sophisticated attempt to capture the process of identity re-encoding across different social systems."
+          },
+          {
+            "text": "My grandmother in Iraq was a respected elder with social authority. Here she is an old woman who doesn\u2019t speak English and needs help filling out forms.",
+            "significance": "This stark contrast powerfully illustrates the impact of shifting categorical systems and the reduction of identity that can occur during migration."
+          }
+        ],
+        "emotional_register": "passionate|personal|reflective",
+        "emotional_notes": "Fatima's writing is deeply personal and driven by a desire to understand and articulate her family's experiences. There's a palpable sense of urgency in her exploration of how categories shape their lives.",
+        "readings_referenced": [
+          "Crenshaw"
+        ],
+        "concepts_applied": [
+          "Intersectionality",
+          "Social Construction of Categories"
+        ],
+        "personal_connections": [
+          "Family history in Iraq",
+          "Experiences as a refugee in America"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Fatima\u2019s submission is striking in its directness and the way it immediately connects Crenshaw\u2019s framework to deeply personal and ongoing experiences. She isn't abstractly analyzing intersectionality; she's demonstrating a profound recognition of it in action, both in her family's history in Iraq and in her own experiences as a refugee in America. The way she describes her mother's situation in Iraq \u2013 meticulously detailing the combination of factors that created a specific kind of danger \u2013 is a powerful illustration of Crenshaw\u2019s point about categories obscuring complex realities. \n\nWhat\u2019s particularly notable is her ability to articulate how categories themselves function, not as inherent truths, but as social constructs that carry weight and impact. She\u2019s not just stating that categories are socially constructed; she\u2019s showing how those constructions translate into material effects \u2013 impacting her mother\u2019s safety in Iraq and shaping how she and her family are perceived and treated in the United States. The comparison between the meanings of \"Sunni\" and \"Muslim\" across different contexts is insightful and reveals a sophisticated understanding of how power shapes the significance of identity labels. \n\nThe fact that she uses AAVE linguistic features is a crucial detail. It's not a deficit; it's a demonstration of her voice and a way of communicating her understanding in a way that feels authentic to her. The teacher should notice that Fatima is not struggling to understand the theory; she's grappling with the implications of it in a way that is both deeply personal and intellectually rigorous.\n\nFatima is grappling with the limits of Crenshaw\u2019s framework when applied across vastly different cultural and political contexts. She\u2019s not simply accepting the concept of intersectionality; she\u2019s actively trying to extend it to account for the experience of migration and the translation of identity across categorical systems. The core of her argument revolves around the idea that moving between societies isn't just a shift in how intersectional identities *operate*, but a fundamental re-categorization that creates entirely new, often reductive, systems of classification.\n\nWhat\u2019s striking is the way she grounds this theoretical exploration in her family's lived experience. The contrast between her grandmother\u2019s respected position in Iraq and her current situation in America, needing assistance with forms, is a powerful illustration of this \u201cintersectional translation.\u201d She\u2019s not just describing a problem; she\u2019s articulating a process \u2013 a process she tentatively labels as such \u2013 that deserves further exploration. The phrase \"intersectional translation\" is a really interesting move, suggesting a dynamic process of re-encoding identity within a new system.\n\nIt's notable that she acknowledges Crenshaw as a starting point, demonstrating a sophisticated understanding of intellectual development. She's not dismissing Crenshaw, but building upon it, driven by a desire to account for the particularities of her family\u2019s experience. The connection she makes between social construction and the arbitrariness of categories, prompted by her family\u2019s experience, is a moment of insightful clarity.",
+        "what_student_is_reaching_for": "Fatima is attempting to extend Crenshaw\u2019s framework to account for the complexities of identity translation across vastly different cultural and political contexts, specifically focusing on the experience of migration and the reductive nature of new categorical systems.",
+        "confusion_or_questions": null,
+        "observation": "Fatima is reaching for a truly expansive understanding of Crenshaw's framework, extending it far beyond the initial context of Black women in America to encompass the complexities of displacement, migration, and cultural translation. She\u2019s grappling with how categories themselves function as tools of power and how those tools shift and reshape when individuals move between different cultural and political systems. Her concept of \"intersectional translation\" is a really insightful attempt to name the process by which identities are reduced and reinterpreted when crossing borders \u2013 it's a sophisticated observation about the loss of nuance and specificity that can occur when navigating new systems.\n\nEmotionally, her writing is deeply rooted in her family's lived experiences, and there's a palpable sense of both recognition and frustration with the limitations of existing frameworks. She\u2019s clearly processing a great deal of personal experience and connecting it directly to the theoretical concepts, which gives her analysis a powerful immediacy. The way she contrasts her mother's experience in Iraq with her experiences in America demonstrates a keen awareness of how social categories and institutional structures shape individual lives.\n\nIt's striking how Fatima is pushing beyond Crenshaw's framework to identify what *else* is needed to fully account for these experiences. Her questioning of how to account for the translation of social positions across systems is a really sophisticated move, and it suggests a desire to develop a more nuanced understanding of how power operates across different cultural contexts. The teacher could really encourage this kind of expansive thinking.\n\nI notice a subtle instance of **abstract liberalism** in her concluding paragraph. When she writes, \"Maybe this is what the professor means by the social construction of categories \u2014 that the categories are not just descriptions of reality but are tools that each society builds for its own purposes,\" she's framing the concept of social construction in a way that feels detached from the lived",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student is thoughtfully engaging with Crenshaw's concept of intersectionality and applying it to their family's experiences as Iraqi refugees navigating a new cultural and political landscape. They are developing their own nuanced understanding of how categories and systems of classification operate across different contexts, and proposing a concept of 'intersectional translation' to account for shifts in identity and social position when crossing borders. While drawing on personal experience, the focus is on intellectual analysis and expanding the framework of intersectionality.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": false,
+        "checkin_reasoning": "The student is drawing on personal experience (her mother's and grandmother's experiences, and her own experiences as a refugee and Muslim in America) to analyze Crenshaw's framework. This is an example of using personal experience as course material, not self-disclosure.",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 0.0,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "typical",
+          "starter_diversity": "conversation_opportunity",
+          "comma_density": "strong_engagement",
+          "avg_word_length": "worth_monitoring",
+          "hp_confidence": "conversation_opportunity",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": -0.39,
+        "theme_concern_notes": []
+      },
+      "submission_text": "When I read the Crenshaw article about intersectionality it was the first time I see an American academic writing about something that my family already know from our life. In Iraq, before we come here, my mother was a woman and she was Sunni in a Shia area and she was also a teacher which means she was educated but not rich and all of these things together they make her experience very specific. It is not just that she is a woman in Iraq, because a rich Shia woman in Baghdad has a completely different life. It is the combination of being Sunni and being a woman and being educated but with no money and being from Mosul specifically that created her situation. When the conflict got worse it was all of these things together that made it dangerous for us, not any one thing by itself. I think Crenshaw would say my mother was at an intersection that the systems could not see because they only look at one thing at a time. The UN people when we apply for refugee status they ask about religion and they ask about the war but they don't ask about what it means to be a Sunni woman teacher from Mosul with children, which is a very specific kind of danger. My mother she had colleagues who were Sunni men and they were also in danger but a different kind of danger. She had colleagues who were Shia women and they were more safe. The intersection is what Crenshaw talks about and I recognize it immediately even though she is writing about Black women in America and not about Iraqi refugees. I think the framework is bigger than America even if it was made in America. When I come to this country I also experience a new intersection that did not exist before. In Iraq I was not Muslim in the way Americans think of Muslim. I was Sunni, I was from a specific family, I was from a specific city. Here I am just Muslim and that category it flatten everything about who I am into one word that Americans associate with terrorism and oppression of women. So now my intersection is: refugee, Muslim, woman, ESL, Arab, and each of these words carries a weight in America that it did not carry in Iraq. The word refugee here means something about being poor and desperate. The word Muslim means something about being dangerous or backwards. The word Arab means something about not being modern. None of these meanings are true about me or my family but they are real in the sense that they affect how people treat me, which is what Crenshaw means I think when she says that categories have material effects even when they are social constructions. My mother in Iraq was not oppressed by the word Sunni \u2014 she was oppressed by the specific political and military situation that the word Sunni indexed. Here in America she is not oppressed by the word Muslim exactly \u2014 she is oppressed by the specific set of assumptions and policies and surveillance that the word Muslim triggers in the American context. The word changes countries and changes meaning but the mechanism is the same: you are reduced to a category and the category determines how institutions treat you and the category cannot see the full complexity of who you are.\n\nThe part of Crenshaw that I am less sure about is whether the framework can account for what happens when you move between systems. My mother's intersection in Iraq was dangerous but at least it was legible to the people around her \u2014 everyone in Mosul understood what it meant to be who she was. Here the intersection is illegible. Americans do not have the context to understand what being a Sunni woman from Mosul means, so they substitute their own categories: Muslim, refugee, immigrant, ESL. These substituted categories create a new intersection that has nothing to do with the original one but is equally powerful in determining her access to jobs, housing, respect, and safety. I want to call this something like intersectional translation \u2014 the process by which a person's identity is translated from one categorical system to another when they cross borders, and the translation is always a reduction because the receiving system does not have the categories to capture the original complexity. I don't know if this is already a concept in the literature because I have not read everything yet but it is what I observe in my own family's experience. My grandmother in Iraq was a respected elder with social authority. Here she is an old woman who doesn't speak English and needs help filling out forms. Same person, different categorical system, completely different social position. Intersectionality explains each position but I think something else is needed to explain the translation between them. Maybe this is what the professor means by the social construction of categories \u2014 that the categories are not just descriptions of reality but are tools that each society builds for its own purposes, and when you move between societies you experience the arbitrariness of the tools directly. That is what my family's experience has taught me and I think Crenshaw's framework is a good starting point for understanding it even if it does not go all the way to where my experience takes me.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "4b4064ab-3c66-4fa9-8145-02df7ac57cf4",
+      "student_id": "LF06",
+      "student_name": "Marisol Delgado-Reyes",
+      "coding_record": {
+        "student_id": "LF06",
+        "student_name": "Marisol Delgado-Reyes",
+        "theme_tags": [
+          "Intersectionality and Lived Experience",
+          "Limitations of Single-Axis Frameworks",
+          "Knowledge Production (Academic vs. Lived)",
+          "Community-Based Analysis",
+          "Visibility as Resistance"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "I don't think I'm supposed to be writing about this in a school paper and I'll probably delete this paragraph before I submit.",
+            "significance": "This reveals a keen awareness of boundaries and a complex relationship with academic writing \u2013 a desire to connect theory to reality colliding with a sense of impropriety or fear."
+          },
+          {
+            "text": "Crenshaw says that intersectional experiences are made invisible by single-axis frameworks, and I think staying in the analytical register would have been its own form of single-axis thinking \u2014 the axis being 'academic.'",
+            "significance": "This demonstrates a sophisticated understanding of how adhering to a purely 'analytical register' can be a form of exclusion, a kind of academic silencing."
+          },
+          {
+            "text": "I started it thinking I would write a standard analytical response to the reading and instead I wrote about my family, which is probably not what was asked for.",
+            "significance": "This shows a willingness to deviate from expectations to authentically engage with the material and center her community's experiences."
+          }
+        ],
+        "emotional_register": "passionate|personal|reflective",
+        "emotional_notes": "Marisol's writing demonstrates raw honesty and vulnerability, particularly in her decision to share a deeply personal story about her family. She is also reflective about the choices she is making in her writing and the implications of those choices.",
+        "readings_referenced": [
+          "Crenshaw"
+        ],
+        "concepts_applied": [
+          "Intersectionality",
+          "Single-Axis Frameworks",
+          "Visibility"
+        ],
+        "personal_connections": [
+          "Family experiences",
+          "Community experiences (Mexican and Central American)",
+          "Experiences with domestic violence advocacy"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Marisol is grappling with the practical implications of Crenshaw's framework, and she's doing so through the lens of her own community's experiences. She's not just abstractly understanding intersectionality; she's using it to analyze power dynamics within families facing the pressures of undocumented status. The way she connects Crenshaw's legal arguments to the specific challenges faced by Mexican and Central American families is really insightful. She's identifying a gap \u2013 a systemic failure \u2013 where institutions designed to address single issues (domestic violence, immigration, legal aid) are inadequate when confronted with the complexities of intersectional experiences.\n\nWhat's striking is her ability to articulate the ways in which these systems, despite the best efforts of the people working within them, are fundamentally built for a \"single-axis person.\" She's not criticizing individuals; she's pointing to the structural limitations of these systems. Her description of how undocumented status can intensify power dynamics within families, creating isolation and limiting options, is powerfully observed. The fact that she chose to write about this, rather than attempting a more \"standard analytical response,\" speaks to a deep commitment to centering the experiences of her community. It's a courageous choice, and it reveals a sophisticated understanding of how academic frameworks can sometimes fail to capture the nuances of lived realities.\n\nMarisol is grappling with the profound difference between understanding intersectionality as a theoretical framework and living it. She's powerfully articulating that Crenshaw's legal analysis, while insightful, doesn't fully capture the existential reality for those navigating multiple, compounding systems of oppression. The core of her argument is a distinction between analytical knowledge (Crenshaw\u2019s) and lived knowledge (her mother\u2019s), recognizing that both are valuable but produce different kinds of understanding.\n\nWhat\u2019s striking is the raw honesty and vulnerability in her writing, particularly her decision to share a deeply personal story about her family. She explicitly acknowledges the discomfort and potential risk in doing so, stating, \"I don't think I'm supposed to be writing about this in a school paper and I'll probably delete this paragraph before I submit.\" This reveals a keen awareness of boundaries and a complex relationship with academic writing \u2013 a desire to connect theory to reality colliding with a sense of impropriety or fear.\n\nMarisol is demonstrating a sophisticated understanding of Crenshaw's argument about the limitations of single-axis frameworks, extending it to critique the fragmented nature of social services. She's not simply restating Crenshaw; she's using Crenshaw's work to illuminate a very specific, painful reality within her own family, and then reflecting on the different kinds of knowledge that arise from that experience. The teacher should notice her ability to connect abstract theory to concrete experience, and her insightful observation about the different forms of knowledge produced by those inside and outside of an experience.\n\nMarisol is grappling with the limitations of academic frameworks when applied to lived experience, particularly when that experience is shaped by multiple intersecting oppressions. She's acutely aware of the gap between theoretical understanding and practical survival, and she's pushing back against the idea that academic analysis should be prioritized over direct engagement with the complexities of those experiences. Her insight about her mother living \"inside the gap that the framework describes\" is a powerful observation, and her comparison of the feminist movement and domestic violence advocacy reveals a critical understanding of how mainstream institutions often fail those on the margins.\n\nWhat's striking is her honesty about the direction her paper took \u2013 moving from a planned analytical response to a deeply personal reflection on her family. She\u2019s recognizing that attempting to adhere to a purely \u201canalytical register\u201d would have been a form of exclusion in itself, a kind of academic silencing. Her decision to \u201clet yourself be visible\u201d is a deliberate and thoughtful choice, rooted in Crenshaw\u2019s argument about intersectionality. She's demonstrating a sophisticated understanding of how visibility itself can be a form of resistance against systems that render certain experiences invisible. The fact that she ends the paper unsure of how to conclude suggests a genuine struggle with how to represent complex realities within the confines of academic writing, a struggle that deserves recognition and support, not correction.",
+        "what_student_is_reaching_for": "Marisol is attempting to bridge the gap between theoretical frameworks like Crenshaw's intersectionality and the complex, often contradictory realities of lived experience, particularly within her own community, arguing that a purely analytical approach can inadvertently silence important perspectives.",
+        "confusion_or_questions": null,
+        "observation": "Marisol is grappling with a really profound question about the relationship between theoretical frameworks and lived experience, and she's doing so in a way that directly challenges the assumptions of academic distance. She's powerfully articulating how Crenshaw\u2019s framework illuminates a reality that is simultaneously deeply personal and structurally constrained for her family \u2013 the ways that immigration status, gender, and power dynamics within the family create a situation of isolation and fear that no single system can adequately address. Her ability to connect Crenshaw\u2019s legal arguments to the very concrete situation of her mother\u2019s experience is a testament to her intellectual capacity and her courage in bringing such a personal story into the academic space.\n\nEmotionally, this feels like a deeply generative moment of reckoning for Marisol. She's clearly wrestling with the tension between academic expectations and the urgency of her family's situation, and she's making a conscious decision to prioritize authenticity and visibility, even if it means deviating from a \"standard analytical response.\" The raw honesty in her writing, particularly the paragraph she mentions she might delete, speaks to a deep commitment to honoring her family's experience and refusing to sanitize it for an academic audience.\n\nIt's striking how Marisol is explicitly naming the limitations of mainstream frameworks \u2013 the domestic violence shelter, the immigration lawyer, the school counselor \u2013 and pointing out how their single-axis thinking fails to address the complex realities of intersectional experiences. She's also making a really insightful observation about the difference between the knowledge produced by academics (theories and policies) and the knowledge produced by those living within these systems (survival strategies). This is a level of critical self-reflection that goes far beyond the assignment prompt.\n\nI notice a subtle instance of **abstract liberalism** in her acknowledgement of the people working within those systems (\"many of them are doing incredible work with limited resources",
+        "wellbeing_axis": "BURNOUT",
+        "wellbeing_signal": "The student is grappling with a deeply personal and emotionally charged situation (their mother's experience with domestic violence and their family's immigration status) while attempting to engage with the assigned reading on intersectionality. They express a need to 'get it out' and acknowledge the discomfort of writing about such a sensitive topic, suggesting a level of emotional exhaustion and a potential for burnout. While the writing demonstrates a sophisticated understanding of the course material, the intensity of the personal disclosure indicates a struggle to manage the emotional weight of the topic.",
+        "wellbeing_confidence": 0.85,
+        "checkin_flag": null,
+        "checkin_reasoning": null,
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 1.65,
+            "marker_count": 1,
+            "markers": [
+              "right now"
+            ]
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 2.61,
+            "marker_count": 2,
+            "markers": [
+              "my community",
+              "I hope that"
+            ]
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 4.3,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "typical",
+          "starter_diversity": "worth_monitoring",
+          "comma_density": "conversation_opportunity",
+          "avg_word_length": "typical",
+          "hp_confidence": "strong_engagement",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": -0.49,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Intersectionality as a framework asks us to consider how overlapping social identities relate to systems of oppression and privilege. Crenshaw developed this concept by examining how Black women's experiences in the workplace and in the legal system couldn't be adequately addressed by either race-based or gender-based frameworks alone. What I found compelling about the reading is not just the argument itself but the method \u2014 she uses specific legal cases to show how the gaps in the framework aren't accidental. They're built into how the categories work.\n\nI think about this in terms of my own community. I grew up in a neighborhood where almost everyone is Mexican or Central American, and within that community there are so many intersections that outsiders don't see. There are differences between families who have been here for three generations and families who just arrived. There are differences between people with papers and people without. There are differences between people from different regions of Mexico who carry different racial positions \u2014 my abuelo always talked about how being from Oaxaca meant being seen as indigenous in Mexico City, which carried a specific kind of stigma that people from Guadalajara didn't experience. All of these differences intersect with gender and class and language and education and age in ways that create very specific positions.\n\nOne thing the reading made me think about is how the concept of machismo intersects with immigration status to create very specific power dynamics within families. This isn't something I've seen discussed much in our class materials, probably because it's an internal community dynamic rather than an external institutional one. But Crenshaw's framework applies here too \u2014 the intersection creates something qualitatively different from either machismo alone or immigration stress alone. When a family is under the pressure of undocumented status, the power dynamics inside the household can intensify because the family is isolated from outside support systems. You can't call the police if you don't trust the police. You can't leave if leaving means losing your housing and your kids' stability.\n\nI think Crenshaw would recognize what I'm describing here even though her original cases were about employment discrimination. The mechanism is the same: when you exist at an intersection that institutional support systems weren't designed for, the gap becomes a trap. Domestic violence services assume you can engage with law enforcement. Immigration services don't deal with family safety. Legal aid is overloaded and underfunded and the waitlist alone takes months. Each system was designed for a single-axis person with a single-axis problem, and my community is full of people whose problems are intersectional in ways that no single system can address. This isn't a criticism of the people who work in those systems \u2014 many of them are doing incredible work with limited resources. It's a criticism of the categorical architecture, the same way Crenshaw was critiquing the architecture of anti-discrimination law, not the individual judges.\n\nI'm writing about this because it's real for me, not theoretical. My mom has been dealing with my stepdad for years and it got worse after my uncle got deported because that scared everyone in the family and made them feel like we had to keep everything inside, keep quiet, don't draw attention. My stepdad knows my mom won't go to anyone for help because she's afraid and he uses that. The intersection Crenshaw writes about \u2014 where the specific combination of identities creates a trap that neither identity alone explains \u2014 that's exactly what I see. It's not just that my mom is a woman dealing with a controlling partner. It's that she's an undocumented woman in a community where asking for help means risking everything, partnered with someone who understands exactly how trapped she is. I don't think I'm supposed to be writing about this in a school paper and I'll probably delete this paragraph before I submit but right now I need to get it out because the reading made it impossible to pretend this is just theory.\n\nWhat Crenshaw shows in the legal cases is that institutions designed to help people with one problem at a time can't help people whose problems are intersectional. The domestic violence shelter might not have bilingual staff. The immigration lawyer doesn't do family law. The school counselor doesn't know about any of this because we don't talk about it. Each system sees one piece and none of them see how the pieces combine to create a situation where leaving is more dangerous than staying, at least that's how my mom sees it.\n\nI want to go back to the analytical point because I think there's something important here about how intersectionality functions differently for people inside the experience versus people studying it from outside. For Crenshaw, as a legal scholar, the insight is analytical \u2014 she can show how legal frameworks fail intersectional subjects. For my mom, the insight is existential \u2014 she lives inside the gap that the framework describes. I don't think either perspective is more valid but they produce very different kinds of knowledge. The academic version produces theories and policies. The lived version produces survival strategies that never make it into the literature.\n\nThe reading also talks about how the feminist movement has historically centered white women's experiences, and I see a parallel in how domestic violence advocacy often centers middle-class white women's experiences. The advice is always: call the police, go to a shelter, get a restraining order. Those steps assume a relationship to institutions that my mom doesn't have. They assume that the police are safe, that a shelter won't ask about your status, that a restraining order can be enforced when your abuser knows you won't go to court. The intersection of immigration status and domestic violence creates a specific trap that mainstream advocacy frameworks weren't built to address. Some organizations understand this \u2014 I know there are groups that specifically serve undocumented DV survivors \u2014 but the default framework still assumes a single-axis subject who can access institutions without risk.\n\nI don't know how to end this paper. I started it thinking I would write a standard analytical response to the reading and instead I wrote about my family, which is probably not what was asked for. But Crenshaw says that intersectional experiences are made invisible by single-axis frameworks, and I think staying in the analytical register would have been its own form of single-axis thinking \u2014 the axis being \"academic.\" Sometimes the most honest engagement with a text about visibility is to let yourself be visible. I hope that's OK.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "4b4064ab-3c66-4fa9-8145-02df7ac57cf4",
+      "student_id": "LF07",
+      "student_name": "Noah Adeyemi",
+      "coding_record": {
+        "student_id": "LF07",
+        "student_name": "Noah Adeyemi",
+        "theme_tags": [
+          "Structural Critique",
+          "Categorical Reductive Systems",
+          "Activism & Institutional Change",
+          "Limitations of Intersectionality"
+        ],
+        "theme_confidence": {
+          "Structural Critique": 0.95,
+          "Categorical Reductive Systems": 0.9,
+          "Activism & Institutional Change": 0.85,
+          "Limitations of Intersectionality": 0.9
+        },
+        "notable_quotes": [
+          {
+            "text": "institutions built on single-axis categories systematically fail the people who exist at intersections",
+            "significance": "This quote demonstrates Noah's grasp of Crenshaw's core argument about the limitations of single-axis frameworks."
+          },
+          {
+            "text": "the structure of institutional categories themselves creates specific patterns of invisibility that disproportionately harm people at intersections",
+            "significance": "This highlights his expansion of Crenshaw's argument beyond legal contexts, recognizing the broader impact of categorization."
+          },
+          {
+            "text": "the categories become so specific that they defeat the purpose of having categories at all",
+            "significance": "This is a particularly insightful point about the paradoxical nature of refining categories \u2013 it reveals a sophisticated understanding of the complexities of categorization."
+          }
+        ],
+        "emotional_register": "reflective",
+        "emotional_notes": "Noah's tone is thoughtful and analytical, demonstrating a willingness to engage with the complexities and limitations of Crenshaw's framework. He is not expressing distress but rather engaging in a rigorous intellectual exploration.",
+        "readings_referenced": [
+          "Crenshaw"
+        ],
+        "concepts_applied": [
+          "intersectionality",
+          "structural racism",
+          "categorical architecture"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Noah is grappling with the practical implications of Crenshaw\u2019s framework, moving beyond a purely theoretical understanding to consider how it might translate into institutional change. He's clearly grasped the core structural argument \u2013 that single-axis categories create blind spots \u2013 and is actively trying to apply that insight to fields beyond the legal context Crenshaw initially explored. His examples of medical research and technology design are particularly insightful, demonstrating a capacity to see how this structural blindness operates in various domains.\n\nWhat's striking is his honest assessment of the framework's limitations. He doesn't shy away from the challenge of creating truly inclusive institutions, recognizing the potential pitfalls of endlessly multiplying categories. This isn't a criticism of Crenshaw's work, but a thoughtful consideration of how to move forward. He's articulating a sophisticated tension: intersectionality is a powerful diagnostic tool, revealing the flaws in existing systems, but it doesn't offer a clear roadmap for building something better.\n\nThe way he frames this challenge \u2013 the \"combinatorially explosive\" nature of categories \u2013 is a really interesting observation. It suggests a deep understanding of the complexities of categorization itself, a crucial insight that goes beyond simply understanding the concept of intersectionality. He's thinking about the very foundations of how we organize knowledge and experience, and that\u2019s a really valuable place to be.\n\nNoah\u2019s submission reveals a sophisticated grappling with the limitations of intersectionality as a practical tool, moving beyond Crenshaw\u2019s framework as a purely diagnostic one. He's clearly wrestling with the tension between the theoretical power of intersectionality and the realities of institutional function. The observation that \u201cthe categories become so specific that they defeat the purpose of having categories at all\u201d is a particularly insightful point, demonstrating a critical awareness of how attempts to refine categorization can paradoxically reinforce the very system they aim to critique.\n\nWhat's striking is his exploration of an \"anti-categorical approach,\" a concept he acknowledges as philosophically appealing but practically challenging. He doesn't shy away from the difficulty of this idea, recognizing the necessity of categories for resource distribution while simultaneously questioning their inherent limitations. The connection he draws between structural racism and intersectionality, arguing that the structure of categories themselves produces invisibility and harm, is a strong articulation of the week's concepts.\n\nHis reflection on activism is especially notable. Noah isn't simply accepting intersectionality as a framework for demanding better treatment within existing categories; he\u2019s pushing further, considering activism that challenges the categories themselves. The inherent paradox of building a movement around the idea that single-category movements are inherently exclusionary is a complex and insightful observation. It suggests a deep engagement with the political implications of Crenshaw\u2019s work.",
+        "what_student_is_reaching_for": "Noah is attempting to move beyond Crenshaw's initial legal argument to apply intersectionality as a framework for diagnosing structural flaws across various institutions, while simultaneously grappling with the practical challenges of building alternatives to categorical systems.",
+        "confusion_or_questions": null,
+        "observation": "Noah is really grappling with the practical implications of Crenshaw's framework, moving beyond the theoretical to consider how it applies to concrete areas like medical research, education, and urban planning. He\u2019s demonstrating a sophisticated understanding of how seemingly neutral institutional structures can perpetuate inequalities through their categorical logic \u2013 the connection he makes between Crenshaw\u2019s legal argument and structural racism is particularly insightful. There's a clear intellectual curiosity driving him to extend Crenshaw's work, and he's thoughtfully considering the challenges of translating this analysis into actionable solutions.\n\nEmotionally, Noah seems engaged in a process of critical questioning, wrestling with the limitations of Crenshaw\u2019s framework and the difficulty of dismantling categorical thinking. He's not afraid to articulate the tension between philosophical ideals (an anti-categorical approach) and practical realities (institutions needing categories to function). This feels like a genuine intellectual struggle, not a performance of understanding.\n\nI notice a shift in his thinking from earlier in the semester, where he seemed more focused on the individual level of prejudice. Now, he's clearly zeroing in on the structural level, recognizing that activism focused on single categories can be insufficient. He's articulating a complex challenge: how do you build a movement around the idea that movements themselves can be exclusionary? This is a really promising trajectory.\n\nI also notice a subtle instance of **abstract liberalism** in his discussion of institutional categories. He states, \"Institutions need categories to function. You can't distribute resources without some way of identifying who needs them.\" While technically true, this statement subtly reinforces the necessity of categorization without fully acknowledging the ways in which those categories themselves can be inherently biased and exclusionary. It positions categorization as a neutral, unavoidable requirement for institutional function, potentially overlooking alternative, more equitable approaches to resource distribution that don't rely on rigid categories. It'",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student is deeply engaged with Crenshaw's intersectionality framework, analyzing its strengths, weaknesses, and implications across various institutions. They are critically evaluating the framework and connecting it to course material on structural racism.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": false,
+        "checkin_reasoning": "The student does not explicitly state anything about their own current state. The final sentence, 'Whether we can get there from here is the open question that I hope we keep exploring in this class,' is a statement about their engagement with the course material, not a disclosure of personal feelings or circumstances.",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 2.33,
+            "marker_count": 1,
+            "markers": [
+              "last week"
+            ]
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.99,
+            "marker_count": 1,
+            "markers": [
+              "we can"
+            ]
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 3.3,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "strong_engagement",
+          "starter_diversity": "typical",
+          "comma_density": "typical",
+          "avg_word_length": "strong_engagement",
+          "hp_confidence": "typical",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": 0.37,
+        "theme_concern_notes": []
+      },
+      "submission_text": "The power of Crenshaw's intersectionality framework, as I understand it, is not just that it names the overlap of identities but that it reveals a specific structural problem: institutions built on single-axis categories systematically fail the people who exist at intersections. I want to examine this structural argument closely because I think it has implications beyond what Crenshaw originally intended.\n\nFirst, the legal argument. Crenshaw shows that anti-discrimination law operates by comparing plaintiffs to a reference group. Race discrimination is measured against the treatment of white people. Sex discrimination is measured against the treatment of men. But for a Black woman, both comparisons are insufficient because her treatment may be distinct from both Black men and white women. The legal framework literally cannot see her experience because it lacks the conceptual categories to do so. This is not a failure of individual judges \u2014 it's a failure of the categorical architecture itself.\n\nI find this argument compelling because it applies well beyond the courtroom. Consider medical research. Clinical trials have historically enrolled predominantly white male subjects and then generalized the results. When researchers began disaggregating data by race, they found differences. When they disaggregated by sex, they found differences. But the intersectional question \u2014 are there specific health outcomes for Black women that differ from both Black men and white women \u2014 is often still unasked because the research design doesn't create space for it. The same structural blindness Crenshaw identifies in law operates in medicine, in education, in technology design, in urban planning.\n\nThis brings me to a question about the limits of the framework. If intersectionality identifies the problem \u2014 that single-axis categories create blind spots \u2014 what does the solution look like institutionally? You can't create a separate legal category for every possible intersection because the number of intersections is combinatorially explosive. Black women, Black disabled women, Black disabled immigrant women, Black disabled immigrant queer women \u2014 at some point the categories become so specific that they defeat the purpose of having categories at all. I think this is where Crenshaw's framework is strongest as a diagnostic tool and weakest as a prescriptive one. It tells you what's wrong with how institutions categorize people but doesn't quite tell you how to build institutions that don't need those categories.\n\nOne possible direction is what some scholars call an anti-categorical approach: rather than creating more intersections within the existing system, question whether categorical thinking itself is the right framework for addressing inequality. This appeals to me philosophically but I recognize it may not be practical. Institutions need categories to function. You can't distribute resources without some way of identifying who needs them. The question is whether you can build categories that are responsive to intersectionality rather than blind to it.\n\nI think the reading pairs well with what we discussed about structural racism last week. Structural racism is the idea that racial inequality is maintained through institutional systems rather than individual prejudice. Intersectionality adds precision to this claim: it's not just that institutions are structurally racist, it's that the structure of institutional categories themselves creates specific patterns of invisibility that disproportionately harm people at intersections. The structure isn't just racist \u2014 it's categorically reductive in a way that produces racism as one of its effects.\n\nThis framework changes how I think about activism too. If the problem is categorical, then activism that works within existing categories \u2014 demanding better treatment for women, or for people of color, or for LGBTQ people \u2014 is necessary but insufficient. You also need activism that challenges the categories themselves, that demands institutions account for the people who fall between the boxes. That's harder to organize around because it doesn't have a single constituency. Intersectional activism is almost a contradiction in terms \u2014 how do you build a movement around the insight that movements based on single categories will inevitably leave people out?\n\nI don't have an answer to that but I think Crenshaw's framework is the right starting point. You have to name the problem before you can solve it, and the problem is that our institutions were built for single-axis people who don't exist. Everyone exists at an intersection. The framework that finally accounts for that is the framework that might actually produce just institutions. Whether we can get there from here is the open question that I hope we keep exploring in this class.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    }
+  ],
+  "themes": {
+    "theme_set": "{\"themes\":[{\"name\":\"Connecting Theory to Lived Experience\",\"description\":\"Auto-grouped from coding tag 'Connecting Theory to Lived Experience' (LLM timed out)\",\"frequency\":2,\"student_ids\":[\"LF01\",\"LF03\"],\"supporting_quotes\":[],\"confidence\":0.3,\"sub_themes\":null},{\"name\":\"Skepticism and Validation\",\"description\":\"Auto-grouped from coding tag 'Skepticism and Validation' (LLM timed out)\",\"frequency\":1,\"student_ids\":[\"LF01\"],\"supporting_quotes\":[],\"confidence\":0.3,\"sub_themes\":null},{\"name\":\"Nuanced Understanding of Intersectionality\",\"description\":\"Auto-grouped from coding tag 'Nuanced Understanding of Intersectionality' (LLM timed out)\",\"frequency\":1,\"student_ids\":[\"LF01\"],\"supporting_quotes\":[],\"confidence\":0.3,\"sub_themes\":null},{\"name\":\"Critical Engagement with Crenshaw's Framework\",\"description\":\"Auto-grouped from coding tag 'Critical Engagement with Crenshaw's Framework' (LLM timed out)\",\"frequency\":1,\"student_ids\":[\"LF01\"],\"supporting_quotes\":[],\"confidence\":0.3,\"sub_themes\":null},{\"name\":\"Self-Reflection and Positionality\",\"description\":\"Auto-grouped from coding tag 'Self-Reflection and Positionality' (LLM timed out)\",\"frequency\":1,\"student_ids\":[\"LF01\"],\"supporting_quotes\":[],\"confidence\":0.3,\"sub_themes\":null},{\"name\":\"Applying Intersectionality to Everyday Life\",\"description\":\"Auto-grouped from coding tag 'Applying Intersectionality to Everyday Life' (LLM timed out)\",\"frequency\":1,\"student_ids\":[\"LF02\"],\"supporting_quotes\":[],\"confidence\":0.3,\"sub_themes\":null},{\"name\":\"Limitations of Institutional Responses\",\"description\":\"Auto-grouped from coding tag 'Limitations of Institutional Responses' (LLM timed out)\",\"frequency\":1,\"student_ids\":[\"LF02\"],\"supporting_quotes\":[],\"confidence\":0.3,\"sub_themes\":null},{\"name\":\"The Burden of Multiple Expectations\",\"description\":\"Auto-grouped from coding tag 'The Burden of Multiple Expectations' (LLM timed out)\",\"frequency\":1,\"student_ids\":[\"LF02\"],\"supporting_quotes\":[],\"confidence\":0.3,\"sub_themes\":null},{\"name\":\"Recognizing Invisible Experiences\",\"description\":\"Auto-grouped from coding tag 'Recognizing Invisible Experiences' (LLM timed out)\",\"frequency\":1,\"student_ids\":[\"LF02\"],\"supporting_quotes\":[],\"confidence\":0.3,\"sub_themes\":null},{\"name\":\"Intersectionality and Epistemic Violence\",\"description\":\"Auto-grouped from coding tag 'Intersectionality and Epistemic Violence' (LLM timed out)\",\"frequency\":1,\"student_ids\":[\"LF03\"],\"supporting_quotes\":[],\"confidence\":0.3,\"sub_themes\":null},{\"name\":\"Hesitation and Self-Censorship Regarding Personal Disclosure\",\"description\":\"Marisol expressed significant discomfort sharing personal experiences within the academic context, indicating a potential conflict between lived experience and perceived academic expectations. This suggests a need to explore the boundaries of appropriate sharing and the role of vulnerability in academic work.\",\"frequency\":1,\"student_ids\":[\"LF06\"],\"supporting_quotes\":[{\"text\":\"I don't think I'm supposed to be writing about this in a school paper and I'll probably delete this paragraph before I submit.\",\"significance\":\"Demonstrates a reluctance to share potentially sensitive information within a formal academic setting.\"}],\"confidence\":0.9,\"sub_themes\":[\"academic boundaries\",\"vulnerability in writing\"]},{\"name\":\"Critique of Categorical Systems and Institutional Failure\",\"description\":\"Noah identifies a fundamental flaw in institutions that rely on single-axis categories, arguing that these systems inherently fail individuals who exist at the intersection of multiple identities. This points to a structural critique of how institutions perpetuate inequality.\",\"frequency\":1,\"student_ids\":[\"LF07\"],\"supporting_quotes\":[{\"text\":\"institutions built on single-axis categories systematically fail the people who exist at intersections\",\"significance\":\"Directly challenges the efficacy of single-axis frameworks in addressing complex social issues.\"}],\"confidence\":0.95,\"sub_themes\":[\"structural inequality\",\"limitations of categorization\"]},{\"name\":\"Navigating the Limits of Intersectionality\",\"description\":\"While Noah acknowledges the failures of single-axis systems, he also expresses a sense of caution regarding intersectionality itself, suggesting a need for further consideration of its practical application and potential pitfalls. This demonstrates a nuanced understanding of the complexities involved in applying intersectional frameworks.\",\"frequency\":1,\"student_ids\":[\"LF07\"],\"supporting_quotes\":[],\"confidence\":0.85,\"sub_themes\":[\"practical application\",\"critical evaluation\"]}],\"contradictions\":[{\"description\":\"Tension between personal disclosure and academic expectations vs. structural critique and activism.\",\"side_a\":\"Hesitation and self-censorship regarding personal disclosure\",\"side_a_students\":[\"LF06\"],\"side_b\":\"Structural critique and activism\",\"side_b_students\":[\"LF07\"],\"pedagogical_significance\":\"This tension highlights the challenges students face when attempting to bridge personal experiences and structural analysis. It presents an opportunity to discuss the ethics of sharing, the role of personal narratives in social change, and the potential for academic settings to both support and inhibit vulnerable disclosures.\"}]}",
+    "outlier_report": "{\"outliers\":[{\"student_id\":\"LF04\",\"student_name\":\"David Orozco\",\"why_notable\":\"David critiques the oversimplification of intersectionality in popular discourse, demonstrating a sophisticated understanding of Crenshaw's original argument and a focus on structural analysis.\",\"relationship_to_themes\":\"This submission challenges the 'Nuanced Understanding of Intersectionality' theme by going beyond a nuanced understanding to actively critique common misinterpretations. It strongly aligns with 'Critical Engagement with Crenshaw's Framework' and introduces a 'Structural Analysis of Institutions' theme not explicitly identified, highlighting a focus on systemic issues rather than individual prejudice.\",\"notable_quote\":{\"text\":\"Crenshaw's intersectionality is one of those concepts that I think gets oversimplified a lot in the way it circulates in popular discourse\",\"significance\":\"This reveals David's awareness of how intersectionality is often diluted or misunderstood outside of academic settings, prompting a deeper engagement with Crenshaw's original work.\"},\"teacher_recommendation\":\"Highlight David's observation about the oversimplification of intersectionality in class. Ask students to share examples of how they've seen intersectionality misrepresented. Encourage him to elaborate on how institutions contribute to structural invisibility.\"},{\"student_id\":\"LF05\",\"student_name\":\"Fatima Al-Rashidi\",\"why_notable\":\"Fatima introduces the concept of 'intersectional translation,' a novel framework for understanding how identities are re-encoded and reduced when navigating different social systems, particularly across borders.\",\"relationship_to_themes\":\"While Fatima engages with 'Recognizing Invisible Experiences,' her concept of 'intersectional translation' significantly extends Crenshaw's framework. It challenges the 'Limitations of Institutional Responses' theme by suggesting that the problem isn't just about institutional failure but about the inherent limitations of categorical systems themselves. It also relates to 'Applying Intersectionality to Everyday Life' by providing a framework for understanding how individuals navigate complex identity negotiations.\",\"notable_quote\":{\"text\":\"I want to call this something like intersectional translation \u2014 the process by which a person's identity is translated from one categorical system to another when they cross borders, and the translation is always a reduction because the receiving system does not have the categories to capture the original complexity.\",\"significance\":\"This demonstrates Fatima's insightful observation about the loss of nuance and complexity that occurs when individuals are forced to fit into new categorical systems, a particularly relevant experience for those navigating migration or cultural shifts.\"},\"teacher_recommendation\":\"Dedicate time to discussing Fatima's concept of 'intersectional translation.' Ask students to consider how this framework applies to their own experiences or observations. Explore the implications of this concept for designing more inclusive and equitable systems.\"}]}",
+    "synthesis_report": null
+  },
+  "feedback": [
+    {
+      "run_id": "4b4064ab-3c66-4fa9-8145-02df7ac57cf4",
+      "student_id": "LF01",
+      "student_name": "Aaliyah Washington",
+      "draft_text": "Aaliyah, it was really insightful to read your reflections on Crenshaw's work, especially when you said, 'I came into this assignment thinking I already knew what intersectionality was and I'm leaving it realizing I only understood the surface.' That kind of honest self-assessment is a powerful starting point for deeper learning. You did a great job connecting Crenshaw's framework to your family's experiences, showing how race and gender combine to create unique challenges. I'm wondering, as you consider how the effects reinforce the construction, could you explore how those constructions are actively maintained and reproduced within your community?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "4b4064ab-3c66-4fa9-8145-02df7ac57cf4",
+      "student_id": "LF04",
+      "student_name": "David Orozco",
+      "draft_text": "David, I was really struck by your observation that Crenshaw's intersectionality is often oversimplified in popular discourse \u2013 that's a really insightful point about how complex theories can get flattened. You've done a great job applying Crenshaw's ideas to the education system, showing a clear understanding of how institutions can create structural invisibility. Thinking about how categories like 'Mexican' can obscure more than they reveal is a powerful move. I'm wondering, how might Crenshaw's framework help us understand the ways that different systems (like education, healthcare, or the legal system) interact to shape experiences?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "4b4064ab-3c66-4fa9-8145-02df7ac57cf4",
+      "student_id": "LF05",
+      "student_name": "Fatima Al-Rashidi",
+      "draft_text": "Fatima, I was really struck by your concept of 'intersectional translation' \u2013 it's a powerful way to articulate the loss of nuance that happens when navigating new systems. You've done a wonderful job connecting Crenshaw's framework to your family's experiences, particularly the contrast between your grandmother's authority in Iraq and her experience in America. As you consider how societies 'build categories for their own purposes,' could you explore how those purposes might reinforce existing power structures?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "4b4064ab-3c66-4fa9-8145-02df7ac57cf4",
+      "student_id": "LF02",
+      "student_name": "Jaylen Morris",
+      "draft_text": "Jaylen, I was really struck by your point about how different social justice movements can inadvertently exclude those at the intersection of those identities \u2013 that's a really insightful observation. It takes courage to be so honest about the challenges you're facing, and I appreciate you sharing your experiences navigating so many expectations. I'm wondering, as you were reflecting on Crenshaw's work, did you notice any parallels between the legal cases she discussed and the ways institutions might unintentionally create barriers for people today?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "4b4064ab-3c66-4fa9-8145-02df7ac57cf4",
+      "student_id": "LF06",
+      "student_name": "Marisol Delgado-Reyes",
+      "draft_text": "Marisol, I was really struck by your observation that staying in a purely analytical register could be its own form of single-axis thinking \u2013 that's a really insightful point about the limitations of academic frameworks! It takes a lot of courage to bring such personal experiences into the classroom, and I appreciate you sharing your reflections on your family's experiences. I'm wondering, as you thoughtfully considered the tension between academic expectations and the urgency of your family's situation, what other approaches might help bridge the gap between theory and lived experience?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "4b4064ab-3c66-4fa9-8145-02df7ac57cf4",
+      "student_id": "LF03",
+      "student_name": "Natasha Okafor-Chen",
+      "draft_text": "Natasha, I was really struck by your observation that 'the interaction between categories creates experiences that the categories themselves cannot capture' \u2013 that's a really insightful way to articulate the limitations of trying to neatly define experiences. It takes a lot of courage and vulnerability to connect such complex theoretical concepts to your own lived experience, and I appreciate you sharing your reflections on navigating those spaces. Thinking about your point about wanting to avoid 'appropriating the framework,' I'm wondering if you could elaborate on how Crenshaw's work might help us understand the nuances of those boundaries you're drawing?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "4b4064ab-3c66-4fa9-8145-02df7ac57cf4",
+      "student_id": "LF07",
+      "student_name": "Noah Adeyemi",
+      "draft_text": "Noah, I was really struck by your observation that 'the categories become so specific that they defeat the purpose of having categories at all' \u2013 that's a really insightful point about the limitations of categorical systems. You've done a great job connecting Crenshaw's legal argument to broader structural issues like structural racism. I'm wondering, when you mention that institutions need categories to function, could you explore some alternative ways of thinking about resource distribution that might move beyond rigid categories?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    }
+  ],
+  "observation_synthesis": "Okay, here's a class summary based on my reading of the student submissions. I've aimed for a 5-minute read, focusing on actionable insights for you.\n\n## Class Temperature\n\nThis class is humming with a really exciting level of intellectual curiosity and a genuine desire to grapple with complex ideas. There's a palpable sense of students moving beyond simply understanding *what* intersectionality is to actively questioning *how* it works, *where* it falls short, and *what* it can be used for. The energy feels driven by a combination of intellectual challenge and a desire to connect theory to lived experience.\n\n## What Students Are Reaching For\n\nHere are the main intellectual threads I'm seeing:\n\n1.  **Moving Beyond Individual Experience to Structural Analysis:** Several students are actively trying to connect Crenshaw\u2019s framework to broader systemic issues within education, law, and social justice movements. Jaylen Morris is doing this particularly well, connecting Crenshaw\u2019s legal arguments to broader systemic issues within education. David Orozco is also making a strong move by extending Crenshaw\u2019s analysis to the education system, demonstrating a clear grasp of the structural logic Crenshaw outlines.\n2.  **Critiquing the Limitations of Categorical Thinking:** There's a strong current of students questioning the inherent limitations of categories themselves and how they can inadvertently exclude or marginalize those at the intersections. Natasha Okafor-Chen\u2019s critique of the 'checklist' approach is a standout example, and David Orozco is also grappling with the limitations of categories themselves.\n3.  **Bridging the Gap Between Theory and Lived Experience:** A significant number of students are wrestling with how to translate abstract theoretical concepts into concrete, actionable insights. Fatima Al-Rashidi is grappling with how to account for the translation of social positions across different societies, and Marisol Delgado-Reyes is powerfully articulating how Crenshaw\u2019s framework illuminates a reality that is simultaneously deeply personal and structurally constrained.\n4.  **Recognizing the Complexity of Power Dynamics:** Students are beginning to recognize that intersectionality isn't just about acknowledging multiple identities, but about understanding how power operates across different systems and institutions. Noah Adeyemi is demonstrating a capacity for diagnosing structural flaws across various institutions.\n\n## Exceptional Contributions\n\n*   **Marisol Delgado-Reyes:** Marisol\u2019s decision to center her family\u2019s experiences in her writing, even if it meant deviating from a \"standard analytical response,\" is a powerful testament to her authenticity and courage. She articulates how mainstream frameworks can fail to address the specific needs of marginalized communities, and her honesty about the challenges of translating theory into action is incredibly valuable. *Why it matters:* This demonstrates a commitment to centering marginalized voices and challenging conventional academic expectations. *Mirror back:* Validate her decision to prioritize visibility and encourage this kind of self-reflection.\n*   **Fatima Al-Rashidi:** Fatima\u2019s connection to her family\u2019s experiences in Iraq provides a rich context for understanding the complexities of navigating multiple forms of oppression. Her grappling with the question of what *else* is needed to explain the translation of social positions across different cultural contexts is a very sophisticated question. *Why it matters:* This shows a willingness to push beyond the boundaries of Crenshaw\u2019s framework and engage with broader questions about social construction and power. *Mirror back:* Encourage her expansive thinking and acknowledge the value of her questions.\n*   **Natasha Okafor-Chen:** Natasha\u2019s critique of the 'checklist' approach to intersectionality, combined with her connection to Spivak\u2019s concept of epistemic violence, demonstrates a nuanced understanding of Crenshaw\u2019s core argument and a capacity for synthesizing theoretical concepts. *Why it matters:* This shows a critical awareness of how institutions, even those aiming for inclusivity, can inadvertently exclude those who exist at multiple intersections. *Mirror back:* Validate her shift to personal reflection and encourage this kind of self-reflection.\n\n## Students to Check In With\n\n*   **Aaliyah Washington:** While her initial skepticism is a valuable asset, it also reveals a potential threshold \u2013 a need for the teacher to validate her initial assessment that intersectionality might be 'one of those academic things.' *Tone:* Warm acknowledgment. Acknowledge her skepticism and share a concrete example of how Crenshaw\u2019s work has impacted policy or social movements.\n*   **Jaylen Morris:** Jaylen mentions wanting to connect the framework to other readings on structural racism but cuts off his thought. *Tone:* Gentle inquiry about workload. Ask him if he's feeling overwhelmed and if he'd like to discuss his ideas further in office hours.\n*   **Fatima Al-Rashidi:** Fatima is grappling with a question that goes beyond Crenshaw\u2019s framework: what explains the translation of social positions across different societies? *Tone:* Curiosity about what's behind the question. Ask her what prompted her to ask that question and if she's seen any readings that might help her explore it further.\n\n## How Students Entered the Material\n\nThe range of entry points is striking. Some students, like David Orozco, approached the material with a clear focus on structural analysis, while others, like Marisol Delgado-Reyes, were driven by a desire to connect theory to lived experience. Natasha Okafor-Chen demonstrated a strong analytical ability, while Fatima Al-Rashidi approached the material with a passionate and personal perspective. Aaliyah Washington started with skepticism, which then fueled her engagement.\n\n## What's Working in This Assignment\n\nThe prompt's flexibility is clearly working well. Students felt empowered to connect the material to their own experiences and to critique the framework itself. The open-ended nature of the assignment allowed students to explore their own intellectual curiosities and to challenge conventional thinking. The fact that students felt comfortable sharing personal stories is a testament to the trust you've built in the classroom.\n\n## Moments for the Classroom\n\nSeveral students are wrestling with the tension between the theoretical framework of intersectionality and the practical realities of social change. Some are questioning how to move beyond analysis to action, while others are grappling with the challenges of organizing around intersectional issues. This tension could be explored in a class discussion by asking students to brainstorm concrete examples of how Crenshaw\u2019s framework can be applied to real-world problems.\n\n## Structural Power Moves to Address\n\n*   **Colorblind Erasure:** Several students, including David Orozco and Natasha Okafor-Chen, demonstrated a subtle tendency towards colorblind erasure when discussing their family experiences. For example, David's framing of his family's experience as a challenge to the \"simple version of intersectionality\" risks minimizing the specific ways that anti-Blackness and other forms of racialization operate within Latinx communities. *Pedagogical approach:* In a class discussion, you could gently challenge the assumption that a more \"complex\" understanding of intersectionality necessarily involves erasing the specificity of racial experiences. You could ask students to consider how different forms of oppression interact and reinforce one another.\n*   **Abstract Liberalism:** Aaliyah's framing of the \"construction\" of social categories as \"real because the effects are real\" and Fatima's discussion of institutions building categories \"for their own purposes\" both reflect a subtle tendency towards abstract liberalism. *Pedagogical approach:* You could ask students to consider the role of power in shaping and maintaining social categories. You could ask them to consider who benefits from these categories and how they are used to justify inequality.\n\n\n\n## Looking Ahead to Next Week\n\nGiven the strong engagement with Crenshaw\u2019s framework, students are well-positioned to engage with Omi & Winant\u2019s concept of racial formation. The students who are grappling with the limitations of categories will be particularly interested in Omi & Winant\u2019s argument that race is a socially constructed system that is constantly being negotiated and contested. Fatima Al-Rashidi\u2019s questions about the translation of social positions across different societies will be particularly relevant to Omi & Winant\u2019s discussion of how racial categories are shaped by historical and political contexts. Encourage students to consider how Crenshaw\u2019s framework and Omi & Winant\u2019s framework can be used together to analyze the complexities of race and inequality."
+}

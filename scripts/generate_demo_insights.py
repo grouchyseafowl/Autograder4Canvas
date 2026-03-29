@@ -74,6 +74,60 @@ COURSES = {
         "output_file": "insights_biology.json",
         "run_id": "demo-insights-run-bio-lab-0000000000001",
     },
+    "phase1_long_form": {
+        "course_id": "90003",
+        "course_name": "Ethnic Studies (11), Period 3",
+        "assignment_id": "113002",
+        "assignment_name": "Week 6 Discussion: Intersectionality in Practice",
+        "teacher_context": (
+            "This is a weekly discussion board. Students respond to a reading about "
+            "intersectionality theory applied to everyday life. Complete/incomplete grading — "
+            "150 word minimum. I'm looking for genuine engagement with the concepts, not "
+            "polished academic writing."
+        ),
+        "next_week_topic": (
+            "Week 7: Racial Formation — Omi & Winant's framework. Students will read "
+            "an excerpt on how race is socially constructed through political struggle "
+            "and institutional practice."
+        ),
+        "corpus_file": "phase1_long_form.json",
+        "output_file": "insights_phase1_long_form.json",
+        "run_id": "demo-insights-run-phase1-longform-0001",
+    },
+    "phase2_biology": {
+        "course_id": "90005",
+        "course_name": "Biology, Period 6",
+        "assignment_id": "115002",
+        "assignment_name": "Lab Reflection: Osmosis and Cell Transport",
+        "teacher_context": (
+            "Write a reflection on this week's lab. What did you observe? "
+            "What surprised you? How does what you saw connect to what we've "
+            "been reading about cell transport? Complete/incomplete, 100 word minimum."
+        ),
+        "corpus_file": "phase2_biology.json",
+        "output_file": "insights_phase2_biology.json",
+        "run_id": "demo-insights-run-phase2-bio-00001",
+    },
+    "phase3_translated": {
+        "course_id": "90003",
+        "course_name": "Ethnic Studies (11), Period 3",
+        "assignment_id": "113002",
+        "assignment_name": "Week 6 Discussion: Intersectionality in Practice",
+        "teacher_context": (
+            "This is a weekly discussion board. Students respond to a reading about "
+            "intersectionality theory applied to everyday life. Complete/incomplete grading — "
+            "150 word minimum. I'm looking for genuine engagement with the concepts, not "
+            "polished academic writing."
+        ),
+        "next_week_topic": (
+            "Week 7: Racial Formation — Omi & Winant's framework. Students will read "
+            "an excerpt on how race is socially constructed through political struggle "
+            "and institutional practice."
+        ),
+        "corpus_file": "phase3_translated.json",
+        "output_file": "insights_phase3_translated.json",
+        "run_id": "demo-insights-run-phase3-translated-1",
+    },
 }
 
 
@@ -370,7 +424,9 @@ def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--course", default="both",
-                        choices=["ethnic_studies", "biology", "both"])
+                        choices=["ethnic_studies", "biology", "both",
+                                 "phase1_long_form", "phase2_biology",
+                                 "phase3_translated"])
     parser.add_argument("--small-batch", type=int, default=0,
                         help="Limit to N students (for quick testing)")
     parser.add_argument("--backend", default="mlx-gemma",
