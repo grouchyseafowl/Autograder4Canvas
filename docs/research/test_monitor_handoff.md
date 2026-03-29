@@ -106,6 +106,17 @@ students. Critical test cases:
 - WB: 10/10, controls: 0/2 FP
 - File: `test_n_4axis_submissions_qwen7b_2026-03-28_2338.json`
 
+**Qwen 2.5 7B deployment question**: Qwen 2.5 7B 4-bit runs on ~half the
+memory of Gemma 12B 4-bit — viable on 8GB Macs where Gemma can't fit. But
+the S023 false CRISIS (reading abuela's story as student's own crisis) means
+it misreads intergenerational knowledge-sharing as distress. This
+disproportionately harms students from communities where family narrative IS
+the intellectual tradition (Yosso's familial capital). A confidence threshold
+(only surface CRISIS at >0.95) could suppress the 0.9 false flag, but risks
+suppressing real signals too. Document as a known limitation if offering a
+lower-tier deployment, not something to fix in the prompt — this is a model
+comprehension ceiling, not a format problem.
+
 **Gemma 27B via OpenRouter still needed** — this is the real cross-model
 comparison (same family, larger scale). Run:
 ```bash
