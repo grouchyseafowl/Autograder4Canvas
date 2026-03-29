@@ -1,251 +1,272 @@
-# Test Monitor + Implementation Handoff — 2026-03-28
+# Test Monitor + Implementation Handoff — 2026-03-29
 
 ## Your role
 
-You are monitoring running tests, analyzing results, implementing the two-pass
-wellbeing architecture in production code, running the pipeline resume, and
-launching Phase 1-4 testing. You own the full loop: monitor → analyze → implement
-→ test.
+You are monitoring test results, analyzing outputs qualitatively, fixing bugs,
+running remaining phases, implementing the two-pass wellbeing architecture in
+production, and running the pipeline resume. Debug as you go — if something
+crashes, fix and re-run. Address any issues from testing BEFORE the pipeline run.
 
-## Currently running (background)
+## What has been completed this session
 
-**Temp 0.3 replication suite** — launched via `run_temp03_replications.sh`.
-The script runs sequentially: P@0.1 → N×5@0.3 → P×3@0.3.
+### Replication suite (COMPLETE — all stable)
 
-Check progress:
+**N@0.3 (9 runs)**: 9/9 identical. S029 ENGAGED, S002 ENGAGED, WB 10/10,
+0/2 control FPs. Effectively deterministic at temp 0.3 on Gemma 12B 4-bit.
+
+**P@0.3 (4 runs: 1 @0.1, 3 @0.3)**: 4/4 identical for v3 prompt. 2/6 corpus
+CHECK-INs (S002 + S029 only), S028 clear, 0/2 control FPs. Boolean calibration
+is stable.
+
+**Paper-ready finding**: The 4-axis format protects neurodivergent writers
+(S029 ENGAGED 9/9) where the binary detector flagged them 25/25. Format
+change eliminates disparate impact without model change.
+
+Files: `data/research/raw_outputs/test_n_4axis_submissions_gemma12b_2026-03-28_1*.json`
+and `test_p_two_pass_gemma12b_2026-03-28_1*.json`.
+
+### Trajectory tests (COMPLETE — 69/69 passed, 0.22s)
+
+Pure unit tests in `tests/test_trajectory_context.py`. All equity protections
+validated: multi-signal safety, ESL suppression, neurodivergent protection,
+working student protection, equity language compliance.
+
+### Phase 1: Long-Form Chunking (COMPLETE — issues found and fixed)
+
+**File**: `src/demo_assets/insights_phase1_long_form_gemma12b_mlx.json`
+**Duration**: 86 min, 7 students (778-1500 words each)
+
+**Results**: All 7 essays chunked correctly (2-3 chunks each). Chunking code
+works. P1 readings per chunk concatenated for P2 — no silent truncation.
+
+**Wellbeing**:
+- LF02 Jaylen (burnout buried in middle): **BURNOUT 0.9** ✅ — key test passed
+- LF06 Marisol (DV/IPV at boundary): BURNOUT 0.85 ⚠️ should be CRISIS
+- LF03 Natasha (tonal shift): BURNOUT 0.9 ⚠️ false positive (emotional
+  engagement misread as depletion)
+- All others correct. what_student_is_reaching_for: 7/7 populated.
+
+**Fixes committed**:
+1. CRISIS supersedes ENGAGED — DV/housing/food insecurity disclosures now
+   CRISIS even when student maintains analytical engagement (prompts.py +
+   run_alt_hypothesis_tests.py)
+2. BURNOUT anchored on MATERIAL CONDITIONS (work, sleep, caregiving) not
+   metacommentary. Emotional intensity ≠ depletion. (prompts.py +
+   run_alt_hypothesis_tests.py)
+3. Observation preamble regex extended — "Okay, here's what I'm noticing
+   about [student]..." now caught (submission_coder.py)
+
+### Phase 2: Biology/STEM (COMPLETE — strong results)
+
+**File**: `src/demo_assets/insights_phase2_biology_gemma12b_mlx.json`
+**Duration**: 76 min, 11 students
+
+**Results**: Zero false positives on all 7 equity-critical STEM students.
+The pipeline does not pathologize non-standard ways of knowing in STEM:
+- BIO-LR01 Daniela: abuela's cooking = epistemology, not confusion
+- BIO-LR02 Marcus: colloquial register = engagement, not deficiency
+- BIO-LR03 Anh: ESL syntax not flagged, technical precision recognized
+- BIO-LR04 Jordan: neurodivergent tangents = curiosity, not disorganization
+- BIO-LR07 Ruby: indigenous ecological knowledge = epistemology
+
+**Wellbeing**: 3/4 detected. BIO-WB02 Keyana (food insecurity) missed —
+expected, documented as known limitation for subtle incidental signals in
+procedural STEM writing. BIO-WB04 Jaylen (brother's arrest) under-classified
+as BURNOUT instead of CRISIS — same pattern as LF06, should be fixed by
+the CRISIS supersedes prompt change.
+
+**Phase 2 ran on pre-fix prompts** (launched before the commits). A re-run
+with fixed prompts would confirm the CRISIS supersedes fix works.
+
+### Phase 3: Translated/Multilingual (FAILED — bug fixed, needs re-run)
+
+Crashed on Carmen Flores (TR01): Pydantic validation error. The model
+returned `emotional_register` as a list `['passionate', 'urgent', 'personal']`
+instead of a string. **Fixed**: added `_coerce_str()` helper in
+`submission_coder.py` that joins lists at the parse boundary. Committed.
+
+**Re-run needed**:
 ```bash
-ls -lt data/research/raw_outputs/test_p_two_pass_gemma12b_2026-03-28_17*.json data/research/raw_outputs/test_n_*2026-03-28_17*.json data/research/raw_outputs/test_n_*2026-03-28_18*.json 2>/dev/null
+caffeinate -i python3 scripts/generate_demo_insights.py --course phase3_translated
 ```
 
-**P@0.1 is already complete** — results: 2/7 corpus CHECK-INs, 0/2 control FPs,
-8/8 WB signals, S002+S029 caught. This is the best result of the iteration.
-File: `test_p_two_pass_gemma12b_2026-03-28_1719.json`.
+This is the language justice test — whether the pipeline reads through
+translated syntax and code-switching without pathologizing multilingual
+students. Critical test cases:
+- TR01 Carmen (Spanish L1 transfer syntax): should be ENGAGED
+- TR02 Diego (Spanglish code-switching): should be ENGAGED
+- TR03 Ana (translated + burnout): should be BURNOUT
+- TR06 Isabella (code-switching + ICE crisis): should be CRISIS
 
-Note: the JSON metadata says temperature 0.3 but the actual inference was 0.1
-(controlled by `TEST_TEMPERATURE` env var; the JSON reads from the MODELS config
-dict instead — metadata bug, does not affect results).
+### Phase 4: Cross-Model (PARTIAL — Qwen done, Gemma 27B pending)
 
-Remaining in the suite: N×5@0.3 (~70 min), P×3@0.3 (~42 min). Do NOT re-launch
-the suite — it's already running in the background. Just monitor the output files.
+**Qwen 2.5 7B result** (data point, not primary comparison):
+- S029 ENGAGED ✅ — format protects neurodivergent writers across model families
+- S023 Yolanda: false CRISIS (Qwen reads grandmother's story as student's crisis)
+- WB: 10/10, controls: 0/2 FP
+- File: `test_n_4axis_submissions_qwen7b_2026-03-28_2338.json`
 
-## What happened before this session
+**Gemma 27B via OpenRouter still needed** — this is the real cross-model
+comparison (same family, larger scale). Run:
+```bash
+python3 scripts/run_alt_hypothesis_tests.py --tests N --model gemma27b --no-subprocess
+```
+Note: OpenRouter key is in `~/Documents/GitHub/Reframe/.env` as
+`REFRAME_SHARED_OPENROUTER_KEY`. The test harness reads it automatically.
 
-### Test P prompt iteration (4 runs)
-
-The two-pass architecture works: Pass 1 classifies all students on a 4-axis
-schema (CRISIS/BURNOUT/ENGAGED/NONE), then Pass 2 runs a targeted CHECK-IN
-prompt only on ENGAGED students. Pass 1 was perfect from the start (17/17).
-The iteration was all about the Pass 2 CHECK-IN prompt.
-
-| Run | Prompt ver | Corpus CHK-INs | Control FPs | S028 FP | S002 | S029 |
-|-----|-----------|----------------|-------------|---------|------|------|
-| 1456 | v1 (original) | 6/7 | 2/2 | yes | yes | yes |
-| 1521 | v2 (self-ref + equity) | 3/7 | 0/2 | yes | yes | yes |
-| 1546 | v2 (same prompt rerun) | 3/7 | 0/2 | yes | yes | yes |
-| 1719 | v3 (boolean calibration) | **2/7** | **0/2** | **no** | yes | yes |
-
-**v1 problem**: "Is there anything subtle?" was a yes-biased question. Model
-found "abrupt endings" in 8/8 ENGAGED students because student writing normally
-ends without formal conclusions.
-
-**v2 fixes** (lines 2583-2618 in `run_alt_hypothesis_tests.py`):
-1. Flipped default: "Most engaged students need no further attention"
-2. Required quotable self-reference about OWN STATE (not course material)
-3. Required REGISTER SHIFT as a strong indicator
-4. Four equity protections (register-neutral, not dialect-specific):
-   - No formal conclusion = normal, not a signal
-   - Personal/community experience as course material ≠ self-disclosure
-   - Rhetorical expressions about material ≠ self-disclosure
-   - Approach metacommentary ("I'm just gonna be real") ≠ state disclosure
-5. Boolean calibration: "Set check_in to true ONLY when the competing
-   interpretations are genuinely balanced"
-
-**Why S028 kept flagging in v2**: "Ok so I'm just gonna be real with this one"
-— the model quoted this as potential self-disclosure but its own reasoning said
-"it's crucial not to overinterpret this; it's likely a strategic choice."
-Boolean/reasoning misalignment. The v3 calibration sentence fixed it by telling
-the model: if your analysis leans toward "nothing to note," check_in is false.
-
-### Decision tree result: GO
-
-P catches S002 ✅ AND corpus CHECK-INs = 2/7 (< 4/7) ✅.
-**Two-pass architecture is validated. Implement in production.**
-
-Full iteration history is logged in `docs/research/experiment_log.md` starting
-at the entry "## 2026-03-28 15:30 — Test P Results".
+Check if `gemma27b` model key exists in MODELS dict. If not, add it pointing
+to the OpenRouter endpoint for `google/gemma-3-27b-it`.
 
 ## Queue (in priority order)
 
-### 1. Monitor replication results (ongoing, ~2 hours total)
+### 1. Re-run Phase 3 (translated/multilingual, ~45-60 min)
 
-Results will appear as files in `data/research/raw_outputs/`. Key questions:
+Bug is fixed. This is the most critical remaining test — the pipeline has
+never been tested on translated syntax or code-switching. The spec in
+`docs/research/additional_testing_spec.md` (Phase 3 section, line ~380)
+has detailed success criteria. Read qualitatively — especially TR06 (code-
+switching + ICE crisis) which is the hardest equity test.
 
-**N@0.3 (5 runs)**: Does S029 stay ENGAGED? Does S002 stay ENGAGED (not BURNOUT)?
-Do all WB signals stay correct? If S029 flips on any run, document the flip rate.
-Stable results = strong paper evidence. Variable results = need confidence intervals.
+### 2. Run Phase 4 Gemma 27B (~25 min via OpenRouter)
 
-**P@0.3 (3 runs)**: What's the CHECK-IN range? Does S028 stay clear with the
-v3 prompt? Ideal: 2/7 consistently. Acceptable: 2-3/7 range.
+Cross-model validation on same family, larger scale. If 27B also protects
+S029, the paper can claim format generalizes within the Gemma family.
 
-Log all results to experiment_log.md. Read qualitatively — don't rely on keyword
-matching (WELLBEING_KEYWORDS has been wrong before, see experiment log).
+### 3. Implement two-pass wellbeing in production pipeline
 
-### 2. Implement two-pass wellbeing in production pipeline
-
-The validated architecture needs to move from the test script into the production
-pipeline. The prompts are in `scripts/run_alt_hypothesis_tests.py`:
+The validated architecture needs to move from the test script into production.
+Prompts are in `scripts/run_alt_hypothesis_tests.py`:
 - **Pass 1** (4-axis): `FOUR_AXIS_SUBMISSION_SYSTEM` at line ~2197
 - **Pass 2** (CHECK-IN): `TARGETED_CHECKIN_SYSTEM` at line ~2583
 
-Production pipeline files to modify:
-- `src/insights/engine.py` — the main pipeline. Currently has a binary concern
-  detector (Stage 5) that needs replacing with the two-pass architecture.
-- `src/insights/synthesizer.py` — downstream synthesis reads concern flags;
-  needs to read the new 4-axis + CHECK-IN results instead.
+Production files to modify:
+- `src/insights/engine.py` — replace binary concern detector (Stage 5)
+  with two-pass architecture
+- `src/insights/synthesizer.py` — read 4-axis + CHECK-IN results instead
+  of binary concern_flag
 
-Key implementation decisions:
-- Pass 1 replaces Stage 5 entirely (no more binary concern_flag)
-- Pass 2 runs only on ENGAGED students (the gating logic)
-- Results stored per-student: `wellbeing_axis` (CRISIS/BURNOUT/ENGAGED/NONE),
-  `wellbeing_confidence`, `checkin_flag` (bool), `checkin_reasoning` (string)
-- Temperature: 0.1 for pass 1 (classification), 0.3 for pass 2 (generative)
+Key decisions:
+- Pass 1 replaces Stage 5 entirely
+- Pass 2 runs only on ENGAGED students
+- Temperature: 0.1 for pass 1, 0.3 for pass 2
 - Use `unload_mlx_model()` between pipeline stages per CLAUDE.md
-
-### 3. Phase 1-4 additional testing suite (BEFORE pipeline resume)
-
-Run these BEFORE the pipeline resume. They validate the wellbeing prompts on
-new domains using the test harness. If the prompts fail on STEM or multilingual
-submissions, you want to know before baking a full 32-student production run.
-
-24 synthetic submissions across 3 corpus files:
-
-**Spec**: `docs/research/additional_testing_spec.md` (824 lines, full success
-criteria for each test case)
-
-**Corpus files**:
-- `data/demo_corpus/phase1_long_form.json` — 7 long-form essays (chunking)
-- `data/demo_corpus/phase2_biology.json` — 11 biology submissions (STEM equity
-  + wellbeing): home epistemology, colloquial register, ESL, neurodivergent,
-  accommodation disclosure, AAVE in STEM, indigenous knowledge, burnout,
-  food insecurity, housing instability, front-loaded crisis
-- `data/demo_corpus/phase3_translated.json` — 6 translated/code-switching
-  submissions: Spanish L1 transfer, Spanglish code-switching, Vietnamese
-  concept inclusion, burnout through translation, ICE stress in Spanglish
-
-**Execution order**: Phase 1 → 2 → 3 → 4. Phase 4 waits for temp 0.3 results.
-Follow MLX conventions from CLAUDE.md (warmup, caffeinate, subprocess isolation).
-
-Read the spec carefully before running — it has specific success criteria per
-test case, not just pass/fail.
+- Results: `wellbeing_axis`, `wellbeing_confidence`, `checkin_flag`,
+  `checkin_reasoning` per student
 
 ### 4. Pipeline resume from checkpoint (~80 min)
 
-Run `0cb5b7e8` in the InsightsStore has 32/32 students coded (P1+P2 complete).
-Resume skips coding and runs: wellbeing classification → observations →
-themes → outliers → synthesis → feedback.
+Run `0cb5b7e8` in InsightsStore. 32/32 coded, needs downstream stages.
+**WARNING**: auto-resume picks wrong run. See handoff notes in prior version.
 
-**WARNING**: There are 5 runs in the store (query with
-`PYTHONPATH=src python3 -c "from insights.insights_store import InsightsStore; ..."`):
-- `0cb5b7e8` — 32 codings, no downstream stages. **THIS IS THE ONE WE WANT.**
-- `6a5ff72f` — 4 codings (quick_analysis)
-- `48dc3560` — 0 codings
-- `10d8fd07` — 4 codings
-- `4b7d2caf` — 22 codings
-
-The auto-resume (`_find_incomplete_run()` at line 94 of generate_demo_insights.py)
-picks the most recent incomplete run, NOT 0cb5b7e8. You need to either:
-1. Check if a `--resume-run <id>` flag exists
-2. Or delete/mark the newer incomplete runs so auto-resume finds 0cb5b7e8
-3. Or manually call `engine.resume_run(run_id="0cb5b7e8...")` in a script
-
-To launch (once resume target is confirmed):
-```bash
-caffeinate -i python3 scripts/generate_demo_insights.py --course ethnic_studies
-```
-
-Check the baked output against the P1-P7 checklist (from memory file
-`project_pipeline_rerun_followup.md`):
-- [ ] `what_student_is_reaching_for` populated (was 0/32, should be >25/32)
-- [ ] `confusion_or_questions` populated where applicable
-- [ ] Observation preambles stripped (no "Okay, here's what I'm noticing")
-- [ ] Anti-spotlighting: no "ask [student] to share" in synthesis
-- [ ] Multiplicity + pedagogical wins sections in synthesis
-- [ ] Forward-looking section in synthesis
-- [ ] Structural naming in observations (Connor: "colorblind erasure", etc.)
-- [ ] P7 insight ranking: Exceptional Contributions highlight analytically
-      interesting students (check `_insight_score()` effect)
-- [ ] Observation synthesis saved to raw_outputs
+Run AFTER Phase 3 confirms no prompt issues on multilingual text and AFTER
+implementation is complete.
 
 ### 5. Test K retry (when Venice quotas reset)
+
 ```bash
 python3 scripts/run_alt_hypothesis_tests.py --tests K --no-subprocess
 ```
-Enhancement model comparison — 9 models, corrected list, no GPT. Free
-OpenRouter models have rate limits. Best run late evening or overnight.
+
+## Bugs fixed this session
+
+| Bug | Fix | Commit |
+|---|---|---|
+| LF06 DV under-classified as BURNOUT | CRISIS supersedes ENGAGED in classifier prompt | 900e3ae |
+| LF03 emotional engagement → false BURNOUT | BURNOUT anchored on material conditions, not metacommentary | 6b009b5 |
+| Observation preamble "Okay, here's what I'm noticing" | Extended regex to include period-terminated "notic\w+" pattern | 900e3ae |
+| Phase 3 crash: emotional_register as list | `_coerce_str()` helper joins lists at parse boundary | d677560 |
+| Experiment log: "8 runs" should be "9 runs" | Corrected | d677560 |
+| Experiment log: "2/4 caught" should be "3/4 detected" | Corrected | d677560 |
+
+## Significance of findings
+
+### For implementation
+
+**The 4-axis format is the intervention, not the model.** The format change
+(binary → 4-axis) eliminates disparate impact on neurodivergent writers
+without model changes. This means:
+- Prompt engineering is the primary lever for equity outcomes
+- Model selection matters less than classification schema design
+- The two-pass architecture (classify → targeted CHECK-IN) reduces false
+  positives from 6/7 corpus to 2/7 while maintaining sensitivity
+- The pipeline generalizes from ethnic studies to STEM without domain-specific
+  prompt changes — equity protections transfer across disciplines
+
+**Known limitations to document**:
+- Subtle, incidental wellbeing signals in procedural writing (BIO-WB02 food
+  insecurity) are below the detection floor for single-submission classification
+- Crisis disclosures wrapped in sustained analytical engagement may be under-
+  classified (LF06, BIO-WB04) — the CRISIS supersedes fix addresses this
+- Theme generation times out on long-form content at the lightweight tier
+- Observation preambles still appear occasionally (regex may need expansion)
+
+### Scholarly context
+
+**Format > model for equity outcomes** connects to work on structured
+prediction formats reducing bias in NLP (Schick & Schütze 2021 on pattern
+exploiting training; Zhao et al. 2021 on calibration). The finding that a
+4-category schema eliminates false positives that persist across model sizes
+and families suggests the classification format itself encodes assumptions
+about whose writing is "normal" — the binary FLAG/CLEAR schema encodes a
+deficit model where any deviation from expected academic register triggers
+a flag.
+
+**Community cultural wealth in STEM** (Yosso 2005): The Phase 2 result —
+indigenous ecological knowledge, home epistemology, colloquial STEM register
+all correctly classified as ENGAGED — demonstrates that the observation
+architecture can recognize what Yosso calls "familial capital" and
+"aspirational capital" in STEM contexts. The pipeline reads abuela's cooking
+as osmosis epistemology rather than off-topic confusion.
+
+**Language justice** (Flores & Rosa 2015 on raciolinguistic ideologies): The
+Phase 3 test (pending re-run) directly tests whether the pipeline reproduces
+what Flores & Rosa call "appropriateness-based" language ideologies — where
+the listener/reader's perception of the speaker determines whether language
+is heard as competent or deficient. If the pipeline reads translated syntax
+or code-switching as engagement rather than confusion, it disrupts the
+raciolinguistic frame that positions Standard English as the neutral register
+against which all others are measured.
+
+**Neurodiversity and algorithmic justice** (Whittaker et al. 2019 on
+disability and AI): The S029 result (25/25 false flags on binary → 9/9
+correct on 4-axis) is a case study in how classification schemas can
+encode or disrupt normative assumptions about cognition. The binary
+detector treated nonlinear, associative writing as deviant; the 4-axis
+schema treats it as a valid academic register. The problem was never the
+student's writing — it was the built environment of the classification system.
 
 ## Critical conventions
 
 ### MLX testing
-- **Always warmup Metal** before launching tests:
-  ```python
-  python3 -c "from mlx_lm import load, generate; m,t = load('mlx-community/gemma-3-12b-it-4bit'); print(generate(m, t, prompt='Hi', max_tokens=3, verbose=False))"
-  ```
-- **Use `caffeinate -i`** to prevent system sleep during runs
-- If Metal deadlocks (0% CPU after model load), kill the process, warmup again
-- **Post-sleep deadlock**: Metal inference launched right after laptop wake
-  deadlocks. Wait 30s after wake, warmup, then launch.
+- **Always warmup Metal** before launching tests
+- **Use `caffeinate -i`** to prevent system sleep
 - **Pause 5s between subprocesses** for Metal memory reclamation
 - Call `unload_mlx_model()` between pipeline stages
 
 ### Evaluating results
-- **READ RAW OUTPUT QUALITATIVELY** — the keyword evaluator has been wrong
-  multiple times. Read what the model actually SAID about each student.
-- Every test output file includes `provenance.git_commit` — verify it.
-- pass2_reasoning fields may have JSON escaping issues (backslash-truncated
-  in the stored `pass2_reasoning` field). Read the `prompt_pass2` field instead
-  for the full raw model output.
+- **READ RAW OUTPUT QUALITATIVELY** — keyword matching has been unreliable
+- Read what the model actually SAID about each student
+- Every test output includes `provenance.git_commit` — verify it
+- pass2_reasoning fields may have JSON escaping issues — read prompt_pass2
 
 ### Logging
 - Add findings to `docs/research/experiment_log.md`
-- Include: what was tested, raw numbers, qualitative reading, implications
 - **Verify every number against the actual JSON** before writing
-- Note codepath (test harness vs production) for classification tests
 
 ## Files you need
 
 | File | What it is |
 |---|---|
 | `scripts/run_alt_hypothesis_tests.py` | All tests (A-P), including v3 prompts |
-| `scripts/run_temp03_replications.sh` | Currently running replication suite |
 | `scripts/generate_demo_insights.py` | Demo pipeline + resume logic |
+| `scripts/run_phase_tests.sh` | Phase test chaining script |
 | `src/insights/engine.py` | Production pipeline (needs two-pass impl) |
 | `src/insights/synthesizer.py` | Synthesis (reads concern flags) |
-| `docs/research/experiment_log.md` | Research log |
+| `src/insights/submission_coder.py` | Coding, observations, wellbeing classification |
+| `src/insights/prompts.py` | All prompts (updated with fixes) |
+| `docs/research/experiment_log.md` | Research log (verified accurate) |
 | `docs/research/additional_testing_spec.md` | Phase 1-4 test spec |
-| `data/demo_corpus/phase{1,2,3}*.json` | New test corpus files |
-| `data/demo_corpus/ethnic_studies.json` | Existing corpus (mix with new) |
-| `memory/project_pipeline_refinement_plan.md` | Decision tree |
-| `memory/project_pipeline_rerun_followup.md` | P1-P7 checklist |
+| `data/demo_corpus/phase{1,2,3}*.json` | Test corpus files |
 | `data/research/raw_outputs/` | All test results |
+| `src/demo_assets/insights_phase{1,2}_*.json` | Phase 1-2 baked outputs |
 | `CLAUDE.md` | MLX conventions |
-
-## Decision tree (updated)
-
-**Two-pass architecture: GO** (validated across 4 P runs, best result 2/7 corpus
-CHECK-INs with 0/2 control FPs). Implement in production.
-
-**Temp 0.3 N replications** (pending):
-- If stable (S029 stays ENGAGED 5/5): 4-axis finding is robust. Ready for paper.
-- If S029 flips >1/5: need confidence interval, not absolute claim.
-
-**Temp 0.3 P replications** (pending):
-- If S028 stays clear 3/3: boolean calibration is stable.
-- If S028 flips: it's a borderline case sensitive to sampling. Acceptable if
-  the reasoning is self-correcting (teacher would dismiss it).
-
-**Pipeline resume**: Verify P1-P7 fixes against checklist. If synthesis still
-truncates at 2000 tokens, may need to split into two calls.
-
-**Phase 1-4 tests**: Follow spec. These test new domains (STEM, multilingual)
-that the ethnic studies corpus doesn't cover. Results inform whether the
-wellbeing prompts generalize beyond the development corpus.
