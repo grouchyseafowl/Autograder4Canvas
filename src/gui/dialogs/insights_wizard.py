@@ -24,7 +24,8 @@ from PySide6.QtWidgets import (
     QFrame, QLineEdit, QStackedWidget, QProgressBar,
     QScrollArea, QWidget, QApplication,
 )
-from PySide6.QtCore import Qt, Signal, QThread
+from PySide6.QtCore import Qt, Signal, QThread, QUrl
+from PySide6.QtGui import QDesktopServices
 
 from gui.styles import (
     px,
@@ -33,8 +34,8 @@ from gui.styles import (
     TERM_GREEN, BURN_RED, STATUS_WARN,
     BG_VOID, BG_INSET,
     BORDER_DARK, BORDER_AMBER, AMBER_BTN, ROSE_ACCENT,
-    PANE_BG_GRADIENT,
-    make_section_label, make_h_rule, make_content_pane,
+    PANE_BG_GRADIENT, MONO_FONT,
+    make_section_label, make_h_rule, make_content_pane, make_secondary_button,
 )
 
 log = logging.getLogger("autograder.insights_wizard")
@@ -320,6 +321,61 @@ class _OptionCard(QFrame):
     def mousePressEvent(self, event):
         self.clicked.emit()
         super().mousePressEvent(event)
+
+
+# ---------------------------------------------------------------------------
+# Enhancement API-key sub-frame builder
+# ---------------------------------------------------------------------------
+
+def _build_enh_key_frame(frame: QFrame, _obj_suffix: str) -> None:
+    """Populate *frame* with step instructions, OpenRouter link, and key field.
+
+    The QLineEdit is given object-name ``"enh_api_key"`` so callers can
+    retrieve it with ``findChild(QLineEdit, "enh_api_key")``.
+    """
+    lo = QVBoxLayout(frame)
+    lo.setContentsMargins(SPACING_MD, SPACING_SM, SPACING_MD, SPACING_SM)
+    lo.setSpacing(SPACING_XS)
+
+    step_style = (
+        f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+        f" font-family: {MONO_FONT};"
+        f" background: transparent; border: none;"
+    )
+    steps = [
+        "1.  Create a free account at openrouter.ai",
+        "2.  Click \u2018Keys\u2019 in the left sidebar, then \u2018Create Key\u2019",
+        "3.  Paste the key here (starts with sk-or-):",
+    ]
+    for s in steps:
+        lbl = QLabel(s)
+        lbl.setStyleSheet(step_style)
+        lo.addWidget(lbl)
+
+    lo.addSpacing(SPACING_XS)
+
+    link_row = QHBoxLayout()
+    link_row.setSpacing(SPACING_XS)
+    link_btn = QPushButton("Open OpenRouter")
+    link_btn.setFixedHeight(px(26))
+    make_secondary_button(link_btn)
+    link_btn.clicked.connect(
+        lambda: QDesktopServices.openUrl(
+            QUrl("https://openrouter.ai/keys")
+        )
+    )
+    link_row.addWidget(link_btn)
+    link_row.addStretch()
+    lo.addLayout(link_row)
+
+    lo.addSpacing(SPACING_XS)
+
+    key_edit = QLineEdit()
+    key_edit.setObjectName("enh_api_key")
+    key_edit.setEchoMode(QLineEdit.EchoMode.Password)
+    key_edit.setPlaceholderText("sk-or-\u2026")
+    key_edit.setStyleSheet(_INPUT_QSS)
+    lo.addWidget(key_edit)
 
 
 # ---------------------------------------------------------------------------
@@ -614,11 +670,24 @@ class InsightsWizard(QDialog):
             self._inst_key_edit.setText(key)
             self._inst_model_edit.setText(s.get("insights_cloud_model", ""))
             self._on_card_clicked(self._card_inst)
-        elif privacy == "anonymized_only" and key:
+        elif privacy == "free_enhancement":
             self._on_card_clicked(self._card_local)
-            self._enhance_toggle.setChecked(True)
-            self._enhance_key_edit.setText(key)
-            self._enhance_model_edit.setText(s.get("insights_cloud_model", ""))
+            self._enhance_option = 1
+            if self._enh_or_key_1 and key:
+                self._enh_or_key_1.setText(key)
+        elif privacy == "privacy_enhancement":
+            self._on_card_clicked(self._card_local)
+            self._enhance_option = 2
+            if self._enh_or_key_2 and key:
+                self._enh_or_key_2.setText(key)
+        elif privacy == "browser_handoff":
+            self._enhance_option = 3
+        elif privacy == "anonymized_only" and key:
+            # Legacy: map old "anonymized_only" to free_enhancement
+            self._on_card_clicked(self._card_local)
+            self._enhance_option = 1
+            if self._enh_or_key_1 and key:
+                self._enh_or_key_1.setText(key)
 
     # ------------------------------------------------------------------
     # UI construction
@@ -1048,7 +1117,7 @@ class InsightsWizard(QDialog):
         )
         lo.addWidget(self._rec_label)
 
-        # --- Enhancement section — two-column layout (shown only for 12B) ---
+        # --- Enhancement section — 4-option card selector ---
         self._enhance_section = QFrame()
         self._enhance_section.setVisible(False)
         self._enhance_section.setStyleSheet("background: transparent;")
@@ -1056,105 +1125,114 @@ class InsightsWizard(QDialog):
         enh_lo.setContentsMargins(0, SPACING_XS, 0, 0)
         enh_lo.setSpacing(SPACING_XS)
 
-        enh_lo.addWidget(make_section_label("Optional: Cloud Enhancement"))
+        enh_lo.addWidget(make_section_label(
+            "How would you like to enhance your analysis?"
+        ))
         enh_lo.addWidget(make_h_rule())
 
-        # Two-column: LEFT = explanation, RIGHT = privacy + controls
-        enh_cols = QHBoxLayout()
-        enh_cols.setSpacing(SPACING_MD)
-
-        # LEFT — what it is and what it adds
-        enh_left = QWidget()
-        enh_left.setStyleSheet("background: transparent;")
-        el_lo = QVBoxLayout(enh_left)
-        el_lo.setContentsMargins(0, 0, 0, 0)
-        el_lo.setSpacing(SPACING_XS)
-        el_lo.addWidget(_body_text(
-            "Local analysis covers the essentials. Cloud enhancement "
-            "adds richer interpretation on top of that."
-        ))
-        el_lo.addSpacing(SPACING_XS)
-        el_lo.addWidget(_body_text(
-            "What it adds:\n"
-            "  \u2022  Deeper read of what class patterns mean\n"
-            "  \u2022  More specific next-session suggestions\n"
-            "  \u2022  Stronger recognition of multilingual\n"
-            "       and diverse writing as strengths"
-        ))
-        el_lo.addStretch()
-
-        # RIGHT — privacy notice + toggle + fields
-        enh_right = QWidget()
-        enh_right.setStyleSheet("background: transparent;")
-        er_lo = QVBoxLayout(enh_right)
-        er_lo.setContentsMargins(0, 0, 0, 0)
-        er_lo.setSpacing(SPACING_XS)
-
-        ferpa_pane = make_content_pane("wizFerpaPane")
-        fp_lo = QHBoxLayout(ferpa_pane)
-        fp_lo.setContentsMargins(SPACING_XS, SPACING_XS, SPACING_XS, SPACING_XS)
-        fp_lo.setSpacing(SPACING_XS)
-        ferpa_icon = QLabel("\u26a0")
-        ferpa_icon.setFixedWidth(px(16))
-        ferpa_icon.setStyleSheet(
-            f"color: {PHOSPHOR_HOT}; font-size: {px(12)}px;"
-            f" background: transparent; border: none;"
+        # Scroll area for the cards (so it doesn't overflow on small windows)
+        enh_scroll = QScrollArea()
+        enh_scroll.setWidgetResizable(True)
+        enh_scroll.setStyleSheet(
+            "QScrollArea { border: none; background: transparent; }"
+            + _SCROLL_QSS
         )
-        fp_lo.addWidget(ferpa_icon)
-        ferpa_text = QLabel(
-            "Privacy-safe: only anonymized class-level patterns are "
-            "sent \u2014 nothing identifying leaves your computer."
+        enh_scroll_w = QWidget()
+        enh_scroll_w.setObjectName("enhScrollW")
+        enh_scroll_w.setStyleSheet(
+            "QWidget#enhScrollW { background: transparent; }"
         )
-        ferpa_text.setWordWrap(True)
-        ferpa_text.setStyleSheet(
-            f"color: {PHOSPHOR_MID}; font-size: {px(10)}px;"
-            f" background: transparent; border: none;"
+        enh_scroll.setWidget(enh_scroll_w)
+        enh_cards_lo = QVBoxLayout(enh_scroll_w)
+        enh_cards_lo.setContentsMargins(0, SPACING_XS, 0, SPACING_XS)
+        enh_cards_lo.setSpacing(SPACING_SM)
+
+        # Option 0 — no cloud
+        self._enh_card_0 = _OptionCard(
+            "Keep everything on my computer",
+            "Your local model generates per-student observations, class patterns, "
+            "and a full class summary. No data leaves your machine.",
+            idx=10,
         )
-        fp_lo.addWidget(ferpa_text, 1)
-        er_lo.addWidget(ferpa_pane)
-
-        er_lo.addSpacing(SPACING_XS)
-
-        from gui.widgets.switch_toggle import SwitchToggle
-        self._enhance_toggle = SwitchToggle(
-            "Enable cloud enhancement", wrap_width=200,
+        enh_cards_lo.addWidget(self._enh_card_0)
+        self._enh_card_0.clicked.connect(
+            lambda: self._on_enhance_card_clicked(0)
         )
-        self._enhance_toggle.toggled.connect(self._on_enhance_toggled)
-        er_lo.addWidget(self._enhance_toggle)
 
-        self._enhance_fields = QFrame()
-        self._enhance_fields.setVisible(False)
-        self._enhance_fields.setStyleSheet("background: transparent;")
-        ef_lo = QVBoxLayout(self._enhance_fields)
-        ef_lo.setContentsMargins(0, SPACING_XS, 0, 0)
-        ef_lo.setSpacing(SPACING_XS)
-
-        ef_lo.addWidget(_body_text(
-            "Create a free account at openrouter.ai, generate an "
-            "API key, and paste it below."
-        ))
-        ef_lo.addWidget(_field_label("OpenRouter API Key"))
-        self._enhance_key_edit = QLineEdit()
-        self._enhance_key_edit.setEchoMode(QLineEdit.EchoMode.Password)
-        self._enhance_key_edit.setPlaceholderText("Paste OpenRouter API key")
-        self._enhance_key_edit.setStyleSheet(_INPUT_QSS)
-        ef_lo.addWidget(self._enhance_key_edit)
-
-        ef_lo.addWidget(_field_label("Model (optional)"))
-        self._enhance_model_edit = QLineEdit()
-        self._enhance_model_edit.setPlaceholderText(
-            "google/gemma-2-27b-it  (default, ~$0.01/run)"
+        # Option 1 — free OpenRouter
+        self._enh_card_1 = _OptionCard(
+            "Enhance with a free service",
+            "After local analysis completes, sends a summary of class patterns "
+            "(no student names or writing) to Google\u2019s servers for a second "
+            "reading. Adds cross-pattern analysis and richer \u2018Moments for "
+            "the Classroom\u2019 suggestions. Free, but Google may use pattern "
+            "data to improve their products.",
+            idx=11,
         )
-        self._enhance_model_edit.setStyleSheet(_INPUT_QSS)
-        ef_lo.addWidget(self._enhance_model_edit)
+        enh_cards_lo.addWidget(self._enh_card_1)
+        self._enh_card_1.clicked.connect(
+            lambda: self._on_enhance_card_clicked(1)
+        )
 
-        er_lo.addWidget(self._enhance_fields)
-        er_lo.addStretch()
+        # Expandable API-key block shared-ish approach: two separate frames
+        self._enh_key_frame_1 = QFrame()
+        self._enh_key_frame_1.setVisible(False)
+        self._enh_key_frame_1.setStyleSheet(
+            f"QFrame {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+            f" border-radius: 6px; }}"
+        )
+        _build_enh_key_frame(self._enh_key_frame_1, "or_key_1")
+        self._enh_or_key_1 = self._enh_key_frame_1.findChild(
+            QLineEdit, "enh_api_key"
+        )
+        enh_cards_lo.addWidget(self._enh_key_frame_1)
 
-        enh_cols.addWidget(enh_left, 1)
-        enh_cols.addWidget(enh_right, 1)
-        enh_lo.addLayout(enh_cols)
-        lo.addWidget(self._enhance_section)
+        # Option 2 — privacy-focused Venice
+        self._enh_card_2 = _OptionCard(
+            "Enhance with a privacy-focused service",
+            "After local analysis completes, sends anonymized patterns to "
+            "Venice.ai for a second reading. Adds cross-pattern analysis and "
+            "richer \u2018Moments for the Classroom\u2019 suggestions. Venice "
+            "doesn\u2019t log or train on your data. About 1\u00a2 per use.",
+            idx=12,
+        )
+        enh_cards_lo.addWidget(self._enh_card_2)
+        self._enh_card_2.clicked.connect(
+            lambda: self._on_enhance_card_clicked(2)
+        )
+
+        self._enh_key_frame_2 = QFrame()
+        self._enh_key_frame_2.setVisible(False)
+        self._enh_key_frame_2.setStyleSheet(
+            f"QFrame {{ background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+            f" border-radius: 6px; }}"
+        )
+        _build_enh_key_frame(self._enh_key_frame_2, "or_key_2")
+        self._enh_or_key_2 = self._enh_key_frame_2.findChild(
+            QLineEdit, "enh_api_key"
+        )
+        enh_cards_lo.addWidget(self._enh_key_frame_2)
+
+        # Option 3 — browser handoff
+        self._enh_card_3 = _OptionCard(
+            "Paste into my school\u2019s AI tool",
+            "After analysis, copy anonymized class patterns to any chatbot your "
+            "school provides. You control where the data goes. No account or "
+            "cost needed.",
+            idx=13,
+        )
+        enh_cards_lo.addWidget(self._enh_card_3)
+        self._enh_card_3.clicked.connect(
+            lambda: self._on_enhance_card_clicked(3)
+        )
+
+        enh_cards_lo.addStretch()
+        enh_lo.addWidget(enh_scroll, 1)
+        lo.addWidget(self._enhance_section, 1)
+
+        # Track selected enhancement option (default: 0 = local only)
+        self._enhance_option: int = 0
+        self._on_enhance_card_clicked(0)
 
         # --- No-local-capability message ---
         self._no_local_msg = QFrame()
@@ -1287,11 +1365,23 @@ class InsightsWizard(QDialog):
         self._next_btn.setEnabled(True)
 
     # ------------------------------------------------------------------
-    # Enhancement toggle
+    # Enhancement card selection
     # ------------------------------------------------------------------
 
-    def _on_enhance_toggled(self, checked: bool):
-        self._enhance_fields.setVisible(checked)
+    def _on_enhance_card_clicked(self, opt: int):
+        """Select an enhancement option and show/hide the API-key frames."""
+        self._enhance_option = opt
+        cards = [
+            self._enh_card_0,
+            self._enh_card_1,
+            self._enh_card_2,
+            self._enh_card_3,
+        ]
+        for i, card in enumerate(cards):
+            if card.isVisible():
+                card.set_selected(i == opt)
+        self._enh_key_frame_1.setVisible(opt == 1)
+        self._enh_key_frame_2.setVisible(opt == 2)
 
     # ------------------------------------------------------------------
     # Navigation
@@ -1402,7 +1492,7 @@ class InsightsWizard(QDialog):
                 "institutional AI access or the Export to Chatbot feature."
             )
 
-        # Recommendation
+        # Recommendation + enhancement section
         self._enhance_section.setVisible(False)
         self._no_local_msg.setVisible(False)
 
@@ -1417,6 +1507,19 @@ class InsightsWizard(QDialog):
                 "on your machine."
             )
             self._recommended_model = model
+            # Show enhancement for all local tiers; 27B can still benefit
+            self._enhance_section.setVisible(True)
+            self._enh_card_0.setVisible(True)
+            self._enh_card_1.setVisible(True)
+            self._enh_card_2.setVisible(True)
+            self._enh_card_3.setVisible(True)
+            # Relabel option 0 normally for full-capability machines
+            self._enh_card_0._title_lbl.setText(
+                "Keep everything on my computer"
+            )
+            self._enh_card_0._desc_lbl.setText(
+                "No cloud call. Local analysis is the final output."
+            )
 
         elif hw["can_run_12b"]:
             model = "gemma3:12b"
@@ -1428,11 +1531,45 @@ class InsightsWizard(QDialog):
             )
             self._recommended_model = model
             self._enhance_section.setVisible(True)
+            self._enh_card_0.setVisible(True)
+            self._enh_card_1.setVisible(True)
+            self._enh_card_2.setVisible(True)
+            self._enh_card_3.setVisible(True)
+            self._enh_card_0._title_lbl.setText(
+                "Keep everything on my computer"
+            )
+            self._enh_card_0._desc_lbl.setText(
+                "No cloud call. Local analysis is the final output."
+            )
 
         else:
             self._rec_label.setText("")
             self._no_local_msg.setVisible(True)
             self._recommended_model = ""
+            # Low-RAM: show enhancement section but hide options 1 & 2
+            # (those require a local model to enhance)
+            self._enhance_section.setVisible(True)
+            self._enh_card_0.setVisible(True)
+            self._enh_card_1.setVisible(False)
+            self._enh_card_2.setVisible(False)
+            self._enh_card_3.setVisible(True)
+            # Re-frame option 0 for no-local-model context
+            self._enh_card_0._title_lbl.setText(
+                "Pattern analysis only (no AI model needed)"
+            )
+            self._enh_card_0._desc_lbl.setText(
+                "Statistical patterns are computed locally. "
+                "No AI model or cloud service required."
+            )
+            # If current selection is 1 or 2, fall back to 0
+            if self._enhance_option in (1, 2):
+                self._on_enhance_card_clicked(0)
+            else:
+                self._on_enhance_card_clicked(self._enhance_option)
+            return
+
+        # Re-apply card selection visuals after show/hide
+        self._on_enhance_card_clicked(self._enhance_option)
 
     # ------------------------------------------------------------------
     # Populate install page (page 2)
@@ -1455,9 +1592,8 @@ class InsightsWizard(QDialog):
             )
         elif self._recommended_model:
             parts = ["Setting up local analysis on your computer."]
-            if (self._enhance_section.isVisible()
-                    and self._enhance_toggle.isChecked()
-                    and self._enhance_key_edit.text().strip()):
+            enh_opt = self._enhance_option
+            if self._enhance_section.isVisible() and enh_opt in (1, 2):
                 parts.append(
                     "Cloud enhancement is enabled \u2014 only anonymized "
                     "class patterns will be sent."
@@ -1518,21 +1654,28 @@ class InsightsWizard(QDialog):
                 "fn": _make_task_test_inference(model),
             })
 
-            # Enhancement
-            if (self._enhance_section.isVisible()
-                    and self._enhance_toggle.isChecked()
-                    and self._enhance_key_edit.text().strip()):
-                enh_key = self._enhance_key_edit.text().strip()
-                enh_model = (
-                    self._enhance_model_edit.text().strip()
-                    or "google/gemma-2-27b-it"
-                )
-                tasks.append({
-                    "name": "Cloud enhancement",
-                    "fn": lambda k=enh_key, m=enh_model: _task_test_cloud(
-                        "https://openrouter.ai/api/v1", k, m,
-                    ),
-                })
+            # Enhancement — test API connection for options 1 and 2
+            enh_opt = self._enhance_option
+            if self._enhance_section.isVisible() and enh_opt in (1, 2):
+                if enh_opt == 1:
+                    enh_key = (
+                        self._enh_or_key_1.text().strip()
+                        if self._enh_or_key_1 else ""
+                    )
+                    enh_cloud_model = "google/gemma-3-27b-it:free"
+                else:
+                    enh_key = (
+                        self._enh_or_key_2.text().strip()
+                        if self._enh_or_key_2 else ""
+                    )
+                    enh_cloud_model = "mistralai/mistral-small-3.1-24b-instruct"
+                if enh_key:
+                    tasks.append({
+                        "name": "Cloud enhancement",
+                        "fn": lambda k=enh_key, m=enh_cloud_model: _task_test_cloud(
+                            "https://openrouter.ai/api/v1", k, m,
+                        ),
+                    })
 
         # Build checklist UI
         for task in tasks:
@@ -1725,26 +1868,47 @@ class InsightsWizard(QDialog):
             else:
                 s["insights_model_tier"] = "auto"
 
-            # Enhancement
-            if (self._enhance_section.isVisible()
-                    and self._enhance_toggle.isChecked()
-                    and self._enhance_key_edit.text().strip()):
-                s["insights_cloud_url"] = "https://openrouter.ai/api/v1"
-                s["insights_cloud_key"] = (
-                    self._enhance_key_edit.text().strip()
+            # Enhancement — map card selection to cloud settings
+            enh_opt = self._enhance_option if self._enhance_section.isVisible() else 0
+            if enh_opt == 1:
+                enh_key = (
+                    self._enh_or_key_1.text().strip()
+                    if self._enh_or_key_1 else ""
                 )
+                s["insights_cloud_privacy"] = "free_enhancement"
+                s["insights_cloud_url"] = "https://openrouter.ai/api/v1"
+                s["insights_cloud_key"] = enh_key
+                s["insights_cloud_model"] = "google/gemma-3-27b-it:free"
+                s["insights_cloud_api_format"] = "openai"
+            elif enh_opt == 2:
+                enh_key = (
+                    self._enh_or_key_2.text().strip()
+                    if self._enh_or_key_2 else ""
+                )
+                s["insights_cloud_privacy"] = "privacy_enhancement"
+                s["insights_cloud_url"] = "https://openrouter.ai/api/v1"
+                s["insights_cloud_key"] = enh_key
                 s["insights_cloud_model"] = (
-                    self._enhance_model_edit.text().strip()
-                    or "google/gemma-2-27b-it"
+                    "mistralai/mistral-small-3.1-24b-instruct"
                 )
                 s["insights_cloud_api_format"] = "openai"
-                s["insights_cloud_privacy"] = "anonymized_only"
-            else:
+            elif enh_opt == 3:
+                s["insights_cloud_privacy"] = "browser_handoff"
                 s["insights_cloud_url"] = ""
                 s["insights_cloud_key"] = ""
+            else:
+                # Option 0 — no cloud
                 s["insights_cloud_privacy"] = ""
+                s["insights_cloud_url"] = ""
+                s["insights_cloud_key"] = ""
         else:
             # No local capability, no institutional — minimal config
             s["insights_model_tier"] = "auto"
+            # Still record the browser-handoff or no-cloud choice
+            enh_opt = self._enhance_option if self._enhance_section.isVisible() else 0
+            if enh_opt == 3:
+                s["insights_cloud_privacy"] = "browser_handoff"
+            else:
+                s["insights_cloud_privacy"] = ""
 
         save_settings(s)

@@ -130,20 +130,55 @@ to the OpenRouter endpoint for `google/gemma-3-27b-it`.
 
 ## Queue (in priority order)
 
-### 1. Re-run Phase 3 (translated/multilingual, ~45-60 min)
+**Parallelism**: Cloud tests (OpenRouter) and MLX tests can run simultaneously —
+they use independent resources. Launch the matching pairs together.
 
-Bug is fixed. This is the most critical remaining test — the pipeline has
-never been tested on translated syntax or code-switching. The spec in
-`docs/research/additional_testing_spec.md` (Phase 3 section, line ~380)
-has detailed success criteria. Read qualitatively — especially TR06 (code-
-switching + ICE crisis) which is the hardest equity test.
+### COMPLETED ✅
+- Phase 1 (long-form), Phase 2 (biology), Phase 3 (translated/multilingual)
+- Replication suite (N×9, P×4) — stable at 0.3
+- Phase 4 Gemma 27B N-test run
 
-### 2. Run Phase 4 Gemma 27B (~25 min via OpenRouter)
+### 1. [LAUNCH NOW — MLX] Pipeline resume (~80 min)
 
-Cross-model validation on same family, larger scale. If 27B also protects
-S029, the paper can claim format generalizes within the Gemma family.
+Store fixed (2026-03-29): 4 junk incomplete runs marked complete in SQLite.
+`0cb5b7e8` is now the only incomplete 90003 run — auto-resume lands correctly.
 
-### 3. Implement two-pass wellbeing in production pipeline
+```bash
+caffeinate -i python3 scripts/generate_demo_insights.py --course ethnic_studies
+```
+
+### 1b. [LAUNCH NOW — Cloud, parallel with above] 27B counterfactual probes (~2 min)
+
+Three probes to test the 27B training-data-bias hypothesis. NOT YET IMPLEMENTED
+as a test — need to add `test_q_27b_probes()` to run_alt_hypothesis_tests.py.
+See "Probe Design" section in `docs/research/experiment_log.md` (~line 5587).
+OpenRouter key: `~/Documents/GitHub/Reframe/.env` as `REFRAME_SHARED_OPENROUTER_KEY`.
+
+### 2. [AFTER pipeline resume — MLX] Trajectory report tests (~4-6 hours)
+
+New longitudinal report system. 17 students × 4 assignments + LLM eval.
+
+```bash
+caffeinate -i python scripts/run_trajectory_tests.py --model gemma12b
+```
+
+Resumes automatically via phase flags in `data/research/raw_outputs/.trajectory_flags/`.
+One partial TRAJ_TEST_1 run exists in store (only preprocessing, 0 codings) — safe to ignore.
+
+Key files:
+- Corpus: `data/demo_corpus/trajectory_test_corpus.json`
+- Output: `data/research/raw_outputs/trajectory_reports_gemma12b_{ts}.json`
+- Eval: LLM semantic assessment, 44 questions across 17 students
+
+### 2b. [AFTER pipeline resume — Cloud, parallel with above] Test K retry
+
+Venice quotas should be reset. Run alongside trajectory tests.
+
+```bash
+python3 scripts/run_alt_hypothesis_tests.py --tests K --no-subprocess
+```
+
+### 3. [Future] Implement two-pass wellbeing in production pipeline
 
 The validated architecture needs to move from the test script into production.
 Prompts are in `scripts/run_alt_hypothesis_tests.py`:
@@ -161,22 +196,6 @@ Key decisions:
 - Pass 2 runs only on ENGAGED students
 - Temperature: 0.1 for pass 1, 0.3 for pass 2
 - Use `unload_mlx_model()` between pipeline stages per CLAUDE.md
-- Results: `wellbeing_axis`, `wellbeing_confidence`, `checkin_flag`,
-  `checkin_reasoning` per student
-
-### 4. Pipeline resume from checkpoint (~80 min)
-
-Run `0cb5b7e8` in InsightsStore. 32/32 coded, needs downstream stages.
-**WARNING**: auto-resume picks wrong run. See handoff notes in prior version.
-
-Run AFTER Phase 3 confirms no prompt issues on multilingual text and AFTER
-implementation is complete.
-
-### 5. Test K retry (when Venice quotas reset)
-
-```bash
-python3 scripts/run_alt_hypothesis_tests.py --tests K --no-subprocess
-```
 
 ## Bugs fixed this session
 
@@ -249,10 +268,25 @@ student's writing — it was the built environment of the classification system.
 ## Critical conventions
 
 ### MLX testing
-- **Always warmup Metal** before launching tests
-- **Use `caffeinate -i`** to prevent system sleep
-- **Pause 5s between subprocesses** for Metal memory reclamation
-- Call `unload_mlx_model()` between pipeline stages
+- **Always use `caffeinate -i`** — non-negotiable. Machine sleep mid-run causes
+  Metal deadlock. The subprocess timeout fires, subprocess is killed, but Metal
+  memory may not release cleanly. Next phase load OOMs → machine stalls.
+  ```bash
+  caffeinate -i python scripts/run_trajectory_tests.py --model gemma12b
+  caffeinate -i python3 scripts/generate_demo_insights.py --course ethnic_studies
+  ```
+- **Metal warmup is now in the scripts** — `_metal_warmup()` runs automatically
+  before the first MLX subprocess in both test scripts and generate_demo_insights.py.
+  Costs ~20s but prevents cold-start deadlocks.
+- **Pause 5s between subprocesses** for Metal memory reclamation (already in scripts)
+- **Call `unload_mlx_model()`** between pipeline stages (engine.py does this)
+
+### API / Cloud testing
+- OpenRouter key: `~/Documents/GitHub/Reframe/.env` as `REFRAME_SHARED_OPENROUTER_KEY`
+- Cloud tests can run in parallel with MLX tests — independent resources
+- **Free first**: Gemma 27B free via OpenRouter for replication/regression
+- **Paid for novel paper comparisons** only (Sonnet, Opus via Anthropic API)
+- Venice API (Test K): quotas reset periodically — retry if 429
 
 ### Evaluating results
 - **READ RAW OUTPUT QUALITATIVELY** — keyword matching has been unreliable

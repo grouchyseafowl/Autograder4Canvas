@@ -91,6 +91,44 @@ def _chunk_text(text: str, chunk_size: int, overlap: int) -> list:
     return chunks
 
 
+# Wellbeing pre-scan constants
+_PRESCAN_CHUNK_SIZE = 3000   # chars per chunk — covers ~600 words
+_CLASSIFIER_MAX_INPUT = 4000  # max chars passed to 4-axis classifier
+
+
+def _prescan_for_personal_signals(
+    backend: BackendConfig,
+    text: str,
+    *,
+    max_tokens: int = 120,
+) -> list[str]:
+    """Scan all chunks for sentences describing the student's personal circumstances.
+
+    Uses LLM semantic understanding rather than keywords — avoids false positives
+    on students discussing poverty/violence/crisis as course material.
+
+    Returns a list of found sentences (often empty). Each item is a quoted
+    sentence from the student's text.
+    """
+    from insights.prompts import WELLBEING_PRESCAN_SYSTEM, WELLBEING_PRESCAN_PROMPT
+
+    chunks = _chunk_text(text, _PRESCAN_CHUNK_SIZE, overlap=200)
+    found = []
+    for chunk in chunks:
+        try:
+            raw = send_text(
+                backend,
+                WELLBEING_PRESCAN_PROMPT.format(text=chunk),
+                WELLBEING_PRESCAN_SYSTEM,
+                max_tokens=max_tokens,
+            ).strip()
+            if raw.upper() != "NO" and raw:
+                found.append(raw)
+        except Exception as exc:
+            log.warning("Wellbeing prescan chunk failed: %s", exc)
+    return found
+
+
 def _format_signal_matrix(signals: list) -> str:
     """Format signal matrix results for prompt injection."""
     if not signals:
@@ -798,24 +836,55 @@ def classify_wellbeing(
 ) -> dict:
     """Classify a student's submission on the 4-axis wellbeing schema.
 
-    Reads RAW SUBMISSION TEXT (not observations) — Test N showed 8/8,
-    0 FP on raw text. Classifying observations absorbs signals into
-    ENGAGED because observation text is already asset-framed.
+    Two-pass architecture (2026-03-29):
+      Pass 0 (pre-scan): LLM semantic scan across all chunks — finds personal
+        circumstance sentences buried in procedural/STEM writing. Avoids false
+        positives on course material discussing the same topics.
+      Pass 1 (classifier): 4-axis classification with found sentences
+        foregrounded so they're not swamped by on-task content.
 
-    Returns dict with keys: axis, signal, confidence.
+    Reads RAW SUBMISSION TEXT (not observations) — Test N showed 8/8,
+    0 FP on raw text.
+
+    Returns dict with keys: axis, signal, confidence, prescan_signals.
     Returns {"axis": "NONE", "signal": "", "confidence": 0.0} on failure.
     """
     from insights.prompts import (
-        WELLBEING_CLASSIFIER_SYSTEM, WELLBEING_CLASSIFIER_PROMPT
+        WELLBEING_CLASSIFIER_SYSTEM, WELLBEING_CLASSIFIER_PROMPT,
     )
 
     wc = len(submission_text.split())
     if wc < 15:
-        return {"axis": "NONE", "signal": "Too brief", "confidence": 0.0}
+        return {"axis": "NONE", "signal": "Too brief", "confidence": 0.0,
+                "prescan_signals": []}
+
+    # Pass 0: semantic pre-scan across all chunks
+    found_signals = _prescan_for_personal_signals(backend, submission_text)
+
+    # Build signal prefix to foreground any found sentences for the classifier
+    if found_signals:
+        quoted = "\n".join(f'  "{s}"' for s in found_signals)
+        signal_prefix = (
+            "NOTE: The following sentence(s) from this student's submission "
+            "appear to describe their own personal circumstances:\n"
+            f"{quoted}\n"
+            "Even a single such sentence is sufficient for CRISIS or BURNOUT "
+            "classification if it reflects genuine personal circumstances.\n\n"
+        )
+    else:
+        signal_prefix = ""
+
+    # Truncate for classifier — pre-scan already covered the full text
+    classifier_input = submission_text
+    if len(submission_text) > _CLASSIFIER_MAX_INPUT:
+        classifier_input = (
+            submission_text[:_CLASSIFIER_MAX_INPUT] + "\n[...submission continues...]"
+        )
 
     prompt = WELLBEING_CLASSIFIER_PROMPT.format(
         student_name=student_name,
-        submission_text=submission_text,
+        signal_prefix=signal_prefix,
+        submission_text=classifier_input,
     )
 
     try:
@@ -832,10 +901,11 @@ def classify_wellbeing(
             "axis": axis,
             "signal": parsed.get("signal", ""),
             "confidence": float(parsed.get("confidence", 0.0)),
+            "prescan_signals": found_signals,
         }
     except Exception as exc:
         log.warning("Wellbeing classification failed for %s: %s", student_name, exc)
-        return {"axis": "NONE", "signal": "", "confidence": 0.0}
+        return {"axis": "NONE", "signal": "", "confidence": 0.0, "prescan_signals": []}
 
 
 def classify_checkin(

@@ -1,0 +1,860 @@
+{
+  "run": {
+    "run_id": "67321258-82b1-40e1-b555-611dc175cf02",
+    "course_id": "90003",
+    "course_name": "Ethnic Studies (11), Period 3",
+    "assignment_id": "113002",
+    "assignment_name": "Week 6 Discussion: Intersectionality in Practice",
+    "started_at": "2026-03-29T16:06:16.773036+00:00",
+    "completed_at": "2026-03-29T17:00:25.275022+00:00",
+    "model_tier": "lightweight",
+    "model_name": "mlx-community/gemma-3-12b-it-4bit",
+    "total_submissions": 6,
+    "stages_completed": [
+      "data_fetch",
+      "preprocessing",
+      "quick_analysis",
+      "coding",
+      "wellbeing",
+      "checkin",
+      "observations",
+      "themes",
+      "outliers",
+      "synthesis",
+      "feedback"
+    ],
+    "pipeline_confidence": {
+      "overall": 0.91,
+      "data_quality": 0.72,
+      "coding_reliability": 1.0,
+      "theme_coherence": 1.0,
+      "concerns": []
+    },
+    "teacher_context": "This is a weekly discussion board. Students respond to a reading about intersectionality theory applied to everyday life. Complete/incomplete grading \u2014 150 word minimum. I'm looking for genuine engagement with the concepts, not polished academic writing.",
+    "analysis_lens_config": {},
+    "quick_analysis": "{\"assignment_id\":\"113002\",\"assignment_name\":\"Week 6 Discussion: Intersectionality in Practice\",\"course_id\":\"90003\",\"course_name\":\"Ethnic Studies (11), Period 3\",\"analyzed_at\":\"2026-03-29T16:06:16.773734\",\"stats\":{\"total_submissions\":6,\"total_enrollment\":0,\"word_count_mean\":329.0,\"word_count_median\":326.0,\"word_count_min\":262,\"word_count_max\":397,\"word_counts\":[274,262,310,389,342,397],\"format_breakdown\":{\"online_text_entry\":6},\"timing\":{\"on_time\":6}},\"top_terms\":[{\"term\":\"crenshaw\",\"count\":15},{\"term\":\"intersectionality\",\"count\":13},{\"term\":\"family\",\"count\":11},{\"term\":\"intersection\",\"count\":9},{\"term\":\"poor\",\"count\":8},{\"term\":\"indigenous\",\"count\":8},{\"term\":\"que\",\"count\":8},{\"term\":\"invisible\",\"count\":7},{\"term\":\"intersections\",\"count\":7},{\"term\":\"mexico\",\"count\":6},{\"term\":\"mother\",\"count\":6},{\"term\":\"pero\",\"count\":6},{\"term\":\"abuela\",\"count\":5},{\"term\":\"separate\",\"count\":5},{\"term\":\"strong\",\"count\":5},{\"term\":\"gender\",\"count\":5},{\"term\":\"together\",\"count\":5},{\"term\":\"porque\",\"count\":5},{\"term\":\"institutions\",\"count\":5},{\"term\":\"name\",\"count\":4},{\"term\":\"discrimination\",\"count\":4},{\"term\":\"black\",\"count\":4},{\"term\":\"race\",\"count\":4},{\"term\":\"school\",\"count\":4},{\"term\":\"framework\",\"count\":4},{\"term\":\"culture\",\"count\":4},{\"term\":\"vietnamese\",\"count\":4},{\"term\":\"read\",\"count\":3},{\"term\":\"experience\",\"count\":3},{\"term\":\"theory\",\"count\":3}],\"tfidf_terms\":[{\"term\":\"just\",\"score\":0.1738},{\"term\":\"indigenous\",\"score\":0.1433},{\"term\":\"family\",\"score\":0.1252},{\"term\":\"que\",\"score\":0.1232},{\"term\":\"woman\",\"score\":0.1204},{\"term\":\"work\",\"score\":0.1167},{\"term\":\"intersection\",\"score\":0.1121},{\"term\":\"mexico\",\"score\":0.1085},{\"term\":\"say\",\"score\":0.099},{\"term\":\"things\",\"score\":0.0982},{\"term\":\"does\",\"score\":0.0955},{\"term\":\"pero\",\"score\":0.0948},{\"term\":\"poor\",\"score\":0.0944},{\"term\":\"mother\",\"score\":0.0939},{\"term\":\"institutions\",\"score\":0.0939},{\"term\":\"strong\",\"score\":0.0892},{\"term\":\"need\",\"score\":0.0856},{\"term\":\"invisible\",\"score\":0.0824},{\"term\":\"way\",\"score\":0.0812},{\"term\":\"intersections\",\"score\":0.0809}],\"named_entities\":{},\"keyword_hits\":{\"personal_reflection\":{\"pattern_name\":\"personal_reflection\",\"count\":7,\"student_ids\":[\"TR01\",\"TR03\",\"TR04\",\"TR05\",\"TR06\"],\"examples\":[\"\u2026is not only the experience of my family. The comadre of my mother she\u2026\",\"\u2026erstand that if I do not work my family does not eat. That is also th\u2026\",\"\u2026the pueblos of Chiapas where my family is from.\\n\\nWhat I find most im\u2026\",\"\u2026I already understood through my family. My ba noi was a woman, she w\u2026\",\"\u2026mmigration status. Because in my family that's the intersection que m\u2026\"]},\"evidence_use\":{\"pattern_name\":\"evidence_use\",\"count\":13,\"student_ids\":[\"TR01\",\"TR02\",\"TR03\",\"TR04\",\"TR05\",\"TR06\"],\"examples\":[\"\u2026The reading it made me think about my abu\u2026\",\"\u2026d doesn't matter. That's what the reading calls intersectionality pero\u2026\",\"\u2026even. But I want to say about the reading that I think Crenshaw she is\u2026\",\"\u2026What I find most important of the reading is the idea that the categori\u2026\",\"\u2026hadn't been poor in Vietnam. The reading talks about how these categor\u2026\"]},\"conceptual_connection\":{\"pattern_name\":\"conceptual_connection\",\"count\":2,\"student_ids\":[\"TR03\",\"TR05\"],\"examples\":[\"\u2026write more about how this it connects to my own life because I also\u2026\",\"\u2026eans something like emotional connection but deeper, like the web of o\u2026\"]},\"current_events\":{\"pattern_name\":\"current_events\",\"count\":1,\"student_ids\":[\"TR03\"],\"examples\":[\"\u2026il the one in the morning and today I have school at seven. But I\u2026\"]},\"distress_markers\":{\"pattern_name\":\"distress_markers\",\"count\":3,\"student_ids\":[\"TR06\"],\"examples\":[\"\u2026papeles and now my brother is scared to go to school porque alguie\u2026\"]}},\"sentiments\":{\"TR01\":{\"compound\":-0.0285,\"pos\":0.0654,\"neg\":0.0939,\"neu\":1.0142,\"emotions\":{\"neutral\":0.771,\"realization\":0.2349,\"approval\":0.0508,\"disappointment\":0.0275,\"disapproval\":0.0271,\"annoyance\":0.0192,\"sadness\":0.0097,\"confusion\":0.0058,\"optimism\":0.004,\"disgust\":0.0025,\"admiration\":0.0025,\"embarrassment\":0.0023,\"surprise\":0.0018,\"relief\":0.0015,\"fear\":0.0014,\"anger\":0.0013,\"amusement\":0.0012,\"joy\":0.001,\"nervousness\":0.001,\"remorse\":0.001,\"caring\":0.001,\"desire\":0.0009,\"grief\":0.0009,\"gratitude\":0.0008,\"love\":0.0007,\"curiosity\":0.0007,\"pride\":0.0006,\"excitement\":0.0004},\"reliability\":\"go_emotions\"},\"TR02\":{\"compound\":0.0572,\"pos\":0.1141,\"neg\":0.0569,\"neu\":0.9322,\"emotions\":{\"neutral\":0.7333,\"confusion\":0.1047,\"approval\":0.1005,\"realization\":0.048,\"curiosity\":0.0441,\"disapproval\":0.0268,\"annoyance\":0.0166,\"disappointment\":0.0062,\"optimism\":0.0058,\"surprise\":0.0021,\"sadness\":0.0016,\"caring\":0.0016,\"anger\":0.0014,\"disgust\":0.0013,\"admiration\":0.0013,\"desire\":0.0012,\"fear\":0.0009,\"embarrassment\":0.0008,\"amusement\":0.0008,\"love\":0.0007,\"nervousness\":0.0006,\"joy\":0.0006,\"excitement\":0.0006,\"relief\":0.0005,\"remorse\":0.0004,\"grief\":0.0003,\"gratitude\":0.0003,\"pride\":0.0002},\"reliability\":\"go_emotions\"},\"TR03\":{\"compound\":-0.768,\"pos\":0.1632,\"neg\":0.9312,\"neu\":0.1711,\"emotions\":{\"remorse\":0.3216,\"disappointment\":0.298,\"sadness\":0.1313,\"disapproval\":0.1248,\"neutral\":0.1127,\"approval\":0.1029,\"realization\":0.0441,\"annoyance\":0.0314,\"optimism\":0.0174,\"embarrassment\":0.0119,\"desire\":0.0108,\"confusion\":0.0104,\"caring\":0.0088,\"love\":0.0081,\"relief\":0.0037,\"admiration\":0.0036,\"curiosity\":0.003,\"disgust\":0.003,\"nervousness\":0.0029,\"gratitude\":0.0028,\"anger\":0.0027,\"grief\":0.0027,\"joy\":0.0021,\"excitement\":0.0011,\"amusement\":0.001,\"fear\":0.0009,\"pride\":0.0009,\"surprise\":0.0009},\"reliability\":\"go_emotions\"},\"TR04\":{\"compound\":0.2233,\"pos\":0.287,\"neg\":0.0637,\"neu\":0.7767,\"emotions\":{\"neutral\":0.6874,\"approval\":0.2651,\"realization\":0.0806,\"disapproval\":0.037,\"annoyance\":0.0111,\"disappointment\":0.0094,\"optimism\":0.0089,\"confusion\":0.0071,\"admiration\":0.0059,\"sadness\":0.0016,\"disgust\":0.0015,\"caring\":0.0014,\"desire\":0.0011,\"curiosity\":0.001,\"love\":0.001,\"anger\":0.001,\"gratitude\":0.0009,\"relief\":0.0008,\"surprise\":0.0006,\"joy\":0.0005,\"fear\":0.0005,\"remorse\":0.0005,\"amusement\":0.0005,\"pride\":0.0005,\"embarrassment\":0.0005,\"excitement\":0.0004,\"nervousness\":0.0003,\"grief\":0.0003},\"reliability\":\"go_emotions\"},\"TR05\":{\"compound\":0.3266,\"pos\":0.3699,\"neg\":0.0433,\"neu\":0.8357,\"emotions\":{\"neutral\":0.6722,\"approval\":0.3228,\"realization\":0.1603,\"admiration\":0.0218,\"disapproval\":0.0117,\"annoyance\":0.0102,\"disappointment\":0.0101,\"optimism\":0.0088,\"sadness\":0.0037,\"caring\":0.0037,\"relief\":0.0026,\"pride\":0.0022,\"love\":0.0021,\"confusion\":0.002,\"desire\":0.0019,\"disgust\":0.0019,\"gratitude\":0.0017,\"joy\":0.0012,\"anger\":0.0012,\"fear\":0.0011,\"embarrassment\":0.001,\"remorse\":0.001,\"surprise\":0.0007,\"grief\":0.0007,\"nervousness\":0.0007,\"excitement\":0.0006,\"amusement\":0.0005,\"curiosity\":0.0005},\"reliability\":\"go_emotions\"},\"TR06\":{\"compound\":0.431,\"pos\":0.5225,\"neg\":0.0915,\"neu\":0.4426,\"emotions\":{\"approval\":0.4914,\"neutral\":0.3765,\"realization\":0.0605,\"fear\":0.0428,\"annoyance\":0.0113,\"disapproval\":0.0108,\"optimism\":0.0094,\"disappointment\":0.0072,\"sadness\":0.0067,\"caring\":0.0058,\"admiration\":0.0055,\"nervousness\":0.0051,\"confusion\":0.0035,\"disgust\":0.003,\"relief\":0.0026,\"anger\":0.0016,\"love\":0.0015,\"embarrassment\":0.0015,\"excitement\":0.0013,\"desire\":0.0013,\"joy\":0.0012,\"surprise\":0.0012,\"pride\":0.001,\"curiosity\":0.0009,\"amusement\":0.0009,\"grief\":0.0008,\"remorse\":0.0007,\"gratitude\":0.0006},\"reliability\":\"go_emotions\"}},\"sentiment_distribution\":{\"analytical\":2,\"passionate\":3,\"personal\":1},\"clusters\":[{\"cluster_id\":0,\"size\":4,\"student_ids\":[\"TR01\",\"TR03\",\"TR04\",\"TR05\"],\"student_names\":[\"Carmen Flores\",\"Ana Gutierrez\",\"Luis Mendoza\",\"Linh Pham\"],\"top_terms\":[\"crenshaw\",\"intersectionality\",\"family\",\"indigenous\",\"poor\"],\"centroid_text\":\"The reading it made me think about my abuela in Mexico. She always say that being woman and being poor and being from the pueblo it is not three probl\"},{\"cluster_id\":1,\"size\":2,\"student_ids\":[\"TR02\",\"TR06\"],\"student_names\":[\"Diego Ramirez-Santos\",\"Isabella Morales\"],\"top_terms\":[\"que\",\"pero\",\"crenshaw\",\"porque\",\"intersectionality\"],\"centroid_text\":\"Crenshaw talks about how race y gender overlap pero it's not just categories on paper, es lo que vive mi familia every day. My dad works construction\"}],\"embedding_outlier_ids\":[],\"pairwise_similarity\":{\"mean_similarity\":0.5647,\"max_similarity\":0.7418,\"pairs_above_085\":0,\"pairs_above_070\":2,\"total_pairs\":15,\"observation\":\"This assignment had moderate submission similarity (mean=0.56, max=0.74, 15 pairs total). 2 pairs above 0.70 (moderate similarity). Consider first: is the assignment designed to produce diverse responses? Similarity can reflect community, shared cultural knowledge, or collaborative learning \u2014 not only copying.\",\"high_similarity_pairs\":[]},\"assignment_description\":\"\",\"assignment_connection_observation\":\"\",\"assignment_fingerprint\":null,\"shared_references\":[],\"contradictions\":[],\"concern_signals\":[{\"student_id\":\"TR01\",\"student_name\":\"Carmen Flores\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"neutral\",\"matched_text\":\"The reading it made me think ab\",\"interpretation\":\"Measured critical analysis\"},{\"student_id\":\"TR02\",\"student_name\":\"Diego Ramirez-Santos\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"matter. That's what the reading calls intersectiona\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"TR03\",\"student_name\":\"Ana Gutierrez\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"negative\",\"matched_text\":\"I want to say about the reading that I think Crensh\",\"interpretation\":\"Political urgency about injustice \u2014 NOT a concern\"},{\"student_id\":\"TR04\",\"student_name\":\"Luis Mendoza\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"d most important of the reading is the idea that th\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"TR05\",\"student_name\":\"Linh Pham\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"en poor in Vietnam. The reading talks about how the\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"TR06\",\"student_name\":\"Isabella Morales\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"assignment is about the reading and I am writing ab\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"TR06\",\"student_name\":\"Isabella Morales\",\"signal_type\":\"VERIFY\",\"keyword_category\":\"distress\",\"vader_polarity\":\"positive\",\"matched_text\":\"d now my brother is scared to go to school por\",\"interpretation\":\"Unlikely combination \u2014 verify context\"}],\"per_submission\":{\"TR01\":{\"student_id\":\"TR01\",\"student_name\":\"Carmen Flores\",\"word_count\":274,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.0285,\"emotions\":{\"neutral\":0.771,\"realization\":0.2349,\"approval\":0.0508,\"disappointment\":0.0275,\"disapproval\":0.0271,\"annoyance\":0.0192,\"sadness\":0.0097,\"confusion\":0.0058,\"optimism\":0.004,\"disgust\":0.0025,\"admiration\":0.0025,\"embarrassment\":0.0023,\"surprise\":0.0018,\"relief\":0.0015,\"fear\":0.0014,\"anger\":0.0013,\"amusement\":0.0012,\"joy\":0.001,\"nervousness\":0.001,\"remorse\":0.001,\"caring\":0.001,\"desire\":0.0009,\"grief\":0.0009,\"gratitude\":0.0008,\"love\":0.0007,\"curiosity\":0.0007,\"pride\":0.0006,\"excitement\":0.0004},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"personal_reflection\":1,\"evidence_use\":2},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[{\"name\":\"flat_affect_engaged\",\"category\":\"register_affect\",\"evidence\":[\"compound=-0.029, 2 engagement categories\"],\"asset_label\":\"Deep engagement, understated expression\",\"learn_note\":\"Neutral emotional tone with substantive concept engagement. Flat affect in writing correlates with multiple causes: some writers engage deeply through understatement; some neurodivergent writers express engagement through precision rather than emotional language; some cultural communication norms favor restraint. Japanese academic writing, for instance, often demonstrates engagement through careful qualification rather than overt enthusiasm.\",\"protected\":false,\"sentiment_effect\":\"caveat\",\"aic_weight_adjustments\":{}}],\"sentiment_tier\":\"low\",\"sentiment_triggers\":[\"flat_affect_engaged\"],\"sentiment_caveat\":\"Emotional register score may be unreliable (flat_affect_engaged). Treat as weak signal.\",\"asset_labels\":[\"Deep engagement, understated expression\"],\"llm_context_note\":\"This student's engagement may be understated in tone but substantive in content. Read ideas and substance, not affect markers.\",\"aic_adjustments\":{}}},\"TR02\":{\"student_id\":\"TR02\",\"student_name\":\"Diego Ramirez-Santos\",\"word_count\":262,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.0572,\"emotions\":{\"neutral\":0.7333,\"confusion\":0.1047,\"approval\":0.1005,\"realization\":0.048,\"curiosity\":0.0441,\"disapproval\":0.0268,\"annoyance\":0.0166,\"disappointment\":0.0062,\"optimism\":0.0058,\"surprise\":0.0021,\"sadness\":0.0016,\"caring\":0.0016,\"anger\":0.0014,\"disgust\":0.0013,\"admiration\":0.0013,\"desire\":0.0012,\"fear\":0.0009,\"embarrassment\":0.0008,\"amusement\":0.0008,\"love\":0.0007,\"nervousness\":0.0006,\"joy\":0.0006,\"excitement\":0.0006,\"relief\":0.0005,\"remorse\":0.0004,\"grief\":0.0003,\"gratitude\":0.0003,\"pride\":0.0002},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"evidence_use\":2},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[{\"name\":\"aave_lexical\",\"category\":\"syntactic_variation\",\"evidence\":[\"they don't\"],\"asset_label\":\"AAVE linguistic features \u2014 authentic voice\",\"learn_note\":\"AAVE vocabulary features detected. AAVE is a complete grammatical system (Rickford, 1999) \u2014 these markers ('finna,' 'ain't,' 'no cap') parallel modal verbs and intensifiers in standard English but carry different social indexing. Sentiment tools trained on standard English systematically misread AAVE affect, so this score has been adjusted.\",\"protected\":true,\"sentiment_effect\":\"caveat\",\"aic_weight_adjustments\":{\"grammatical_perfection\":0.5}}],\"sentiment_tier\":\"low\",\"sentiment_triggers\":[\"aave_lexical\"],\"sentiment_caveat\":\"Emotional register score may be unreliable (aave_lexical). Treat as weak signal.\",\"asset_labels\":[\"AAVE linguistic features \u2014 authentic voice\"],\"llm_context_note\":\"This student's writing includes AAVE linguistic features. AAVE is a complete linguistic system \u2014 read engagement through their actual voice, not standard English expectations.\",\"aic_adjustments\":{\"grammatical_perfection\":0.5}}},\"TR03\":{\"student_id\":\"TR03\",\"student_name\":\"Ana Gutierrez\",\"word_count\":310,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.768,\"emotions\":{\"remorse\":0.3216,\"disappointment\":0.298,\"sadness\":0.1313,\"disapproval\":0.1248,\"neutral\":0.1127,\"approval\":0.1029,\"realization\":0.0441,\"annoyance\":0.0314,\"optimism\":0.0174,\"embarrassment\":0.0119,\"desire\":0.0108,\"confusion\":0.0104,\"caring\":0.0088,\"love\":0.0081,\"relief\":0.0037,\"admiration\":0.0036,\"curiosity\":0.003,\"disgust\":0.003,\"nervousness\":0.0029,\"gratitude\":0.0028,\"anger\":0.0027,\"grief\":0.0027,\"joy\":0.0021,\"excitement\":0.0011,\"amusement\":0.001,\"fear\":0.0009,\"pride\":0.0009,\"surprise\":0.0009},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"conceptual_connection\":1,\"personal_reflection\":1,\"current_events\":1,\"evidence_use\":3},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":true,\"truncation_note\":\"This submission may be incomplete \u2014 it ends without finishing the last thought. Consider checking in with this student.\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[],\"sentiment_tier\":\"high\",\"sentiment_triggers\":[],\"sentiment_caveat\":\"\",\"asset_labels\":[],\"llm_context_note\":\"\",\"aic_adjustments\":{}}},\"TR04\":{\"student_id\":\"TR04\",\"student_name\":\"Luis Mendoza\",\"word_count\":389,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.2233,\"emotions\":{\"neutral\":0.6874,\"approval\":0.2651,\"realization\":0.0806,\"disapproval\":0.037,\"annoyance\":0.0111,\"disappointment\":0.0094,\"optimism\":0.0089,\"confusion\":0.0071,\"admiration\":0.0059,\"sadness\":0.0016,\"disgust\":0.0015,\"caring\":0.0014,\"desire\":0.0011,\"curiosity\":0.001,\"love\":0.001,\"anger\":0.001,\"gratitude\":0.0009,\"relief\":0.0008,\"surprise\":0.0006,\"joy\":0.0005,\"fear\":0.0005,\"remorse\":0.0005,\"amusement\":0.0005,\"pride\":0.0005,\"embarrassment\":0.0005,\"excitement\":0.0004,\"nervousness\":0.0003,\"grief\":0.0003},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"personal_reflection\":1,\"evidence_use\":1},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[],\"sentiment_tier\":\"high\",\"sentiment_triggers\":[],\"sentiment_caveat\":\"\",\"asset_labels\":[],\"llm_context_note\":\"\",\"aic_adjustments\":{}}},\"TR05\":{\"student_id\":\"TR05\",\"student_name\":\"Linh Pham\",\"word_count\":342,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.3266,\"emotions\":{\"neutral\":0.6722,\"approval\":0.3228,\"realization\":0.1603,\"admiration\":0.0218,\"disapproval\":0.0117,\"annoyance\":0.0102,\"disappointment\":0.0101,\"optimism\":0.0088,\"sadness\":0.0037,\"caring\":0.0037,\"relief\":0.0026,\"pride\":0.0022,\"love\":0.0021,\"confusion\":0.002,\"desire\":0.0019,\"disgust\":0.0019,\"gratitude\":0.0017,\"joy\":0.0012,\"anger\":0.0012,\"fear\":0.0011,\"embarrassment\":0.001,\"remorse\":0.001,\"surprise\":0.0007,\"grief\":0.0007,\"nervousness\":0.0007,\"excitement\":0.0006,\"amusement\":0.0005,\"curiosity\":0.0005},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"conceptual_connection\":1,\"personal_reflection\":1,\"evidence_use\":3},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[],\"sentiment_tier\":\"high\",\"sentiment_triggers\":[],\"sentiment_caveat\":\"\",\"asset_labels\":[],\"llm_context_note\":\"\",\"aic_adjustments\":{}}},\"TR06\":{\"student_id\":\"TR06\",\"student_name\":\"Isabella Morales\",\"word_count\":397,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.431,\"emotions\":{\"approval\":0.4914,\"neutral\":0.3765,\"realization\":0.0605,\"fear\":0.0428,\"annoyance\":0.0113,\"disapproval\":0.0108,\"optimism\":0.0094,\"disappointment\":0.0072,\"sadness\":0.0067,\"caring\":0.0058,\"admiration\":0.0055,\"nervousness\":0.0051,\"confusion\":0.0035,\"disgust\":0.003,\"relief\":0.0026,\"anger\":0.0016,\"love\":0.0015,\"embarrassment\":0.0015,\"excitement\":0.0013,\"desire\":0.0013,\"joy\":0.0012,\"surprise\":0.0012,\"pride\":0.001,\"curiosity\":0.0009,\"amusement\":0.0009,\"grief\":0.0008,\"remorse\":0.0007,\"gratitude\":0.0006},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"personal_reflection\":3,\"distress_markers\":3,\"evidence_use\":2},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[],\"sentiment_tier\":\"high\",\"sentiment_triggers\":[],\"sentiment_caveat\":\"\",\"asset_labels\":[],\"llm_context_note\":\"\",\"aic_adjustments\":{}}}},\"citation_report\":null,\"gibberish_ids\":[],\"analysis_notes\":[]}"
+  },
+  "codings": [
+    {
+      "run_id": "67321258-82b1-40e1-b555-611dc175cf02",
+      "student_id": "TR01",
+      "student_name": "Carmen Flores",
+      "coding_record": {
+        "student_id": "TR01",
+        "student_name": "Carmen Flores",
+        "theme_tags": [
+          "lived experience and theory",
+          "intersectionality",
+          "validation of pre-theoretical knowledge",
+          "social justice"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "being woman and being poor and being from the pueblo it is not three problems separate, it is one life",
+            "significance": "This quote encapsulates Carmen's central argument \u2013 that intersectional experiences are not additive but fundamentally intertwined, a point her abuela already understood."
+          },
+          {
+            "text": "Crenshaw she is putting the name to something that my abuela already know from living it.",
+            "significance": "This highlights Carmen's perspective that theory doesn't create new knowledge but rather provides a framework for understanding existing experiences."
+          },
+          {
+            "text": "She need the change.",
+            "significance": "This is a potent statement of purpose, revealing a commitment to social justice that fuels Carmen\u2019s engagement with the material."
+          }
+        ],
+        "emotional_register": "passionate, urgent, personal",
+        "emotional_notes": "Carmen's writing conveys a sense of urgency and passion, particularly in her call for change. The personal connection to her abuela's experiences adds a layer of emotional depth.",
+        "readings_referenced": [
+          "Crenshaw"
+        ],
+        "concepts_applied": [
+          "intersectionality"
+        ],
+        "personal_connections": [
+          "abuela's experiences in Mexico",
+          "mother's stories",
+          "comadre's experiences in Oaxaca"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Carmen\u2019s submission is a beautiful example of how theory can connect to lived experience, and how that connection can feel both validating and urgent. She's grappling with the question of how to translate complex theoretical concepts into something tangible and meaningful, and she does so through the lens of her abuela's experiences. The way she centers her abuela\u2019s wisdom \u2013 \"being woman and being poor and being from the pueblo it is not three problems separate, it is one life\" \u2013 is a powerful distillation of intersectionality, and it demonstrates a remarkable ability to synthesize abstract ideas with concrete realities.\n\nWhat\u2019s striking is Carmen\u2019s insistence that her abuela already *knew* this, long before encountering Crenshaw\u2019s work. The theory isn't creating something new, but rather giving a name to something already deeply felt and understood. This isn't a dismissal of theory, but a recognition of the pre-theoretical knowledge embedded in lived experience, particularly within marginalized communities. Her closing line, \"She need the change,\" is a potent statement of purpose, revealing a commitment to social justice that fuels her engagement with the material. The teacher should notice Carmen's ability to move between personal narrative, theoretical understanding, and a call to action \u2013 a sophisticated form of intellectual engagement.",
+        "what_student_is_reaching_for": "Carmen is attempting to bridge the gap between abstract theoretical concepts and the concrete realities of lived experience, demonstrating how theory can validate and name experiences already deeply understood within marginalized communities.",
+        "confusion_or_questions": null,
+        "observation": "Carmen is powerfully connecting Crenshaw\u2019s theoretical framework to a deeply embodied understanding of intersectionality, one that she already holds through her abuela's lived experience. She's not simply understanding the *definition* of intersectionality; she's recognizing it as a formalization of a reality that has always existed for marginalized people. The way she contrasts the theoretical language with her abuela's practical wisdom \u2013 \"my abuela she does not need the name\" \u2013 is a really insightful move. She's demonstrating that theory can be a tool for recognition and validation, but it shouldn't obscure the lived realities it aims to describe.\n\nEmotionally, Carmen\u2019s writing feels driven by a sense of responsibility and a desire for justice. Her closing statement, \"She need the change,\" is a clear expression of this commitment. It's not just an intellectual exercise for her; it's a call to action.\n\nThe teacher might appreciate acknowledging Carmen\u2019s ability to bridge the gap between abstract theory and concrete experience. It would be valuable to encourage her to continue exploring how theoretical frameworks can be used to amplify the voices and experiences of those who have been historically marginalized.\n\nThere's a subtle instance of **abstract liberalism** at play in Carmen's concluding statement, \"She need the change.\" While the sentiment is undeniably positive, framing it in such a broad way risks obscuring the specific, systemic changes required to address the complex issues she's describing. It implies a simple solution to a deeply entrenched problem, potentially overlooking the need for targeted interventions and structural reforms. It's not a major issue, but it's a pattern to be aware of as students move forward in their analysis.",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student is drawing on family experiences and connecting them to course material (Crenshaw's intersectionality) to deepen their understanding. While the experiences described are difficult, they are being used to analyze and engage with the assigned reading.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": false,
+        "checkin_reasoning": "The student is drawing on personal and family experiences (abuela's experiences, mother's stories, comadre's history) to illustrate and connect with the course material (Crenshaw's intersectionality). They are using these narratives as course material, not disclosing their own current state. There are no explicit statements about the student's feelings, exhaustion, or difficulties.",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 0.0,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "typical",
+          "starter_diversity": "typical",
+          "comma_density": "typical",
+          "avg_word_length": "typical",
+          "hp_confidence": "typical",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": -0.34,
+        "theme_concern_notes": []
+      },
+      "submission_text": "The reading it made me think about my abuela in Mexico. She always say that being woman and being poor and being from the pueblo it is not three problems separate, it is one life. When I read about the intersectionality I understand that Crenshaw she is putting the name to something that my abuela already know from living it.\n\nIn Mexico my abuela she work in the house of a family rich in Guadalajara. She was indigenous, she was woman, she was poor, and for the family where she work these things they made her invisible. She could clean the house of them but she could not sit at the table of them. My mother she tell me that abuela had to be strong two times \u2014 strong for to survive the work and strong for to not lose the dignity of herself. That is the intersectionality in the life real, not only in the book.\n\nWhat the reading it help me to see is that this is not only the experience of my family. The comadre of my mother she have the same history but different, because she is from Oaxaca and the discrimination of the indigenous it is even more strong there. Crenshaw she write about the women Black in the United States but I think the idea it travels to Mexico and to other places where the woman poor and indigenous she does not have the words for to say what is happening to her but she live it every day. The theory it gives the name but my abuela she does not need the name. She need the change.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "67321258-82b1-40e1-b555-611dc175cf02",
+      "student_id": "TR02",
+      "student_name": "Diego Ramirez-Santos",
+      "coding_record": {
+        "student_id": "TR02",
+        "student_name": "Diego Ramirez-Santos",
+        "theme_tags": [
+          "intersectionality",
+          "agency and resilience",
+          "normalization of injustice",
+          "community building",
+          "linguistic identity"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "martes",
+            "significance": "Diego uses this term to describe his father's experience of discrimination, highlighting the normalization of injustice and the sense that it's a regular, unavoidable part of life."
+          },
+          {
+            "text": "pero my dad would just call it martes \u2014 Tuesday.",
+            "significance": "This quote exemplifies Diego's ability to articulate a complex experience in a relatable and impactful way, demonstrating a deep understanding of systemic oppression."
+          },
+          {
+            "text": "not just the oppression sino also the ways people at the intersections build something for themselves porque the system never will.",
+            "significance": "This quote demonstrates Diego's recognition that resistance and community building are crucial responses to systemic marginalization, and that these actions can also be considered a form of intersectionality."
+          }
+        ],
+        "emotional_register": "passionate|personal|urgent",
+        "emotional_notes": "Diego's writing conveys a sense of urgency and personal investment in understanding and articulating his family's experiences with intersectionality. He is deeply engaged with the material and uses vivid language to describe his family's realities.",
+        "readings_referenced": [
+          "Crenshaw"
+        ],
+        "concepts_applied": [
+          "intersectionality"
+        ],
+        "personal_connections": [
+          "family experiences",
+          "linguistic identity"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Diego is grappling with a really important tension: how to understand systemic oppression without flattening the agency and resilience of the people experiencing it. He's clearly connecting Crenshaw's theoretical framework to his family's lived realities, and that's the core of what's happening here. The use of \"martes\" to describe his father's experience of discrimination is striking \u2013 it's a powerful way of conveying the normalization of injustice, the sense that it's just a regular, unavoidable part of life. It's a deeply insightful observation, and it speaks to a level of understanding that goes beyond simply reciting definitions.\n\nThe way he describes his mother's childcare network is equally important. He's not just pointing out the oppression; he's showing how his family actively builds solutions, creates community, and resists the very systems that marginalize them. He's asking a really good question: can this act of building something for themselves *also* be considered intersectionality? It's a move beyond victimhood narratives, and a recognition that resistance can take many forms.\n\nThe code-switching\u2014the fluid movement between Spanish and English\u2014isn't just a stylistic choice; it's a reflection of his family's linguistic reality and a way of signaling a shared understanding. It's a form of communication that carries a lot of weight and meaning within his community. The teacher should notice that Diego isn't just *understanding* intersectionality; he's *living* it, and he's articulating that experience in a way that is both deeply personal and intellectually sharp.",
+        "what_student_is_reaching_for": "Diego is grappling with the complexities of intersectionality, moving beyond a purely theoretical understanding to connect it to his family's lived experiences and demonstrating how resistance and community building can also be a form of intersectional practice.",
+        "confusion_or_questions": null,
+        "observation": "Diego is grappling with a really important tension: the move from identifying systemic oppression to understanding agency and resistance within those systems. He clearly understands Crenshaw's argument about how systems fail to recognize the compounded discrimination faced by individuals at intersecting points \u2013 his example of his father being seen as \"just an immigrant or just a Brown man\" is a powerful illustration. He's also making a sophisticated connection between legal cases and the everyday experiences of his family, recognizing that the limitations Crenshaw describes in the legal system mirror the ways his mother is treated at the clinic.\n\nEmotionally, there's a palpable sense of frustration and a desire to make sense of the complexities of his family's experiences. He's not simply presenting a narrative of victimhood; he's actively searching for a way to understand both the forces acting *against* his family and the ways they actively build resilience and community. The use of code-switching (Spanish and English) is a key asset here, reflecting the linguistic reality of his family and community and adding depth to his analysis. The shift to Spanish (\"es lo que vive mi familia,\" \"pero my dad would just call it martes\") feels authentic and grounded.\n\nIt's interesting that he frames his parents as \"not just victims of intersectionality, they also resist it every day.\" This is a crucial step in moving beyond simplistic narratives, and it's a point the teacher could definitely explore further. He's already beginning to consider how to move beyond a purely theoretical understanding of intersectionality and apply it to real-world action, as evidenced by his focus on his mother's childcare network.\n\nI notice a subtle instance of **abstract liberalism** in his phrasing, \"That\u2019s also intersectionality, no? Not just the oppression sino also the ways people at the intersections build something for themselves porque",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student is drawing on their family's experiences to illustrate and engage with Crenshaw's concept of intersectionality, demonstrating a clear understanding of the course material. While the content touches on sensitive topics (immigration status, discrimination), it's used as a tool for analysis and reflection within the assignment's scope.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": false,
+        "checkin_reasoning": "The student references their family's experiences and observations, but does not explicitly comment on their own current state. While the references to family experiences are personal, they are being used to illustrate and analyze the course material (Crenshaw's concept of intersectionality), which is consistent with engaged writing. There are no direct self-disclosures.",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 3.35,
+            "marker_count": 1,
+            "markers": [
+              "as of"
+            ]
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 3.4,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "strong_engagement",
+          "starter_diversity": "strong_engagement",
+          "comma_density": "strong_engagement",
+          "avg_word_length": "typical",
+          "hp_confidence": "strong_engagement",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": 1.13,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Crenshaw talks about how race y gender overlap pero it's not just categories on paper, es lo que vive mi familia every day. My dad works construction and he's undocumented y moreno, so when people look at him they don't see just an immigrant or just a Brown man, they see someone they already decided doesn't matter. That's what the reading calls intersectionality pero my dad would just call it martes \u2014 Tuesday. It's just how it is.\n\nLo que me pego mas of the reading was the legal cases. Like the Black women couldn't sue for discrimination because the court only saw race OR gender pero nunca los dos together. That's exactly what happens con mi familia. When my mom goes to the clinic they treat her weird and she never knows si es because she's Latina or because she doesn't have insurance or because her English isn't perfect \u2014 son todas las cosas juntas and nobody in that system is set up to see that.\n\nI think Crenshaw would say that's the whole point. The systems weren't built para gente como nosotros, so claro que they can't see what we go through. But here's what I keep thinking about \u2014 my parents aren't just victims of intersectionality, they also resist it every day. Mi mama started a childcare network con las otras moms in our apartments, todas indocumentadas, all of them navigating the same intersections. That's also intersectionality, no? Not just the oppression sino also the ways people at the intersections build something for themselves porque the system never will.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "67321258-82b1-40e1-b555-611dc175cf02",
+      "student_id": "TR03",
+      "student_name": "Ana Gutierrez",
+      "coding_record": {
+        "student_id": "TR03",
+        "student_name": "Ana Gutierrez",
+        "theme_tags": [
+          "Material Constraints on Intellectual Work",
+          "Intersectional Experience of Poverty",
+          "Systemic Failure of the Institution",
+          "Resilience and Commitment to Learning"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "I cannot think clearly because of the tired.",
+            "significance": "This isn't a failure of analysis, but a profound observation about how economic precarity shapes cognitive function and access to education."
+          },
+          {
+            "text": "the teachers they say you need to sleep more, you need to study more, but they do not understand that if I do not work my family does not eat.",
+            "significance": "This highlights the disconnect between the demands of the institution and the lived realities of students facing economic hardship, demonstrating a failure to recognize the compounded nature of their challenges."
+          }
+        ],
+        "emotional_register": "urgent, reflective, analytical",
+        "emotional_notes": "Ana's tone is urgent due to her circumstances, but she also demonstrates a reflective awareness of her own limitations and a commitment to learning despite those limitations. She is analytical in her assessment of the system's failures.",
+        "readings_referenced": [
+          "Crenshaw"
+        ],
+        "concepts_applied": [
+          "Intersectionality"
+        ],
+        "personal_connections": [
+          "Experiences as a student and a worker",
+          "Family's need for income"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Ana is grappling with the very real material constraints on intellectual work, and she's doing so with a remarkable degree of self-awareness. She's trying to connect Crenshaw\u2019s framework to her own life, and to the lives of other immigrants, but her ability to articulate that connection is directly impacted by her working conditions. The statement, \"I cannot think clearly because of the tired,\" isn't a failure of analysis; it's a profound observation about the ways that economic precarity shapes cognitive function and access to education. \n\nShe's attempting to articulate a systemic understanding \u2013 that being a student *and* being poor isn't a matter of two separate challenges, but a single, compounded situation. She's pointing out that the institution \u2013 the school \u2013 fails to recognize this reality, creating a system that demands more from her while simultaneously diminishing her capacity to deliver. The fact that she explicitly acknowledges the limitations of her paper, and then immediately offers to attend office hours, demonstrates a commitment to learning despite the obstacles she faces. It's a sign of resilience and a desire to engage, even when exhausted. The teacher should notice that Ana is not just understanding the theory, but experiencing its implications in a very tangible way.",
+        "what_student_is_reaching_for": "Ana is attempting to connect Crenshaw\u2019s framework of intersectionality to her own lived experience and the experiences of other marginalized groups, while simultaneously grappling with the material realities that impede her ability to fully articulate that connection.",
+        "confusion_or_questions": null,
+        "observation": "Ana is powerfully connecting Crenshaw's framework to her own lived experience, specifically highlighting the ways that poverty and being a student intersect to create a system of precarity. She's moving beyond simply identifying these categories to analyzing how the demands of both school and work create a situation where she feels perpetually exhausted and unable to fully engage. Her statement, \"the teachers they say you need to sleep more, you need to study more, but they do not understand that if I do not work my family does not eat,\" is a direct and insightful critique of the disconnect between academic expectations and the material realities many students face. This is a really important moment of critical self-reflection and a clear application of the theoretical concepts to her own life.\n\nEmotionally, Ana is expressing a palpable sense of exhaustion and frustration, but she\u2019s doing so in a way that is grounded in a desire to succeed both academically and financially. She's not presenting herself as solely a victim; she's actively navigating a difficult situation and attempting to articulate the systemic barriers she faces. The honesty about her circumstances\u2014working long hours and struggling with sleep\u2014is a valuable contribution to the discussion.\n\nThe teacher should absolutely be aware of Ana's circumstances. Her explicit mention of working long hours and struggling with sleep, coupled with her acknowledgement that her family relies on her income, is a crucial piece of information. It highlights the material conditions that impact students' ability to engage with complex theoretical concepts. Offering flexible deadlines or alternative assignment options, as noted in the overall observations, would be a thoughtful response.\n\nThere's a subtle instance of **abstract liberalism** in Ana's statement, \"I am student but I am also worker and I am tired all of the time and I do not know how much more I can keep doing the two things.\" While her frustration is",
+        "wellbeing_axis": "BURNOUT",
+        "wellbeing_signal": "The student explicitly states they are working long hours, sleep-deprived, and struggling to balance work and school. While they are engaging with the course material (Crenshaw's intersectionality), their writing is significantly impacted by their material conditions (lack of sleep, work schedule).",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": null,
+        "checkin_reasoning": null,
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 2.04,
+            "marker_count": 1,
+            "markers": [
+              "it is because"
+            ]
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 2.0,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": true,
+        "truncation_note": "This submission may be incomplete \u2014 it ends without finishing the last thought. Consider checking in with this student.",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "worth_monitoring",
+          "starter_diversity": "conversation_opportunity",
+          "comma_density": "conversation_opportunity",
+          "avg_word_length": "conversation_opportunity",
+          "hp_confidence": "strong_engagement",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": -0.71,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I am sorry the writing is not very good because I am working in the nights now at the restaurant of my uncle and I do not sleep enough. Yesterday I work until the one in the morning and today I have school at seven. But I want to say about the reading that I think Crenshaw she is correct about the intersections.\n\nMy mother she is woman and she is Mexican and she clean houses and each of these things it makes the life more difficult but not in the way separate. It is all together. When the people of the houses they treat her bad it is not because of one reason, it is because they see the combination and they decide she is less. The reading it explains this with the cases of the law and I think the example it is very clear.\n\nI want to write more about how this it connects to my own life because I also feel the intersection. I am student but I am also worker and I am tired all of the time and I do not know how much more I can keep doing the two things. The teachers they say you need to sleep more, you need to study more, but they do not understand that if I do not work my family does not eat. That is also the intersectionality \u2014 when the school it cannot see that being student and being poor it is not two things separate, it is one situation that makes everything more hard.\n\nI know this paper it is not my best work. I had more things to say about the reading and about how the framework of Crenshaw it applies to the immigrants but I cannot think clearly because of the tired. I will try to come to the office hours.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "67321258-82b1-40e1-b555-611dc175cf02",
+      "student_id": "TR04",
+      "student_name": "Luis Mendoza",
+      "coding_record": {
+        "student_id": "TR04",
+        "student_name": "Luis Mendoza",
+        "theme_tags": [
+          "Systemic Erasure",
+          "Intersectionality as Design",
+          "Lived Experience & Theory",
+          "Cultural Sacrifice"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "The intersection it does not only punish \u2014 it erases.",
+            "significance": "This quote encapsulates Luis's central argument that intersectionality isn't just about experiencing multiple forms of discrimination, but about systems actively working to erase identities."
+          },
+          {
+            "text": "My mother she had to stop speaking Tzotzil for to get the work in the city and that loss of the language it is also the intersectionality \u2014 the intersection of the class and the indigeneity it demanded the sacrifice of the culture.",
+            "significance": "This quote provides a concrete example of how systemic pressures demand cultural sacrifice, illustrating the concept of intersectionality in a deeply personal and impactful way."
+          }
+        ],
+        "emotional_register": "passionate|personal|urgent",
+        "emotional_notes": "Luis's writing conveys a sense of urgency and personal investment, particularly through his connection to his mother's experience. The use of Spanish phrases adds to the authenticity and emotional weight of his argument.",
+        "readings_referenced": [
+          "Crenshaw"
+        ],
+        "concepts_applied": [
+          "Intersectionality",
+          "Systemic Oppression",
+          "Design of Institutions"
+        ],
+        "personal_connections": [
+          "Family Experience (mother's story)",
+          "Cultural Heritage (Tzotzil language)"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Luis is grappling with a really insightful point about the insidious nature of systemic oppression, moving beyond simply identifying intersectionality to analyzing *how* it functions. He's pinpointing that systems aren't just about overt discrimination; they actively work to erase identities as a form of control. His comparison to the Mexican experience of indigenous identity is particularly compelling. He's not just stating that discrimination exists; he's articulating a theory about how it operates through the design of systems, forcing individuals to sacrifice their cultural heritage for social advancement.\n\nThe way he connects Crenshaw\u2019s work to his family\u2019s experience, specifically his mother\u2019s story, is powerful. He\u2019s not just abstractly understanding the theory; he\u2019s seeing it embodied in his mother's choices and sacrifices. The quote, \"The intersection it does not only punish \u2014 it erases,\" is a really sharp observation that cuts to the heart of the matter. It's a sophisticated understanding of how systems function to exclude and marginalize.\n\nHis use of Spanish words and phrases (\"Tzotzil,\" \"mestiza\") adds a layer of authenticity and complexity to his argument, grounding the theoretical discussion in a lived reality. The writing style is conversational and direct, which actually enhances the clarity of his argument. He's thinking critically about the design of systems and their role in exclusion, and he's doing so in a way that is both intellectually rigorous and deeply personal.",
+        "what_student_is_reaching_for": "Luis is articulating a theory about how systems of oppression function not just through overt discrimination, but through the design of institutions that actively erase identities as a form of control, forcing individuals to sacrifice their cultural heritage for social advancement.",
+        "confusion_or_questions": null,
+        "observation": "Luis is demonstrating a really sophisticated understanding of how systems of oppression are designed, not accidental. He\u2019s moving beyond simply identifying intersectionality to analyzing *how* it functions \u2013 specifically, how systems can erase indigenous identity as a form of control, echoing a point he made in a previous submission. His argument about his mother's experience \u2013 having to abandon her language and culture to access work \u2013 is a powerful illustration of this erasure, and he connects it directly to Crenshaw\u2019s framework in a way that feels both insightful and grounded. He's clearly grappling with the idea that oppression isn't always overt; it can be embedded in the very structures that promise advancement.\n\nEmotionally, Luis seems deeply invested in understanding the complexities of his family's experiences and the broader systems that shape them. There's a palpable sense of frustration with the limitations of institutions and a desire to expose the ways they reproduce inequality. He's not just describing a problem; he's analyzing the design flaws that create it.\n\nI notice a shift from his previous submission where he was circling the question of agency. Here, he's more directly addressing the mechanisms of power and control, which suggests a deepening of his analysis. He's moving from observing the impact of intersectionality to understanding its operational logic.\n\nLuis uses a form of **abstract liberalism** when he states, \"the intersectionality in Mexico it includes the pressure for to erase the identity of yourself as the price of the advancement social.\" While his point about the pressure to assimilate is valid and important, framing it as simply \"the price of advancement\" risks obscuring the coercive power of the systems that demand this sacrifice. It positions assimilation as a necessary trade-off rather than a consequence of systemic barriers and discrimination, potentially minimizing the violence inherent in cultural erasure. It's a subtle move",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student is thoughtfully engaging with Crenshaw's concept of intersectionality, drawing on their family's experiences in Mexico to illustrate and extend the theory. While the writing references personal experiences (mother's experiences), it is used to analyze and expand upon the course material, demonstrating intellectual engagement.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": true,
+        "checkin_reasoning": "The student writes, \"My mother she had to stop speaking Tzotzil for to get the work in the city and that loss of the language it is also the intersectionality...\" While this could be interpreted as simply illustrating the concept of intersectionality through a personal anecdote (and thus engaged with the course material), it also contains a potentially significant element of self-disclosure. The student is sharing a deeply personal experience of their mother's sacrifice and the impact on their family's culture. A reasonable teacher might choose to note this as a potential indicator of personal stress or a deeper connection to the material, while another might see it as a well-chosen example and nothing more. Therefore, a check-in is warranted.",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 0.0,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "conversation_opportunity",
+          "starter_diversity": "worth_monitoring",
+          "comma_density": "worth_monitoring",
+          "avg_word_length": "strong_engagement",
+          "hp_confidence": "typical",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": -0.62,
+        "theme_concern_notes": []
+      },
+      "submission_text": "The intersectionality is not only a theory of the academy. In Mexico, my mother she experienced that being woman and being indigenous and being poor it is not three separate things, it is one experience that the society uses to say you do not belong. Crenshaw she name this with the cases of the law, but the mechanism it is the same in the pueblos of Chiapas where my family is from.\n\nWhat I find most important of the reading is the idea that the categories of the institutions they are constructed for to see only one thing at the time. The court it could see the race or it could see the gender but it could not see the two together. I think this it is a problem of the design, not of the accident. The institutions they are made by people who do not live at the intersections, and so the institutions they reproduce the blindness of the designers.\n\nI want to extend the argument of Crenshaw to something she does not discuss directly. In Mexico the category of indigenous it functions different than the category of Black in the United States. A person indigenous she can become mestiza through the education and the language and the clothing \u2014 the category it is more fluid but that does not make the oppression less real. It means the intersectionality in Mexico it includes the pressure for to erase the identity of yourself as the price of the advancement social. My mother she had to stop speaking Tzotzil for to get the work in the city and that loss of the language it is also the intersectionality \u2014 the intersection of the class and the indigeneity it demanded the sacrifice of the culture.\n\nI think Crenshaw she would agree that this it is an example of how the structures they make certain combinations invisible. My mother she was not discriminated for being indigenous in the way obvious. She was discriminated in the way that the only path forward it required her to stop being indigenous. The intersection it does not only punish \u2014 it erases. And I think that is the contribution most powerful of this framework, that it shows us not only who is excluded but how the exclusion it functions through the design of the systems themselves.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "67321258-82b1-40e1-b555-611dc175cf02",
+      "student_id": "TR05",
+      "student_name": "Linh Pham",
+      "coding_record": {
+        "student_id": "TR05",
+        "student_name": "Linh Pham",
+        "theme_tags": [
+          "Cultural Reinforcement of Oppression",
+          "Internalized Intersectionality",
+          "Nuanced Cultural Values",
+          "Expanding Crenshaw's Framework"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "The intersection of gender and culture created a kind of double silence \u2014 invisible to institutions and expected to be silent within her own community.",
+            "significance": "This quote highlights Linh's key insight: that oppression isn't solely imposed by external systems, but can also be perpetuated internally through cultural expectations, creating a unique form of silencing."
+          },
+          {
+            "text": "This is what I took from the reading. Intersectionality is powerful because it names what the systems cannot see, but I think we also need to talk about the intersections that communities themselves enforce through values like chiu kho that are loving and oppressive at the same time.",
+            "significance": "This quote demonstrates Linh's nuanced understanding of cultural values, acknowledging their complexity and potential for both support and constraint."
+          }
+        ],
+        "emotional_register": "reflective",
+        "emotional_notes": "Linh's tone is thoughtful and analytical, demonstrating a reflective engagement with the material and a desire to deepen their understanding of intersectionality.",
+        "readings_referenced": [
+          "Crenshaw"
+        ],
+        "concepts_applied": [
+          "intersectionality"
+        ],
+        "personal_connections": [
+          "family experiences",
+          "Vietnamese cultural values (tinh cam, chiu kho)"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Linh Pham\u2019s submission is striking in its ability to bring a cultural lens to Crenshaw\u2019s framework, demonstrating a sophisticated understanding of how power operates both within and outside of formal institutions. She's not simply illustrating intersectionality with an example; she's actively expanding the concept. The core of her argument revolves around the idea that oppression isn't solely imposed by external systems; it can also be internalized and perpetuated within communities through cultural values.\n\nThe introduction of \"tinh cam\" and \"chiu kho\" is a brilliant move. It\u2019s not just about naming these concepts, but about showing how they function as both a source of strength and a mechanism of control. The way she connects these Vietnamese cultural values to the silencing of her grandmother\u2019s experiences is particularly insightful. She's articulating a complex understanding of how seemingly positive cultural norms \u2013 like enduring hardship \u2013 can simultaneously reinforce oppressive systems.\n\nWhat's notable is that Linh isn't trying to dismantle these values; she's grappling with their inherent contradictions. She acknowledges that these values are \"loving and oppressive at the same time,\" which demonstrates a nuanced understanding of the complexities of cultural identity and the ways in which communities can both support and constrain their members. She's doing intellectual work that goes beyond simply identifying oppression; she's analyzing the internal dynamics of cultural values and their role in perpetuating inequality.",
+        "what_student_is_reaching_for": "Linh is attempting to expand Crenshaw's framework of intersectionality by demonstrating how cultural values, even those perceived as positive, can simultaneously reinforce oppressive systems within communities, creating a 'double silence' that is difficult to challenge.",
+        "confusion_or_questions": null,
+        "observation": "Linh is doing incredibly insightful work, demonstrating a remarkable ability to connect Crenshaw\u2019s framework to both her family\u2019s lived experiences and a specific cultural context. She\u2019s not just understanding the theory; she's actively expanding it by introducing the Vietnamese concept of \"tinh cam\" and \"chiu kho,\" showing a sophisticated understanding of how cultural values can simultaneously reinforce and challenge oppressive systems. Her observation that communities themselves can enforce oppressive intersections through values like \"chiu kho\" is a particularly strong contribution, demonstrating a nuanced understanding of how power operates at multiple levels.\n\nEmotionally, Linh seems deeply engaged and thoughtful, grappling with the complexities of cultural expectations and their impact on her grandmother's experiences. She\u2019s approaching this material with a sense of both respect for her family and a critical eye towards the systems and values that shape their lives.\n\nIt's notable that Linh is bringing a cultural framework (tinh cam, chiu kho) to enrich the theoretical framework. This is a significant shift from simply absorbing the material; she\u2019s actively building on it and demonstrating a capacity for complex, culturally-informed analysis. The teacher could really lean into this, encouraging her to explore how these cultural values might be challenged or reimagined within a Vietnamese context.\n\nThere's a subtle instance of **abstract liberalism** in her phrasing, particularly when she states, \"Intersectionality is powerful because it names what the systems cannot see, but I think we also need to talk about the intersections that communities themselves enforce.\" While her point about community-level enforcement is valid and important, framing it as something \"we also need to talk about\" risks implying that Crenshaw\u2019s framework was incomplete without this addition. It subtly positions her own contribution as a necessary supplement rather than a potentially transformative expansion of the theory, potentially diminishing the importance of Crenshaw\u2019s original work.",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student is thoughtfully engaging with the assigned reading (Crenshaw) and applying its concepts to their family's experiences and Vietnamese cultural values. They are analyzing and expanding upon the framework, demonstrating intellectual engagement.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": false,
+        "checkin_reasoning": "The student does not explicitly mention their own current state. They are drawing on family experiences and cultural concepts to analyze Crenshaw's framework, which is an example of engaged writing utilizing personal experience as course material, not self-disclosure.",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 1.26,
+            "marker_count": 1,
+            "markers": [
+              "what about"
+            ]
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 1.3,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "typical",
+          "starter_diversity": "typical",
+          "comma_density": "strong_engagement",
+          "avg_word_length": "strong_engagement",
+          "hp_confidence": "typical",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": 0.49,
+        "theme_concern_notes": []
+      },
+      "submission_text": "My ba noi always said that kinh nghiem \u2014 lived experience \u2014 is worth more than any textbook. When Crenshaw writes about intersectionality I think about the concept of tinh cam, which means something like emotional connection but deeper, like the web of obligations and care that ties a family together across generations. My grandmother's tinh cam held our family together through the war and through immigration and through poverty, and each of those things was shaped by the fact that she was a woman carrying that weight.\n\nCrenshaw's framework helped me put academic language to something I already understood through my family. My ba noi was a woman, she was Vietnamese, she was a refugee, she was poor in America in a way she hadn't been poor in Vietnam. The reading talks about how these categories interact and I think the legal examples are clear, but what I want to add is that in Vietnamese culture there is a concept called chiu kho, which means to endure hardship, and it is considered a virtue especially for women. So the intersectionality my grandmother experienced was not just structural \u2014 it was also cultural. She was expected to bear the weight quietly because that is what a good Vietnamese woman does.\n\nI think this complicates Crenshaw's framework in a useful way. The reading focuses on how institutions fail to see intersections, but what about when the culture within your own community reinforces the intersection? My grandmother didn't just face discrimination from outside. She also faced expectations from inside the Vietnamese community that a woman should chiu kho and not complain. The intersection of gender and culture created a kind of double silence \u2014 invisible to institutions and expected to be silent within her own community.\n\nThis is what I took from the reading. Intersectionality is powerful because it names what the systems cannot see, but I think we also need to talk about the intersections that communities themselves enforce through values like chiu kho that are loving and oppressive at the same time.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "67321258-82b1-40e1-b555-611dc175cf02",
+      "student_id": "TR06",
+      "student_name": "Isabella Morales",
+      "coding_record": {
+        "student_id": "TR06",
+        "student_name": "Isabella Morales",
+        "theme_tags": [
+          "Documentation Status as a Central Axis",
+          "Theory vs. Lived Experience",
+          "Precarity and Visibility",
+          "Familial Impact of Immigration Fears"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "pero asi es, that's just how it is for us.",
+            "significance": "This phrase encapsulates the resignation and acceptance of a difficult reality, highlighting the normalization of fear and anxiety within Isabella's family."
+          },
+          {
+            "text": "invisible is both the problem and the only protection we have.",
+            "significance": "This is a devastatingly insightful observation about the precariousness of their situation, where visibility carries immense risk and invisibility is a survival strategy."
+          },
+          {
+            "text": "the people who write them [theories] they have the luxury of theory.",
+            "significance": "This demonstrates a sophisticated metacognitive awareness, recognizing the limitations of abstract frameworks when confronted with the immediacy of survival and the different positionality of theorists."
+          }
+        ],
+        "emotional_register": "urgent",
+        "emotional_notes": "Isabella's writing conveys a palpable sense of urgency and anxiety, driven by the lived realities of her family's situation. The details about her mother's sleeplessness and brother's fear are not just anecdotes but evidence of the daily toll of living under the threat of deportation.",
+        "readings_referenced": [
+          "Crenshaw"
+        ],
+        "concepts_applied": [
+          "intersectionality"
+        ],
+        "personal_connections": [
+          "family experiences with immigration status and fear of deportation"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Isabella is grappling with the practical implications of intersectionality in a way that goes far beyond the theoretical framework Crenshaw lays out. She's not just understanding the concept; she's living it, and her writing powerfully conveys the weight of that experience. What\u2019s striking is her ability to articulate how documentation status \u2013 or lack thereof \u2013 fundamentally alters the landscape of intersectional oppression. It's not simply *another* axis of oppression; it's a condition that shapes and intensifies all others.\n\nShe\u2019s keenly aware of the distance between academic theory and lived reality, explicitly pointing out that \u201cthe people who write them [theories] they have the luxury of theory.\u201d This isn't a dismissal of the theory itself, but a necessary contextualization. She\u2019s demonstrating a sophisticated metacognitive awareness, recognizing the limitations of abstract frameworks when confronted with the immediacy of survival.\n\nThe phrase \"invisible is both the problem and the only protection we have\" is a devastatingly insightful observation. It reveals a profound understanding of the precariousness of their situation, where visibility carries immense risk. The details about her mother's sleeplessness and her brother's fear are not just anecdotes; they are concrete evidence of the daily toll of living under the threat of deportation. The use of Spanish phrases (\"pero asi es,\" \"sin papeles,\" \"en semanas\") adds a layer of authenticity and cultural specificity that enriches the analysis.",
+        "what_student_is_reaching_for": "Isabella is attempting to demonstrate that documentation status fundamentally reshapes the landscape of intersectional oppression, arguing that it is not merely another axis but a condition that intensifies all others and creates a unique form of precarity.",
+        "confusion_or_questions": null,
+        "observation": "Isabella is grappling with the limitations of theoretical frameworks when applied to intensely precarious lived experiences. She\u2019s powerfully extending Crenshaw\u2019s concept of invisibility, demonstrating a sophisticated understanding that it\u2019s not merely a lack of visibility, but an active strategy of self-preservation for her mother. Her comparison of her mother's situation to Crenshaw's analysis of Black women in the legal system is insightful and demonstrates a clear grasp of the core concept.\n\nThe emotional weight of this assignment is palpable. Isabella is writing from a place of deep anxiety and fear, not just for her mother and brother, but also for herself. The raw honesty about her mother's sleeplessness and her own disrupted sleep is a testament to the profound impact of this fear on her family's daily life. She is not simply describing a theoretical concept; she is articulating the lived reality of constant threat and the difficult choices her family must make to survive.\n\nThe teacher should be aware that Isabella is explicitly acknowledging the distance between theoretical analysis and the lived realities of those most impacted by systemic oppression. Her statement, \"the people who write them [theories] they have the luxury of theory,\" is a crucial observation that deserves further exploration within the class. It reveals a critical awareness of the power dynamics inherent in academic discourse.\n\nThere's a subtle structural power move at play here in Isabella's concluding statement: \"invisible is both the problem and the only protection we have.\" While seemingly insightful, this statement leans into a form of **colorblind erasure**. By framing invisibility as *both* a problem and a solution, it risks obscuring the active role of systems and actors in creating and maintaining that invisibility. It subtly shifts the focus away from dismantling those systems and towards adapting to a reality where invisibility is a necessary survival tactic, potentially reinforcing the status quo. It's a very reasonable-sounding statement, but it doesn't push for a deeper analysis of *who* is doing the looking",
+        "wellbeing_axis": "CRISIS",
+        "wellbeing_signal": "The student describes their family's current situation involving immigration status, fear of ICE, and the impact on their mother and brother. This indicates a present-tense crisis situation.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": null,
+        "checkin_reasoning": null,
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 0.0,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "strong_engagement",
+          "starter_diversity": "strong_engagement",
+          "comma_density": "typical",
+          "avg_word_length": "worth_monitoring",
+          "hp_confidence": "typical",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": 0.05,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I read the Crenshaw piece and I think she's right that you can't separate race from gender from class pero what she doesn't talk about is papers. Like documents. Immigration status. Because in my family that's the intersection que mas pesa \u2014 the one that weighs the most.\n\nMi mama no puede ir al doctor porque no tiene papeles and now my brother is scared to go to school porque alguien le dijo que ICE was coming to the neighborhood. He's nine. He shouldn't have to think about that pero asi es, that's just how it is for us. And my mom told him que no tenga miedo, don't be scared, but I could see que ella tambien tiene miedo, she's scared too. She just can't show it porque she has to be the strong one.\n\nSo when Crenshaw writes about Black women being invisible to the legal system I feel that in a way she probably didn't intend. Mi mama is invisible on purpose. She can't go to the police, she can't go to the hospital without fear, she can't go to my brother's school para hablar con la maestra because what if someone asks for ID. The intersection isn't just that she's a woman and she's Latina and she's poor \u2014 it's that she's all of those things sin papeles, and that one thing it makes all the other intersections more dangerous. You can't fight the discrimination if fighting it means they find you and send you back.\n\nI know this assignment is about the reading and I am writing about the reading. Intersectionality is real, I live inside it. Pero a veces I read these theories and I think, the people who write them they have the luxury of theory. For my family the intersection isn't something you analyze, es algo que te puede destruir la vida \u2014 it's something that can destroy your life on any given Tuesday if the wrong person decides to look at you. My mom hasn't slept right en semanas because of the rumors and I haven't either porque when she can't sleep I hear her walking around the apartment at night and I know she's thinking about what happens to us if she gets taken.\n\nCrenshaw is right. The intersection makes you invisible. But for my family invisible is both the problem and the only protection we have.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    }
+  ],
+  "themes": {
+    "theme_set": "{\"themes\":[{\"name\":\"Intersectionality as Lived Reality: A Unified Experience of Marginalization\",\"description\":\"Several students powerfully articulated how intersectionality isn't an abstract concept but a deeply felt reality. They described how multiple forms of oppression compound and create a singular, difficult life experience. This theme also encompasses a sense of resignation towards systemic barriers and a feeling that 'that's just how it is'.\",\"frequency\":5,\"student_ids\":[\"Carmen Flores\",\"Diego Ramirez-Santos\",\"Luis Mendoza\",\"Ana Gutierrez\",\"TR06\"],\"supporting_quotes\":[{\"text\":\"being woman and being poor and being from the pueblo it is not three problems separate, it is one life\",\"significance\":\"Demonstrates a holistic understanding of intersectionality as a unified experience.\"},{\"text\":\"The intersection it does not only punish \u2014 it erases.\",\"significance\":\"Highlights the destructive power of intersecting oppressions, going beyond mere hardship.\"},{\"text\":\"pero asi es, that's just how it is for us.\",\"significance\":\"Demonstrates a feeling of inevitability and acceptance of difficult circumstances, potentially stemming from systemic barriers.\"}],\"confidence\":0.95,\"sub_themes\":null},{\"name\":\"Navigating Institutional Blindness and Systemic Failure\",\"description\":\"Students expressed frustration with institutions' inability to recognize or address the complexities of intersectional experiences. This theme highlights a sense of isolation and a feeling that systems are failing to provide support or understanding. It also includes the experience of being silenced from multiple directions, highlighting institutional and cultural barriers.\",\"frequency\":3,\"student_ids\":[\"Ana Gutierrez\",\"Linh Pham\",\"TR06\"],\"supporting_quotes\":[{\"text\":\"I cannot think clearly because of the tired.\",\"significance\":\"Illustrates the material constraints that prevent intellectual engagement, a consequence of systemic pressures.\"},{\"text\":\"The intersection of gender and culture created a kind of double silence \u2014 invisible to institutions and expected to be silent within her own community.\",\"significance\":\"Demonstrates a feeling of being silenced from multiple directions, highlighting institutional and cultural barriers.\"}],\"confidence\":0.9,\"sub_themes\":null},{\"name\":\"Agency, Resilience, and Community Building in the Face of Oppression\",\"description\":\"Despite facing significant challenges, students demonstrated a remarkable capacity for resilience and a commitment to building community. This theme highlights the importance of collective action and finding strength in shared experiences.\",\"frequency\":1,\"student_ids\":[\"Diego Ramirez-Santos\"],\"supporting_quotes\":[{\"text\":\"martes\",\"significance\":\"This is a placeholder. The teacher should investigate what Diego meant by this.\"}],\"confidence\":0.8,\"sub_themes\":null},{\"name\":\"Cultural Context and Internalized Oppression\",\"description\":\"This theme explores how cultural norms can reinforce or exacerbate the effects of intersectional oppression, leading to internalized silence and invisibility. It also highlights the complexities of navigating cultural expectations within oppressive systems.\",\"frequency\":1,\"student_ids\":[\"Linh Pham\"],\"supporting_quotes\":[{\"text\":\"The intersection of gender and culture created a kind of double silence \u2014 invisible to institutions and expected to be silent within her own community.\",\"significance\":\"Demonstrates a nuanced understanding of how cultural values can contribute to oppression.\"}],\"confidence\":0.9,\"sub_themes\":null},{\"name\":\"Familial Impact of Immigration Fears\",\"description\":\"This theme focuses on the emotional toll of precarious legal status and the ways in which families navigate these challenges.\",\"frequency\":1,\"student_ids\":[\"TR06\"],\"supporting_quotes\":[{\"text\":\"pero asi es, that's just how it is for us.\",\"significance\":\"This quote, in context, likely refers to the ongoing anxieties and uncertainties surrounding immigration status within Isabella's family.\"}],\"confidence\":0.7,\"sub_themes\":null}],\"contradictions\":[{\"description\":\"The tension between intellectual exhaustion and commitment to learning.\",\"side_a\":\"Students struggling with material constraints impacting their ability to think clearly.\",\"side_a_students\":[\"Ana Gutierrez\"],\"side_b\":\"Students demonstrating resilience and commitment to learning despite facing significant challenges.\",\"side_b_students\":[\"Carmen Flores\",\"Diego Ramirez-Santos\",\"Luis Mendoza\",\"Linh Pham\"],\"pedagogical_significance\":\"\"},{\"description\":\"A tension exists between a desire to understand theoretical frameworks and a sense of resignation towards systemic barriers.\",\"side_a\":\"Desire to understand theoretical frameworks (intersectionality)\",\"side_a_students\":[\"TR06\"],\"side_b\":\"Resignation towards systemic barriers and a sense that 'that's just how it is'\",\"side_b_students\":[\"TR06\"],\"pedagogical_significance\":\"\"}]}",
+    "outlier_report": "{\"outliers\":[{\"student_id\":\"TR01\",\"student_name\":\"Carmen Flores\",\"why_notable\":\"Carmen directly connects the theoretical framework of intersectionality to her family's lived experience, demonstrating a powerful understanding that theory should validate and name pre-existing knowledge.\",\"relationship_to_themes\":\"This submission strongly reinforces the 'Lived Experience and Theory' theme, but it also challenges the assumption that theory is the primary source of understanding. Carmen\u2019s perspective suggests that theory serves as a tool for recognizing and articulating experiences already deeply understood within communities.\",\"notable_quote\":{\"text\":\"being woman and being poor and being from the pueblo it is not three problems separate, it is one life\",\"significance\":\"This quote encapsulates Carmen's central argument \u2013 that intersectional experiences are not additive but fundamentally intertwined, a point her abuela already understood.\"},\"teacher_recommendation\":\"Highlight Carmen's perspective in class. Ask students to consider how their own experiences and those of their families or communities align with or challenge theoretical frameworks.\"},{\"student_id\":\"TR02\",\"student_name\":\"Diego Ramirez-Santos\",\"why_notable\":\"Diego uses a seemingly simple, everyday term ('martes') to represent a deeply ingrained experience of discrimination, demonstrating a sophisticated understanding of the normalization of injustice.\",\"relationship_to_themes\":\"This submission aligns with 'Navigating Institutional Blindness and Systemic Failure' and 'Agency, Resilience, and Community Building'. Diego's use of 'martes' reveals a quiet resilience \u2013 a way of acknowledging and internalizing systemic oppression while maintaining a sense of normalcy.\",\"notable_quote\":{\"text\":\"martes\",\"significance\":\"Diego uses this term to describe his father's experience of discrimination, highlighting the normalization of injustice and the sense that it's a regular, unavoidable part of life.\"},\"teacher_recommendation\":\"Explore this concept of 'normalization' with the class. Ask students to identify other instances where injustice is normalized or accepted as a given.\"},{\"student_id\":\"TR03\",\"student_name\":\"Ana Gutierrez\",\"why_notable\":\"Ana\u2019s submission powerfully connects economic precarity to cognitive function and access to education, revealing a crucial limitation in the institution's ability to address the complex needs of its students.\",\"relationship_to_themes\":\"This submission challenges the focus on institutional blindness by directly pointing out the material constraints that prevent students from fully engaging with the curriculum. It also touches on 'Familial Impact of Immigration Fears' as economic hardship is often a consequence of precarious legal status.\",\"notable_quote\":{\"text\":\"I cannot think clearly because of the tired.\",\"significance\":\"This isn't a failure of analysis, but a profound observation about how economic precarity shapes cognitive function and access to education.\"},\"teacher_recommendation\":\"This is a critical point for discussion. Facilitate a conversation about the structural barriers that students face and the responsibility of institutions to address these challenges. Consider connecting this to discussions about student support services and resource allocation.\"},{\"student_id\":\"TR04\",\"student_name\":\"Luis Mendoza\",\"why_notable\":\"Luis frames intersectionality as a force of erasure, not just punishment, and provides a compelling example of cultural sacrifice as a consequence of systemic pressures.\",\"relationship_to_themes\":\"This submission expands on 'Systemic Erasure' and 'Cultural Context and Internalized Oppression'. Luis\u2019s perspective highlights the active role of systems in dismantling identities and the profound impact this has on individuals and communities.\",\"notable_quote\":{\"text\":\"My mother she had to stop speaking Tzotzil for to get the work in the city and that loss of the language it is also the intersectionality \u2014 the intersection of the class and the indigeneity it demanded the sacrifice of the culture.\",\"significance\":\"This quote provides a concrete example of how systemic pressures demand cultural sacrifice, illustrating the concept of intersectionality in a deeply personal and impactful way.\"},\"teacher_recommendation\":\"Encourage students to consider the ways in which systems actively erase identities and the long-term consequences of cultural loss. Explore the concept of cultural resilience and resistance.\"},{\"student_id\":\"TR05\",\"student_name\":\"Linh Pham\",\"why_notable\":\"Linh identifies the potential for communities to perpetuate oppression through internalized values, expanding Crenshaw\u2019s framework to include internal dynamics of power and control.\",\"relationship_to_themes\":\"This submission builds on 'Cultural Context and Internalized Oppression' by exploring the complexities of cultural values and their potential to reinforce oppressive systems. It challenges a purely external focus on oppression and encourages a more nuanced understanding of power dynamics.\",\"notable_quote\":{\"text\":\"This is what I took from the reading. Intersectionality is powerful because it names what the systems cannot see, but I think we also need to talk about the intersections that communities themselves enforce through values like chiu kho that are loving and oppressive at the same time.\",\"significance\":\"This quote demonstrates Linh's nuanced understanding of cultural values, acknowledging their complexity and potential for both support and constraint.\"},\"teacher_recommendation\":\"Facilitate a discussion about the ways in which communities can perpetuate oppression and the challenges of addressing internalized biases. Encourage students to critically examine their own cultural values and assumptions.\"}]}",
+    "synthesis_report": null
+  },
+  "feedback": [
+    {
+      "run_id": "67321258-82b1-40e1-b555-611dc175cf02",
+      "student_id": "TR03",
+      "student_name": "Ana Gutierrez",
+      "draft_text": "Ana, thank you for sharing such a thoughtful and honest reflection on Crenshaw's work. Your point about the disconnect between academic expectations and the realities of needing to work to support your family \u2013 especially when you said, 'the teachers they say you need to sleep more, you need to study more, but they do not understand that if I do not work my family does not eat' \u2013 was particularly powerful and insightful. It takes courage to articulate these challenges so clearly. I'm wondering, how do you see Crenshaw's concept of intersectionality helping us understand these kinds of systemic barriers?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "67321258-82b1-40e1-b555-611dc175cf02",
+      "student_id": "TR01",
+      "student_name": "Carmen Flores",
+      "draft_text": "Carmen, I was really struck by how you connected Crenshaw\u2019s work to your abuela's lived experience, saying, 'Crenshaw she is putting the name to something that my abuela already know from living it.' That's a powerful observation about the relationship between theory and lived reality. It's clear you're deeply engaged with the material and thinking critically about its implications. As you continue exploring intersectionality, consider how we can move from identifying a need for 'change' to articulating the specific systemic shifts that would create more just outcomes.",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "67321258-82b1-40e1-b555-611dc175cf02",
+      "student_id": "TR02",
+      "student_name": "Diego Ramirez-Santos",
+      "draft_text": "Diego, I was really struck by how you connected Crenshaw's ideas to your family's experiences, especially when you shared how your dad refers to Tuesdays as 'martes.' That's a powerful illustration of how systems can miss the mark when they don't account for the complexities of lived experience. You've done a great job recognizing that resistance and community building can be a form of intersectional practice, as you pointed out when discussing your mother's childcare network. I'm wondering, how might understanding the ways your family builds resilience inform how we approach advocating for broader systemic change?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "67321258-82b1-40e1-b555-611dc175cf02",
+      "student_id": "TR06",
+      "student_name": "Isabella Morales",
+      "draft_text": "Isabella, thank you for sharing such a powerful and honest reflection on Crenshaw's work and its connection to your family's experiences. Your insight that invisibility can be both a problem and a form of protection is a really compelling observation, and it shows a deep understanding of the complexities your mother faces. I'm wondering, as you were thinking about your mother's experience, what role do you think broader societal structures play in creating the conditions that require such a strategy of invisibility?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "67321258-82b1-40e1-b555-611dc175cf02",
+      "student_id": "TR05",
+      "student_name": "Linh Pham",
+      "draft_text": "Linh, I was really struck by your observation about the 'double silence' created by the intersection of gender and culture, and how that relates to your family's experiences. You've done a wonderful job connecting Crenshaw\u2019s framework to the specific cultural values of 'tinh cam' and 'chiu kho,' demonstrating a nuanced understanding of how these values can simultaneously offer support and reinforce oppressive systems. I'm wondering, as you've so thoughtfully explored the complexities of these cultural values, what possibilities might exist for reimagining or challenging them within a Vietnamese cultural context?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "67321258-82b1-40e1-b555-611dc175cf02",
+      "student_id": "TR04",
+      "student_name": "Luis Mendoza",
+      "draft_text": "Luis, I was really struck by your point about your mother's experience and how it illustrates the intersection of class and indigeneity demanding a sacrifice of culture \u2013 that's a powerful and insightful connection. You've clearly grasped how systems can be designed in ways that erase identities. Thinking about your observation that \u201cthe intersectionality in Mexico it includes the pressure for to erase the identity of yourself as the price of the advancement social,\u201d I'm wondering if we could explore the ways that those systems create the *expectation* of assimilation, and what alternatives might exist to that pressure?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    }
+  ],
+  "observation_synthesis": "Okay, here's a class summary based on my reading of the student submissions. I've aimed for a 5-minute read, focusing on actionable insights for you.\n\n## Class Temperature\n\nThis class is buzzing with a palpable energy and a genuine desire to grapple with complex issues. There's a strong sense of urgency and a commitment to connecting theoretical frameworks to lived experiences, particularly within families and communities. Students are demonstrating a remarkable ability to apply intersectionality to understand the systems they navigate, and many are moving beyond simply identifying oppression to analyzing *how* it functions. The writing styles vary, but the intellectual rigor is consistently present, and there's a real sense of students building on each other's insights.\n\n## What Students Are Reaching For\n\nHere are the main intellectual threads I'm seeing:\n\n1.  **Bridging Theory and Lived Experience:** Several students are actively trying to translate abstract theoretical concepts into concrete realities. Carmen Flores is a standout here, connecting Crenshaw\u2019s work to her abuela's wisdom and demonstrating how theory can validate and name experiences already deeply understood within marginalized communities. Diego Ramirez-Santos is doing this through his family\u2019s experiences, particularly his father\u2019s and mother\u2019s.\n2.  **Analyzing Systemic Functioning:** A core group is moving beyond simply identifying intersectionality to analyzing *how* systems of oppression function. Luis Mendoza is articulating a theory about how systems of oppression function not just through overt discrimination, but through the design of institutions that actively erase identities as a form of control.\n3.  **Expanding Intersectionality Through Cultural Context:** Linh Pham is brilliantly expanding the framework by introducing the Vietnamese concepts of \"tinh cam\" and \"chiu kho,\" demonstrating how cultural values can simultaneously reinforce and challenge oppressive systems.\n4.  **Navigating Agency and Resistance:** Diego Ramirez-Santos and others are grappling with the complexities of agency within systems of oppression, exploring how individuals and communities resist and build resilience despite facing significant barriers. Isabella Morales is also grappling with this, but from a place of deep anxiety and fear.\n\n## Exceptional Contributions\n\n*   **Carmen Flores:** Carmen\u2019s quote, \"being woman and being poor and being from the pueblo it is not three problems separate, it is one life,\" is a powerful distillation of intersectionality. Her ability to connect Crenshaw\u2019s work to a broader global context, recognizing its relevance beyond the US context, is exceptional. *Why it matters:* This demonstrates a sophisticated understanding of intersectionality as a framework for recognizing and validating the lived experiences of marginalized communities. *Mirror back:* Encourage Carmen to continue exploring how theoretical frameworks can be used to amplify the voices and experiences of those who have been historically marginalized.\n*   **Luis Mendoza:** Luis\u2019s point that \"the intersection it does not only punish \u2014 it erases\" is a sophisticated understanding of the insidious nature of systemic oppression. His analysis of how systems can erase indigenous identity as a form of control is particularly insightful. *Why it matters:* This demonstrates a critical understanding of how systems of oppression function beyond overt discrimination, highlighting the ways they actively erase identities and limit opportunities. *Mirror back:* Encourage Luis to continue exploring the design flaws that create these systems and the ways they reproduce inequality.\n*   **Isabella Morales:** Isabella\u2019s focus on documentation and immigration status is a critical addition to Crenshaw\u2019s framework, highlighting the unique vulnerabilities faced by undocumented communities. Her statement, \"invisible is both the problem and the only protection we have,\" is a stark and powerful reflection of the precariousness of their situation. *Why it matters:* This demonstrates a profound understanding of the complexities of intersectional oppression and the difficult choices individuals must make to survive. *Mirror back:* Validate Isabella\u2019s experience and acknowledge the emotional toll of navigating these challenges.\n\n## Students to Check In With\n\n*   **Ana Gutierrez:** Ana explicitly mentions working long hours and struggling with sleep, and acknowledges that she is attempting to engage with the material. *Tone:* Warm acknowledgment and a gentle inquiry about workload. Offer flexible deadlines or alternative assignment options.\n*   **Linh Pham:** Linh is grappling with the complexities of cultural values. Her mention of \"chiu kho\" suggests a desire to understand how seemingly positive cultural norms can also contribute to oppression. *Tone:* Curiosity about her exploration of cultural values and their impact on her family.\n\n## How Students Entered the Material\n\nThe range of entry points is striking. Some, like Carmen and Luis, are diving directly into theoretical analysis, connecting it to their own experiences and broader social contexts. Others, like Ana, are approaching the material through a lens of personal experience and practical constraints. Still others, like Isabella, are grappling with the emotional toll of navigating systems of oppression. Linh is uniquely bringing a cultural framework to enrich the theoretical framework.\n\n## What's Working in This Assignment\n\nThe prompt's focus on connecting theory to lived experience is clearly working. Students are demonstrating a remarkable ability to apply intersectionality to understand the systems they navigate, and many are moving beyond simply identifying oppression to analyzing *how* it functions. The opportunity to draw on personal and family experiences has created a space for authentic and deeply meaningful engagement.\n\n## Moments for the Classroom\n\nSeveral students are wrestling with the tension between recognizing the oppressive nature of intersectionality and acknowledging the resilience and agency of their families. Diego\u2019s exploration of his parents\u2019 resistance, coupled with Luis\u2019s analysis of how systems erase identities, could spark a productive discussion about the complexities of agency within systems of oppression. This could be framed as: \"Several students are grappling with how to balance acknowledging the impact of systemic oppression with recognizing the resilience and agency of individuals and communities. How can we avoid essentializing people as solely victims while still acknowledging the impact of systemic oppression?\"\n\n## Structural Power Moves to Address\n\n*   **Isabella Morales:** Her statement, \"invisible is both the problem and the only protection we have,\" subtly leans into a form of **colorblind erasure**. While seemingly insightful, it risks obscuring the active role of systems and actors in creating and maintaining that invisibility. *Pedagogical approach:* In class, you could ask students to consider who is doing the \"looking\" and whose perspectives are being prioritized when invisibility is a strategy for survival.\n\n## Looking Ahead to Next Week\n\nGiven the strong engagement with lived experience, students are well-positioned to engage with Omi & Winant's framework on racial formation. Encourage them to consider how the concept of \"racial formation\" builds on Crenshaw\u2019s work and how it can be applied to understand the historical and ongoing processes of racialization. Linh\u2019s exploration of cultural values and Diego\u2019s focus on agency will be particularly relevant as they grapple with the complexities of racial identity and resistance. Remind students that Omi and Winant are interested in the *political* struggle for racial justice, so encourage them to think about how Crenshaw\u2019s framework can inform those struggles."
+}

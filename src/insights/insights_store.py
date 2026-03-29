@@ -8,11 +8,14 @@ DB lives at: <output_dir>/insights.db
 """
 
 import json
+import logging
 import sqlite3
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+log = logging.getLogger(__name__)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -258,6 +261,24 @@ class InsightsStore:
             self._conn.commit()
         except Exception:
             pass  # column already exists
+        self._migrate_v7()
+
+    def _migrate_v7(self) -> None:
+        """Add trajectory_reports table for per-student semester narratives."""
+        self._conn.executescript("""
+            CREATE TABLE IF NOT EXISTS trajectory_reports (
+                student_id      TEXT NOT NULL,
+                course_id       TEXT NOT NULL,
+                student_name    TEXT,
+                report_text     TEXT,
+                generated_at    TEXT,
+                model_name      TEXT,
+                PRIMARY KEY (student_id, course_id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_traj_reports_course
+                ON trajectory_reports (course_id);
+        """)
+        self._conn.commit()
 
     @staticmethod
     def generate_run_id() -> str:
@@ -461,6 +482,45 @@ class InsightsStore:
             except (json.JSONDecodeError, TypeError):
                 pass
         return d
+
+    def get_student_history(
+        self, student_id: str, course_id: str,
+        *, exclude_run_id: str = "",
+    ) -> List[Dict]:
+        """Get a student's coding records across all completed runs in a course.
+
+        Returns chronological list of dicts with decoded coding_record.
+        Used by trajectory comparator to build per-student longitudinal context.
+        """
+        try:
+            rows = self._conn.execute(
+                """
+                SELECT c.run_id, c.student_name, c.coding_record,
+                       r.assignment_name, r.started_at
+                FROM insights_codings c
+                JOIN insights_runs r ON c.run_id = r.run_id
+                WHERE c.student_id = ?
+                  AND r.course_id = ?
+                  AND r.completed_at IS NOT NULL
+                  AND c.run_id != ?
+                ORDER BY r.started_at ASC
+                """,
+                (str(student_id), str(course_id), str(exclude_run_id)),
+            ).fetchall()
+        except Exception as e:
+            log.warning("get_student_history failed: %s", e)
+            return []
+
+        result = []
+        for r in rows:
+            d = dict(r)
+            if d.get("coding_record"):
+                try:
+                    d["coding_record"] = json.loads(d["coding_record"])
+                except (json.JSONDecodeError, TypeError):
+                    pass
+            result.append(d)
+        return result
 
     def update_coding_tags(
         self, run_id: str, student_id: str,
@@ -893,3 +953,86 @@ class InsightsStore:
             self.delete_run(row["run_id"])
             count += 1
         return count
+
+    # ── Trajectory Reports ────────────────────────────────────────────────
+
+    def save_trajectory_report(
+        self,
+        student_id: str,
+        course_id: str,
+        student_name: str,
+        report_text: str,
+        model_name: str = "",
+    ) -> None:
+        """Save or update a per-student trajectory report.
+
+        Overwrites any existing report for the same student+course pair.
+        """
+        self._conn.execute(
+            """INSERT INTO trajectory_reports
+                   (student_id, course_id, student_name, report_text,
+                    generated_at, model_name)
+               VALUES (?, ?, ?, ?, ?, ?)
+               ON CONFLICT (student_id, course_id) DO UPDATE SET
+                   student_name = excluded.student_name,
+                   report_text = excluded.report_text,
+                   generated_at = excluded.generated_at,
+                   model_name = excluded.model_name""",
+            (str(student_id), str(course_id), student_name, report_text,
+             self._now(), model_name),
+        )
+        self._conn.commit()
+
+    def get_trajectory_report(
+        self, student_id: str, course_id: str,
+    ) -> Optional[Dict]:
+        """Retrieve a saved trajectory report for a student+course.
+
+        Returns dict with keys: student_id, course_id, student_name,
+        report_text, generated_at, model_name. Returns None if no report.
+        """
+        row = self._conn.execute(
+            """SELECT * FROM trajectory_reports
+               WHERE student_id = ? AND course_id = ?""",
+            (str(student_id), str(course_id)),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def get_course_trajectory_reports(self, course_id: str) -> List[Dict]:
+        """Retrieve all trajectory reports for a course.
+
+        Returns list of dicts, sorted by student name.
+        """
+        rows = self._conn.execute(
+            """SELECT * FROM trajectory_reports
+               WHERE course_id = ?
+               ORDER BY student_name ASC""",
+            (str(course_id),),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_trajectory_report_staleness(
+        self, student_id: str, course_id: str,
+    ) -> Optional[int]:
+        """Check how many new completed runs exist since the report was generated.
+
+        Returns None if no report exists, 0 if up-to-date, N if N new runs
+        have been completed since the report was generated.
+        """
+        report = self.get_trajectory_report(student_id, course_id)
+        if not report:
+            return None
+        generated_at = report.get("generated_at", "")
+        if not generated_at:
+            return None
+        try:
+            row = self._conn.execute(
+                """SELECT COUNT(*) as cnt FROM insights_runs
+                   WHERE course_id = ?
+                     AND completed_at IS NOT NULL
+                     AND completed_at > ?""",
+                (str(course_id), generated_at),
+            ).fetchone()
+            return row["cnt"] if row else 0
+        except Exception:
+            return None

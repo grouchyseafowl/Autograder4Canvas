@@ -111,8 +111,16 @@ class SubmissionCodingRecord(BaseModel):
     wellbeing_signal: Optional[str] = None     # brief LLM description
     wellbeing_confidence: float = 0.0          # 0.0-1.0
 
+    # Pass 2: Targeted CHECK-IN (runs only on ENGAGED students)
+    # Surfaces subtle self-disclosure signals for teacher awareness.
+    # The reasoning presents competing interpretations — the teacher decides.
+    checkin_flag: Optional[bool] = None        # True if check-in warranted
+    checkin_reasoning: Optional[str] = None    # quote + competing interpretations
+
     # Metadata from non-LLM pass (carried forward for synthesis)
     word_count: int = 0
+    submitted_at: Optional[str] = None       # ISO 8601 from Canvas
+    unknown_word_rate: float = 0.0           # unknown words per 100 words (spellchecker)
     cluster_id: Optional[int] = None
     emotional_register_score: float = 0.0
     sentiment_reliability: str = "high"  # "high" | "low" | "suppressed"
@@ -256,6 +264,8 @@ class PerSubmissionSummary(BaseModel):
     # Truncation detection (non-LLM heuristic)
     is_possibly_truncated: bool = False
     truncation_note: str = ""
+    # Unknown word rate from spellchecker (unknown words per 100 words)
+    unknown_word_rate: float = 0.0
     # Linguistic repertoire (feature-based, not population-based)
     # Stores full detection result for sentiment tier, asset labels, LLM context, AIC adjustments.
     # None for old data — submission_coder falls back to assess_sentiment_reliability.

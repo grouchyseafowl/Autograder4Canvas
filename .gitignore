@@ -112,6 +112,11 @@ test_data/
 sample_submissions/
 submissions/
 
+# Research pipeline outputs — generated artifacts, accessed by research agents only
+data/research/raw_outputs/
+data/demo_baked/checkpoints/
+data/demo_corpus/
+
 # Student run output data — never commit grade/flag files or GUI state
 # (RunStore/InsightsStore are SQLite, covered by *.db / *.sqlite above)
 *.xlsx

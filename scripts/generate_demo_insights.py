@@ -193,6 +193,24 @@ def run_pipeline(course_key: str, small_batch: int = 0,
     print(f"  Students: {total}")
     print(f"{'═'*60}")
 
+    # ── Metal warmup (MLX only — prevents sleep-induced deadlocks) ──
+    # CLAUDE.md convention: warm up Metal before any MLX inference.
+    # Use 'caffeinate -i python scripts/generate_demo_insights.py ...' to
+    # prevent system sleep during long runs (30+ students can take 80+ min).
+    is_mlx = (backend_override is None or backend_override.name == "mlx")
+    if is_mlx:
+        print("\n  [Metal warmup] Initializing GPU...")
+        import time as _time; _t0 = _time.time()
+        try:
+            from insights.llm_backend import BackendConfig as _BC, send_text as _st, unload_mlx_model as _unload
+            _cfg = _BC(name="mlx", model="mlx-community/gemma-3-12b-it-4bit", max_tokens=5, temperature=0.0)
+            _st(_cfg, "Warmup", system_prompt="OK")
+            _unload()
+            _time.sleep(3)
+            print(f"  [Metal warmup] Ready ({_time.time() - _t0:.0f}s)")
+        except Exception as _e:
+            print(f"  [Metal warmup] Non-fatal: {_e}. Proceeding.")
+
     # ── Build engine ──
     from settings import load_settings
     from insights.engine import InsightsEngine

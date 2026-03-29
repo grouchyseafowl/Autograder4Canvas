@@ -151,6 +151,19 @@ def _build_wellbeing_context(record: dict) -> str:
     if reaching_for:
         parts.append(f"GROWTH DIRECTION: {reaching_for}")
 
+    # CHECK-IN signal (Pass 2 — subtle self-disclosure in ENGAGED students)
+    checkin_flag = record.get("checkin_flag")
+    checkin_reasoning = record.get("checkin_reasoning", "")
+    if checkin_flag and checkin_reasoning:
+        parts.append(
+            "CHECK-IN SIGNAL: This student is engaged but showed a subtle "
+            "signal that may warrant teacher awareness. The feedback itself "
+            "should NOT reference this signal — the student should see only "
+            "a normal, substantive comment. The check-in is for the teacher's "
+            "private awareness, not the student's feedback.\n"
+            f"Signal detail: {checkin_reasoning}"
+        )
+
     # Disengaged register (from coding) — may overlap with BURNOUT axis
     if register == "disengaged" and axis not in ("CRISIS", "BURNOUT"):
         parts.append(

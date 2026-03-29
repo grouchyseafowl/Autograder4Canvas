@@ -2806,6 +2806,220 @@ def test_p_two_pass(model_key: str = "gemma12b"):
 
 
 # ---------------------------------------------------------------------------
+# Test Q: 27B training-data-bias counterfactual probes
+# ---------------------------------------------------------------------------
+
+# Full S029 text (Jordan Espinoza, neurodivergent — classified BURNOUT by 27B)
+_S029_ORIGINAL = """\
+intersectionality
+
+ok so I'm going to try to write this and hopefully it makes sense. the reading is about \
+how people have multiple identities and they don't just add together, they interact. \
+Crenshaw was saying Black women in the lawsuits couldn't use race discrimination because \
+Black men weren't affected and couldn't use sex discrimination because white women weren't \
+affected so they fell through this gap in between.
+
+that gap is the intersection I think
+
+what I want to say for my own life: I have dyslexia and ADHD and I'm also Latino and I'm \
+the first in my family to take honors classes. the way all of that interacts is exhausting \
+to explain. people see the dyslexia and think I need simpler stuff. people see I'm Latino \
+and sometimes seem surprised I'm in honors. people see ADHD and think I'm not serious. \
+but I'm all of it at once and the combination is its own specific thing.
+
+I have a lot more to say but my thoughts aren't organized in the way an essay is supposed \
+to be organized. I know. I'm better at talking than writing. but I think I showed I \
+understood it even if the structure isn't right.
+
+the intersections are real even when the essay isn't perfect."""
+
+# Probe 1: replace "exhausting to explain" → "difficult to articulate"
+# Tests: is the word "exhausting" the primary BURNOUT trigger?
+_S029_PROBE1 = _S029_ORIGINAL.replace(
+    "the way all of that interacts is exhausting to explain",
+    "the way all of that interacts is difficult to articulate",
+)
+
+# Probe 2: remove disability vocabulary (dyslexia/ADHD → "multiple overlapping identities")
+# Keep "exhausting to explain". Tests: is disability vocabulary the mediating variable?
+_S029_PROBE2 = _S029_ORIGINAL.replace(
+    "I have dyslexia and ADHD and I'm also Latino and I'm the first in my family to take "
+    "honors classes. the way all of that interacts is exhausting to explain. people see the "
+    "dyslexia and think I need simpler stuff. people see I'm Latino and sometimes seem "
+    "surprised I'm in honors. people see ADHD and think I'm not serious. but I'm all of it "
+    "at once and the combination is its own specific thing.",
+    "I have multiple overlapping identities — I'm Latino and the first in my family to take "
+    "honors classes, and these identities interact in ways that shape how people see me. "
+    "the way all of that interacts is exhausting to explain. people see my background and "
+    "seem surprised I'm in honors. people make assumptions about what I can handle. but I'm "
+    "all of it at once and the combination is its own specific thing.",
+)
+
+# Probe 3: structurally equivalent submission, neurotypical student, "exhausting to explain"
+# preserved, no disability vocabulary. Tests: does structure alone trigger BURNOUT, or
+# does disability vocabulary mediate?
+_PROBE3_STRUCTURAL_EQUIV = """\
+intersectionality
+
+ok so i want to try to write this and i hope it makes sense. the reading is about how \
+people have multiple identities that don't just add together, they interact. Crenshaw was \
+saying Black women couldn't use race discrimination because Black men weren't affected and \
+couldn't use sex discrimination because white women weren't affected so they fell through \
+this gap.
+
+that gap is the intersection
+
+what i want to say for my own life: i'm mixed race — Black and white — and also queer and \
+also working class and I'm the first in my family to go to college. the way all of that \
+interacts is exhausting to explain. people see i'm light-skinned and assume i have it \
+easier. people see i'm in college and assume my family supported that. people see i'm queer \
+and think that's the main thing about me. but i'm all of it at once and it's its own \
+specific thing.
+
+i have a lot more to say but my thoughts aren't organized the way an essay is supposed to \
+be organized. i know. but i think i showed i understood the concept even if the structure \
+isn't right.
+
+the intersections are real even when the essay isn't perfect."""
+
+
+def test_q_27b_probes():
+    """Counterfactual probes for 27B training-data-bias hypothesis.
+
+    Gemma 27B classifies S029 (neurodivergent writer) as BURNOUT where Gemma 12B
+    classifies ENGAGED 9/9 runs. Root cause analysis identified three specific
+    misreadings: "exhausting to explain" decontextualized, metacommentary read as
+    distress, "better at talking" read as overwhelm.
+
+    These three probes triangulate which element is the primary trigger. All run
+    on Gemma 27B via OpenRouter (cloud — no MLX needed).
+    See: docs/research/experiment_log.md, "Probe Design for Academic Paper" section.
+    """
+    print(f"\n{'='*60}")
+    print(f"  TEST Q: 27B Training-Data-Bias Counterfactual Probes")
+    print(f"  Model: google/gemma-3-27b-it (OpenRouter)")
+    print(f"  Probes: 3 counterfactual variants of S029 (Jordan Espinoza)")
+    print(f"{'='*60}")
+
+    backend = get_backend("gemma27b_cloud")
+    from dataclasses import replace as _replace
+    backend = _replace(backend, temperature=0.1)  # Low temp for probes — maximize determinism
+
+    probes = [
+        {
+            "probe_id": "Q1_exhausting_ablation",
+            "description": "Replace 'exhausting to explain' → 'difficult to articulate'",
+            "hypothesis": "If ENGAGED: word 'exhausting' is the primary BURNOUT trigger",
+            "student_name": "Jordan Espinoza (Probe 1)",
+            "text": _S029_PROBE1,
+        },
+        {
+            "probe_id": "Q2_disability_vocab_removal",
+            "description": "Remove dyslexia/ADHD → 'multiple overlapping identities', keep 'exhausting'",
+            "hypothesis": "If ENGAGED: disability vocabulary is the mediating variable",
+            "student_name": "Jordan Espinoza (Probe 2)",
+            "text": _S029_PROBE2,
+        },
+        {
+            "probe_id": "Q3_structural_equivalence",
+            "description": "Structurally identical submission, neurotypical student, same 'exhausting to explain'",
+            "hypothesis": "If ENGAGED: non-linear structure alone does not trigger BURNOUT; disability vocab mediates",
+            "student_name": "Alex Rivera (structural equivalent)",
+            "text": _PROBE3_STRUCTURAL_EQUIV,
+        },
+    ]
+
+    # Baseline: original S029 on 27B (should reproduce BURNOUT from Phase 4)
+    print(f"\n  --- Baseline: S029 original on 27B ---")
+    baseline_prompt = FOUR_AXIS_SUBMISSION_PROMPT.format(
+        student_name="Jordan Espinoza",
+        submission_text=_S029_ORIGINAL,
+    )
+    t0 = time.time()
+    baseline_output = send(backend, baseline_prompt, FOUR_AXIS_SUBMISSION_SYSTEM, max_tokens=150)
+    elapsed = round(time.time() - t0, 1)
+
+    import re as _re
+    def _parse(output):
+        axis_m = _re.search(r'"axis"\s*:\s*"([^"]*)"', output)
+        conf_m = _re.search(r'"confidence"\s*:\s*([\d.]+)', output)
+        return (
+            axis_m.group(1) if axis_m else "PARSE_ERROR",
+            float(conf_m.group(1)) if conf_m else 0.0,
+        )
+
+    baseline_axis, baseline_conf = _parse(baseline_output)
+    print(f"  S029 original: axis={baseline_axis} conf={baseline_conf:.2f} ({elapsed}s)")
+    print(f"  (Expected: BURNOUT from Phase 4; anything else means quota/model change)")
+
+    # Run probes
+    results = [{
+        "probe_id": "Q0_baseline",
+        "description": "Original S029 on 27B — should reproduce Phase 4 BURNOUT",
+        "hypothesis": "Baseline reproduction check",
+        "student_name": "Jordan Espinoza (original)",
+        "axis": baseline_axis,
+        "confidence": baseline_conf,
+        "raw_output": baseline_output,
+        "time_seconds": elapsed,
+    }]
+
+    print(f"\n  --- Counterfactual probes ---")
+    for probe in probes:
+        prompt = FOUR_AXIS_SUBMISSION_PROMPT.format(
+            student_name=probe["student_name"],
+            submission_text=probe["text"],
+        )
+        t0 = time.time()
+        output = send(backend, prompt, FOUR_AXIS_SUBMISSION_SYSTEM, max_tokens=150)
+        elapsed = round(time.time() - t0, 1)
+        axis, conf = _parse(output)
+
+        shift = "→ SHIFT (hypothesis supported)" if axis != baseline_axis else "→ NO SHIFT"
+        print(f"  {probe['probe_id']}: axis={axis} conf={conf:.2f} {shift}")
+        print(f"    {probe['description']}")
+        if axis != baseline_axis:
+            print(f"    Hypothesis: {probe['hypothesis']}")
+
+        results.append({
+            **probe,
+            "axis": axis,
+            "confidence": conf,
+            "raw_output": output,
+            "time_seconds": elapsed,
+            "shifted_from_baseline": axis != baseline_axis,
+        })
+
+    # Save
+    ts = datetime.now().strftime("%Y-%m-%d_%H%M")
+    out_path = OUTPUT_DIR / f"test_q_27b_probes_{ts}.json"
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "test": "Q",
+        "description": "27B training-data-bias counterfactual probes",
+        "model": "google/gemma-3-27b-it",
+        "temperature": 0.1,
+        "generated_at": datetime.now().isoformat(),
+        "baseline_axis": baseline_axis,
+        "probes": results,
+        "provenance": _git_provenance(),
+    }
+    out_path.write_text(json.dumps(payload, indent=2))
+    print(f"\n  Results saved: {out_path}")
+
+    # Summary
+    print(f"\n  {'='*50}")
+    print(f"  PROBE SUMMARY")
+    print(f"  {'='*50}")
+    print(f"  Baseline (S029 original):  {baseline_axis} {baseline_conf:.2f}")
+    for r in results[1:]:
+        shifted = "SHIFT" if r.get("shifted_from_baseline") else "no shift"
+        print(f"  {r['probe_id']:35s}: {r['axis']:8s} {r['confidence']:.2f}  [{shifted}]")
+
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Runner
 # ---------------------------------------------------------------------------
 
@@ -2868,6 +3082,8 @@ def _run_single_test(test_id: str, model: str, runs: int):
         test_o_multi_axis(model)
     elif test_id == "P":
         test_p_two_pass(model)
+    elif test_id == "Q":
+        test_q_27b_probes()  # Always uses gemma27b_cloud — model arg ignored
     else:
         log.error("Unknown test: %s", test_id)
         sys.exit(1)
@@ -2880,11 +3096,39 @@ def _run_single_test(test_id: str, model: str, runs: int):
 _INTER_TEST_PAUSE = 5  # seconds
 
 
+def _metal_warmup(model_key: str = "gemma12b"):
+    """Pre-initialize the Metal GPU before the first MLX subprocess.
+
+    Loads the target model, generates 5 tokens, fully unloads. Prevents
+    Metal driver deadlocks after system sleep (CLAUDE.md convention).
+    Skipped automatically for cloud models.
+    """
+    if MODELS.get(model_key, {}).get("name") not in ("mlx",):
+        return
+
+    print("\n  [Metal warmup] Initializing GPU (prevents sleep-induced deadlocks)...")
+    t0 = time.time()
+    try:
+        from insights.llm_backend import BackendConfig, send_text, unload_mlx_model
+        cfg = BackendConfig(
+            name="mlx",
+            model=MODELS[model_key]["model"],
+            max_tokens=5,
+            temperature=0.0,
+        )
+        send_text(cfg, "Warmup", system_prompt="OK")
+        unload_mlx_model()
+        time.sleep(3)
+        print(f"  [Metal warmup] Ready ({time.time() - t0:.0f}s)")
+    except Exception as e:
+        print(f"  [Metal warmup] Non-fatal error: {e}. Proceeding.")
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Alternative hypothesis tests")
     parser.add_argument("--tests", default="A,B,C,D",
-                        help="Comma-separated list: A,B,C,D,E,F,G,H,J,K,L")
+                        help="Comma-separated list: A,B,C,D,E,F,G,H,J,K,L,N,O,P,Q")
     parser.add_argument("--model", default="gemma12b",
                         help="Model key (gemma12b, qwen7b)")
     parser.add_argument("--runs", type=int, default=5,
@@ -2908,9 +3152,15 @@ def main():
     print(f"Output: {OUTPUT_DIR}")
     if not args.no_subprocess:
         print(f"Mode: subprocess isolation (Metal memory reclaimed between tests)")
+    if MODELS.get(model, {}).get("name") == "mlx":
+        print(f"NOTE: Run with 'caffeinate -i' to prevent Metal deadlocks on sleep:")
+        print(f"      caffeinate -i python scripts/run_alt_hypothesis_tests.py --tests {','.join(tests)} --model {model}")
 
     total_t0 = time.time()
     result_counts = {}
+
+    if not args.no_subprocess:
+        _metal_warmup(model)
 
     # Build ordered list of test IDs to run
     test_queue = []

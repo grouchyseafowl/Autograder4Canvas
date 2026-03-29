@@ -441,6 +441,28 @@ class SettingsPanel(QWidget):
 
         lo.addLayout(cols)
 
+        # ── Deepening pass toggle ──
+        lo.addWidget(make_h_rule())
+        dp_row = QHBoxLayout()
+        dp_row.setSpacing(SPACING_SM)
+        dp_row.addWidget(_field_label("Deepening Pass"))
+        self._deepening_toggle = SwitchToggle(
+            "Re-examine flagged students", wrap_width=200
+        )
+        dp_row.addWidget(self._deepening_toggle)
+        dp_row.addStretch()
+        lo.addLayout(dp_row)
+        desc = QLabel(
+            "Refines concern accuracy by asking the model to reconsider "
+            "flagged passages. Adds ~30s per flagged student."
+        )
+        desc.setWordWrap(True)
+        desc.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+            f" font-style: italic; background: transparent; padding-left: 44px;"
+        )
+        lo.addWidget(desc)
+
         # ── Bottom row: throttle + whisper ──
         lo.addWidget(make_h_rule())
         bottom = QHBoxLayout()
@@ -1065,6 +1087,9 @@ class SettingsPanel(QWidget):
             self._draft_feedback_toggle.setChecked(
                 bool(s.get("insights_draft_feedback", False))
             )
+            self._deepening_toggle.setChecked(
+                bool(s.get("insights_deepening_pass", True))
+            )
 
             # Accessibility
             font_scale = float(s.get("font_scale", 1.0))
@@ -1158,6 +1183,7 @@ class SettingsPanel(QWidget):
         for toggle in (
             self._keep_awake_toggle,
             self._draft_feedback_toggle,
+            self._deepening_toggle,
             self._warn_reinterpret_toggle,
             self._pp_translate_toggle,
             self._pp_transcribe_toggle,
@@ -1308,6 +1334,7 @@ class SettingsPanel(QWidget):
             )
             s["insights_keep_awake"] = self._keep_awake_toggle.isChecked()
             s["insights_draft_feedback"] = self._draft_feedback_toggle.isChecked()
+            s["insights_deepening_pass"] = self._deepening_toggle.isChecked()
 
             # Accessibility
             s["font_scale"] = self._text_size_combo.currentData() or 1.0

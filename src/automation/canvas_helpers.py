@@ -407,3 +407,59 @@ class CanvasAutomationAPI:
             return True
         except requests.exceptions.RequestException:
             return False
+
+    def create_assignment(
+        self,
+        course_id: int,
+        *,
+        name: str,
+        description: str = "",
+        submission_types: Optional[List[str]] = None,
+        points_possible: float = 0,
+        published: bool = True,
+    ) -> Dict[str, Any]:
+        """Create a Canvas assignment.
+
+        Returns the assignment dict from Canvas API.
+        """
+        url = f"{self.base_url}/api/v1/courses/{course_id}/assignments"
+        payload = {
+            "assignment": {
+                "name": name,
+                "description": description,
+                "submission_types": submission_types or ["none"],
+                "points_possible": points_possible,
+                "published": published,
+            }
+        }
+        response = requests.post(
+            url, headers=self.headers, json=payload, timeout=30
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def post_submission_comment(
+        self,
+        course_id: int,
+        assignment_id: int,
+        student_id: str,
+        comment_text: str,
+    ) -> Dict[str, Any]:
+        """Post a comment on a student's submission.
+
+        Uses PUT to update the submission with a text comment.
+        """
+        url = (
+            f"{self.base_url}/api/v1/courses/{course_id}"
+            f"/assignments/{assignment_id}/submissions/{student_id}"
+        )
+        payload = {
+            "comment": {
+                "text_comment": comment_text,
+            }
+        }
+        response = requests.put(
+            url, headers=self.headers, json=payload, timeout=30
+        )
+        response.raise_for_status()
+        return response.json()

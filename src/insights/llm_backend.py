@@ -79,7 +79,7 @@ DEFAULT_MODELS = {
 
 def get_default_model(tier: str) -> str:
     """Return the default Ollama model name for a tier."""
-    return DEFAULT_MODELS.get(tier, "llama3.1:8b")
+    return DEFAULT_MODELS.get(tier, "gemma3:12b")
 
 
 # ---------------------------------------------------------------------------

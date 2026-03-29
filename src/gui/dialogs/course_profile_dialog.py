@@ -32,7 +32,8 @@ from gui.styles import (
     BORDER_DARK, BORDER_AMBER,
     BG_VOID, BG_CARD, BG_INSET, BG_PANEL,
     PANE_BG_GRADIENT,
-    make_section_label, make_h_rule,
+    STATUS_WARN,
+    make_section_label, make_h_rule, make_secondary_button,
     combo_qss,
 )
 
@@ -429,6 +430,191 @@ class _PatternsForm(QWidget):
 
 
 # ---------------------------------------------------------------------------
+# _CalibrationSection — concern calibration visibility widget
+# ---------------------------------------------------------------------------
+
+class _CalibrationSection(QWidget):
+    """Displays accumulated concern calibration data for a profile.
+
+    Shows each concern pattern that has been acknowledged or dismissed, with
+    counts, a de-emphasis indicator for patterns the teacher often dismisses,
+    and a Reset Calibration button.
+
+    Call load(profile_manager) to populate. Call load(None) to show an empty
+    state (no profile selected / no calibration data).
+    """
+
+    #: Emitted when the teacher resets calibration (profile has been mutated).
+    calibration_reset = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        lo = QVBoxLayout(self)
+        lo.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+        lo.setSpacing(SPACING_SM)
+
+        lo.addWidget(make_section_label("Your Calibration"))
+        lo.addWidget(make_h_rule())
+
+        self._desc = QLabel(
+            "How the system adjusts based on your responses. "
+            "Concerns you've previously dismissed will be de-emphasized in future runs."
+        )
+        self._desc.setWordWrap(True)
+        self._desc.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px; background: transparent;"
+        )
+        lo.addWidget(self._desc)
+
+        # Container for per-pattern rows — rebuilt on each load()
+        self._rows_widget = QWidget()
+        self._rows_widget.setStyleSheet("background: transparent;")
+        self._rows_lo = QVBoxLayout(self._rows_widget)
+        self._rows_lo.setContentsMargins(0, SPACING_SM, 0, 0)
+        self._rows_lo.setSpacing(4)
+        lo.addWidget(self._rows_widget)
+
+        # Empty state label (shown when there is no calibration data)
+        self._empty_lbl = QLabel("No calibration data yet for this profile.")
+        self._empty_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_GLOW}; font-size: {px(11)}px;"
+            f" font-style: italic; background: transparent;"
+        )
+        self._empty_lbl.setVisible(False)
+        lo.addWidget(self._empty_lbl)
+
+        lo.addSpacing(SPACING_SM)
+
+        # Reset button
+        self._reset_btn = QPushButton("Reset Calibration")
+        make_secondary_button(self._reset_btn)
+        self._reset_btn.setToolTip(
+            "Clear all acknowledge/dismiss history for this profile. "
+            "Future runs will not be adjusted by past responses."
+        )
+        self._reset_btn.setEnabled(False)
+        self._reset_btn.clicked.connect(self._on_reset)
+        lo.addWidget(self._reset_btn, 0, Qt.AlignmentFlag.AlignLeft)
+
+        lo.addStretch()
+
+        # Keep a reference so _on_reset can call reset_concern_sensitivity()
+        self._profile_mgr = None
+
+    # ── Data ──────────────────────────────────────────────────────────────
+
+    def load(self, profile_mgr) -> None:
+        """Populate the section from a TeacherProfileManager (or None to clear)."""
+        self._profile_mgr = profile_mgr
+        self._rebuild_rows(profile_mgr)
+
+    def _rebuild_rows(self, profile_mgr) -> None:
+        """Clear and repopulate per-pattern rows from edit_history."""
+        # Remove existing row widgets
+        while self._rows_lo.count():
+            item = self._rows_lo.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        if profile_mgr is None:
+            self._empty_lbl.setVisible(True)
+            self._reset_btn.setEnabled(False)
+            return
+
+        # Tally acknowledge / dismiss counts from edit_history
+        ack_counts: dict = {}
+        dis_counts: dict = {}
+        for entry in profile_mgr.profile.edit_history:
+            if entry.get("action") != "concern_action":
+                continue
+            details = entry.get("details", {})
+            key = details.get("concern", "")
+            action = details.get("action", "")
+            if not key:
+                continue
+            if action == "acknowledge":
+                ack_counts[key] = ack_counts.get(key, 0) + 1
+            elif action == "dismiss":
+                dis_counts[key] = dis_counts.get(key, 0) + 1
+
+        # Union of all keys that appear in either dict
+        all_keys = sorted(
+            set(ack_counts) | set(dis_counts),
+            key=lambda k: -(dis_counts.get(k, 0) + ack_counts.get(k, 0)),
+        )
+
+        if not all_keys:
+            self._empty_lbl.setVisible(True)
+            self._reset_btn.setEnabled(False)
+            return
+
+        self._empty_lbl.setVisible(False)
+        self._reset_btn.setEnabled(True)
+
+        for key in all_keys:
+            ack = ack_counts.get(key, 0)
+            dis = dis_counts.get(key, 0)
+            de_emphasized = dis > ack
+
+            row_widget = QWidget()
+            row_widget.setStyleSheet(
+                f"background: {BG_INSET}; border: 1px solid {BORDER_DARK};"
+                f" border-radius: 3px;"
+            )
+            row_lo = QHBoxLayout(row_widget)
+            row_lo.setContentsMargins(8, 4, 8, 4)
+            row_lo.setSpacing(SPACING_SM)
+
+            # Pattern name (truncated for display)
+            display_key = key if len(key) <= 60 else key[:57] + "\u2026"
+            name_lbl = QLabel(display_key)
+            name_lbl.setStyleSheet(
+                f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
+                f" background: transparent; border: none;"
+            )
+            name_lbl.setWordWrap(False)
+            row_lo.addWidget(name_lbl, 1)
+
+            # Counts indicator
+            counts_text = f"Acknowledged: {ack}  \u00b7  Dismissed: {dis}"
+            counts_lbl = QLabel(counts_text)
+            counts_lbl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+                f" background: transparent; border: none;"
+            )
+            row_lo.addWidget(counts_lbl)
+
+            # De-emphasized badge
+            if de_emphasized:
+                badge = QLabel("(de-emphasized)")
+                badge.setStyleSheet(
+                    f"color: {STATUS_WARN}; font-size: {px(11)}px;"
+                    f" background: transparent; border: none;"
+                )
+                row_lo.addWidget(badge)
+
+            self._rows_lo.addWidget(row_widget)
+
+    # ── Handlers ──────────────────────────────────────────────────────────
+
+    def _on_reset(self) -> None:
+        if self._profile_mgr is None:
+            return
+        from gui.dialogs.message_dialog import show_question
+        if not show_question(
+            self, "Reset Calibration",
+            "Clear all acknowledge/dismiss history for this profile?\n\n"
+            "Future runs will not be adjusted by past responses. "
+            "This cannot be undone.",
+        ):
+            return
+        self._profile_mgr.reset_concern_sensitivity()
+        self._rebuild_rows(self._profile_mgr)
+        self.calibration_reset.emit()
+
+
+# ---------------------------------------------------------------------------
 # CourseProfileDialog
 # ---------------------------------------------------------------------------
 
@@ -610,10 +796,19 @@ class CourseProfileDialog(QDialog):
         pane.setStyleSheet(_PANE_QSS)
         lo = QVBoxLayout(pane)
         lo.setContentsMargins(0, 0, 0, 0)
+        lo.setSpacing(0)
 
         self._patterns_form = _PatternsForm()
         self._patterns_form.changed.connect(self._on_form_changed)
-        lo.addWidget(self._patterns_form)
+        lo.addWidget(self._patterns_form, 1)
+
+        lo.addWidget(make_h_rule())
+
+        self._calibration_section = _CalibrationSection()
+        self._calibration_section.calibration_reset.connect(
+            lambda: self._flash_status("Calibration reset.")
+        )
+        lo.addWidget(self._calibration_section)
 
         return pane
 
@@ -649,6 +844,7 @@ class CourseProfileDialog(QDialog):
                 p.disabled_default_patterns,
                 p.custom_strength_patterns,
             )
+            self._calibration_section.load(mgr)
             self._tmpl_name_input.setText(display_name)
             self._dirty = False
             self._save_btn.setEnabled(False)
@@ -729,6 +925,7 @@ class CourseProfileDialog(QDialog):
         self._settings_form.load("", "", "general")
         self._settings_form.set_id_editable(True)
         self._patterns_form.load([], [], [])
+        self._calibration_section.load(None)
         self._tmpl_name_input.clear()
         self._dirty = False
         self._save_btn.setEnabled(False)

@@ -39,12 +39,12 @@ _DEFAULTS = {
     "insights_whisper_model": "base",
     "insights_translation_backend": "ollama",
     "insights_translation_model": "llama3.1:8b",
-    "insights_model_tier": "auto",            # "auto" picks best available (27b > 12b)
+    "insights_model_tier": "auto",            # persistent depth toggle default (auto/lightweight/medium/deep_thinking)
     "insights_throttle_delay": 20,
-    "insights_low_priority": True,
     "insights_keep_awake": True,
+    "insights_deepening_pass": True,
     "insights_setup_complete": False,         # gates first-run wizard
-    "insights_cloud_privacy": "",             # "institutional_dpa" or "anonymized_only"
+    "insights_cloud_privacy": "",             # "", "free_enhancement", "privacy_enhancement", "browser_handoff", "institutional_dpa"
     # Accessibility
     "font_scale": 1.25,                   # 1.0 = small, 1.25 = default, 1.5 = extra large
     "insights_draft_feedback": False,

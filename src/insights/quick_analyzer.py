@@ -662,6 +662,14 @@ class QuickAnalyzer:
         _all_wcs = [len(body.split()) for body in texts.values()]
         _class_median_wc = statistics.median(_all_wcs) if _all_wcs else 0.0
 
+        # Spellchecker for unknown_word_rate (instantiated once, reused per submission)
+        _spell = None
+        try:
+            from spellchecker import SpellChecker
+            _spell = SpellChecker()
+        except ImportError:
+            log.debug("pyspellchecker not available — unknown_word_rate will be 0.0")
+
         for sid, body in texts.items():
             wc = len(body.split())
             sub_meta = meta.get(sid, {})
@@ -700,6 +708,41 @@ class QuickAnalyzer:
                 log.warning("Linguistic feature detection failed for %s: %s", sid, e)
                 _ling_repertoire = None
 
+            # Unknown word rate — only for submissions with >= 15 words
+            # TODO: dialect exclusions via linguistic_repertoire are not yet applied
+            # here because _ling_repertoire is freshly computed above in the same
+            # loop iteration. Extract protected evidence words when available.
+            _unknown_word_rate = 0.0
+            if _spell is not None and wc >= 15:
+                try:
+                    _clean_words = [
+                        re.sub(r"[^a-z]", "", w.lower())
+                        for w in body.split()
+                    ]
+                    _clean_words = [w for w in _clean_words if w]
+                    if _clean_words:
+                        # Apply dialect protection: load evidence words from
+                        # protected features in the linguistic repertoire.
+                        _known_extras: List[str] = []
+                        if _ling_repertoire is not None:
+                            try:
+                                for feat in getattr(_ling_repertoire, "features", []):
+                                    if getattr(feat, "protected", False):
+                                        for ev in getattr(feat, "evidence", []):
+                                            _known_extras.extend(
+                                                re.sub(r"[^a-z]", "", w.lower())
+                                                for w in str(ev).split()
+                                                if w
+                                            )
+                            except Exception:
+                                pass
+                        if _known_extras:
+                            _spell.word_frequency.load_words(_known_extras)
+                        _unknown = _spell.unknown(_clean_words)
+                        _unknown_word_rate = (len(_unknown) / len(_clean_words)) * 100
+                except Exception as e:
+                    log.debug("unknown_word_rate failed for %s: %s", sid, e)
+
             result.per_submission[sid] = PerSubmissionSummary(
                 student_id=sid,
                 student_name=sub_meta.get("student_name", f"Student {sid}"),
@@ -720,6 +763,7 @@ class QuickAnalyzer:
                 is_possibly_truncated=_is_trunc,
                 truncation_note=_trunc_note,
                 linguistic_repertoire=_ling_repertoire,
+                unknown_word_rate=_unknown_word_rate,
             )
 
         return result

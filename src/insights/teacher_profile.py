@@ -212,6 +212,21 @@ class TeacherProfileManager:
             self._append_history("concern_pattern_remove", {"pattern": pattern})
             self._save()
 
+    def reset_concern_sensitivity(self) -> None:
+        """Clear all accumulated concern sensitivity adjustments.
+
+        Resets concern_sensitivity to empty, removes concern_action entries
+        from edit_history, and saves. Does not affect other profile data
+        (patterns, renames, subject area, etc.).
+        """
+        self._profile.concern_sensitivity = {}
+        self._profile.edit_history = [
+            e for e in self._profile.edit_history
+            if e.get("action") != "concern_action"
+        ]
+        self._append_history("calibration_reset", {})
+        self._save()
+
     def disable_default_pattern(self, pattern_label: str) -> None:
         """Mute a default concern pattern for this course.
 

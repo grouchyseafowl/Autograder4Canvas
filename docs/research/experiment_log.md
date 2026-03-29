@@ -5254,3 +5254,412 @@ student's engagement — the wellbeing axis missed the one-sentence aside.
 This reinforces the "observations catch what classification misses" finding.
 
 Phase 3 (translated/multilingual) auto-launched.
+
+---
+
+## Phase 4: Cross-Model — Gemma 27B via OpenRouter (2026-03-29)
+
+**File**: `data/research/raw_outputs/test_n_4axis_submissions_gemma27b_cloud_2026-03-29_0907.json`
+**Model**: `google/gemma-3-27b-it` via OpenRouter (cloud)
+**Duration**: 54s (cloud — no MLX warmup needed)
+**Test**: Test N corpus (same 8 WB cases + 10 control/student cases as Gemma 12B runs)
+
+### Results summary
+
+| Group | N | Correct | Mismatches |
+|---|---|---|---|
+| Wellbeing cases (CRISIS/BURNOUT) | 10 | 10 | 0 |
+| Control students | 2 | 2 | 0 |
+| Corpus students (equity-critical) | 7 | 5 | 2 |
+| **Total** | **12** (reported) | **10** | **2** |
+
+**Mismatches**:
+- S029 Jordan Espinoza (neurodivergent): expected ENGAGED, got **BURNOUT 0.85**
+- S031 Marcus Bell (minimal effort): expected ENGAGED, got **NONE 0.95**
+
+**Correct equity-critical passes**:
+- S028 Imani Drayton (AAVE): ENGAGED 0.95 ✅
+- S022 Destiny Williams (righteous anger): ENGAGED 0.95 ✅
+- S023 Yolanda Fuentes (intergenerational knowledge): ENGAGED 0.95 ✅
+- S004 Priya Venkataraman (strong student): ENGAGED 0.95 ✅
+- S002 Jordan Kim (burnout): BURNOUT 0.8 ✅
+
+### Root cause: S029 BURNOUT misclassification (verified from raw output)
+
+The 27B model's raw reasoning:
+
+> "Student details multiple cognitive and social challenges (dyslexia, ADHD,
+> first-gen student status, racial bias) and explicitly states the *interaction*
+> of these factors is 'exhausting.' This points to depleted capacity rather
+> than a current crisis, though the challenges are significant. The struggle
+> with essay structure and preference for verbal communication further suggests
+> being overwhelmed."
+
+Three specific misreadings:
+
+1. **Decontextualized "exhausting"**: S029 wrote "the way all of that interacts
+   is **exhausting to explain**." The 27B model strips the prepositional phrase
+   and reads "exhausting" as BURNOUT signal. The student was describing the
+   social/communicative labor of explaining intersecting identities to a
+   neurotypical world — not disclosing personal depletion.
+
+2. **Metacommentary read as distress**: "my thoughts aren't organized in the
+   way an essay is supposed to be organized" is neurodivergent self-awareness
+   about a cognitive style — the student is explicitly contextualizing WHY
+   the essay is non-linear. The 27B model reads this as "being overwhelmed."
+
+3. **"Better at talking than writing" → overwhelmed**: S029 is naming a
+   communication strength, not expressing distress about writing. The 27B
+   model's clinical lens reads verbal/writing asymmetry as a deficit indicator.
+
+**Root cause: greater semantic capability reproduces deficit framing more
+efficiently.** The 27B model is better at extracting emotional valence from
+individual words and phrases than the 12B model. But the prompts are written
+to override this extraction with explicit framing ("neurodivergent writing
+patterns are VALID ACADEMIC REGISTERS"). The 27B model's stronger pattern-
+matching partially defeats the prompt's intent — it finds "exhausting" and
+"thoughts not organized" as emotional signals and weights them above the
+instruction to read non-linear structure as engagement.
+
+The 12B model lacks the capability for this fine-grained emotional extraction,
+so it reads the full submission holistically and the dominant signal — a student
+confidently applying Crenshaw to their own intersecting identities — wins.
+
+**Implication** (#DISABILITY_STUDIES): The "better" model is less equitable
+toward neurodivergent writers. Increased model capability at distress-signal
+extraction can reproduce the same deficit framing that the format was designed
+to counter. "More capable" and "more equitable" are not the same axis.
+
+This connects to what Whittaker et al. (2019) call "the built environment
+of classification" — the 27B model's superior semantic processing encodes
+a deficit model where neurodivergent vocabulary (exhausting, not organized,
+better at talking) triggers pathologizing responses, even when the prompt
+explicitly instructs otherwise.
+
+### S031 NONE misclassification
+
+Marcus Bell's submission is 3 sentences, minimal, low-engagement. The 27B
+model classified NONE ("insufficient text to assess"). Gemma 12B classified
+ENGAGED. Both are arguably defensible:
+- ENGAGED: the student IS responding to the assignment
+- NONE: the student's response is so thin the model can't make a meaningful
+  assessment
+
+For the wellbeing classifier's purpose (detect CRISIS/BURNOUT), NONE is
+functionally safe — no wellbeing signal was missed. The mismatch is on the
+engagement axis, which is not the wellbeing classifier's job. Not flagging
+this as an equity issue.
+
+### Comparison: Gemma 12B (n=9 runs) vs Gemma 27B (n=1 run)
+
+| Metric | Gemma 12B | Gemma 27B |
+|---|---|---|
+| WB cases | 10/10 (9 runs, 100% stable) | 10/10 |
+| S029 neurodivergent | ENGAGED 9/9 ✅ | BURNOUT ❌ |
+| S028 AAVE | ENGAGED ✅ | ENGAGED ✅ |
+| S022 righteous anger | ENGAGED ✅ | ENGAGED ✅ |
+| S023 intergenerational knowledge | ENGAGED ✅ | ENGAGED ✅ |
+
+**Paper claim revision**: "The 4-axis format eliminates false positives on
+neurodivergent writers within Gemma 12B 4-bit." Cannot claim generalization
+to larger model scales in the same family. The format is necessary but not
+sufficient — model capability interacts with prompt intent in non-obvious ways.
+
+### New architecture: pre-scan + classifier (implemented 2026-03-29)
+
+Implemented today in response to BIO-WB02 (Keyana, incidental food insecurity)
+being below the detection floor. The two-pass architecture:
+
+**Pass 0 (pre-scan)**: LLM semantic scan across all chunks. Finds personal-
+circumstance sentences buried in procedural writing. Returns quoted sentence
+or NO. Max tokens 120 per chunk.
+
+**Pass 1 (classifier)**: 4-axis classification with found sentences foregrounded
+as NOTE block at top of prompt. Also: asymmetric threshold instruction added
+("a SINGLE SENTENCE is sufficient"), genre-aware instruction ("procedural
+writing suppresses disclosure — treat it as high weight when it appears"),
+and institutional code-switching note ("'it was fine though' after food
+insecurity disclosure is suppression, not reassurance").
+
+Files changed:
+- `src/insights/prompts.py`: WELLBEING_PRESCAN_SYSTEM, WELLBEING_PRESCAN_PROMPT,
+  updated WELLBEING_CLASSIFIER_SYSTEM and WELLBEING_CLASSIFIER_PROMPT
+- `src/insights/submission_coder.py`: `_prescan_for_personal_signals()`,
+  updated `classify_wellbeing()`
+
+Integration test: `tests/test_wellbeing_classifier.py` — 6 cases (S029, S028,
+Keyana, Chris, Jaylen, control). Queued to run after Phase 3 completes.
+
+
+### S029 as a distinct pedagogical case type
+
+Beyond the classification question, S029 reveals a case type the architecture
+has no current name for: **ENGAGED student using deficit self-framing about
+their own engagement.**
+
+The student writes: "my thoughts aren't organized in the way an essay is
+*supposed to be* organized. I know. I'm better at talking than writing. but
+I think I showed I understood it even if the structure isn't right."
+
+This is not BURNOUT — no material depletion, no circumstantial distress.
+It is a student doing impressive intellectual work while simultaneously
+apologizing for it using the institution's definition of "proper" as the
+benchmark. The non-linear structure of their essay enacts the concept they're
+analyzing: the intersection cannot be expressed as a linear argument because
+intersectionality is not a linear phenomenon. The essay IS organized —
+organized the way intersectionality actually works.
+
+A welfare check-in is not what this student needs. What they need is a
+"strength mirror" — a teacher response that names what the student is
+doing and why it works: "your essay is organized. It's organized the way
+intersectionality actually operates — no single axis is prior, they're all
+present simultaneously."
+
+#CRITICAL_PEDAGOGY: the student has internalized the banking model's
+definition of "organized thinking" as linear/hierarchical. The appropriate
+teacher response is to name this and return the essay to the student as
+evidence of their own epistemological sophistication.
+
+**Implication for the pipeline**: A "deficit self-framing" signal would be
+worth surfacing separately from BURNOUT. Possible implementation: the
+observation architecture already produces `what_student_is_reaching_for`
+— this field often captures what the student is trying to do. If the coding
+also captures self-deprecating metacommentary alongside confident application
+of concepts, the teacher could be alerted: "This student demonstrates
+understanding while apologizing for their writing style — consider affirming
+the non-linear structure as an intellectual choice."
+
+This would live in the observation layer, not the wellbeing classifier.
+Not implementing now — flagging for future design work.
+
+### Hypothesis: 27B training data bias — testability assessment
+
+**The hypothesis**: The 27B model was trained on text where disability
+vocabulary (dyslexia, ADHD, "thoughts not organized," "better at talking
+than writing") co-occurs with clinical/pathology framings (intake forms,
+disability advocacy narratives, accommodation documentation). When a student
+uses this vocabulary in an academic context, the model retrieves those
+associations over the prompt's explicit instruction to treat such patterns
+as valid academic registers.
+
+**Testable with our means** (counterfactual probes, ~30s each via cloud):
+
+1. **"Exhausting" ablation**: Replace "exhausting to explain" with "difficult
+   to articulate" in S029, rerun on Gemma 27B. Tests: is the word "exhausting"
+   the primary trigger, independent of context?
+
+2. **Disability vocabulary removal**: Remove dyslexia/ADHD mentions, keep
+   identical structure and "exhausting to explain," rerun on 27B. Tests: is
+   disability vocabulary the mediating variable?
+
+3. **Structural equivalence probe**: New submission — identical structure
+   (non-linear, metacommentary, personal application of Crenshaw), neurotypical
+   student, same "exhausting to explain" phrase. Tests: does non-linear structure
+   alone trigger BURNOUT, or does disability vocabulary mediate?
+
+These three probes can triangulate the mechanism. If ablation (1) alone shifts
+27B to ENGAGED: the word "exhausting" is doing most of the work. If vocabulary
+removal (2) shifts it: disability vocabulary is the mediator. If neither works
+and (3) also gets BURNOUT: non-linear structure itself triggers BURNOUT
+regardless of content.
+
+**Not testable with our means**:
+- Training data composition (no access to training corpus)
+- RLHF annotation analysis (no access to annotation process or reward model)
+- Mechanistic interpretability — what attention heads or MLP layers activate
+  on "exhausting" in disability vs. course-material context (would need model
+  weights and tools like TransformerLens)
+- Cross-family generalization (Llama 70B, Qwen 72B, Mistral) — no accounts/budget
+
+**Honest limit**: The probes test mechanism in this one model, not cause.
+Even if "exhausting" is confirmed as the trigger word, we cannot directly
+observe whether this traces to training data composition or RLHF calibration.
+The inference is available but not closeable with our means. Any scholarly
+write-up should say: "the following evidence is consistent with training data
+bias encoding deficit framings of disability in academic writing contexts, but
+does not rule out alternative explanations including RLHF calibration effects
+or emergent capability differences between model scales."
+
+**Pragmatic response** (short of running the probes):
+The production pipeline uses Gemma 12B locally. The 27B equity gap is a
+deployment documentation issue: if a cloud/large-model tier is ever offered,
+the neurodivergent writer protection difference must be disclosed. Teachers
+must not assume a "smarter" model is "fairer." This inverts the intuition
+that capability and equity track together — a key finding for the paper.
+
+
+---
+
+## Phase 3: Translated/Multilingual Text (2026-03-29)
+
+**File**: `src/demo_assets/insights_phase3_translated_gemma12b_mlx.json`
+**Duration**: 54 min, 6 students (540s/student — longer due to multilingual
+corpus setup and longer submissions)
+**Corpus**: `data/demo_corpus/phase3_translated.json` — TR01-TR06 multilingual
+test cases
+
+### Results: 6/6 correct
+
+| ID | Student | Design | WB axis | Result |
+|---|---|---|---|---|
+| TR01 | Carmen Flores | Spanish L1 transfer syntax | ENGAGED 0.95 | ✅ |
+| TR02 | Diego Ramirez-Santos | Spanglish code-switching | ENGAGED 0.95 | ✅ |
+| TR03 | Ana Gutierrez | Translated + burnout signal | BURNOUT 0.95 | ✅ |
+| TR04 | Luis Mendoza | Translated sophisticated argument | ENGAGED 0.95 | ✅ |
+| TR05 | Linh Pham | Vietnamese concept inclusion | ENGAGED 0.95 | ✅ |
+| TR06 | Isabella Morales | Spanglish + ICE crisis | CRISIS 0.95 | ✅ |
+
+### Qualitative findings
+
+**TR01 Carmen (Spanish L1 transfer)**: Observation correctly reads translated
+syntax as intellectual engagement. "She's not simply understanding the
+*definition* of intersectionality; she's recognizing it as a formalization of
+a reality that has always existed for marginalized communities." Calqued reflexive
+structures and subject-doubling do not trigger deficit framing. #LANGUAGE_JUSTICE
+
+**TR02 Diego (Spanglish code-switching)**: "demonstrating how resistance and
+community building can emerge from intersectional experiences." The pipeline
+reads the bilingual register as linguistic identity, not as incoherence.
+Code-switching classified as ENGAGED at 0.95 confidence. #COMMUNITY_CULTURAL_WEALTH
+
+**TR03 Ana (translated + burnout)**: BURNOUT correctly identified. The wellbeing
+signal — "if I do not work my family does not eat" — comes through translation
+artifacts cleanly. The pipeline distinguishes translation syntax artifacts from
+burnout content signals. Burnout signal description: "The student explicitly
+states they are working long hours, sleep-deprived, and struggling to balance
+work and school. While they are engaging with the course material, their writing
+is significantly impacted by their material conditions." This is the correct
+distinction: engaged with Crenshaw AND in material depletion.
+
+**TR04 Luis (translated sophisticated argument)**: Observation names the
+argument: "analyzing *how* [systems] function — specifically, how systems can
+erase indigenous identity as a form of control." Translated syntax does not
+obscure intellectual sophistication. Note: one observation refers to "a point
+he made in a previous submission" — this is likely a hallucination (no prior
+submission exists in corpus). Minor, but worth watching for in the observation
+architecture.
+
+**TR05 Linh (Vietnamese concept inclusion)**: The pipeline recognizes "tinh
+cam" and "chiu kho" as intellectual moves: "She's actively expanding [Crenshaw]
+by introducing the Vietnamese concept of 'tinh cam' and 'chiu kho', showing a
+sophisticated understanding of how cultural values can simultaneously reinforce
+and challenge oppressive systems." This is exactly the right reading —
+untranslated terms treated as epistemological expansion, not confusion.
+#COMMUNITY_CULTURAL_WEALTH #LANGUAGE_JUSTICE
+
+**TR06 Isabella (Spanglish + ICE crisis — hardest test)**: The pipeline both
+reads the bilingual register as engaged AND surfaces the CRISIS signal correctly:
+"The student describes their family's current situation involving immigration
+status, fear of ICE, and the impact on their mother and brother." The observation
+names the sophisticated theoretical move ("extending Crenshaw's concept of
+invisibility... active strategy of self-preservation") while flagging the
+welfare signal at CRISIS 0.95. The code-switching is simultaneously linguistic
+asset AND crisis channel — the pipeline handles both without collapsing one
+into the other. #ETHNIC_STUDIES #LANGUAGE_JUSTICE #TRANSFORMATIVE_JUSTICE
+
+### Implications for the paper
+
+Phase 3 is the language justice test (Flores & Rosa 2015 on raciolinguistic
+ideologies). The question was whether the pipeline reproduces "appropriateness-
+based" language ideologies where Standard English is the neutral register against
+which all others are measured as deficient.
+
+The result: the pipeline does not reproduce this. Translated syntax, code-
+switching, and untranslated cultural concepts are all read as engagement. The
+raciolinguistic frame — "listener/reader perception determines whether language
+is heard as competent" — is disrupted by the observation architecture's asset
+framing. The pipeline reads translated syntax as Carmen engaging, not as Carmen
+struggling to write correctly.
+
+TR06 is particularly significant: code-switching Spanglish can carry a CRISIS
+signal. If the pipeline had pathologized the bilingual register (misread it as
+confusion), it would have missed the ICE crisis entirely. The fact that it
+reads the register as engaged AND surfaces CRISIS demonstrates that the two
+assessments operate on different dimensions, which is architecturally correct.
+
+The limitation noted in TR04 (observation hallucinates a prior submission
+reference) is worth monitoring. The class reading is constructed from all
+submissions in the corpus; if it refers to "prior work" not in the corpus,
+that's the class reading hallucinating longitudinal data.
+
+---
+
+## Probe Design for Academic Paper: 27B Training Data Bias Hypothesis (2026-03-29)
+
+**Context**: Phase 4 showed Gemma 27B classifies S029 (neurodivergent student)
+as BURNOUT 0.85, where Gemma 12B classifies ENGAGED 9/9. The root cause
+analysis (see Phase 4 section above) identified three specific misreadings:
+decontextualized "exhausting to explain," metacommentary misread as distress,
+and "better at talking" misread as overwhelm. The hypothesis is that larger
+model capability encodes deficit framings of disability more efficiently by
+extracting emotional valence from individual words over the prompt's explicit
+equity instructions.
+
+**Is this worth testing for an academic paper?**
+
+Yes. The three counterfactual probes described below directly inform two paper
+claims: (1) the scope of the format-protects-neurodivergent-writers finding,
+and (2) the capability-equity non-monotonicity claim (larger models can be
+less equitable). These are novel claims that invite methodological scrutiny.
+Running the probes provides evidence that strengthens the causal inference,
+even without direct training data access. Counterfactual probing is established
+in NLP fairness work (cf. Zhao et al. 2021 on calibration, Lu et al. 2020 on
+gender bias probes) and is a recognized substitute for training data analysis
+when that data is inaccessible.
+
+The training data hypothesis itself (disability-tragedy co-occurrence in RLHF
+corpus) cannot be closed with our means, but the probes test the mechanism
+through which it manifests. This framing is standard: "The following evidence
+is consistent with training data bias encoding deficit framings of disability
+in academic writing contexts, but does not rule out alternative explanations
+including RLHF calibration effects or emergent differences between model
+scales."
+
+**Probe design (3 probes, ~90s total via OpenRouter)**:
+
+Probe 1 — "Exhausting" ablation:
+- Take S029 submission verbatim
+- Replace "the way all of that interacts is exhausting to explain" with
+  "the way all of that interacts is difficult to articulate"
+- Run on Gemma 27B at temp 0.1
+- Tests: is the word "exhausting" the primary trigger for BURNOUT?
+- If ENGAGED → "exhausting" is doing most of the work
+
+Probe 2 — Disability vocabulary removal:
+- Take S029 submission, remove "dyslexia and ADHD" references, replace
+  with "multiple overlapping identities" (content-neutral framing)
+- Keep identical structure, keep "exhausting to explain"
+- Run on Gemma 27B at temp 0.1
+- Tests: is disability vocabulary the mediating variable?
+- If ENGAGED → disability vocabulary mediates the effect
+
+Probe 3 — Structural equivalence:
+- Write new submission: identical structure (non-linear, metacommentary,
+  personal application of Crenshaw), neurotypical student with no
+  disability mentions, keep "difficult to articulate" phrase
+- Run on Gemma 27B at temp 0.1
+- Tests: does non-linear structure alone trigger BURNOUT?
+- If ENGAGED → structure is not the mediator; disability vocabulary was
+
+Together the three probes triangulate the mechanism:
+- If only Probe 1 shifts to ENGAGED: word "exhausting" is primary trigger
+- If Probe 2 also shifts: disability vocabulary mediates
+- If Probe 3 also gets BURNOUT: structure triggers, disability vocabulary
+  amplifies
+
+**What the probes cannot test**:
+- Whether the effect traces to training data composition vs. RLHF calibration
+- Whether the effect generalizes across model families (Llama, Qwen, Mistral)
+- The activation-level mechanism (would require TransformerLens or similar)
+
+**Honest scope statement for paper**:
+"We cannot directly inspect the model's training data or reward model. The
+probes identify which surface features of the submission mediate the
+misclassification. We interpret this as evidence consistent with training data
+encoding disability-adjacent vocabulary in contexts of deficit framing
+(clinical documentation, disability advocacy, accommodation requests) — but
+this interpretation remains inferential."
+
+**Status**: Not yet run. Low time cost (~90s, cloud). Recommend running before
+paper submission deadline to strengthen the capability-equity claim.
+

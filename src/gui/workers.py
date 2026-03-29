@@ -1922,6 +1922,9 @@ class InsightsWorker(CancellableWorker):
         teacher_interests: Optional[list] = None,
         settings: Optional[dict] = None,
         course_profile_id: str = "default",
+        next_week_topic: str = "",
+        teacher_lens: str = "",
+        ai_policy: str = "not_expected",
         parent=None,
     ):
         super().__init__(api, parent)
@@ -1939,6 +1942,9 @@ class InsightsWorker(CancellableWorker):
         self._teacher_interests = teacher_interests
         self._settings = settings or {}
         self._course_profile_id = course_profile_id
+        self._next_week_topic = next_week_topic
+        self._teacher_lens = teacher_lens
+        self._ai_policy = ai_policy
 
     def run(self) -> None:
         try:
@@ -1973,6 +1979,9 @@ class InsightsWorker(CancellableWorker):
                 progress_callback=_progress,
                 result_callback=_result,
                 course_profile_id=self._course_profile_id,
+                next_week_topic=self._next_week_topic,
+                teacher_lens=self._teacher_lens,
+                ai_policy=self._ai_policy,
             )
 
             if run_id:
@@ -2182,6 +2191,9 @@ class BatchInsightsWorker(CancellableWorker):
         teacher_interests: Optional[list] = None,
         settings: Optional[dict] = None,
         course_profile_id: str = "default",
+        next_week_topic: str = "",
+        teacher_lens: str = "",
+        ai_policy: str = "not_expected",
         parent=None,
     ):
         super().__init__(api, parent)
@@ -2195,6 +2207,9 @@ class BatchInsightsWorker(CancellableWorker):
         self._teacher_interests = teacher_interests
         self._settings = settings or {}
         self._course_profile_id = course_profile_id
+        self._next_week_topic = next_week_topic
+        self._teacher_lens = teacher_lens
+        self._ai_policy = ai_policy
 
     def run(self) -> None:
         completed_ids = []
@@ -2262,6 +2277,9 @@ class BatchInsightsWorker(CancellableWorker):
                     progress_callback=_progress,
                     result_callback=_result,
                     course_profile_id=self._course_profile_id,
+                    next_week_topic=self._next_week_topic,
+                    teacher_lens=self._teacher_lens,
+                    ai_policy=self._ai_policy,
                 )
 
                 if run_id:

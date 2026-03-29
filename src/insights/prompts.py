@@ -1954,7 +1954,38 @@ particularly well-positioned or might need extra scaffolding?"""
 # ---------------------------------------------------------------------------
 # Wellbeing Classifier (4-axis) — replaces binary concern detection
 # Validated: Test N, n=4, 100% stable across all runs. 8/8, 0 FP.
+#
+# Architecture (2026-03-29):
+#   Pre-scan pass finds personal-circumstance sentences in all chunks first.
+#   Classifier receives found sentences as foregrounded context so buried
+#   signals in procedural/STEM writing are not swamped by on-task content.
 # ---------------------------------------------------------------------------
+
+WELLBEING_PRESCAN_SYSTEM = (
+    "You are scanning a student's submission for a single purpose: find any "
+    "sentence where the student describes their OWN current personal circumstances "
+    "outside the academic task — specifically food insecurity, housing instability, "
+    "sleep deprivation from work or caregiving, family crisis, immigration "
+    "enforcement threat, domestic violence, recent loss, or health emergency.\n\n"
+    "You are NOT looking for: students discussing these topics as course material, "
+    "historical examples, community analysis, or academic arguments about social "
+    "issues. You ARE looking for: the student's own present situation leaking "
+    "through the assignment.\n\n"
+    "The signal is often brief and minimized — 'it was fine though,' 'I managed,' "
+    "'I don't know if this is relevant.' A student who discloses something and then "
+    "downplays it has still disclosed it.\n\n"
+    "If you find such a sentence, quote it exactly. If not, respond with exactly: NO"
+)
+
+WELLBEING_PRESCAN_PROMPT = """\
+Scan this text. Find any sentence where the student describes their own current \
+personal circumstances outside the academic work (food, housing, sleep, family \
+crisis, safety threat). Quote it exactly if found, or respond NO.
+
+TEXT:
+---
+{text}
+---"""
 
 WELLBEING_CLASSIFIER_SYSTEM = (
     "You are assessing a student's submission for their teacher.\n\n"
@@ -1989,12 +2020,24 @@ WELLBEING_CLASSIFIER_SYSTEM = (
     "classify as CRISIS. A student can be intellectually engaged AND in crisis. "
     "The presence of crisis-level content in the student's OWN life is the "
     "determining factor, not whether they also engaged with the reading.\n\n"
+    "A SINGLE SENTENCE is sufficient for CRISIS or BURNOUT classification. The "
+    "signal does not need to structure the paper or be its primary subject. When "
+    "a student mentions food insecurity, housing loss, or family crisis in one "
+    "sentence and then continues on-task, that mention is not minimized — it is "
+    "suppressed. Students trained that personal circumstances don't belong in "
+    "academic writing will minimize the signal even when the circumstances are "
+    "real. 'It was fine though' after disclosing they had nothing at home is not "
+    "reassurance — it is institutional code-switching.\n\n"
+    "In procedural, technical, or short-response writing, students rarely mention "
+    "personal circumstances at all — the genre does not invite disclosure. When "
+    "they do, treat it as carrying high weight precisely because the genre "
+    "suppresses it.\n\n"
     "Respond with JSON only: {\"axis\": \"CRISIS\"|\"BURNOUT\"|\"ENGAGED\"|\"NONE\", "
     "\"signal\": \"brief description\", \"confidence\": 0.0-1.0}"
 )
 
 WELLBEING_CLASSIFIER_PROMPT = """\
-STUDENT: {student_name}
+{signal_prefix}STUDENT: {student_name}
 SUBMISSION:
 ---
 {submission_text}

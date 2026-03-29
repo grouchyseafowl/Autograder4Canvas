@@ -201,6 +201,9 @@ class InsightsEngine:
         progress_callback: Optional[Callable] = None,
         result_callback: Optional[Callable] = None,
         course_profile_id: str = "default",
+        next_week_topic: str = "",
+        teacher_lens: str = "",
+        ai_policy: str = "not_expected",
     ) -> Optional[str]:
         """Run the full analysis pipeline for one assignment.
 
@@ -281,8 +284,10 @@ class InsightsEngine:
             progress_callback=progress_callback,
             result_callback=result_callback,
             course_profile_id=course_profile_id,
-            next_week_topic=self._settings.get("insights_next_week_topic", ""),
+            next_week_topic=next_week_topic or self._settings.get("insights_next_week_topic", ""),
             skip_feedback=not self._settings.get("insights_draft_feedback", False),
+            teacher_lens=teacher_lens,
+            ai_policy=ai_policy,
         )
 
     def run_from_submissions(
@@ -305,6 +310,8 @@ class InsightsEngine:
         skip_feedback: bool = False,
         timing_callback: Optional[Callable] = None,
         backend_override=None,
+        teacher_lens: str = "",
+        ai_policy: str = "not_expected",
     ) -> Optional[str]:
         """Run the analysis pipeline on pre-loaded submissions.
 
@@ -441,8 +448,9 @@ class InsightsEngine:
 
             # Pre-scan AIC to identify likely AI-generated submissions BEFORE
             # the class reading, so AI voice doesn't center over authentic voices.
+            # Gate on ai_policy: "allowed" skips AIC entirely (teacher says AI is fine)
             _ai_flagged_ids: set = set()
-            if _HAS_AIC and not _skip_class_reading:
+            if _HAS_AIC and not _skip_class_reading and ai_policy != "allowed":
                 try:
                     _prescan_aic = _DishonestyAnalyzer(
                         profile_id="standard",
@@ -641,6 +649,10 @@ class InsightsEngine:
                         notable_quotes=[],
                         word_count=wc,
                     )
+                    # Persist Canvas metadata for trajectory comparator
+                    record.submitted_at = meta.get(sid, {}).get("submitted_at")
+                    if quick_sub:
+                        record.unknown_word_rate = quick_sub.unknown_word_rate
                     coding_records.append(record)
                     self._store.save_coding(
                         run_id, sid, name, record.model_dump_json(),
@@ -669,6 +681,10 @@ class InsightsEngine:
                             "gibberish_detail": quick_sub.gibberish_detail,
                         },
                     )
+                    # Persist Canvas metadata for trajectory comparator
+                    record.submitted_at = meta.get(sid, {}).get("submitted_at")
+                    if quick_sub:
+                        record.unknown_word_rate = quick_sub.unknown_word_rate
                     coding_records.append(record)
                     self._store.save_coding(
                         run_id, sid, name, record.model_dump_json(),
@@ -778,6 +794,11 @@ class InsightsEngine:
                         _iflags["gibberish_detail"] = quick_sub.gibberish_detail
                     if _iflags:
                         record.integrity_flags = _iflags
+
+                    # Persist Canvas metadata for trajectory comparator
+                    record.submitted_at = meta.get(sid, {}).get("submitted_at")
+                    if quick_sub:
+                        record.unknown_word_rate = quick_sub.unknown_word_rate
 
                 coding_records.append(record)
 
@@ -948,7 +969,63 @@ class InsightsEngine:
             self._store.complete_stage(run_id, "wellbeing")
             self._emit_timing(timing_callback, "wellbeing", _stage_t0)
 
-            # Release MLX model between wellbeing → observations
+            if self._cancelled:
+                return None
+
+            # ----------------------------------------------------------
+            # Stage 5a: Targeted CHECK-IN (Pass 2 of two-pass wellbeing)
+            # Runs ONLY on ENGAGED students. Surfaces subtle self-disclosure
+            # signals (exhaustion, time pressure, personal difficulty) for
+            # teacher awareness. Uses temp 0.3 (generative reasoning).
+            # Validated: Test P v3 (2/7 corpus, 0/2 control FPs).
+            # ----------------------------------------------------------
+            _stage_t0 = time.time()
+            from dataclasses import replace as _dc_replace
+            from insights.submission_coder import classify_checkin
+
+            # CHECK-IN uses higher temperature for generative reasoning
+            checkin_backend = _dc_replace(backend, temperature=0.3)
+
+            engaged_records = [
+                r for r in coding_records if r.wellbeing_axis == "ENGAGED"
+            ]
+            progress(
+                f"Running CHECK-IN on {len(engaged_records)} ENGAGED "
+                f"students (skipping {total - len(engaged_records)} "
+                f"CRISIS/BURNOUT/NONE)..."
+            )
+
+            for i, record in enumerate(engaged_records):
+                if self._cancelled:
+                    return None
+
+                sid = record.student_id
+                body = texts.get(sid, "")
+
+                progress(
+                    f"CHECK-IN {i + 1}/{len(engaged_records)}: "
+                    f"{record.student_name}..."
+                )
+
+                ci = classify_checkin(
+                    checkin_backend,
+                    student_name=record.student_name,
+                    submission_text=body,
+                )
+                record.checkin_flag = ci["check_in"]
+                record.checkin_reasoning = ci["reasoning"]
+
+                self._store.save_coding(
+                    run_id, sid, record.student_name, record.model_dump_json()
+                )
+
+                if throttle > 0 and i < len(engaged_records) - 1:
+                    time.sleep(throttle)
+
+            self._store.complete_stage(run_id, "checkin")
+            self._emit_timing(timing_callback, "checkin", _stage_t0)
+
+            # Release MLX model between checkin → observations
             if backend and backend.name == "mlx":
                 self._unload_mlx()
 
@@ -964,10 +1041,11 @@ class InsightsEngine:
             # ----------------------------------------------------------
             _stage_t0 = time.time()
             from insights.submission_coder import observe_student
+            from insights.trajectory_context import build_trajectory_context
 
             progress("Generating per-student observations...")
             _teacher_lens = ""
-            _tl_raw = self._settings.get("insights_teacher_lens", "")
+            _tl_raw = teacher_lens or self._settings.get("insights_teacher_lens", "")
             if _tl_raw:
                 _teacher_lens = (
                     f"TEACHER'S OBSERVATION PRIORITIES:\n{_tl_raw}\n"
@@ -983,6 +1061,32 @@ class InsightsEngine:
 
                 progress(f"Observing {i + 1}/{total}: {record.student_name}...")
 
+                # Build longitudinal context from prior runs
+                _traj_ctx = ""
+                try:
+                    _cur_es = record.engagement_signals or {}
+                    _traj_ctx = build_trajectory_context(
+                        self._store,
+                        student_id=sid,
+                        course_id=str(course_id),
+                        current_run_id=run_id,
+                        current_word_count=record.word_count,
+                        current_submitted_at=record.submitted_at or "",
+                        current_register=record.emotional_register or "",
+                        current_engagement_depth=(
+                            _cur_es.get("engagement_depth")
+                            if isinstance(_cur_es, dict) else None
+                        ),
+                        current_unknown_word_rate=record.unknown_word_rate,
+                        current_linguistic_assets=record.linguistic_assets,
+                        current_theme_tags=record.theme_tags,
+                        current_personal_connections=record.personal_connections,
+                        current_readings_referenced=record.readings_referenced,
+                    )
+                except Exception as _tc_err:
+                    log.debug("Trajectory context skipped for %s: %s",
+                              record.student_name, _tc_err)
+
                 obs_text = observe_student(
                     backend,
                     student_name=record.student_name,
@@ -991,6 +1095,7 @@ class InsightsEngine:
                     assignment=assignment_prompt,
                     is_ai_flagged=(sid in _ai_flagged_ids),
                     teacher_lens=_teacher_lens,
+                    trajectory_context=_traj_ctx,
                 )
                 observations_map[sid] = obs_text
 
@@ -1148,9 +1253,24 @@ class InsightsEngine:
                         next_week_topic=_next_week
                     )
 
+                # Class-wide trajectory for synthesis context
+                _class_traj = ""
+                try:
+                    from insights.class_trajectory_context import (
+                        build_class_trajectory_context,
+                    )
+                    _class_traj = build_class_trajectory_context(
+                        self._store,
+                        course_id=str(course_id),
+                        current_run_id=run_id,
+                    )
+                except Exception as _ct_err:
+                    log.debug("Class trajectory context skipped: %s", _ct_err)
+
                 _synth_prompt = OBSERVATION_SYNTHESIS_PROMPT.format(
                     assignment=assignment_prompt,
                     class_context=class_reading,
+                    class_trajectory=_class_traj,
                     observations=_obs_formatted,
                     teacher_lens=_combined_lens,
                     forward_looking=_fwd,
@@ -1620,6 +1740,11 @@ class InsightsEngine:
                             linguistic_context=_resume_ling_note,
                         )
 
+                    # Persist Canvas metadata for trajectory comparator
+                    record.submitted_at = sub_meta.get("submitted_at")
+                    if quick_sub:
+                        record.unknown_word_rate = quick_sub.unknown_word_rate
+
                     coding_records.append(record)
                     coded_sids.add(sid)
                     self._store.save_coding(
@@ -1695,6 +1820,70 @@ class InsightsEngine:
                     return None
 
             # ----------------------------------------------------------
+            # If CHECK-IN not complete, run it on ENGAGED students
+            # ----------------------------------------------------------
+            if "checkin" not in completed_set:
+                if not texts:
+                    for row in existing_codings:
+                        sid = row.get("student_id", "")
+                        sub_text = row.get("submission_text", "")
+                        if sub_text:
+                            texts[sid] = sub_text
+
+                if texts and coding_records:
+                    from dataclasses import replace as _dc_replace
+                    from insights.submission_coder import classify_checkin
+
+                    checkin_backend = _dc_replace(backend, temperature=0.3)
+
+                    engaged_records = [
+                        r for r in coding_records
+                        if r.wellbeing_axis == "ENGAGED"
+                    ]
+                    progress(
+                        f"Running CHECK-IN on {len(engaged_records)} "
+                        f"ENGAGED students..."
+                    )
+
+                    for i, record in enumerate(engaged_records):
+                        if self._cancelled:
+                            self._stop_sleep_prevention()
+                            return None
+
+                        sid = record.student_id
+                        body = texts.get(sid, "")
+
+                        progress(
+                            f"CHECK-IN {i + 1}/{len(engaged_records)}: "
+                            f"{record.student_name}..."
+                        )
+
+                        ci = classify_checkin(
+                            checkin_backend,
+                            student_name=record.student_name,
+                            submission_text=body,
+                        )
+                        record.checkin_flag = ci["check_in"]
+                        record.checkin_reasoning = ci["reasoning"]
+
+                        self._store.save_coding(
+                            run_id, sid, record.student_name,
+                            record.model_dump_json(),
+                        )
+
+                        if throttle > 0 and i < len(engaged_records) - 1:
+                            time.sleep(throttle)
+
+                    self._store.complete_stage(run_id, "checkin")
+                    progress("CHECK-IN complete.")
+                else:
+                    self._store.complete_stage(run_id, "checkin")
+
+                if self._cancelled:
+                    self._stop_sleep_prevention()
+                    return None
+
+            # ----------------------------------------------------------
             # If observations not complete, run them
             # ----------------------------------------------------------
             if "observations" not in completed_set:
@@ -1707,6 +1896,9 @@ class InsightsEngine:
 
                 if texts and coding_records:
                     from insights.submission_coder import observe_student
+                    from insights.trajectory_context import (
+                        build_trajectory_context,
+                    )
 
                     _resume_class_reading = self._store.get_class_reading(run_id)
                     _resume_teacher_lens = ""
@@ -1715,6 +1907,8 @@ class InsightsEngine:
                         _resume_teacher_lens = (
                             f"TEACHER'S OBSERVATION PRIORITIES:\n{_tl_raw}\n"
                         )
+
+                    _resume_course_id = str(run.get("course_id", "0"))
 
                     progress("Generating per-student observations...")
                     for i, record in enumerate(coding_records):
@@ -1733,6 +1927,34 @@ class InsightsEngine:
                             f"{record.student_name}..."
                         )
 
+                        # Build longitudinal context from prior runs
+                        _traj_ctx = ""
+                        try:
+                            _cur_es = record.engagement_signals or {}
+                            _traj_ctx = build_trajectory_context(
+                                self._store,
+                                student_id=sid,
+                                course_id=_resume_course_id,
+                                current_run_id=run_id,
+                                current_word_count=record.word_count,
+                                current_submitted_at=record.submitted_at or "",
+                                current_register=record.emotional_register or "",
+                                current_engagement_depth=(
+                                    _cur_es.get("engagement_depth")
+                                    if isinstance(_cur_es, dict) else None
+                                ),
+                                current_unknown_word_rate=record.unknown_word_rate,
+                                current_linguistic_assets=record.linguistic_assets,
+                                current_theme_tags=record.theme_tags,
+                                current_personal_connections=record.personal_connections,
+                                current_readings_referenced=record.readings_referenced,
+                            )
+                        except Exception as _tc_err:
+                            log.debug(
+                                "Trajectory context skipped for %s: %s",
+                                record.student_name, _tc_err,
+                            )
+
                         obs_text = observe_student(
                             backend,
                             student_name=record.student_name,
@@ -1740,6 +1962,7 @@ class InsightsEngine:
                             class_context=_resume_class_reading,
                             assignment=assignment_prompt,
                             teacher_lens=_resume_teacher_lens,
+                            trajectory_context=_traj_ctx,
                         )
                         record.observation = obs_text
                         self._store.save_coding(

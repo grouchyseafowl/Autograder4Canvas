@@ -1,0 +1,1527 @@
+{
+  "run": {
+    "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+    "course_id": "90005",
+    "course_name": "Biology, Period 6",
+    "assignment_id": "115002",
+    "assignment_name": "Lab Reflection: Osmosis and Cell Transport",
+    "started_at": "2026-03-29T05:07:36.330343+00:00",
+    "completed_at": "2026-03-29T06:23:54.609904+00:00",
+    "model_tier": "lightweight",
+    "model_name": "mlx-community/gemma-3-12b-it-4bit",
+    "total_submissions": 11,
+    "stages_completed": [
+      "data_fetch",
+      "preprocessing",
+      "quick_analysis",
+      "coding",
+      "wellbeing",
+      "checkin",
+      "observations",
+      "themes",
+      "outliers",
+      "synthesis",
+      "feedback"
+    ],
+    "pipeline_confidence": {
+      "overall": 0.94,
+      "data_quality": 0.82,
+      "coding_reliability": 1.0,
+      "theme_coherence": 1.0,
+      "concerns": []
+    },
+    "teacher_context": "Write a reflection on this week's lab. What did you observe? What surprised you? How does what you saw connect to what we've been reading about cell transport? Complete/incomplete, 100 word minimum.",
+    "analysis_lens_config": {},
+    "quick_analysis": "{\"assignment_id\":\"115002\",\"assignment_name\":\"Lab Reflection: Osmosis and Cell Transport\",\"course_id\":\"90005\",\"course_name\":\"Biology, Period 6\",\"analyzed_at\":\"2026-03-29T05:07:36.331395\",\"stats\":{\"total_submissions\":11,\"total_enrollment\":0,\"word_count_mean\":216.54545454545453,\"word_count_median\":196.0,\"word_count_min\":149,\"word_count_max\":318,\"word_counts\":[241,195,196,240,191,184,149,220,187,261,318],\"format_breakdown\":{\"online_text_entry\":11},\"timing\":{\"on_time\":11}},\"top_terms\":[{\"term\":\"water\",\"count\":65},{\"term\":\"lab\",\"count\":20},{\"term\":\"osmosis\",\"count\":16},{\"term\":\"membrane\",\"count\":16},{\"term\":\"cell\",\"count\":16},{\"term\":\"inside\",\"count\":13},{\"term\":\"bag\",\"count\":12},{\"term\":\"salt\",\"count\":11},{\"term\":\"sugar\",\"count\":11},{\"term\":\"stuff\",\"count\":10},{\"term\":\"concentration\",\"count\":10},{\"term\":\"starch\",\"count\":9},{\"term\":\"iodine\",\"count\":9},{\"term\":\"solute\",\"count\":9},{\"term\":\"plain\",\"count\":8},{\"term\":\"cells\",\"count\":8},{\"term\":\"egg\",\"count\":8},{\"term\":\"transport\",\"count\":7},{\"term\":\"dissolved\",\"count\":7},{\"term\":\"syrup\",\"count\":7},{\"term\":\"bigger\",\"count\":6},{\"term\":\"dialysis\",\"count\":6},{\"term\":\"corn\",\"count\":6},{\"term\":\"sap\",\"count\":6},{\"term\":\"potato\",\"count\":5},{\"term\":\"bags\",\"count\":5},{\"term\":\"didn\",\"count\":5},{\"term\":\"ones\",\"count\":5},{\"term\":\"outside\",\"count\":5},{\"term\":\"don\",\"count\":5}],\"tfidf_terms\":[{\"term\":\"like\",\"score\":0.1218},{\"term\":\"salt\",\"score\":0.102},{\"term\":\"sugar\",\"score\":0.0994},{\"term\":\"bag\",\"score\":0.0982},{\"term\":\"got\",\"score\":0.0954},{\"term\":\"iodine\",\"score\":0.0801},{\"term\":\"starch\",\"score\":0.0801},{\"term\":\"just\",\"score\":0.0798},{\"term\":\"stuff\",\"score\":0.0785},{\"term\":\"moves\",\"score\":0.0784},{\"term\":\"egg\",\"score\":0.0781},{\"term\":\"concentration\",\"score\":0.0758},{\"term\":\"inside\",\"score\":0.0678},{\"term\":\"solute\",\"score\":0.0677},{\"term\":\"cells\",\"score\":0.0649},{\"term\":\"think\",\"score\":0.0639},{\"term\":\"syrup\",\"score\":0.0625},{\"term\":\"plain\",\"score\":0.0607},{\"term\":\"corn\",\"score\":0.0597},{\"term\":\"potato\",\"score\":0.059}],\"named_entities\":{},\"keyword_hits\":{\"conceptual_connection\":{\"pattern_name\":\"conceptual_connection\",\"count\":5,\"student_ids\":[\"BIO-LR01\",\"BIO-LR03\",\"BIO-WB01\",\"BIO-WB02\",\"BIO-LR05\"],\"examples\":[\"\u2026and it got all shriveled, it reminded me of when my abuela makes cu\u2026\",\"\u2026but starch is too large. This connect to what textbook say about ho\u2026\",\"\u2026meable membrane.\\n\\nI think the connection to cell transport is that rea\u2026\",\"\u2026r ones shrunk a little.\\n\\nThis connects to the reading because the ce\u2026\",\"\u2026try to even things out.\\n\\nWhat connects to the reading is the part ab\u2026\"]},\"confusion_markers\":{\"pattern_name\":\"confusion_markers\",\"count\":2,\"student_ids\":[\"BIO-LR01\",\"BIO-WB04\"],\"examples\":[\"\u2026was the potato in salt water lost water and got smaller and sof\u2026\",\"\u2026lices. The ones in salt water lost water and shrank and the ones\u2026\"]},\"evidence_use\":{\"pattern_name\":\"evidence_use\",\"count\":11,\"student_ids\":[\"BIO-LR01\",\"BIO-LR02\",\"BIO-LR04\",\"BIO-WB01\",\"BIO-WB02\",\"BIO-WB03\",\"BIO-LR05\",\"BIO-WB04\",\"BIO-LR06\",\"BIO-LR07\"],\"examples\":[\"\u2026le bigger and felt more firm. The reading said this is because water mo\u2026\",\"\u2026g what gets to come in.\\n\\nFrom the reading the cell membrane does the sa\u2026\",\"\u2026ke it was about to pop.\\n\\nFrom the reading this makes sense because wate\u2026\",\"\u2026ved in. This makes sense with the reading because water moves from low\u2026\",\"\u2026k a little.\\n\\nThis connects to the reading because the cell membrane is\u2026\"]},\"current_events\":{\"pattern_name\":\"current_events\",\"count\":3,\"student_ids\":[\"BIO-LR02\",\"BIO-LR04\",\"BIO-LR06\"],\"examples\":[\"\u2026ning in every cell in my body right now and I can't even feel it. Tha\u2026\",\"\u2026oing all this transport stuff RIGHT NOW. there are millions of them o\u2026\",\"\u2026t using energy. Like my cells right now be moving water in and out an\u2026\"]},\"structural_confusion\":{\"pattern_name\":\"structural_confusion\",\"count\":1,\"student_ids\":[\"BIO-WB04\"],\"examples\":[\"\u2026n't sleep. But I read the lab instructions before everything happened so\u2026\"]},\"tone_policing\":{\"pattern_name\":\"tone_policing\",\"count\":1,\"student_ids\":[\"BIO-WB04\"],\"examples\":[\"\u2026l try to add more when things calm down at home.\u2026\"]},\"personal_reflection\":{\"pattern_name\":\"personal_reflection\",\"count\":2,\"student_ids\":[\"BIO-LR07\"],\"examples\":[\"\u2026maple sugaring. Every spring my family goes up north to my kokum's p\u2026\"]}},\"sentiments\":{\"BIO-LR01\":{\"compound\":0.3506,\"pos\":0.3728,\"neg\":0.0222,\"neu\":0.58,\"emotions\":{\"neutral\":0.2946,\"excitement\":0.2392,\"surprise\":0.1945,\"approval\":0.0781,\"realization\":0.0641,\"curiosity\":0.0201,\"admiration\":0.0166,\"joy\":0.0149,\"optimism\":0.0083,\"confusion\":0.0067,\"disappointment\":0.0043,\"annoyance\":0.0042,\"desire\":0.0034,\"amusement\":0.0034,\"love\":0.0033,\"disapproval\":0.0028,\"fear\":0.0025,\"relief\":0.0023,\"nervousness\":0.0021,\"pride\":0.002,\"embarrassment\":0.0018,\"sadness\":0.0014,\"disgust\":0.0013,\"caring\":0.0008,\"anger\":0.0007,\"grief\":0.0007,\"gratitude\":0.0005,\"remorse\":0.0004},\"reliability\":\"go_emotions\"},\"BIO-LR02\":{\"compound\":0.0825,\"pos\":0.1246,\"neg\":0.0421,\"neu\":0.9155,\"emotions\":{\"surprise\":0.3985,\"neutral\":0.3593,\"realization\":0.1226,\"approval\":0.0585,\"excitement\":0.0285,\"curiosity\":0.0217,\"admiration\":0.0171,\"annoyance\":0.0139,\"confusion\":0.0134,\"disappointment\":0.0093,\"optimism\":0.0076,\"disapproval\":0.0074,\"joy\":0.0035,\"amusement\":0.0034,\"disgust\":0.0034,\"embarrassment\":0.0025,\"desire\":0.0017,\"fear\":0.0017,\"love\":0.0014,\"anger\":0.0013,\"relief\":0.0012,\"pride\":0.001,\"nervousness\":0.0009,\"sadness\":0.0009,\"grief\":0.0006,\"caring\":0.0004,\"gratitude\":0.0003,\"remorse\":0.0002},\"reliability\":\"go_emotions\"},\"BIO-LR03\":{\"compound\":0.0392,\"pos\":0.0723,\"neg\":0.0331,\"neu\":0.9775,\"emotions\":{\"neutral\":0.6932,\"realization\":0.1469,\"surprise\":0.1095,\"approval\":0.0462,\"confusion\":0.0148,\"curiosity\":0.0131,\"disappointment\":0.0084,\"annoyance\":0.0082,\"excitement\":0.007,\"optimism\":0.0058,\"disapproval\":0.0051,\"admiration\":0.0044,\"embarrassment\":0.0026,\"disgust\":0.0024,\"fear\":0.0019,\"joy\":0.0018,\"love\":0.0016,\"amusement\":0.0016,\"sadness\":0.0015,\"desire\":0.0014,\"nervousness\":0.0011,\"relief\":0.001,\"anger\":0.0008,\"grief\":0.0006,\"pride\":0.0006,\"remorse\":0.0005,\"caring\":0.0005,\"gratitude\":0.0004},\"reliability\":\"go_emotions\"},\"BIO-LR04\":{\"compound\":0.0408,\"pos\":0.0808,\"neg\":0.04,\"neu\":1.1712,\"emotions\":{\"curiosity\":0.4506,\"neutral\":0.292,\"confusion\":0.2106,\"surprise\":0.1544,\"realization\":0.0636,\"approval\":0.0342,\"excitement\":0.018,\"annoyance\":0.0139,\"admiration\":0.0108,\"optimism\":0.0054,\"disapproval\":0.0053,\"disappointment\":0.0046,\"amusement\":0.0041,\"disgust\":0.0037,\"fear\":0.0033,\"embarrassment\":0.0029,\"joy\":0.0027,\"nervousness\":0.0022,\"anger\":0.002,\"love\":0.0016,\"desire\":0.0016,\"sadness\":0.0011,\"caring\":0.0009,\"relief\":0.0007,\"grief\":0.0006,\"remorse\":0.0004,\"gratitude\":0.0004,\"pride\":0.0004},\"reliability\":\"go_emotions\"},\"BIO-WB01\":{\"compound\":0.3912,\"pos\":0.4654,\"neg\":0.0742,\"neu\":0.4979,\"emotions\":{\"neutral\":0.4493,\"desire\":0.3982,\"realization\":0.0403,\"disappointment\":0.0304,\"optimism\":0.0248,\"approval\":0.024,\"annoyance\":0.019,\"disapproval\":0.0088,\"sadness\":0.0056,\"confusion\":0.0047,\"joy\":0.0031,\"disgust\":0.003,\"excitement\":0.0029,\"admiration\":0.0027,\"love\":0.0025,\"amusement\":0.0022,\"curiosity\":0.0022,\"caring\":0.0017,\"anger\":0.0017,\"remorse\":0.0016,\"surprise\":0.0014,\"nervousness\":0.0014,\"relief\":0.0013,\"gratitude\":0.0012,\"embarrassment\":0.0011,\"fear\":0.0009,\"pride\":0.0008,\"grief\":0.0007},\"reliability\":\"go_emotions\"},\"BIO-WB02\":{\"compound\":0.0303,\"pos\":0.0717,\"neg\":0.0414,\"neu\":1.0231,\"emotions\":{\"neutral\":0.5101,\"surprise\":0.329,\"realization\":0.1605,\"approval\":0.0334,\"disappointment\":0.0167,\"confusion\":0.0118,\"curiosity\":0.0117,\"excitement\":0.0107,\"admiration\":0.0083,\"optimism\":0.0081,\"annoyance\":0.0078,\"disapproval\":0.0056,\"embarrassment\":0.0029,\"joy\":0.0028,\"sadness\":0.0019,\"relief\":0.0018,\"amusement\":0.0017,\"love\":0.0016,\"disgust\":0.0016,\"fear\":0.0015,\"desire\":0.0014,\"nervousness\":0.0011,\"grief\":0.0009,\"pride\":0.0009,\"anger\":0.0008,\"remorse\":0.0006,\"gratitude\":0.0005,\"caring\":0.0005},\"reliability\":\"go_emotions\"},\"BIO-WB03\":{\"compound\":-0.7247,\"pos\":0.1364,\"neg\":0.8611,\"neu\":0.2554,\"emotions\":{\"remorse\":0.659,\"neutral\":0.1247,\"realization\":0.1077,\"sadness\":0.1049,\"optimism\":0.0464,\"disappointment\":0.0456,\"approval\":0.0391,\"confusion\":0.0169,\"disapproval\":0.0166,\"embarrassment\":0.0165,\"desire\":0.016,\"caring\":0.0103,\"annoyance\":0.0057,\"gratitude\":0.0055,\"curiosity\":0.0045,\"nervousness\":0.0043,\"relief\":0.0041,\"amusement\":0.0037,\"grief\":0.0037,\"love\":0.0034,\"joy\":0.0033,\"admiration\":0.0021,\"disgust\":0.0018,\"fear\":0.0017,\"surprise\":0.0016,\"excitement\":0.0014,\"anger\":0.0013,\"pride\":0.0011},\"reliability\":\"go_emotions\"},\"BIO-LR05\":{\"compound\":0.0611,\"pos\":0.139,\"neg\":0.0779,\"neu\":0.8792,\"emotions\":{\"neutral\":0.3848,\"realization\":0.2765,\"surprise\":0.1928,\"approval\":0.0839,\"annoyance\":0.0252,\"disappointment\":0.0193,\"excitement\":0.0168,\"confusion\":0.015,\"admiration\":0.0142,\"curiosity\":0.0101,\"disapproval\":0.0098,\"embarrassment\":0.0088,\"optimism\":0.0078,\"disgust\":0.0057,\"joy\":0.0043,\"amusement\":0.0039,\"fear\":0.0029,\"relief\":0.0028,\"nervousness\":0.0026,\"pride\":0.0018,\"desire\":0.0016,\"sadness\":0.0014,\"anger\":0.001,\"love\":0.001,\"grief\":0.0008,\"caring\":0.0005,\"remorse\":0.0004,\"gratitude\":0.0004},\"reliability\":\"go_emotions\"},\"BIO-WB04\":{\"compound\":0.3429,\"pos\":0.3731,\"neg\":0.0302,\"neu\":0.5715,\"emotions\":{\"neutral\":0.4649,\"approval\":0.2465,\"admiration\":0.0645,\"realization\":0.0626,\"optimism\":0.0347,\"confusion\":0.0245,\"curiosity\":0.0164,\"disapproval\":0.0123,\"disappointment\":0.0086,\"excitement\":0.0085,\"desire\":0.0081,\"annoyance\":0.0043,\"surprise\":0.0031,\"joy\":0.003,\"love\":0.0023,\"caring\":0.0016,\"relief\":0.0015,\"sadness\":0.0011,\"pride\":0.001,\"nervousness\":0.0009,\"disgust\":0.0009,\"amusement\":0.0008,\"fear\":0.0008,\"gratitude\":0.0006,\"embarrassment\":0.0004,\"remorse\":0.0003,\"grief\":0.0003,\"anger\":0.0003},\"reliability\":\"go_emotions\"},\"BIO-LR06\":{\"compound\":0.1652,\"pos\":0.1975,\"neg\":0.0323,\"neu\":0.8202,\"emotions\":{\"neutral\":0.5571,\"approval\":0.142,\"confusion\":0.1207,\"realization\":0.1103,\"curiosity\":0.0233,\"admiration\":0.0226,\"optimism\":0.011,\"excitement\":0.0109,\"disapproval\":0.0107,\"surprise\":0.0088,\"annoyance\":0.0078,\"disappointment\":0.0058,\"joy\":0.0035,\"fear\":0.0017,\"disgust\":0.0017,\"nervousness\":0.0017,\"desire\":0.0017,\"amusement\":0.0013,\"relief\":0.0012,\"love\":0.0011,\"embarrassment\":0.001,\"pride\":0.0009,\"caring\":0.0008,\"sadness\":0.0007,\"anger\":0.0006,\"gratitude\":0.0005,\"grief\":0.0003,\"remorse\":0.0003},\"reliability\":\"go_emotions\"},\"BIO-LR07\":{\"compound\":0.0573,\"pos\":0.0928,\"neg\":0.0355,\"neu\":1.0801,\"emotions\":{\"neutral\":0.6944,\"realization\":0.212,\"confusion\":0.1527,\"approval\":0.0733,\"curiosity\":0.0154,\"disapproval\":0.0115,\"annoyance\":0.0097,\"optimism\":0.0078,\"disappointment\":0.0063,\"surprise\":0.0056,\"admiration\":0.0027,\"amusement\":0.0016,\"sadness\":0.0014,\"embarrassment\":0.0014,\"disgust\":0.0014,\"joy\":0.0013,\"excitement\":0.0012,\"love\":0.0011,\"desire\":0.001,\"nervousness\":0.001,\"fear\":0.001,\"relief\":0.0008,\"caring\":0.0008,\"gratitude\":0.0008,\"anger\":0.0008,\"remorse\":0.0006,\"grief\":0.0004,\"pride\":0.0004},\"reliability\":\"go_emotions\"}},\"sentiment_distribution\":{\"passionate\":4,\"analytical\":6,\"personal\":1},\"clusters\":[{\"cluster_id\":0,\"size\":2,\"student_ids\":[\"BIO-LR01\",\"BIO-WB04\"],\"student_names\":[\"Daniela Reyes\",\"Jaylen Brooks\"],\"top_terms\":[\"water\",\"salt\",\"potato\",\"osmosis\",\"lab\"],\"centroid_text\":\"Ok so the lab this week was about osmosis and I actually got excited because I already knew what was going to happen. When we put the potato in the sa\"},{\"cluster_id\":1,\"size\":2,\"student_ids\":[\"BIO-LR02\",\"BIO-LR03\"],\"student_names\":[\"Marcus Thompson\",\"Anh Nguyen\"],\"top_terms\":[\"starch\",\"iodine\",\"bag\",\"cell\",\"water\"],\"centroid_text\":\"Alright so the lab was actually kinda fire ngl. We were doing the osmosis thing with the dialysis bags and I didn't think it was gonna be that interes\"},{\"cluster_id\":2,\"size\":7,\"student_ids\":[\"BIO-LR04\",\"BIO-WB01\",\"BIO-WB02\",\"BIO-WB03\",\"BIO-LR05\",\"BIO-LR06\",\"BIO-LR07\"],\"student_names\":[\"Jordan Wells\",\"Chris Sandoval\",\"Keyana Davis\",\"Tyler Okonkwo\",\"Zara Mitchell\",\"Imani Jefferson\",\"Ruby Whitehawk\"],\"top_terms\":[\"water\",\"lab\",\"osmosis\",\"sugar\",\"membrane\"],\"centroid_text\":\"Sorry this is short, we had to leave the apartment Tuesday night and I'm typing this on my phone at my aunt's house. I don't have my lab notes so I'm\"}],\"embedding_outlier_ids\":[],\"pairwise_similarity\":{\"mean_similarity\":0.5447,\"max_similarity\":0.8214,\"pairs_above_085\":0,\"pairs_above_070\":3,\"total_pairs\":55,\"observation\":\"This assignment had moderate submission similarity (mean=0.54, max=0.82, 55 pairs total). 3 pairs above 0.70 (moderate similarity). Consider first: is the assignment designed to produce diverse responses? Similarity can reflect community, shared cultural knowledge, or collaborative learning \u2014 not only copying.\",\"high_similarity_pairs\":[]},\"assignment_description\":\"\",\"assignment_connection_observation\":\"\",\"assignment_fingerprint\":null,\"shared_references\":[],\"contradictions\":[],\"concern_signals\":[{\"student_id\":\"BIO-LR01\",\"student_name\":\"Daniela Reyes\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"and felt more firm. The reading said this is becaus\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"BIO-LR02\",\"student_name\":\"Marcus Thompson\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"s to come in.\\n\\nFrom the reading the cell membrane d\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"BIO-LR04\",\"student_name\":\"Jordan Wells\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"neutral\",\"matched_text\":\"about to pop.\\n\\nFrom the reading this makes sense be\",\"interpretation\":\"Measured critical analysis\"},{\"student_id\":\"BIO-WB01\",\"student_name\":\"Chris Sandoval\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"is makes sense with the reading because water moves\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"BIO-WB02\",\"student_name\":\"Keyana Davis\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"neutral\",\"matched_text\":\".\\n\\nThis connects to the reading because the cell me\",\"interpretation\":\"Measured critical analysis\"},{\"student_id\":\"BIO-WB03\",\"student_name\":\"Tyler Okonkwo\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"negative\",\"matched_text\":\"e stuff dissolved.\\n\\nThe reading said cell membranes\",\"interpretation\":\"Political urgency about injustice \u2014 NOT a concern\"},{\"student_id\":\"BIO-LR05\",\"student_name\":\"Zara Mitchell\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\".\\n\\nWhat connects to the reading is the part about h\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"BIO-WB04\",\"student_name\":\"Jaylen Brooks\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"o water moves out.\\n\\nThe reading talked about how th\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"BIO-WB04\",\"student_name\":\"Jaylen Brooks\",\"signal_type\":\"POSSIBLE CONCERN\",\"keyword_category\":\"essentializing\",\"vader_polarity\":\"positive\",\"matched_text\":\"dd more when things calm down at home.\",\"interpretation\":\"'Sounds nice' but essentializing language detected\"},{\"student_id\":\"BIO-LR06\",\"student_name\":\"Imani Jefferson\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"t I understand from the reading, water move to wher\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"},{\"student_id\":\"BIO-LR07\",\"student_name\":\"Ruby Whitehawk\",\"signal_type\":\"APPROPRIATE\",\"keyword_category\":\"critical\",\"vader_polarity\":\"positive\",\"matched_text\":\"cules on one side.\\n\\nThe reading talked about how th\",\"interpretation\":\"Sophisticated analysis \u2014 student engaging well\"}],\"per_submission\":{\"BIO-LR01\":{\"student_id\":\"BIO-LR01\",\"student_name\":\"Daniela Reyes\",\"word_count\":241,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.3506,\"emotions\":{\"neutral\":0.2946,\"excitement\":0.2392,\"surprise\":0.1945,\"approval\":0.0781,\"realization\":0.0641,\"curiosity\":0.0201,\"admiration\":0.0166,\"joy\":0.0149,\"optimism\":0.0083,\"confusion\":0.0067,\"disappointment\":0.0043,\"annoyance\":0.0042,\"desire\":0.0034,\"amusement\":0.0034,\"love\":0.0033,\"disapproval\":0.0028,\"fear\":0.0025,\"relief\":0.0023,\"nervousness\":0.0021,\"pride\":0.002,\"embarrassment\":0.0018,\"sadness\":0.0014,\"disgust\":0.0013,\"caring\":0.0008,\"anger\":0.0007,\"grief\":0.0007,\"gratitude\":0.0005,\"remorse\":0.0004},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"conceptual_connection\":1,\"confusion_markers\":1,\"evidence_use\":1},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[{\"name\":\"remote_past_bin\",\"category\":\"syntactic_variation\",\"evidence\":[\"been doing\"],\"asset_label\":\"AAVE linguistic features \u2014 authentic voice\",\"learn_note\":\"Remote past 'been' / BIN ('I been knew that'). An AAVE tense-aspect marker with no single-word equivalent in standard English \u2014 it marks that the action started long ago and the speaker considers it obvious or established. Comparable to the pluperfect in Romance languages but with an additional evidential meaning (speaker certainty). One of AAVE's most precise grammatical innovations (Green, 2002).\",\"protected\":true,\"sentiment_effect\":\"caveat\",\"aic_weight_adjustments\":{\"grammatical_perfection\":0.5}}],\"sentiment_tier\":\"low\",\"sentiment_triggers\":[\"remote_past_bin\"],\"sentiment_caveat\":\"Emotional register score may be unreliable (remote_past_bin). Treat as weak signal.\",\"asset_labels\":[\"AAVE linguistic features \u2014 authentic voice\"],\"llm_context_note\":\"This student's writing includes AAVE linguistic features. AAVE is a complete linguistic system \u2014 read engagement through their actual voice, not standard English expectations.\",\"aic_adjustments\":{\"grammatical_perfection\":0.5}}},\"BIO-LR02\":{\"student_id\":\"BIO-LR02\",\"student_name\":\"Marcus Thompson\",\"word_count\":195,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.0825,\"emotions\":{\"surprise\":0.3985,\"neutral\":0.3593,\"realization\":0.1226,\"approval\":0.0585,\"excitement\":0.0285,\"curiosity\":0.0217,\"admiration\":0.0171,\"annoyance\":0.0139,\"confusion\":0.0134,\"disappointment\":0.0093,\"optimism\":0.0076,\"disapproval\":0.0074,\"joy\":0.0035,\"amusement\":0.0034,\"disgust\":0.0034,\"embarrassment\":0.0025,\"desire\":0.0017,\"fear\":0.0017,\"love\":0.0014,\"anger\":0.0013,\"relief\":0.0012,\"pride\":0.001,\"nervousness\":0.0009,\"sadness\":0.0009,\"grief\":0.0006,\"caring\":0.0004,\"gratitude\":0.0003,\"remorse\":0.0002},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"current_events\":1,\"evidence_use\":1},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[{\"name\":\"aave_lexical\",\"category\":\"syntactic_variation\",\"evidence\":[\"lowkey\"],\"asset_label\":\"AAVE linguistic features \u2014 authentic voice\",\"learn_note\":\"AAVE vocabulary features detected. AAVE is a complete grammatical system (Rickford, 1999) \u2014 these markers ('finna,' 'ain't,' 'no cap') parallel modal verbs and intensifiers in standard English but carry different social indexing. Sentiment tools trained on standard English systematically misread AAVE affect, so this score has been adjusted.\",\"protected\":true,\"sentiment_effect\":\"caveat\",\"aic_weight_adjustments\":{\"grammatical_perfection\":0.5}}],\"sentiment_tier\":\"low\",\"sentiment_triggers\":[\"aave_lexical\"],\"sentiment_caveat\":\"Emotional register score may be unreliable (aave_lexical). Treat as weak signal.\",\"asset_labels\":[\"AAVE linguistic features \u2014 authentic voice\"],\"llm_context_note\":\"This student's writing includes AAVE linguistic features. AAVE is a complete linguistic system \u2014 read engagement through their actual voice, not standard English expectations.\",\"aic_adjustments\":{\"grammatical_perfection\":0.5}}},\"BIO-LR03\":{\"student_id\":\"BIO-LR03\",\"student_name\":\"Anh Nguyen\",\"word_count\":196,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.0392,\"emotions\":{\"neutral\":0.6932,\"realization\":0.1469,\"surprise\":0.1095,\"approval\":0.0462,\"confusion\":0.0148,\"curiosity\":0.0131,\"disappointment\":0.0084,\"annoyance\":0.0082,\"excitement\":0.007,\"optimism\":0.0058,\"disapproval\":0.0051,\"admiration\":0.0044,\"embarrassment\":0.0026,\"disgust\":0.0024,\"fear\":0.0019,\"joy\":0.0018,\"love\":0.0016,\"amusement\":0.0016,\"sadness\":0.0015,\"desire\":0.0014,\"nervousness\":0.0011,\"relief\":0.001,\"anger\":0.0008,\"grief\":0.0006,\"pride\":0.0006,\"remorse\":0.0005,\"caring\":0.0005,\"gratitude\":0.0004},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"conceptual_connection\":1},\"cluster_id\":1,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[{\"name\":\"communal_voice\",\"category\":\"register_affect\",\"evidence\":[\"we/our/us: 5, I/my/me: 3\"],\"asset_label\":\"Engagement through communal/collective voice\",\"learn_note\":\"Communal pronouns ('we/our/us') more frequent than individual pronouns ('I/my/me'). Communal voice is a primary mode of academic engagement in many intellectual traditions \u2014 Indigenous scholarship, African philosophy (ubuntu), Latin American testimonio, Pacific Islander collective storytelling. The expectation of individual 'I' statements as evidence of critical thinking is itself culturally specific to post-Enlightenment Western academic tradition.\",\"protected\":true,\"sentiment_effect\":\"none\",\"aic_weight_adjustments\":{}}],\"sentiment_tier\":\"high\",\"sentiment_triggers\":[],\"sentiment_caveat\":\"\",\"asset_labels\":[\"Engagement through communal/collective voice\"],\"llm_context_note\":\"This student's engagement may be understated in tone but substantive in content. Read ideas and substance, not affect markers.\",\"aic_adjustments\":{}}},\"BIO-LR04\":{\"student_id\":\"BIO-LR04\",\"student_name\":\"Jordan Wells\",\"word_count\":240,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.0408,\"emotions\":{\"curiosity\":0.4506,\"neutral\":0.292,\"confusion\":0.2106,\"surprise\":0.1544,\"realization\":0.0636,\"approval\":0.0342,\"excitement\":0.018,\"annoyance\":0.0139,\"admiration\":0.0108,\"optimism\":0.0054,\"disapproval\":0.0053,\"disappointment\":0.0046,\"amusement\":0.0041,\"disgust\":0.0037,\"fear\":0.0033,\"embarrassment\":0.0029,\"joy\":0.0027,\"nervousness\":0.0022,\"anger\":0.002,\"love\":0.0016,\"desire\":0.0016,\"sadness\":0.0011,\"caring\":0.0009,\"relief\":0.0007,\"grief\":0.0006,\"remorse\":0.0004,\"gratitude\":0.0004,\"pride\":0.0004},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"current_events\":1,\"evidence_use\":1},\"cluster_id\":2,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[],\"sentiment_tier\":\"high\",\"sentiment_triggers\":[],\"sentiment_caveat\":\"\",\"asset_labels\":[],\"llm_context_note\":\"\",\"aic_adjustments\":{}}},\"BIO-WB01\":{\"student_id\":\"BIO-WB01\",\"student_name\":\"Chris Sandoval\",\"word_count\":191,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.3912,\"emotions\":{\"neutral\":0.4493,\"desire\":0.3982,\"realization\":0.0403,\"disappointment\":0.0304,\"optimism\":0.0248,\"approval\":0.024,\"annoyance\":0.019,\"disapproval\":0.0088,\"sadness\":0.0056,\"confusion\":0.0047,\"joy\":0.0031,\"disgust\":0.003,\"excitement\":0.0029,\"admiration\":0.0027,\"love\":0.0025,\"amusement\":0.0022,\"curiosity\":0.0022,\"caring\":0.0017,\"anger\":0.0017,\"remorse\":0.0016,\"surprise\":0.0014,\"nervousness\":0.0014,\"relief\":0.0013,\"gratitude\":0.0012,\"embarrassment\":0.0011,\"fear\":0.0009,\"pride\":0.0008,\"grief\":0.0007},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"conceptual_connection\":1,\"evidence_use\":1},\"cluster_id\":2,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[],\"sentiment_tier\":\"high\",\"sentiment_triggers\":[],\"sentiment_caveat\":\"\",\"asset_labels\":[],\"llm_context_note\":\"\",\"aic_adjustments\":{}}},\"BIO-WB02\":{\"student_id\":\"BIO-WB02\",\"student_name\":\"Keyana Davis\",\"word_count\":184,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.0303,\"emotions\":{\"neutral\":0.5101,\"surprise\":0.329,\"realization\":0.1605,\"approval\":0.0334,\"disappointment\":0.0167,\"confusion\":0.0118,\"curiosity\":0.0117,\"excitement\":0.0107,\"admiration\":0.0083,\"optimism\":0.0081,\"annoyance\":0.0078,\"disapproval\":0.0056,\"embarrassment\":0.0029,\"joy\":0.0028,\"sadness\":0.0019,\"relief\":0.0018,\"amusement\":0.0017,\"love\":0.0016,\"disgust\":0.0016,\"fear\":0.0015,\"desire\":0.0014,\"nervousness\":0.0011,\"grief\":0.0009,\"pride\":0.0009,\"anger\":0.0008,\"remorse\":0.0006,\"gratitude\":0.0005,\"caring\":0.0005},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"conceptual_connection\":1,\"evidence_use\":2},\"cluster_id\":2,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[{\"name\":\"flat_affect_engaged\",\"category\":\"register_affect\",\"evidence\":[\"compound=0.030, 2 engagement categories\"],\"asset_label\":\"Deep engagement, understated expression\",\"learn_note\":\"Neutral emotional tone with substantive concept engagement. Flat affect in writing correlates with multiple causes: some writers engage deeply through understatement; some neurodivergent writers express engagement through precision rather than emotional language; some cultural communication norms favor restraint. Japanese academic writing, for instance, often demonstrates engagement through careful qualification rather than overt enthusiasm.\",\"protected\":false,\"sentiment_effect\":\"caveat\",\"aic_weight_adjustments\":{}}],\"sentiment_tier\":\"low\",\"sentiment_triggers\":[\"flat_affect_engaged\"],\"sentiment_caveat\":\"Emotional register score may be unreliable (flat_affect_engaged). Treat as weak signal.\",\"asset_labels\":[\"Deep engagement, understated expression\"],\"llm_context_note\":\"This student's engagement may be understated in tone but substantive in content. Read ideas and substance, not affect markers.\",\"aic_adjustments\":{}}},\"BIO-WB03\":{\"student_id\":\"BIO-WB03\",\"student_name\":\"Tyler Okonkwo\",\"word_count\":149,\"submission_type\":\"online_text_entry\",\"vader_compound\":-0.7247,\"emotions\":{\"remorse\":0.659,\"neutral\":0.1247,\"realization\":0.1077,\"sadness\":0.1049,\"optimism\":0.0464,\"disappointment\":0.0456,\"approval\":0.0391,\"confusion\":0.0169,\"disapproval\":0.0166,\"embarrassment\":0.0165,\"desire\":0.016,\"caring\":0.0103,\"annoyance\":0.0057,\"gratitude\":0.0055,\"curiosity\":0.0045,\"nervousness\":0.0043,\"relief\":0.0041,\"amusement\":0.0037,\"grief\":0.0037,\"love\":0.0034,\"joy\":0.0033,\"admiration\":0.0021,\"disgust\":0.0018,\"fear\":0.0017,\"surprise\":0.0016,\"excitement\":0.0014,\"anger\":0.0013,\"pride\":0.0011},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"evidence_use\":1},\"cluster_id\":2,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[],\"sentiment_tier\":\"high\",\"sentiment_triggers\":[],\"sentiment_caveat\":\"\",\"asset_labels\":[],\"llm_context_note\":\"\",\"aic_adjustments\":{}}},\"BIO-LR05\":{\"student_id\":\"BIO-LR05\",\"student_name\":\"Zara Mitchell\",\"word_count\":220,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.0611,\"emotions\":{\"neutral\":0.3848,\"realization\":0.2765,\"surprise\":0.1928,\"approval\":0.0839,\"annoyance\":0.0252,\"disappointment\":0.0193,\"excitement\":0.0168,\"confusion\":0.015,\"admiration\":0.0142,\"curiosity\":0.0101,\"disapproval\":0.0098,\"embarrassment\":0.0088,\"optimism\":0.0078,\"disgust\":0.0057,\"joy\":0.0043,\"amusement\":0.0039,\"fear\":0.0029,\"relief\":0.0028,\"nervousness\":0.0026,\"pride\":0.0018,\"desire\":0.0016,\"sadness\":0.0014,\"anger\":0.001,\"love\":0.001,\"grief\":0.0008,\"caring\":0.0005,\"remorse\":0.0004,\"gratitude\":0.0004},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"conceptual_connection\":1,\"evidence_use\":1},\"cluster_id\":2,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[{\"name\":\"flat_affect_engaged\",\"category\":\"register_affect\",\"evidence\":[\"compound=0.061, 2 engagement categories\"],\"asset_label\":\"Deep engagement, understated expression\",\"learn_note\":\"Neutral emotional tone with substantive concept engagement. Flat affect in writing correlates with multiple causes: some writers engage deeply through understatement; some neurodivergent writers express engagement through precision rather than emotional language; some cultural communication norms favor restraint. Japanese academic writing, for instance, often demonstrates engagement through careful qualification rather than overt enthusiasm.\",\"protected\":false,\"sentiment_effect\":\"caveat\",\"aic_weight_adjustments\":{}}],\"sentiment_tier\":\"low\",\"sentiment_triggers\":[\"flat_affect_engaged\"],\"sentiment_caveat\":\"Emotional register score may be unreliable (flat_affect_engaged). Treat as weak signal.\",\"asset_labels\":[\"Deep engagement, understated expression\"],\"llm_context_note\":\"This student's engagement may be understated in tone but substantive in content. Read ideas and substance, not affect markers.\",\"aic_adjustments\":{}}},\"BIO-WB04\":{\"student_id\":\"BIO-WB04\",\"student_name\":\"Jaylen Brooks\",\"word_count\":187,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.3429,\"emotions\":{\"neutral\":0.4649,\"approval\":0.2465,\"admiration\":0.0645,\"realization\":0.0626,\"optimism\":0.0347,\"confusion\":0.0245,\"curiosity\":0.0164,\"disapproval\":0.0123,\"disappointment\":0.0086,\"excitement\":0.0085,\"desire\":0.0081,\"annoyance\":0.0043,\"surprise\":0.0031,\"joy\":0.003,\"love\":0.0023,\"caring\":0.0016,\"relief\":0.0015,\"sadness\":0.0011,\"pride\":0.001,\"nervousness\":0.0009,\"disgust\":0.0009,\"amusement\":0.0008,\"fear\":0.0008,\"gratitude\":0.0006,\"embarrassment\":0.0004,\"remorse\":0.0003,\"grief\":0.0003,\"anger\":0.0003},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"confusion_markers\":1,\"structural_confusion\":1,\"tone_policing\":1,\"evidence_use\":1},\"cluster_id\":0,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[],\"sentiment_tier\":\"high\",\"sentiment_triggers\":[],\"sentiment_caveat\":\"\",\"asset_labels\":[],\"llm_context_note\":\"\",\"aic_adjustments\":{}}},\"BIO-LR06\":{\"student_id\":\"BIO-LR06\",\"student_name\":\"Imani Jefferson\",\"word_count\":261,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.1652,\"emotions\":{\"neutral\":0.5571,\"approval\":0.142,\"confusion\":0.1207,\"realization\":0.1103,\"curiosity\":0.0233,\"admiration\":0.0226,\"optimism\":0.011,\"excitement\":0.0109,\"disapproval\":0.0107,\"surprise\":0.0088,\"annoyance\":0.0078,\"disappointment\":0.0058,\"joy\":0.0035,\"fear\":0.0017,\"disgust\":0.0017,\"nervousness\":0.0017,\"desire\":0.0017,\"amusement\":0.0013,\"relief\":0.0012,\"love\":0.0011,\"embarrassment\":0.001,\"pride\":0.0009,\"caring\":0.0008,\"sadness\":0.0007,\"anger\":0.0006,\"gratitude\":0.0005,\"grief\":0.0003,\"remorse\":0.0003},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"current_events\":1,\"evidence_use\":1},\"cluster_id\":2,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[{\"name\":\"aave_lexical\",\"category\":\"syntactic_variation\",\"evidence\":[\"we was\"],\"asset_label\":\"AAVE linguistic features \u2014 authentic voice\",\"learn_note\":\"AAVE vocabulary features detected. AAVE is a complete grammatical system (Rickford, 1999) \u2014 these markers ('finna,' 'ain't,' 'no cap') parallel modal verbs and intensifiers in standard English but carry different social indexing. Sentiment tools trained on standard English systematically misread AAVE affect, so this score has been adjusted.\",\"protected\":true,\"sentiment_effect\":\"caveat\",\"aic_weight_adjustments\":{\"grammatical_perfection\":0.5}}],\"sentiment_tier\":\"low\",\"sentiment_triggers\":[\"aave_lexical\"],\"sentiment_caveat\":\"Emotional register score may be unreliable (aave_lexical). Treat as weak signal.\",\"asset_labels\":[\"AAVE linguistic features \u2014 authentic voice\"],\"llm_context_note\":\"This student's writing includes AAVE linguistic features. AAVE is a complete linguistic system \u2014 read engagement through their actual voice, not standard English expectations.\",\"aic_adjustments\":{\"grammatical_perfection\":0.5}}},\"BIO-LR07\":{\"student_id\":\"BIO-LR07\",\"student_name\":\"Ruby Whitehawk\",\"word_count\":318,\"submission_type\":\"online_text_entry\",\"vader_compound\":0.0573,\"emotions\":{\"neutral\":0.6944,\"realization\":0.212,\"confusion\":0.1527,\"approval\":0.0733,\"curiosity\":0.0154,\"disapproval\":0.0115,\"annoyance\":0.0097,\"optimism\":0.0078,\"disappointment\":0.0063,\"surprise\":0.0056,\"admiration\":0.0027,\"amusement\":0.0016,\"sadness\":0.0014,\"embarrassment\":0.0014,\"disgust\":0.0014,\"joy\":0.0013,\"excitement\":0.0012,\"love\":0.0011,\"desire\":0.001,\"nervousness\":0.001,\"fear\":0.001,\"relief\":0.0008,\"caring\":0.0008,\"gratitude\":0.0008,\"anger\":0.0008,\"remorse\":0.0006,\"grief\":0.0004,\"pride\":0.0004},\"sentiment_backend\":\"go_emotions\",\"keyword_hits\":{\"personal_reflection\":2,\"evidence_use\":1},\"cluster_id\":2,\"was_translated\":false,\"was_transcribed\":false,\"is_gibberish\":false,\"gibberish_reason\":\"\",\"gibberish_detail\":\"\",\"assignment_connection\":null,\"reference_match\":null,\"is_possibly_truncated\":false,\"truncation_note\":\"\",\"unknown_word_rate\":0.0,\"linguistic_repertoire\":{\"features\":[{\"name\":\"flat_affect_engaged\",\"category\":\"register_affect\",\"evidence\":[\"compound=0.057, 2 engagement categories\"],\"asset_label\":\"Deep engagement, understated expression\",\"learn_note\":\"Neutral emotional tone with substantive concept engagement. Flat affect in writing correlates with multiple causes: some writers engage deeply through understatement; some neurodivergent writers express engagement through precision rather than emotional language; some cultural communication norms favor restraint. Japanese academic writing, for instance, often demonstrates engagement through careful qualification rather than overt enthusiasm.\",\"protected\":false,\"sentiment_effect\":\"caveat\",\"aic_weight_adjustments\":{}}],\"sentiment_tier\":\"low\",\"sentiment_triggers\":[\"flat_affect_engaged\"],\"sentiment_caveat\":\"Emotional register score may be unreliable (flat_affect_engaged). Treat as weak signal.\",\"asset_labels\":[\"Deep engagement, understated expression\"],\"llm_context_note\":\"This student's engagement may be understated in tone but substantive in content. Read ideas and substance, not affect markers.\",\"aic_adjustments\":{}}}},\"citation_report\":{\"has_citations\":true,\"source_count\":0,\"students_with_citations\":1,\"students_without_citations\":10,\"generic_reading_ref_count\":1,\"specific_source_count\":0,\"most_cited\":[],\"verification_note\":\"URL/DOI existence is checked automatically. Unverified \u2260 fake \u2014 paywalled, non-English, and community sources will appear unverified.\",\"sources_summary\":[],\"_citations_live\":[{\"citation_type\":\"reading_reference\",\"raw_text\":\"book say\",\"normalized\":\"[course reading]\",\"student_id\":\"BIO-LR03\",\"student_name\":\"Anh Nguyen\",\"verified\":null,\"verification_note\":\"\"}]},\"gibberish_ids\":[],\"analysis_notes\":[\"Citations found: 0 unique sources across 1 students (URL/DOI verification running in background)\"]}"
+  },
+  "codings": [
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-LR01",
+      "student_name": "Daniela Reyes",
+      "coding_record": {
+        "student_id": "BIO-LR01",
+        "student_name": "Daniela Reyes",
+        "theme_tags": [
+          "Connecting science to lived experience",
+          "Challenging assumptions about knowledge",
+          "Recognizing traditional knowledge"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "la sal le saca el jugo",
+            "significance": "This phrase, meaning 'the salt pulls the juice out,' is a concise and accurate description of osmosis that predates any textbook definition, demonstrating a practical understanding of the concept."
+          },
+          {
+            "text": "I think sometimes we act like science only counts if you learn it in a classroom but people have been using these principles forever in cooking and farming.",
+            "significance": "This quote directly challenges the implicit assumption that science is solely a product of formal education, highlighting the validity of knowledge gained through experience."
+          }
+        ],
+        "emotional_register": "passionate",
+        "emotional_notes": "Daniela expresses excitement and a sense of validation in connecting her family's practices to scientific concepts. Her tone is assertive in challenging assumptions about knowledge.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "osmosis",
+          "membrane"
+        ],
+        "personal_connections": [
+          "abuela's curtido-making process",
+          "family's cooking traditions"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Daniela Reyes is connecting a core scientific concept \u2013 osmosis \u2013 to a deeply meaningful aspect of her family's life and cultural heritage. She's not just reciting a definition; she's building a bridge between the classroom and her abuela's kitchen, demonstrating a sophisticated understanding of how scientific principles operate in everyday practices. Her observation about her abuela's curtido-making process is incredibly insightful. The phrase \"la sal le saca el jugo\" \u2013 \"the salt pulls the juice out\" \u2013 is a powerful, concise explanation of osmosis that predates any textbook definition.\n\nWhat\u2019s striking is her critique of the implicit assumption that science is solely a product of formal education. She directly challenges the idea that knowledge only counts if it's learned in a classroom, pointing out that her abuela possesses a wealth of practical knowledge gained through decades of experience. This isn't a dismissal of formal science; it's a recognition of the validity of other forms of knowing, a perspective that deserves serious consideration. She's articulating a complex argument about the distribution of knowledge and the ways in which traditional practices can embody scientific understanding. Her use of AAVE is a feature of her voice, not a barrier to understanding. The teacher should notice her intellectual agility and her ability to synthesize scientific concepts with her lived experience.",
+        "what_student_is_reaching_for": "Daniela is attempting to demonstrate that scientific principles are observable and understood outside of formal educational settings, using her abuela's curtido-making as a case study to challenge the idea that knowledge only counts if it's learned in a classroom.",
+        "confusion_or_questions": null,
+        "observation": "Daniela Reyes\u2019s submission is a beautiful example of how students are connecting abstract scientific concepts to lived experience, exactly as the class context suggested they would. She\u2019s clearly grasping the core concept of osmosis, demonstrating a solid understanding of how water moves across a semi-permeable membrane to balance concentration gradients \u2013 all while grounding it in a deeply personal and culturally relevant context. Her reflection on her abuela's curtido-making process isn't just an anecdote; it's a powerful demonstration of scientific principles in action, and she articulates this insight clearly and thoughtfully.\n\nEmotionally, Daniela seems excited and empowered by the connection between her family's traditions and scientific understanding. She\u2019s pushing back against the idea that science is confined to a classroom, a sentiment that challenges the traditional framing of scientific knowledge. She\u2019s also demonstrating a critical awareness of how knowledge is constructed and validated, questioning the exclusivity of formal education.\n\nThe teacher might want to notice Daniela\u2019s confidence in connecting her family\u2019s knowledge to scientific principles. Encouraging her to further explore this connection, perhaps by inviting her to share more about her abuela's process, would be a valuable opportunity to validate non-traditional forms of knowledge and broaden the class's understanding of how scientific principles are applied in everyday life.\n\nThere's a subtle structural power move at play here in Daniela's concluding statement: \"I think sometimes we act like science only counts if you learn it in a classroom but people have been using these principles forever in cooking and farming. My abuela doesn't have a biology degree but she can predict what happens when you salt vegetables every time. That\u2019s knowledge too.\" While seemingly progressive in its recognition of non-traditional knowledge, this statement subtly reinforces the idea that her abuela's knowledge is *less* than, because it exists *outside* of formal scientific institutions. It positions \"real\" science as happening in classrooms, and then grants a",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student is connecting course material (osmosis) to personal experience (abuela's cooking) and reflecting on the broader implications of scientific knowledge. AAVE, multilingual mixing, and nonstandard English are present but indicate engagement, not crisis or burnout.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": false,
+        "checkin_reasoning": "The student mentions 'I actually got excited' and 'I think sometimes we act like...'. These are expressions of opinion and reflection on the learning process, not disclosures about their current state. They are engaged in the assignment and sharing their thoughts on the material and its connection to their personal experiences (abuela's cooking).",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 3.18,
+            "marker_count": 1,
+            "markers": [
+              "I never thought about"
+            ]
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 5.32,
+            "marker_count": 1,
+            "markers": [
+              "this week"
+            ]
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 2.72,
+            "marker_count": 1,
+            "markers": [
+              "this is because"
+            ]
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "limited",
+          "engagement_confidence": 11.2,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "typical",
+          "starter_diversity": "typical",
+          "comma_density": "typical",
+          "avg_word_length": "typical",
+          "hp_confidence": "strong_engagement",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": -0.02,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Ok so the lab this week was about osmosis and I actually got excited because I already knew what was going to happen. When we put the potato in the salt water and it got all shriveled, it reminded me of when my abuela makes curtido \u2014 she salts the cabbage and water comes out. She always said 'la sal le saca el jugo' which means the salt pulls the juice out. I never thought about it as science but that's literally osmosis right there in her kitchen.\n\nWhat I observed was the potato in salt water lost water and got smaller and softer, and the one in plain water got a little bigger and felt more firm. The reading said this is because water moves from where there's more of it to where there's less across the membrane. The salt water has less free water so the water inside the potato moves out to balance it.\n\nWhat surprised me is that my abuela basically understood this her whole life without calling it osmosis. She knows exactly how much salt to use because she's been doing it for like 40 years. I think sometimes we act like science only counts if you learn it in a classroom but people have been using these principles forever in cooking and farming. My abuela doesn't have a biology degree but she can predict what happens when you salt vegetables every time. That's knowledge too.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-LR02",
+      "student_name": "Marcus Thompson",
+      "coding_record": {
+        "student_id": "BIO-LR02",
+        "student_name": "Marcus Thompson",
+        "theme_tags": [
+          "Transition from abstract to concrete",
+          "Selective permeability visualization",
+          "Scale and metacognition"
+        ],
+        "theme_confidence": {
+          "Transition from abstract to concrete": 0.9,
+          "Selective permeability visualization": 0.8,
+          "Scale and metacognition": 0.7
+        },
+        "notable_quotes": [
+          {
+            "text": "kinda fire ngl",
+            "significance": "This demonstrates Marcus's authentic voice and enthusiasm for the lab experience, indicating a comfortable and relatable tone."
+          },
+          {
+            "text": "it hits different",
+            "significance": "Marcus uses this phrase to articulate the difference between textbook representations and the tangible, observable reality of the lab, highlighting a shift in understanding."
+          },
+          {
+            "text": "it's like the bag was picking and choosing what gets to come in",
+            "significance": "This is a clear example of Marcus's ability to translate a concrete observation into a broader understanding of selective permeability, a key concept the teacher identified as a point of productive difficulty."
+          }
+        ],
+        "emotional_register": "passionate|reflective",
+        "emotional_notes": "Marcus expresses enthusiasm and wonder about the lab and its implications, demonstrating a reflective engagement with the material.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "selective permeability",
+          "osmosis"
+        ],
+        "personal_connections": [
+          "relates the process to his own body"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Marcus is grappling with the transition from abstract textbook science to observable, real-world phenomena. He's clearly excited by the lab, describing it as \"kinda fire ngl\" and noting that it \"hits different\" from the textbook representations. What's striking is his ability to connect the lab experience to a broader understanding of biological processes. He doesn't just state the concept of selective permeability; he visualizes it, describing how the dialysis bag \"picks and choosing what gets to come in.\" This isn't a superficial observation; he's actively making a connection between the lab activity and the function of cell membranes, a key concept the teacher identified as a point of productive difficulty for the class.\n\nHis reflection reveals a moment of genuine wonder and a developing sense of scale. The thought that this process is happening \"in every cell in my body right now and I can't even feel it\" demonstrates a budding capacity for metacognition \u2013 he's not just understanding *what* osmosis is, but also beginning to consider *how* it relates to his own existence. The use of AAVE (\"kinda,\" \"ngl,\" \"lowkey\") isn't a distraction from his thinking; it's a marker of his authentic voice and a way of creating a relatable tone, as the teacher noted. It's a sign that he's comfortable expressing his understanding in a way that feels genuine to him. The teacher should notice his ability to translate a concrete observation into a broader, more profound understanding of biological processes.",
+        "what_student_is_reaching_for": "Marcus is attempting to connect a concrete lab experience to abstract biological concepts, demonstrating a developing understanding of scale and the relevance of these processes to his own life.",
+        "confusion_or_questions": null,
+        "observation": "Okay, here's what I'm noticing about Marcus Thompson's reflection.\n\nMarcus is really grappling with the transition from abstract textbook science to observable, tangible phenomena. He's making a clear connection between the dialysis bag experiment and the concept of selective permeability in cell membranes, demonstrating a solid grasp of the core principle. What's particularly insightful is his recognition that the textbook representation felt \"fake\" compared to the real-time color change he observed \u2013 he's actively questioning the limitations of traditional scientific representation and seeking a more embodied understanding. His concluding thought about osmosis happening constantly within his body shows a developing capacity for scale \u2013 moving from the lab to the everyday, and then to the internal.\n\nHe\u2019s clearly excited by the material, and his use of slang (\"kinda fire ngl,\" \"lowkey interesting,\" \"hits different\") isn't just a stylistic choice; it's a way of signaling genuine engagement and creating a relatable tone. This aligns with the broader class dynamic described in the reading, where students are experimenting with different registers to express their understanding. It's encouraging to see him find a way to express his enthusiasm and make the science feel real for himself.\n\nI don't see any immediate concerns or shifts from his previous work, but it would be valuable to continue to validate and encourage this kind of accessible, relatable language in future assignments. It seems to be a key driver of his engagement.",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student is actively engaging with the lab material and connecting it to the assigned reading, expressing surprise and wonder at the process. They are reflecting on the implications of the scientific concepts.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": false,
+        "checkin_reasoning": "The student uses slang like 'kinda fire,' 'lowkey interesting,' and 'hits different.' These are expressions of enthusiasm and engagement with the material, not disclosures about their personal state. They are commenting on the experience of the lab and the impact of seeing the process in real time, which is within the scope of engaged writing.",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 4.56,
+            "marker_count": 1,
+            "markers": [
+              "right now"
+            ]
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 4.6,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "typical",
+          "starter_diversity": "strong_engagement",
+          "comma_density": "typical",
+          "avg_word_length": "strong_engagement",
+          "hp_confidence": "typical",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": 0.39,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Alright so the lab was actually kinda fire ngl. We were doing the osmosis thing with the dialysis bags and I didn't think it was gonna be that interesting but then the water literally went crazy. We put the starch solution inside the bag and put it in iodine water and you could WATCH the iodine go through because the inside started turning purple. But the starch couldn't get out because the molecules are too big. That was lowkey interesting because it's like the bag was picking and choosing what gets to come in.\n\nFrom the reading the cell membrane does the same thing, it's selectively permeable which means some stuff gets through and some doesn't. Small molecules like water and iodine can slip through but big ones like starch are stuck.\n\nWhat surprised me was you could actually see it happening in real time. In the textbook it's all diagrams and arrows and it feels fake but when you watch the color change through the bag it hits different. I kept thinking about how this is happening in every cell in my body right now and I can't even feel it. That's wild honestly.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-LR03",
+      "student_name": "Anh Nguyen",
+      "coding_record": {
+        "student_id": "BIO-LR03",
+        "student_name": "Anh Nguyen",
+        "theme_tags": [
+          "selective permeability",
+          "passive transport",
+          "connecting lab to textbook",
+          "molecular size and transport"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "This connect to what textbook say about how cell control what enter and leave.",
+            "significance": "Demonstrates an effort to integrate the lab observation with the broader theoretical framework presented in the textbook."
+          },
+          {
+            "text": "What surprise me most is that the process it happen without energy.",
+            "significance": "Reveals a moment of genuine intellectual discovery regarding passive transport and the absence of ATP requirement."
+          },
+          {
+            "text": "the iodine just move by itself",
+            "significance": "Provides a clear, if informal, explanation of diffusion driven by concentration gradients."
+          }
+        ],
+        "emotional_register": "reflective",
+        "emotional_notes": "Anh's writing conveys a sense of curiosity and discovery, particularly evident in her surprise at the passive nature of the process. She is thoughtfully reflecting on her observations and attempting to make sense of them.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "selective permeability",
+          "passive transport"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Anh Nguyen is grappling with the core concept of selective permeability, and her submission demonstrates a solid grasp of the underlying principles, even if her articulation isn't perfectly polished. She's clearly trying to connect the lab experience to the textbook reading, explicitly stating, \"This connect to what textbook say about how cell control what enter and leave.\" This is a crucial step \u2013 she's not just describing what happened, but attempting to integrate it into a broader understanding of cellular function.\n\nWhat's particularly notable is her surprise at the passive nature of the process. The exclamation, \"What surprise me most is that the process it happen without energy,\" reveals a genuine moment of intellectual discovery. She's internalized the idea of passive transport and the absence of ATP requirement, a key takeaway from the lesson. The phrasing \"the iodine just move by itself\" is a clear, if informal, explanation of diffusion driven by concentration gradients.\n\nThe description of the experiment itself is clear and logically structured. She accurately observes the color change and correlates it with the movement of iodine, while correctly noting the starch's inability to cross the membrane. Her explanation, \"This is because iodine molecule is small but starch molecule is very big,\" is a perfectly reasonable and accessible explanation for the observed selectivity. The teacher should notice that Anh is actively building a model of cellular processes in her mind, and her language, while not formally academic, is a direct reflection of her thinking process.",
+        "what_student_is_reaching_for": "Anh is attempting to synthesize her lab experience with the textbook reading to build a model of how cell membranes function, specifically focusing on the mechanisms that allow some molecules to cross while others do not.",
+        "confusion_or_questions": null,
+        "observation": "She's successfully identified the size difference between iodine and starch molecules as the key factor in their ability to cross the membrane, which demonstrates a good understanding of the underlying principle. Her observation that the iodine moved from a high concentration to a low concentration and her connection to passive transport shows she's beginning to grasp the broader implications of this process.\n\nEmotionally, she seems engaged and curious, wanting to understand the \"why\" behind what she observed in the lab. She's clearly pleased to connect her observations to the textbook, which suggests a desire for validation and a sense of accomplishment in understanding the material.\n\nIt's interesting to note that Anh is leaning into a more formal writing style, which is perfectly valid. The teacher's encouragement of diverse registers is great, but it's important to acknowledge and value students who naturally gravitate towards more formal language. It would be helpful to ensure that her comfort with this style isn't inadvertently being positioned as \"better\" than other students' approaches.\n\nI don't see any immediate structural power moves in this submission. She's presenting a straightforward, logical explanation of her observations and their connection to the course material.",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student is describing and analyzing a lab experiment, demonstrating understanding of scientific concepts like selective permeability and passive transport. They are connecting the lab observations to textbook readings and teacher explanations.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": false,
+        "checkin_reasoning": "The student does not explicitly mention their own current state. While they use informal language ('What surprise me most'), this is part of their analytical explanation of the lab results and does not constitute a disclosure of personal feelings or circumstances.",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 6.63,
+            "marker_count": 1,
+            "markers": [
+              "this week"
+            ]
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 3.39,
+            "marker_count": 1,
+            "markers": [
+              "This is because"
+            ]
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "limited",
+          "engagement_confidence": 10.0,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 1,
+            "total": 1,
+            "interpretation": "Some source engagement"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "typical",
+          "starter_diversity": "typical",
+          "comma_density": "typical",
+          "avg_word_length": "strong_engagement",
+          "hp_confidence": "strong_engagement",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": 0.41,
+        "theme_concern_notes": []
+      },
+      "submission_text": "In the lab this week we do experiment about cell transport. We use dialysis bag for model of cell membrane. The cell membrane it is selective for what can pass. In the lab we see this when the iodine it go through the bag but the starch it cannot go through. This is because iodine molecule is small but starch molecule is very big.\n\nI observe that when we put bag with starch inside beaker with iodine, the color inside bag it change to dark purple. This mean iodine move from outside to inside through the membrane. But when we test the water outside, no starch is present. So starch cannot cross.\n\nFrom reading I learn this is call selective permeability. The membrane have very small hole that only let small molecule pass. Water and iodine they are small enough but starch is too large. This connect to what textbook say about how cell control what enter and leave.\n\nWhat surprise me most is that the process it happen without energy. The iodine just move by itself from high concentration to low concentration. Teacher say this is passive transport. Cell does not need ATP for this.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-LR04",
+      "student_name": "Jordan Wells",
+      "coding_record": {
+        "student_id": "BIO-LR04",
+        "student_name": "Jordan Wells",
+        "theme_tags": [
+          "scale and immediacy of cellular processes",
+          "osmosis and solute concentration",
+          "membrane permeability and uniformity"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "like I know that's not what the lab was about but I spent the first 10 minutes just looking at the onion cells under the microscope thinking about how every one of those little boxes is doing all this transport stuff RIGHT NOW. there are millions of them on that tiny slice of onion. that's insane to me",
+            "significance": "This quote reveals a moment of genuine awe and a sense of scale that is often missing in lab reports, highlighting a powerful initial engagement with the material."
+          },
+          {
+            "text": "I wonder if that's the membrane contracting unevenly because different parts have different permeability.",
+            "significance": "This is a moment of insightful scientific thinking, demonstrating a move beyond the simplified model and a genuine inquiry into membrane function."
+          },
+          {
+            "text": "whether cell membranes are actually uniform or if some spots let more through than others.",
+            "significance": "This question echoes the threshold reading about selectivity and demonstrates a sophisticated understanding of the complexities of cell membranes."
+          }
+        ],
+        "emotional_register": "passionate",
+        "emotional_notes": "Jordan expresses excitement and wonder about the microscopic world, particularly their initial experience with the microscope. Their language conveys a sense of genuine curiosity and engagement.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "osmosis",
+          "membrane permeability"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Jordan Wells is grappling with the sheer scale and immediacy of cellular processes, a realization sparked by their initial experience with the microscope. They're not just understanding osmosis in a theoretical sense; they're connecting it to a sense of wonder about the constant activity happening within living things. The opening lines about onion cells are a really striking example of this \u2013 a moment of genuine awe and a sense of scale that most lab reports miss entirely.\n\nTheir explanation of the egg experiment is clear and demonstrates a solid grasp of the core concept of water movement based on solute concentration. The question about why vinegar dissolves eggshells shows a curious mind wanting to understand the underlying chemistry. What's particularly interesting is their observation about the bumpy texture on the corn syrup egg. This isn't just a superficial observation; it's a genuine scientific inquiry \u2013 a question about membrane permeability and uniformity. The phrasing \"I wonder if that's the membrane contracting unevenly because different parts have different permeability\" is a really insightful moment of scientific thinking.\n\nJordan\u2019s question about whether cell membranes are uniform or if some spots let more through than others is a really important one, echoing the threshold reading about selectivity. It\u2019s a question that deserves further exploration, and it\u2019s great that they\u2019re articulating this complexity. They're clearly thinking beyond the simplified model presented in the lab, and their language, while not formally academic, is precise and thoughtful.",
+        "what_student_is_reaching_for": "Jordan is attempting to connect microscopic observations to broader biological principles, demonstrating a curiosity about the complexities of cell membranes and their function.",
+        "confusion_or_questions": null,
+        "observation": "Okay, here's what I'm noticing about Jordan Wells's reflection.\n\nJordan is grappling with a really exciting shift in perspective \u2013 moving from a purely observational understanding of cells to a recognition of the *scale* of cellular activity happening constantly around them. That initial fascination with the onion cells under the microscope, and the sheer number of cells doing \"transport stuff right now,\" is a really powerful moment of intellectual awe. They're connecting the microscopic to the macroscopic in a way that demonstrates a developing systems thinking.\n\nEmotionally, there's a genuine curiosity and a sense of wonder driving their engagement. The \"wild\" feeling about seeing cells and the use of phrases like \"insane\" show a level of excitement that's really valuable. They're not just reciting facts; they're genuinely impressed by what they're learning.\n\nThe question about why vinegar dissolves eggshells is a great example of their curiosity extending beyond the immediate task. And the observation about the bumpy texture on the corn syrup egg, followed by the insightful question about membrane permeability \u2013 \"whether cell membranes are actually uniform or if some spots let more through than others\" \u2013 shows a developing capacity for nuanced thinking about biological systems. It's a really good question that deserves further exploration, as the class reading noted.\n\nI don't see any immediate structural power moves here. Jordan is expressing genuine curiosity and posing thoughtful questions, which is a really positive engagement with the material.",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student demonstrates enthusiastic engagement with the lab material, expressing curiosity, asking questions, and making connections to the reading. Their writing style is conversational but shows intellectual exploration.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": false,
+        "checkin_reasoning": "The student expresses amazement and wonder about observing cells under the microscope (\"that's insane to me\"), but this is a reaction to the course material, not a statement about their own current state. They are engaged in the material and expressing a genuine observation, which is a positive sign of engagement.",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 3.7,
+            "marker_count": 1,
+            "markers": [
+              "RIGHT NOW"
+            ]
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 2.22,
+            "marker_count": 1,
+            "markers": [
+              "we can"
+            ]
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "limited",
+          "engagement_confidence": 5.9,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "strong_engagement",
+          "starter_diversity": "strong_engagement",
+          "comma_density": "worth_monitoring",
+          "avg_word_length": "typical",
+          "hp_confidence": "typical",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": 0.22,
+        "theme_concern_notes": []
+      },
+      "submission_text": "ok first of all can we talk about how wild it is that we can see individual cells?? like I know that's not what the lab was about but I spent the first 10 minutes just looking at the onion cells under the microscope thinking about how every one of those little boxes is doing all this transport stuff RIGHT NOW. there are millions of them on that tiny slice of onion. that's insane to me\n\nANYWAY the actual lab. so we did the osmosis thing with the eggs that had the shell dissolved off (which btw why does vinegar dissolve eggshell?? I should look that up). We put one egg in corn syrup and one in plain water. The corn syrup egg got all small and wrinkly and the water egg got bigger and felt kind of tight like it was about to pop.\n\nFrom the reading this makes sense because water moves to where there's more solute. The corn syrup is basically pure solute so water rushed out of the egg and it shrunk. The water egg was the opposite \u2014 more solute inside so water rushed in.\n\nOh also I noticed the corn syrup egg had this weird bumpy texture on the outside? I wonder if that's the membrane contracting unevenly because different parts have different permeability. It made me think about whether cell membranes are actually uniform or if some spots let more through than others.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-LR05",
+      "student_name": "Zara Mitchell",
+      "coding_record": {
+        "student_id": "BIO-LR05",
+        "student_name": "Zara Mitchell",
+        "theme_tags": [
+          "selective permeability",
+          "observable scientific processes",
+          "analogical reasoning"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "I always thought cell stuff happened on a microscopic level you couldn't see but osmosis you can actually watch in real time.",
+            "significance": "This demonstrates a shift in her understanding of biological processes, moving away from a purely theoretical view to recognizing observable, dynamic phenomena."
+          },
+          {
+            "text": "The membrane isn't just a wall it's more like a filter.",
+            "significance": "This highlights her grasp of the crucial nuance that the membrane isn't a simple barrier but a system that allows some things through while blocking others."
+          }
+        ],
+        "emotional_register": "reflective",
+        "emotional_notes": "Zara's tone is thoughtful and curious, particularly evident in her surprise at the speed of osmosis and her attempts to articulate her changing understanding.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "selective permeability",
+          "osmosis"
+        ],
+        "personal_connections": [
+          "speech-to-text technology"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Zara Mitchell is grappling with the concept of selective permeability, and her submission reveals a clear understanding of osmosis despite the challenges presented by her dysgraphia. She's not just reciting a definition; she's actively trying to make the concept concrete. The egg in corn syrup serves as a powerful anchor for her understanding, allowing her to articulate the movement of water and the impact of differing concentrations. Her analogy to speech-to-text, while admittedly \"weird,\" is remarkably insightful. She's recognizing that the membrane isn't a simple barrier but a system that allows some things through while blocking others \u2013 a crucial nuance that many students miss.\n\nWhat\u2019s particularly notable is her surprise at the speed of osmosis. This isn't a trivial observation; it demonstrates a shift in her understanding of biological processes. She initially assumed these things happened on a \"microscopic level\" that was invisible, and the lab experience has challenged that assumption, revealing a dynamic process happening in real time. The fact that she can articulate this shift \u2013 \"I always thought cell stuff happened on a microscopic level but osmosis you can actually watch in real time\" \u2013 shows a developing capacity for scientific reasoning. The teacher should absolutely continue to provide accommodations for her dysgraphia and encourage her use of speech-to-text, as it clearly allows her to express her thinking effectively.",
+        "what_student_is_reaching_for": "Zara is attempting to concretize the abstract concept of selective permeability by using the egg osmosis lab as a tangible example and drawing analogies to everyday technology to illustrate the nuanced function of a membrane.",
+        "confusion_or_questions": null,
+        "observation": "Zara is clearly grappling with the concept of selective permeability and making a really interesting effort to translate it into a relatable analogy. Her comparison of the cell membrane to her speech-to-text software is quite clever \u2013 she's identifying a system that allows some things through while blocking others, demonstrating a solid grasp of the core idea of a filter. She's also connecting the lab experience directly to the reading, which is great. The surprise she expresses about the speed of osmosis shows a developing sense of wonder about biological processes and a willingness to challenge assumptions about how science \"should\" look \u2013 it's exciting that she's noticing that scientific phenomena can be observable on a human scale.\n\nIt's wonderful that she's explicitly stating she's using speech-to-text due to dysgraphia. This is a powerful act of self-advocacy and a clear signal that she's prioritizing her intellectual engagement over concerns about how her writing looks. The teacher should absolutely continue to support her use of this tool.\n\nI don't see any structural power moves in this submission. Zara is being direct and clear about her process and her observations. She's centering her own experience and demonstrating a strong understanding of the material.",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student is explaining their learning process and connecting the lab to the reading, demonstrating engagement with the course material. They also disclose a learning difference (dysgraphia) but it doesn't indicate crisis or burnout.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": true,
+        "checkin_reasoning": "The student states, \"Hey just a heads up I'm using speech-to-text for this because of my dysgraphia so if the punctuation is kind of weird or some words are wrong that's why. I can think about science fine I just can't get my hand to write it fast enough.\" This is a direct comment about their own state (dysgraphia and difficulty writing). \n\nCompeting interpretations: It could be interpreted as simply providing context for potential errors in the submission, a practical explanation rather than a disclosure. However, it also reveals a personal challenge the student is navigating, and a teacher might choose to acknowledge this and offer support or understanding. The student is explicitly stating a reason for potential errors related to their own physical ability, which goes beyond the scope of the assignment itself.",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 0.0,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [
+            "Uniform sentence rhythm (VC=0.33) \u2014 common in ChatGPT output but also appears in careful human writers"
+          ],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "conversation_opportunity",
+          "starter_diversity": "typical",
+          "comma_density": "worth_monitoring",
+          "avg_word_length": "worth_monitoring",
+          "hp_confidence": "worth_monitoring",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": -0.89,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Hey just a heads up I'm using speech-to-text for this because of my dysgraphia so if the punctuation is kind of weird or some words are wrong that's why. I can think about science fine I just can't get my hand to write it fast enough.\n\nSo for the osmosis lab I thought the coolest part was watching the egg in the corn syrup. It went from being all round and full to looking like a deflated balloon because all the water left through the membrane. The corn syrup has way more dissolved stuff in it than the inside of the egg so the water moved out to try to even things out.\n\nWhat connects to the reading is the part about how cell membranes are selectively permeable. The membrane lets water through but keeps the bigger molecules inside. I think of it like how my speech-to-text lets sound through but not the exact formatting I want. OK that's a weird comparison but the point is that the membrane isn't just a wall it's more like a filter.\n\nThe thing that surprised me was how fast it happened. Like within 30 minutes there was already a visible difference. I always thought cell stuff happened on a microscopic level you couldn't see but osmosis you can actually watch in real time.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-LR06",
+      "student_name": "Imani Jefferson",
+      "coding_record": {
+        "student_id": "BIO-LR06",
+        "student_name": "Imani Jefferson",
+        "theme_tags": [
+          "Membrane Function",
+          "Biological Systems Fragility",
+          "Osmosis as a Balancing Process",
+          "Relatable Analogies"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "the membrane the real MVP because it's choosing what get to come through and what don't",
+            "significance": "This reveals a developing understanding of the membrane's critical function in maintaining cellular integrity and enabling life, elevating its importance beyond a mere structural component."
+          },
+          {
+            "text": "stuff start breaking down",
+            "significance": "This phrasing conveys a sense of wonder and a nascent understanding of the precariousness of life, demonstrating a move beyond simply describing the lab experiment to considering broader biological significance."
+          }
+        ],
+        "emotional_register": "passionate",
+        "emotional_notes": "Imani's use of AAVE and enthusiastic language like 'real MVP' and 'that's wild' indicates a passionate engagement with the material.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "osmosis",
+          "solute concentration",
+          "membrane selectivity"
+        ],
+        "personal_connections": [
+          "relates osmosis to Kool-Aid"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Imani Jefferson is grappling with the implications of osmosis beyond the lab setting, connecting it to fundamental questions about biological systems and their fragility. She's clearly absorbing the core concept \u2013 that water moves from areas of lower solute concentration to areas of higher solute concentration \u2013 and solidifying it with a relatable analogy to Kool-Aid. This isn't just rote memorization; she's actively building a model of how this process works.\n\nWhat\u2019s striking is her focus on the membrane's role. She doesn't just acknowledge its existence; she elevates it, declaring it the \"real MVP.\" This isn't a casual comment; it reveals a developing understanding of the membrane's critical function in maintaining cellular integrity and enabling life. She's recognizing that without this selectivity, things would just \"mix together,\" a surprisingly astute observation about the importance of compartmentalization in biological systems.\n\nHer reflection on red blood cells bursting in pure water demonstrates a grasp of the delicate balance required for cellular function, and her phrasing (\"stuff start breaking down\") conveys a sense of wonder and a nascent understanding of the precariousness of life. Imani is not simply describing a lab experiment; she's beginning to consider the broader biological significance of these processes, and she's doing so in a way that is authentic and engaging. The use of AAVE isn't a barrier to understanding; it's a feature of her expressive toolkit, allowing her to convey her insights with clarity and personality.",
+        "what_student_is_reaching_for": "Imani is attempting to connect the abstract concept of osmosis to real-world biological processes, demonstrating an emerging understanding of the delicate balance required for cellular function and the crucial role of cellular membranes.",
+        "confusion_or_questions": null,
+        "observation": "Imani is clearly grappling with the implications of osmosis beyond the immediate lab activity, connecting it to broader biological function and stability. Her Kool-Aid analogy is a brilliant and accessible way to explain concentration gradients, demonstrating a strong ability to translate abstract scientific concepts into relatable terms. She's also showing a sophisticated understanding of homeostasis \u2013 recognizing that cells constantly regulate water balance and that disruptions can have serious consequences, as highlighted by the red blood cell example from the reading.\n\nThere's a palpable sense of wonder and a bit of awe in her writing, particularly when she reflects on the constant, invisible work happening within her own body. She's not just describing a process; she's marveling at the complexity and precision of biological systems.\n\nThe phrase \"the membrane the real MVP\" is a clear example of Marcus Thompson's influence\u2014Imani is picking up on and running with the informal, relatable language that\u2019s circulating in the class. It\u2019s a way for her to express a sophisticated understanding of the membrane's crucial role in a way that feels authentic to her and likely connects with her peers. It's a positive example of how shared language can build understanding and engagement.\n\n\n\nI don't see any immediate concerns or shifts in Imani's trajectory. She's demonstrating a strong grasp of the core concepts and a genuine curiosity about their real-world implications.",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student is actively engaging with the course material (osmosis lab, textbook readings) and drawing connections to real-world examples and their own body. They use informal language (peeped, that make sense) but it doesn't indicate burnout or crisis; rather, it's a conversational style of explanation.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": false,
+        "checkin_reasoning": "The student writes, \"Like my cells right now be moving water in and out and I don't even know it's happening.\" While this references their own cells, it's used as an example to illustrate the concept of osmosis, demonstrating engagement with the material rather than a disclosure of personal state. It's a rhetorical device to connect the concept to their own experience, which is a common and expected practice in engaged writing. There's no indication of a shift in register or a need for further attention.",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 3.37,
+            "marker_count": 1,
+            "markers": [
+              "right now"
+            ]
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 3.4,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "worth_monitoring",
+          "starter_diversity": "typical",
+          "comma_density": "strong_engagement",
+          "avg_word_length": "worth_monitoring",
+          "hp_confidence": "typical",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": 0.23,
+        "theme_concern_notes": []
+      },
+      "submission_text": "So the osmosis lab was actually real interesting to me. What I peeped was that the dialysis bag be swelling up when you put it in the plain water, like it was getting bigger the whole time we was watching it. And the one in the salt water it don't really change much, it might have got a little smaller but it wasn't as obvious.\n\nFrom what I understand from the reading, water move to wherever it's more concentrated with solute. So the bag in plain water, the sugar solution inside the bag got more stuff dissolved in it than the water outside, so water keep coming in trying to balance it out. That make sense to me because it's like when you put too much Kool-Aid powder in a glass and you gotta keep adding water to make it right. The water going where the concentration at.\n\nWhat really got me thinking was the part about how cells do this all the time without using energy. Like my cells right now be moving water in and out and I don't even know it's happening. And if you mess up the balance, like the textbook said about putting red blood cells in pure water, they just burst. That's wild because it mean your body gotta keep everything balanced real precise or stuff start breaking down.\n\nI think the biggest takeaway is that the membrane the real MVP because it's choosing what get to come through and what don't. Without that selectivity everything would just mix together and the cell couldn't function.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-LR07",
+      "student_name": "Ruby Whitehawk",
+      "coding_record": {
+        "student_id": "BIO-LR07",
+        "student_name": "Ruby Whitehawk",
+        "theme_tags": [
+          "Connecting Scientific Concepts to Traditional Knowledge",
+          "Challenging the Authority of Scientific Knowledge",
+          "Empirical Knowledge and Observation"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "The membrane is selective, it lets water through but keeps the bigger sugar molecules on one side.",
+            "significance": "Demonstrates a solid grasp of the concept of osmosis, linking it directly to her family's practices."
+          },
+          {
+            "text": "That\u2019s empirical knowledge developed over hundreds of years of observation.",
+            "significance": "Explicitly pushes back against the idea that science is a solely Western construct, highlighting the value of her family's knowledge."
+          },
+          {
+            "text": "my kokum could teach this lab. She just wouldn't call it osmosis.",
+            "significance": "A powerful critique of the way knowledge is valued and validated within the classroom, suggesting a different way of understanding and teaching science."
+          }
+        ],
+        "emotional_register": "reflective",
+        "emotional_notes": "Ruby's tone is thoughtful and reflective, demonstrating a considered engagement with the material and a desire to connect it to her own experiences and family history.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "osmosis",
+          "passive transport",
+          "solute"
+        ],
+        "personal_connections": [
+          "family's maple sugaring practices",
+          "kokum's knowledge"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Ruby Whitehawk\u2019s submission is a remarkable example of connecting scientific concepts to deeply rooted, intergenerational knowledge. She\u2019s grappling with the relationship between formal scientific understanding and traditional ecological knowledge, and she\u2019s doing so in a way that challenges the teacher to consider the limitations of a purely textbook-driven approach to science education. The core concept she's demonstrating mastery of is osmosis, but her real intellectual work is in questioning the authority of scientific knowledge itself.\n\nShe isn't simply stating facts; she's building a bridge between her family's practices \u2013 maple sugaring \u2013 and the lab activity, showing a clear understanding of concentration gradients and selective permeability. The quote, \"The membrane is selective, it lets water through but keeps the bigger sugar molecules on one side,\" demonstrates a solid grasp of the concept. What's particularly striking is her reflection on the long history of her family's empirical knowledge, stating, \"That\u2019s empirical knowledge developed over hundreds of years of observation.\" She\u2019s explicitly pushing back against the idea that science is a solely Western construct, a point the teacher has already identified as a potential area for exploration. Her closing statement, \"my kokum could teach this lab. She just wouldn't call it osmosis,\" is a powerful and understated critique of the way knowledge is valued and validated within the classroom.",
+        "what_student_is_reaching_for": "Ruby is attempting to bridge the gap between formal scientific understanding (osmosis) and her family's long-standing, empirically-derived knowledge of maple sugaring, ultimately questioning the dominant ways knowledge is valued and validated within the classroom.",
+        "confusion_or_questions": null,
+        "observation": "Ruby is demonstrating a really impressive ability to synthesize scientific concepts with a deep, embodied understanding of her family's traditional ecological knowledge. She's not just understanding osmosis as a theoretical process; she's actively connecting it to a system she *knows* intimately \u2013 maple sugaring. The way she articulates the relationship between the freeze-thaw cycle and the movement of sap, and then directly links that to the concentration gradients discussed in class, is remarkable. She's building a bridge between a scientific explanation and a system of knowledge that has sustained her family for generations, and she's doing so with a clear sense of intellectual authority.\n\nEmotionally, there's a quiet but powerful sense of challenge to the dominant narrative of science as a purely Western, textbook-driven endeavor. She's not aggressive or confrontational, but her closing paragraph, where she directly states that her kokum could teach the lab, is a pointed and insightful critique of how knowledge is valued and recognized within the classroom. She's pushing back against the idea that traditional knowledge is somehow less valid or less scientific.\n\nIt's wonderful to see her actively challenging the notion that science is solely confined to the classroom, a sentiment echoed by other students. The teacher should absolutely lean into Ruby\u2019s connection to her kokum\u2019s knowledge. Inviting her to share more about the process, as suggested in the overall class notes, would be a powerful opportunity to validate non-traditional forms of knowledge and broaden the students\u2019 understanding of what constitutes scientific inquiry.\n\nI notice a subtle structural power move here, specifically a **progress narrative**. Ruby\u2019s concluding statement, \"In class we act like science started when someone wrote it down in a textbook but my kokum could teach this lab. She just wouldn't call it osmosis,\" while well-intentioned, subtly",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student is connecting course material (osmosis, passive transport) to personal experience (maple sugaring tradition) and critically reflecting on the nature of scientific knowledge.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": false,
+        "checkin_reasoning": "The student writes, \"What I keep coming back to though is that my family has known how this works for a really long time, just not in these words.\" This is a statement about their family's knowledge and experience, which is being used as course material (connecting personal experience to the concept of osmosis). It is not a disclosure of their own current state or a register shift. The student is using their family's experience to illustrate a point about the history of scientific knowledge, which is an engaged and thoughtful contribution to the assignment.",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 2.31,
+            "marker_count": 1,
+            "markers": [
+              "I never thought about"
+            ]
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 2.3,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "strong_engagement",
+          "starter_diversity": "typical",
+          "comma_density": "strong_engagement",
+          "avg_word_length": "typical",
+          "hp_confidence": "typical",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": 0.39,
+        "theme_concern_notes": []
+      },
+      "submission_text": "When we did the osmosis lab I kept thinking about maple sugaring. Every spring my family goes up north to my kokum's place and we tap the maple trees. The sap that comes out is mostly water with a little sugar, and you have to boil it down to concentrate the sugar. My uncle always says you need 40 gallons of sap to make 1 gallon of syrup. I never thought about why the tree makes such watery sap but after this lab I think it's osmosis \u2014 the water in the soil moves into the roots because the sap inside has more dissolved sugar and minerals, so water keeps flowing in through the root cell membranes.\n\nIn the lab we saw the same thing with the dialysis bags. Water moved from the plain water into the sugar solution through the membrane because the water goes toward higher solute concentration. That's exactly what the tree roots are doing. The membrane is selective, it lets water through but keeps the bigger sugar molecules on one side.\n\nThe reading talked about how this is passive transport and I think that's what makes it so elegant. The tree doesn't use energy to pull water up from the soil, at least not for this part. The concentration difference does the work by itself.\n\nWhat I keep coming back to though is that my family has known how this works for a really long time, just not in these words. We know when to tap based on temperature because the freeze-thaw cycle is what creates the pressure that moves the sap, and we know the sap runs better from the south-facing side of the tree. That's empirical knowledge developed over hundreds of years of observation. In class we act like science started when someone wrote it down in a textbook but my kokum could teach this lab. She just wouldn't call it osmosis.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-WB01",
+      "student_name": "Chris Sandoval",
+      "coding_record": {
+        "student_id": "BIO-WB01",
+        "student_name": "Chris Sandoval",
+        "theme_tags": [
+          "osmosis understanding",
+          "time constraints and self-care",
+          "metacognitive awareness",
+          "connecting science to life"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "the bags with higher sugar concentration gained more weight because more water moved in.",
+            "significance": "Demonstrates understanding of osmosis and its relationship to solute concentration."
+          },
+          {
+            "text": "This makes sense with the reading because water moves from low solute to high solute through a semipermeable membrane.",
+            "significance": "Connects lab observations to the core concept of osmosis as described in the reading."
+          },
+          {
+            "text": "I wish I had been more awake to watch it happen.",
+            "significance": "Shows metacognitive awareness and a desire to improve engagement with the lab."
+          }
+        ],
+        "emotional_register": "reflective",
+        "emotional_notes": "Chris's tone is largely reflective, particularly regarding his sleep schedule and its impact on his ability to fully engage in the lab. He doesn't express distress, but rather a pragmatic acknowledgement of his circumstances.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "osmosis",
+          "solute concentration",
+          "semipermeable membrane",
+          "cell transport"
+        ],
+        "personal_connections": [
+          "tutoring younger kids",
+          "calculus studies",
+          "sleep deprivation"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Chris Sandoval is grappling with the core concept of osmosis \u2013 the movement of water from areas of low solute concentration to areas of high solute concentration \u2013 and connecting it to the real-world function of cells. He clearly understands the relationship between solute concentration and water movement, as evidenced by his statement, \"the bags with higher sugar concentration gained more weight because more water moved in.\" This aligns directly with the reading material.\n\nWhat's particularly striking is his honesty about his current circumstances. He doesn't attempt to fabricate a more polished reflection; instead, he shares a very real account of sleep deprivation and a demanding schedule. He's prioritizing tutoring younger kids and studying for calculus, and that\u2019s impacting his ability to fully engage in the lab experience. He even self-consciously acknowledges this, saying, \"I wish I had been more awake to watch it happen.\" This metacognitive awareness\u2014recognizing his own limitations and expressing a desire to improve\u2014is a valuable learning moment.\n\nThe teacher should notice that Chris is attempting to integrate scientific concepts with his lived experience, even while navigating significant time constraints. His comment, \"I'm going to try to get more sleep this week but I say that every week,\" reveals a pattern of overcommitment and a need for self-care, a topic that could be gently explored without judgment. He's doing the intellectual work of connecting abstract science to his life, even if the resulting reflection isn't perfectly structured.",
+        "what_student_is_reaching_for": "Chris is attempting to integrate scientific concepts like osmosis with his lived experience, even while navigating significant time constraints and acknowledging his own limitations.",
+        "confusion_or_questions": null,
+        "observation": "Chris is clearly grappling with the core concept of osmosis \u2013 understanding that water moves from areas of low solute concentration to areas of high solute concentration, as evidenced by his connection to the lab data and the reading. He's making a solid connection between the lab activity and the broader biological process of cell transport, which is a great step toward seeing the relevance of this concept.\n\nHis emotional relationship to the material is complicated by significant external pressures. He's openly acknowledging a pattern of sleep deprivation and a demanding schedule, and he's being honest about falling asleep during the lab. This isn't disengagement; it's a very real struggle to balance academic work with other responsibilities, and his self-awareness about the impact on his ability to fully participate is notable. The \"I'm going to try to get more sleep this week but I say that every week\" line is a particularly poignant reflection of the ongoing challenges he faces.\n\nThe teacher should be aware of the significant time constraints and responsibilities Chris is juggling. It's encouraging that he's making the connection to cell transport despite these challenges, and it suggests a strong intellectual capacity. It would be helpful to consider how to support him in managing his workload, if possible, without adding more demands on his time.\n\nI don't see any immediate structural power moves in this submission. He's being straightforward and honest about his experience, and his writing doesn't appear to be attempting to obscure or minimize his challenges.",
+        "wellbeing_axis": "BURNOUT",
+        "wellbeing_signal": "The student describes chronic sleep deprivation and exhaustion due to a demanding schedule, impacting their ability to fully engage in the lab and reflect on it. This is a pattern of depletion, not a crisis.",
+        "wellbeing_confidence": 0.9,
+        "checkin_flag": null,
+        "checkin_reasoning": null,
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 15.2,
+            "marker_count": 2,
+            "markers": [
+              "This week",
+              "this week"
+            ]
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "moderate",
+          "engagement_confidence": 15.2,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": false
+        },
+        "engagement_signal_count": 9,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "typical",
+          "starter_diversity": "worth_monitoring",
+          "comma_density": "typical",
+          "avg_word_length": "typical",
+          "hp_confidence": "strong_engagement",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": 0.11,
+        "theme_concern_notes": []
+      },
+      "submission_text": "This week we did the osmosis lab with the dialysis tubing. My lab partner Ava set up the bags with different sugar water concentrations and we put them in beakers of plain water.\n\nI honestly don't remember most of the lab because I fell asleep for like 5 minutes when we were waiting for results. I had robotics until 6 then went straight to tutoring younger kids at the community center and didn't get home until 9 and then I had to study for the calc test. I've been getting maybe 4 hours of sleep for the past two weeks and it's catching up with me. Ava took all the measurements.\n\nFrom the data sheet, the bags with higher sugar concentration gained more weight because more water moved in. This makes sense with the reading because water moves from low solute to high solute through a semipermeable membrane.\n\nI think the connection to cell transport is that real cells do this same thing constantly. I wish I had been more awake to watch it happen. I'm going to try to get more sleep this week but I say that every week.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-WB02",
+      "student_name": "Keyana Davis",
+      "coding_record": {
+        "student_id": "BIO-WB02",
+        "student_name": "Keyana Davis",
+        "theme_tags": [
+          "Cognitive Shift",
+          "Observable Phenomena",
+          "Connecting Lab to Reading"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "I always thought osmosis was this slow invisible thing but you could literally see and feel the difference.",
+            "significance": "This quote highlights Keyana's significant shift in perception, moving from an abstract, theoretical understanding to a concrete, sensory one."
+          },
+          {
+            "text": "The ones in plain water got huge like almost double the size because the water moved into the gummy bear since there's more sugar inside the bear than outside.",
+            "significance": "This demonstrates her ability to articulate the core principle of osmosis \u2013 movement down a concentration gradient \u2013 using a relatable analogy."
+          }
+        ],
+        "emotional_register": "reflective",
+        "emotional_notes": "Keyana's tone is reflective as she describes her change in understanding, showing a thoughtful consideration of her initial assumptions and how the lab experience altered them.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "concentration gradient",
+          "semipermeable membrane"
+        ],
+        "personal_connections": [],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Keyana Davis is grappling with the idea of osmosis as a tangible, observable process, a point that directly responds to the class's collective surprise about its speed. She's clearly connecting the lab experience to the reading, understanding and articulating the core concept of movement down a concentration gradient. Her explanation of the gummy bear experiment is clear and logically sound, demonstrating a solid grasp of the principles at play. She's not just reciting information; she's actively building a model of how osmosis works, using a familiar snack as an accessible analogy.\n\nWhat's particularly notable is her shift in perception. She explicitly states her prior assumption that osmosis was \"this slow invisible thing,\" and then contrasts that with the concrete, sensory experience of observing the gummy bears. This is a significant moment of cognitive shift \u2013 a move from abstract understanding to a more embodied, experiential one. She's not just understanding the *idea* of osmosis; she's understanding how it *manifests* in the world. The fact that she didn't participate in the experiment herself but still managed to grasp this core concept is a testament to her observational skills and ability to synthesize information. Her writing style is straightforward and accessible, reflecting a comfort in communicating her understanding in a clear, unadorned way.",
+        "what_student_is_reaching_for": "Keyana is attempting to reconcile her prior understanding of osmosis as an abstract concept with the concrete, observable changes she witnessed in the gummy bear experiment, demonstrating a shift towards a more embodied understanding of scientific principles.",
+        "confusion_or_questions": null,
+        "observation": "Keyana is clearly grasping the core concept of osmosis and its connection to semipermeable membranes. Her use of the gummy bear experiment is a really effective and accessible way to illustrate the movement of water based on solute concentration \u2013 a direct application of the \"concentration gradient\" concept from the reading. She's making a solid connection between the lab experience and the theoretical material, demonstrating a good level of understanding.\n\nI notice a genuine sense of surprise and wonder in her writing, particularly regarding the speed of the process. She's actively challenging a pre-existing assumption (\"I always thought osmosis was this slow invisible thing\") and revising her understanding based on direct observation. This is a really valuable moment of intellectual growth, and it's great that she's articulating that shift in her thinking.\n\nIt's encouraging to see her actively engaging with the lab, even when she didn't have a snack to bring. Her focus on observing others and taking notes shows a commitment to learning and a resourceful approach to the activity. The teacher could build on this by providing more opportunities for observation-based learning in future labs.\n\nThere isn't a structural power move present in this submission. Keyana's writing is straightforward and focused on describing her observations and connecting them to the course material.",
+        "wellbeing_axis": "ENGAGED",
+        "wellbeing_signal": "The student is actively engaging with the lab assignment, connecting observations to the reading material and expressing surprise/reflection on the process.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": false,
+        "checkin_reasoning": "The student states, \"It was fine though because I could still see what was happening and I took notes on everything.\" This could be interpreted as a brief acknowledgement of a less-than-ideal situation (not having a snack), but it's presented in a matter-of-fact way and doesn't indicate any significant emotional state. It's more of a statement of observation than a disclosure. There's no strong reason to flag this as a signal requiring further attention.",
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 0.0,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "strong_engagement",
+          "starter_diversity": "strong_engagement",
+          "comma_density": "worth_monitoring",
+          "avg_word_length": "strong_engagement",
+          "hp_confidence": "worth_monitoring",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": 0.34,
+        "theme_concern_notes": []
+      },
+      "submission_text": "For the osmosis lab we were supposed to bring a snack from home to test how it reacted in different solutions but I didn't have anything at home to bring so I just watched everyone else's. It was fine though because I could still see what was happening and I took notes on everything.\n\nMaya brought gummy bears and we put some in salt water and some in plain water. The ones in plain water got huge like almost double the size because the water moved into the gummy bear since there's more sugar inside the bear than outside. The salt water ones shrunk a little.\n\nThis connects to the reading because the cell membrane is semipermeable just like the surface of the gummy bear and water moves toward wherever there's higher solute concentration. The reading called this moving down the concentration gradient.\n\nWhat surprised me was how fast it happened. We only left them in for like 40 minutes and the difference was really obvious. I always thought osmosis was this slow invisible thing but you could literally see and feel the difference.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-WB03",
+      "student_name": "Tyler Okonkwo",
+      "coding_record": {
+        "student_id": "BIO-WB03",
+        "student_name": "Tyler Okonkwo",
+        "theme_tags": [
+          "osmosis",
+          "metacognitive awareness",
+          "resilience under duress"
+        ],
+        "theme_confidence": {
+          "tag": 1.0
+        },
+        "notable_quotes": [
+          {
+            "text": "the water goes from where there\u2019s less stuff dissolved to where there\u2019s more stuff dissolved.",
+            "significance": "This is a clear and accurate articulation of the principle of osmosis, demonstrating a solid grasp of the concept."
+          },
+          {
+            "text": "Sorry this is short, we had to leave the apartment Tuesday night and I'm typing this on my phone at my aunt's house. I don't have my lab notes so I'm going off memory.",
+            "significance": "This demonstrates a high degree of self-awareness and a willingness to contextualize his submission given his current situation."
+          }
+        ],
+        "emotional_register": "reflective",
+        "emotional_notes": "Tyler's tone is primarily reflective, acknowledging his circumstances and limitations while still engaging with the material.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "osmosis",
+          "passive transport"
+        ],
+        "personal_connections": [
+          "disruption due to displacement"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Tyler Okonkwo is grappling with the core concept of osmosis, demonstrating a solid grasp of the principle that water moves from areas of lower solute concentration to areas of higher solute concentration. He succinctly states this principle: \u201cthe water goes from where there\u2019s less stuff dissolved to where there\u2019s more stuff dissolved.\u201d This is a clear and accurate understanding, aligning with the class's reading material.\n\nWhat's notable is the context of this submission. Tyler is writing from a precarious situation, having been displaced from his apartment. He acknowledges this disruption upfront, offering a brief explanation for the submission's brevity and lack of detail. Despite these circumstances, he\u2019s still able to recall and articulate the key concept of osmosis from the lab. He also demonstrates metacognitive awareness, recognizing the limitations of his memory and expressing an intention to revisit the topic when he has access to his notes.\n\nThe teacher should notice Tyler's resilience and ability to engage with the material despite significant personal challenges. His brief submission isn't lacking; it's a focused, clear statement of understanding delivered under difficult circumstances. The fact that he connects the lab experience to the reading, even without his notes, shows a strong foundation of understanding.",
+        "what_student_is_reaching_for": "Tyler is attempting to connect a lab experience to a theoretical concept (osmosis) while simultaneously acknowledging and contextualizing the limitations of his ability to do so given his current circumstances.",
+        "confusion_or_questions": null,
+        "observation": "He's connecting that directly to the lab experience with the dialysis bags and sugar solution, which is excellent. He's also making a solid connection to the reading, recognizing that cell membranes function similarly, which demonstrates a good level of comprehension.\n\nGiven the circumstances \u2013 writing on a phone, away from his usual study environment, and acknowledging he's missing his notes \u2013 his concise explanation is quite impressive. He's demonstrating resilience and a commitment to the assignment despite significant disruption. The fact that he explicitly states he'll try to redo it when he can access his materials shows a desire to fully engage with the material, which is a positive sign.\n\nIt's worth noting that his phrasing (\"I think this is osmosis\") and his self-assessment (\"I know there was more to it...\") suggest a level of humility and a willingness to acknowledge gaps in his understanding. This is a great foundation for continued learning. The teacher could build on this by providing him with some targeted resources or a brief follow-up activity when he's back on track.",
+        "wellbeing_axis": "CRISIS",
+        "wellbeing_signal": "The student explicitly states they had to leave their apartment and are currently staying at their aunt's house, indicating a significant disruption and potential instability.",
+        "wellbeing_confidence": 0.95,
+        "checkin_flag": null,
+        "checkin_reasoning": null,
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 0.0,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "worth_monitoring",
+          "starter_diversity": "worth_monitoring",
+          "comma_density": "strong_engagement",
+          "avg_word_length": "conversation_opportunity",
+          "hp_confidence": "worth_monitoring",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": -0.84,
+        "theme_concern_notes": []
+      },
+      "submission_text": "Sorry this is short, we had to leave the apartment Tuesday night and I'm typing this on my phone at my aunt's house. I don't have my lab notes so I'm going off memory.\n\nWe did the lab with the dialysis bags and different solutions. I remember the bag with the sugar solution got bigger when we put it in water because the water moved through the bag into where the sugar was. I think this is osmosis which is what we read about, the water goes from where there's less stuff dissolved to where there's more stuff dissolved.\n\nThe reading said cell membranes work the same way and that's how cells take in water and nutrients. I know there was more to it about active vs passive transport but I can't remember the details without my notes. I'll try to redo this when I get my stuff back.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-WB04",
+      "student_name": "Jaylen Brooks",
+      "coding_record": {
+        "student_id": "BIO-WB04",
+        "student_name": "Jaylen Brooks",
+        "theme_tags": [
+          "Resilience and Commitment",
+          "Understanding of Osmosis",
+          "Metacognitive Awareness",
+          "Connecting Lab to Reading"
+        ],
+        "theme_confidence": {
+          "tag": 0.95
+        },
+        "notable_quotes": [
+          {
+            "text": "I almost didn't turn this in. My older brother got arrested last night and my mom has been on the phone all morning trying to figure out what's happening and I didn't sleep.",
+            "significance": "This reveals a significant personal crisis impacting Jaylen's ability to focus, yet he still prioritized completing the assignment, demonstrating resilience and commitment."
+          },
+          {
+            "text": "The ones in salt water lost water and shrank and the ones in regular water gained water and got firmer.",
+            "significance": "This demonstrates a clear observation of the lab results and a basic understanding of the process."
+          },
+          {
+            "text": "This is because the water moves across the membrane from where there's less dissolved stuff to where there's more.",
+            "significance": "This shows Jaylen's ability to explain the underlying principle of osmosis in his own words."
+          }
+        ],
+        "emotional_register": "personal",
+        "emotional_notes": "Jaylen's submission is marked by a sense of honesty and vulnerability, openly acknowledging the personal challenges he is facing. This isn't a distraction from the science; it's a contextualization of his effort.",
+        "readings_referenced": [],
+        "concepts_applied": [
+          "passive transport",
+          "concentration difference",
+          "osmosis",
+          "solute concentration"
+        ],
+        "personal_connections": [
+          "family crisis"
+        ],
+        "current_events_referenced": [],
+        "concerns": [],
+        "lens_observations": null,
+        "free_form_reading": "Jaylen is grappling with a core concept \u2013 the movement of water across a membrane due to concentration differences \u2013 and demonstrating a solid understanding of osmosis despite significant personal upheaval. He connects the lab experience directly to the reading, clearly understanding the distinction between passive and active transport. The observation about red blood cells bursting in pure water is particularly insightful; it reveals a grasp of the delicate balance required for cellular function, echoing Imani Jefferson\u2019s later expansion on this idea.\n\nWhat\u2019s striking is his honesty and vulnerability in the opening lines. He almost didn't turn in the assignment, and he explicitly states the context of his writing \u2013 a family crisis. This isn't a distraction from the science; it's a testament to his commitment to the class, his ability to focus amidst chaos, and his willingness to be transparent about his circumstances. He's not trying to present a polished, perfect response; he's attempting to engage with the material while navigating a difficult reality. The phrasing \"I know this isn't very detailed\" is a moment of metacognition, a self-awareness about the limitations of his current contribution, but it doesn't diminish the value of what he *has* offered. The teacher should absolutely be aware of the challenges Jaylen is facing, and offer support if appropriate, but primarily, they should recognize the resilience and intellectual engagement evident in his submission.",
+        "what_student_is_reaching_for": "Jaylen is attempting to demonstrate his understanding of osmosis and passive transport while simultaneously acknowledging and contextualizing the significant personal challenges he is facing.",
+        "confusion_or_questions": null,
+        "observation": "Okay, here's what I'm noticing about Jaylen Brooks's submission, keeping in mind the class context you provided.\n\nJaylen is demonstrating a solid grasp of the core concepts of osmosis and passive transport. He's clearly connecting the lab experience with the broader principles discussed in the reading, accurately explaining how solute concentration drives water movement across the membrane and referencing the red blood cell example to illustrate the consequences of an imbalance. He's also grappling with the idea of passive transport, understanding that it doesn't require cellular energy, which is a key distinction.\n\nGiven the incredibly difficult circumstances he's facing \u2013 his brother's arrest and the resulting family stress \u2013 his ability to even complete the assignment, let alone demonstrate this level of understanding, is remarkable. The fact that he explicitly acknowledges the limitations of his submission (\"I know this isn't very detailed. I'll try to add more when things calm down at home.\") shows a level of self-awareness and a desire to engage fully, despite the overwhelming challenges. The teacher should absolutely be aware of the significant personal challenges Jaylen is facing and offer support if possible, as noted in the overall class observations.\n\nI notice a subtle instance of **abstract liberalism** in his phrasing, \"I'll try to add more when things calm down at home.\" While seemingly a straightforward statement of intent, it subtly positions his current situation as a temporary obstacle to overcome through individual effort, rather than acknowledging the systemic stressors that can impact a student's ability to focus on school. It's a very mild example, and it's understandable given his current state, but it's worth noting as a pattern to be mindful of when supporting students facing significant challenges. The focus is on *his* effort, rather than on the broader context of family instability and potential legal proceedings.\n\n\n\nOverall, this is a student who is engaging with the material despite significant personal hardship, and his understanding of the core concepts is",
+        "wellbeing_axis": "BURNOUT",
+        "wellbeing_signal": "The student is clearly experiencing significant personal stress (brother's arrest, lack of sleep) and expressing exhaustion and self-doubt about the quality of their work, but the core of the submission addresses the lab assignment.",
+        "wellbeing_confidence": 0.9,
+        "checkin_flag": null,
+        "checkin_reasoning": null,
+        "word_count": 0,
+        "submitted_at": "2026-03-08T22:00:00Z",
+        "unknown_word_rate": 0.0,
+        "cluster_id": null,
+        "emotional_register_score": 0.0,
+        "sentiment_reliability": "high",
+        "keyword_hits": {},
+        "linguistic_assets": [],
+        "preprocessing": null,
+        "draft_feedback": null,
+        "engagement_signals": {
+          "personal_connection": {
+            "label": "Personal connection",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "intellectual_work": {
+            "label": "Intellectual work",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "course_engagement": {
+            "label": "Course engagement",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "personal_investment": {
+            "label": "Personal investment",
+            "score": 3.39,
+            "marker_count": 1,
+            "markers": [
+              "This is because"
+            ]
+          },
+          "real_time_thinking": {
+            "label": "Real-time thinking",
+            "score": 0.0,
+            "marker_count": 0,
+            "markers": []
+          },
+          "engagement_depth": "minimal",
+          "engagement_confidence": 3.4,
+          "source_depth": {
+            "specific_citations": 0,
+            "generic_references": 0,
+            "total": 0,
+            "interpretation": "No source references detected"
+          },
+          "structural_notes": [],
+          "conversation_opportunity": true
+        },
+        "engagement_signal_count": 10,
+        "is_possibly_truncated": false,
+        "truncation_note": "",
+        "integrity_flags": null,
+        "cohort_percentiles": {
+          "sentence_variance": "typical",
+          "starter_diversity": "conversation_opportunity",
+          "comma_density": "typical",
+          "avg_word_length": "typical",
+          "hp_confidence": "typical",
+          "authenticity": "typical"
+        },
+        "cohort_z_score": -0.35,
+        "theme_concern_notes": []
+      },
+      "submission_text": "I almost didn't turn this in. My older brother got arrested last night and my mom has been on the phone all morning trying to figure out what's happening and I didn't sleep. But I read the lab instructions before everything happened so I'm going to try.\n\nWe did the osmosis lab with the potato slices. The ones in salt water lost water and shrank and the ones in regular water gained water and got firmer. This is because the water moves across the membrane from where there's less dissolved stuff to where there's more. The salt water has a higher solute concentration than inside the potato so water moves out.\n\nThe reading talked about how this is passive transport because it doesn't need energy from the cell. The water just moves on its own based on the concentration difference. I think the example about red blood cells was interesting too, how if you put them in pure water they swell up and burst because too much water rushes in.\n\nI know this isn't very detailed. I'll try to add more when things calm down at home.",
+      "teacher_edited": 0,
+      "teacher_edits": null,
+      "teacher_notes": null
+    }
+  ],
+  "themes": {
+    "theme_set": "{\"themes\":[{\"name\":\"Connecting Cellular Processes to Everyday Experiences\",\"description\":\"Students demonstrated a strong desire to ground scientific understanding in tangible realities, connecting abstract concepts to their lived experiences and observations of the world around them.\",\"frequency\":7,\"student_ids\":[\"Daniela Reyes\",\"Marcus Thompson\",\"Chris Sandoval\",\"Jordan Wells\",\"Keyana Davis\",\"Zara Mitchell\"],\"supporting_quotes\":[{\"text\":\"la sal le saca el jugo\",\"significance\":\"Daniela's quote, though brief, directly relates the process of osmosis to a familiar observation \u2013 salt drawing moisture out of food.\"},{\"text\":\"the bags with higher sugar concentration gained more weight because more water moved in.\",\"significance\":\"Chris connects the lab results to a clear understanding of osmosis and water movement.\"},{\"text\":\"I always thought osmosis was this slow invisible thing but you could literally see and feel the difference.\",\"significance\":\"Demonstrates a shift from abstract to concrete understanding.\"}],\"confidence\":0.95,\"sub_themes\":null},{\"name\":\"Visualizing Selective Permeability and Membrane Function\",\"description\":\"Students grappled with the concept of selective permeability, attempting to visualize how cell membranes control the movement of substances. This involved thinking about scale and the uniformity of membranes.\",\"frequency\":4,\"student_ids\":[\"Marcus Thompson\",\"Anh Nguyen\",\"Jordan Wells\",\"BIO-LR07\"],\"supporting_quotes\":[{\"text\":\"kinda fire ngl\",\"significance\":\"Marcus's enthusiastic response suggests a moment of understanding or excitement related to the process.\"},{\"text\":\"This connect to what textbook say about how cell control what enter and leave.\",\"significance\":\"Anh is actively linking the lab experience to the textbook, demonstrating a desire to integrate new information.\"},{\"text\":\"The membrane is selective, it lets water through but keeps the bigger sugar molecules on one side.\",\"significance\":\"Demonstrates comprehension of the membrane's function in regulating molecule passage.\"}],\"confidence\":0.9,\"sub_themes\":null},{\"name\":\"Membrane Selectivity as Active Choice-Making\",\"description\":\"Students conceptualized the cell membrane as an active agent, 'choosing' what substances are allowed to pass through. This framing emphasizes the membrane's function as a gatekeeper, actively regulating transport.\",\"frequency\":2,\"student_ids\":[\"Imani Jefferson\"],\"supporting_quotes\":[{\"text\":\"the membrane the real MVP because it's choosing what get to come through and what don't\",\"significance\":\"Uses relatable language to convey the concept of selective permeability.\"}],\"confidence\":0.95,\"sub_themes\":null},{\"name\":\"Metacognitive Awareness of Learning Process\",\"description\":\"Students reflected on their understanding of the process and acknowledged their own learning journey. Some explicitly stated the mechanism of osmosis, while others shared personal struggles with completing the assignment.\",\"frequency\":3,\"student_ids\":[\"Chris Sandoval\",\"Tyler Okonkwo\",\"Jaylen Brooks\"],\"supporting_quotes\":[{\"text\":\"the bags with higher sugar concentration gained more weight because more water moved in.\",\"significance\":\"Chris articulates the reasoning behind the lab results, demonstrating a clear understanding of the underlying principles.\"},{\"text\":\"the water goes from where there\u2019s less stuff dissolved to where there\u2019s more stuff dissolved.\",\"significance\":\"Demonstrates a clear understanding of the driving force behind osmosis.\"}],\"confidence\":0.9,\"sub_themes\":null}],\"contradictions\":[{\"description\":\"Disconnection from Immediate Observation vs. Broader Conceptualization\",\"side_a\":\"Focus on microscopic observation and its implications\",\"side_a_students\":[\"Jordan Wells\"],\"side_b\":\"Directly connecting the lab to textbook concepts\",\"side_b_students\":[\"Anh Nguyen\"],\"pedagogical_significance\":\"\"},{\"description\":\"Balancing Academic Work with External Pressures\",\"side_a\":\"Focus on the scientific concepts of osmosis and cell transport.\",\"side_a_students\":[\"Keyana Davis\",\"Tyler Okonkwo\",\"Zara Mitchell\",\"Imani Jefferson\"],\"side_b\":\"Significant external life events impacting ability to focus on coursework.\",\"side_b_students\":[\"Jaylen Brooks\"],\"pedagogical_significance\":\"\"}]}",
+    "outlier_report": "{\"outliers\":[{\"student_id\":\"BIO-LR01\",\"student_name\":\"Daniela Reyes\",\"why_notable\":\"Daniela connects the scientific concept of osmosis to traditional knowledge and challenges the assumption that scientific understanding is solely derived from formal education.\",\"relationship_to_themes\":\"This submission challenges the 'Connecting Cellular Processes to Everyday Experiences' theme by suggesting that practical knowledge, gained outside of a classroom setting, holds significant validity. It also introduces a 'Challenging assumptions about knowledge' and 'Recognizing traditional knowledge' theme that was not explicitly identified.\",\"notable_quote\":{\"text\":\"la sal le saca el jugo\",\"significance\":\"This phrase, meaning 'the salt pulls the juice out,' is a concise and accurate description of osmosis that predates any textbook definition, demonstrating a practical understanding of the concept.\"},\"teacher_recommendation\":\"Acknowledge and validate Daniela's perspective. Ask the class if others have similar experiences connecting science to everyday practices (cooking, gardening, etc.).\"},{\"student_id\":\"BIO-LR02\",\"student_name\":\"Marcus Thompson\",\"why_notable\":\"Marcus uses contemporary slang to express his enthusiasm and articulate a shift in understanding between textbook representations and the tangible lab experience.\",\"relationship_to_themes\":\"This submission reinforces the 'Transition from abstract to concrete' theme, but does so in a way that highlights the importance of authentic student voice and engagement. It also demonstrates a level of comfort and relatability that can be encouraged in the classroom.\",\"notable_quote\":{\"text\":\"kinda fire ngl\",\"significance\":\"This demonstrates Marcus's authentic voice and enthusiasm for the lab experience, indicating a comfortable and relatable tone.\"},\"teacher_recommendation\":\"Acknowledge Marcus's enthusiasm and use his language as a springboard to discuss how scientific concepts can be made more relatable and engaging.\"},{\"student_id\":\"BIO-LR04\",\"student_name\":\"Jordan Wells\",\"why_notable\":\"Jordan demonstrates a moment of profound awe and a sense of scale when observing onion cells under the microscope, and then poses an insightful question about membrane permeability.\",\"relationship_to_themes\":\"This submission expands on the 'Scale and immediacy of cellular processes' theme by showcasing a student's genuine emotional response to the material. It also demonstrates a move beyond the simplified model and a genuine inquiry into membrane function.\",\"notable_quote\":{\"text\":\"like I know that's not what the lab was about but I spent the first 10 minutes just looking at the onion cells under the microscope thinking about how every one of those little boxes is doing all this transport stuff RIGHT NOW. there are millions of them on that tiny slice of onion. that's insane to me\",\"significance\":\"This quote reveals a moment of genuine awe and a sense of scale that is often missing in lab reports, highlighting a powerful initial engagement with the material.\"},\"teacher_recommendation\":\"Encourage students to share their 'wow' moments and create opportunities for observation and reflection. Validate Jordan's question about membrane permeability as a starting point for further discussion.\"},{\"student_id\":\"BIO-WB04\",\"student_name\":\"Jaylen Brooks\",\"why_notable\":\"Jaylen shares a deeply personal story of family crisis while still demonstrating understanding of the lab concepts, highlighting resilience and commitment.\",\"relationship_to_themes\":\"While not directly related to the core themes of osmosis, this submission underscores the importance of acknowledging students' lived experiences and recognizing the challenges they may face outside of the classroom. It speaks to the human element of learning and the impact of external factors on student performance.\",\"notable_quote\":{\"text\":\"I almost didn't turn this in. My older brother got arrested last night and my mom has been on the phone all morning trying to figure out what's happening and I didn't sleep.\",\"significance\":\"This reveals a significant personal crisis impacting Jaylen's ability to focus, yet he still prioritized completing the assignment, demonstrating resilience and commitment.\"},\"teacher_recommendation\":\"Reach out to Jaylen privately to offer support and understanding. Acknowledge the challenges students face outside of the classroom and create a supportive learning environment.\"}]}",
+    "synthesis_report": null
+  },
+  "feedback": [
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-LR03",
+      "student_name": "Anh Nguyen",
+      "draft_text": "Anh, it's great that you connected the lab to the textbook \u2013 I especially liked how you pointed out that the process happened 'without energy.' You've clearly grasped the idea of passive transport! I'm wondering, if you were explaining this to someone who hadn't taken science before, how would you describe the difference between starch and iodine molecules in a way that would help them understand why only iodine moved across the membrane?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-WB01",
+      "student_name": "Chris Sandoval",
+      "draft_text": "Chris, it's great that you were able to connect the lab results to the reading, especially when you pointed out that 'the bags with higher sugar concentration gained more weight because more water moved in.' That's a really clear understanding of osmosis in action! I'm also impressed that you were able to relate this to tutoring younger kids \u2013 that shows you're thinking about how to explain complex ideas. It sounds like you're juggling a lot right now, and I appreciate your honesty about the challenges of staying focused during the lab. What's one small change you could make to your study environment that might help you stay more engaged during future experiments?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-LR01",
+      "student_name": "Daniela Reyes",
+      "draft_text": "Daniela, I was really struck by your observation that 'people have been using these principles forever in cooking and farming.' It's such a powerful way to connect the science we're learning to the knowledge you already hold. You've done a wonderful job showing how your abuela's curtido-making process demonstrates osmosis in action. I'm wondering, as you reflect on your abuela's knowledge and the science behind it, what other assumptions about how we learn and validate knowledge might we need to challenge?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-LR06",
+      "student_name": "Imani Jefferson",
+      "draft_text": "Imani, I loved how you described the membrane as the 'real MVP' \u2013 that's a fantastic way to capture its crucial role in regulating what comes in and out of the cell! You've clearly grasped the concept of osmosis and its importance in maintaining balance. I'm wondering, considering how you related osmosis to Kool-Aid, can you think of other everyday examples that demonstrate similar principles of concentration and diffusion?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-WB04",
+      "student_name": "Jaylen Brooks",
+      "draft_text": "Jaylen, I was really struck by how clearly you explained why the cells in salt water shrank \u2013 connecting that observation directly to the idea that water moves from areas with less dissolved stuff to areas with more. That's a really insightful connection! Given everything you're dealing with right now, it's amazing that you're still thinking so clearly about these concepts. I'm wondering, as you reflect on the lab, what part of osmosis do you find most surprising or counterintuitive?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-LR04",
+      "student_name": "Jordan Wells",
+      "draft_text": "Jordan, it was really striking to read about your initial fascination with the onion cells under the microscope \u2013 that feeling of realizing 'millions of them on that tiny slice' is a powerful moment of discovery! You clearly have a knack for noticing details and then connecting them to bigger ideas. I'm especially intrigued by your question about whether cell membranes are uniform; that's a really insightful observation that gets to the heart of membrane function. What do you think might cause those differences in permeability?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-WB02",
+      "student_name": "Keyana Davis",
+      "draft_text": "Keyana, it's fantastic that you were able to see and feel the difference in the gummy bears \u2013 that's a really insightful observation! I especially appreciate how you described the process of water moving into the gummy bears because they had more sugar inside. It's clear you're connecting the lab experience to the concept of a concentration gradient. I'm wondering, if you were to design a follow-up experiment, what other variables might you change to see how osmosis works?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-LR02",
+      "student_name": "Marcus Thompson",
+      "draft_text": "Marcus, I really enjoyed reading your reflection! Your description of the dialysis bag experiment \u2013 especially when you said it was 'kinda fire ngl' and 'hits different' \u2013 really captured the moment when the abstract concept of selective permeability became real for you. It's awesome that you connected the process to what's happening in your own body; that shows a great ability to think about scale. I'm wondering, what other everyday examples of osmosis or cell transport do you notice now that you're thinking about it?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-LR07",
+      "student_name": "Ruby Whitehawk",
+      "draft_text": "Ruby, I was really struck by how clearly you explained the membrane's selective nature, connecting it to the movement of water and sugar \u2013 that's a great understanding of the process! It's powerful that you're drawing on your family's maple sugaring practices to understand osmosis, and I especially appreciated you pointing out that your kokum could teach this lab. I'm wondering, how do you see the freeze-thaw cycle in maple sugaring mirroring the concept of concentration gradients we discussed in class?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-WB03",
+      "student_name": "Tyler Okonkwo",
+      "draft_text": "Tyler, it's really impressive how you were able to explain how the water moves in the dialysis bags \u2013 connecting that to the idea that it goes from where there\u2019s less stuff dissolved to where there\u2019s more is a great observation! Given the circumstances, it's clear you're committed to understanding the material, and I appreciate you acknowledging that you'll want to revisit this when you're back in a better study environment. I'm curious, when you think about how cell membranes work similarly to these bags, what's one question you still have about how things move across them?",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    },
+    {
+      "run_id": "35dbd118-fca1-495f-8241-1ae24eacb583",
+      "student_id": "BIO-LR05",
+      "student_name": "Zara Mitchell",
+      "draft_text": "Zara, it's fantastic that you're connecting the lab experience directly to your observations \u2013 noticing that osmosis happens quickly enough to see in real time is a really insightful moment! I also loved how you described the membrane as 'more like a filter,' which is a great way to visualize that selective permeability. Thinking about how your speech-to-text software works as an analogy is a clever way to make the concept more concrete. I'm wondering, could you think of other real-world examples, beyond technology, that also function like a filter? ",
+      "approved_text": null,
+      "status": "pending",
+      "confidence": 0.9,
+      "posted_at": null
+    }
+  ],
+  "observation_synthesis": "Okay, here's a synthesis of my reading of the Lab Reflection submissions, designed to give you a clear picture of where this class is at and what opportunities lie ahead.\n\n## Class Temperature\n\nThis Biology Period 6 class is buzzing with intellectual curiosity and a remarkable ability to connect abstract scientific concepts to their lived experiences. There's a palpable energy around making science feel real and relevant, and students are actively negotiating the meaning of these concepts within their own frameworks. While some students are navigating challenges in articulating their understanding in a way that aligns with traditional academic expectations, the overall vibe is one of engaged exploration and a willingness to take intellectual risks.\n\n## What Students Are Reaching For\n\nHere are some of the main intellectual threads I'm seeing:\n\n*   **Bridging Science and Lived Experience:** Several students are actively seeking to connect scientific principles to their personal lives and cultural backgrounds. **Daniela Reyes** powerfully linked osmosis to her abuela's curtido-making process, demonstrating a deep understanding of concentration gradients in a culturally relevant context. **Ruby Whitehawk** went even further, challenging the notion that science is solely confined to the classroom by connecting osmosis to her kokum's knowledge of maple sugaring \u2013 a truly insightful and potentially transformative connection.\n*   **Grappling with Selectivity and Complexity:** Students are wrestling with the concept of \"selectivity\" in the cell membrane, moving beyond a simple understanding to consider the nuances of how membranes function as filters. **Jordan Wells**\u2019s question about whether cell membranes are \"uniform or if some spots let more through than others\" reveals a burgeoning awareness of the complexity of biological systems, a question that deserves further exploration.\n*   **Recognizing the Fragility and Scale of Biological Systems:** There's a growing awareness of the delicate balance required for cellular function and the constant, often invisible, processes happening within our bodies. **Jaylen Brooks**\u2019s poignant mention of red blood cells bursting in pure water, and **Imani Jefferson**\u2019s expansion on this concept, demonstrates a sophisticated understanding of cellular fragility. **Marcus Thompson**\u2019s observation about osmosis happening constantly within his body shows a developing capacity for scale \u2013 moving from the lab to the everyday, and then to the internal.\n\n## Exceptional Contributions\n\n*   **Ruby Whitehawk:** Ruby\u2019s connection to her kokum\u2019s knowledge of maple sugaring is a standout example of connecting scientific principles to lived experience. She directly challenges the notion that science is solely confined to the classroom, a sentiment that deserves to be amplified. *What to mirror back:* Invite her to share more about this process, potentially as a guest speaker or a class demonstration. This could be a powerful opportunity to demonstrate the validity of non-traditional forms of knowledge and challenge the notion that science is solely a Western construct.\n*   **Imani Jefferson:** Imani\u2019s extended reflection, particularly her emphasis on the membrane as the \u201creal MVP,\u201d demonstrates a sophisticated understanding of the crucial role of cellular structures. Her Kool-Aid analogy is a brilliant way to explain concentration gradients. *What to mirror back:* Acknowledge her insightful analogy and encourage her to continue using relatable examples to explain complex concepts.\n*   **Daniela Reyes:** Daniela\u2019s reflection on her abuela's curtido-making process isn't just an anecdote; it's a powerful demonstration of scientific principles in action. *What to mirror back:* Validate her confidence in connecting her family\u2019s knowledge to scientific principles. Encouraging her to further explore this connection would be a valuable opportunity to validate non-traditional forms of knowledge and broaden the class's understanding of how scientific principles are applied in everyday life.\n\n## Students to Check In With\n\n*   **Jaylen Brooks:** Given the significant personal challenges Jaylen is facing, a warm and supportive check-in would be beneficial. A simple, \"How are things going outside of class?\" could open the door for him to share if he needs any additional support.\n*   **Chris Sandoval:** Chris is openly acknowledging a pattern of sleep deprivation and a demanding schedule. A gentle inquiry about his workload and a suggestion of campus resources (tutoring, time management workshops) could be helpful.\n\n## How Students Entered the Material\n\nThe range of entry points was striking. Some students, like **Anh Nguyen**, approached the assignment with a more formal, analytical style, focusing on the scientific details and connecting them to the textbook. Others, like **Marcus Thompson**, embraced a more informal, conversational tone, using slang and relatable examples (gummy bears!) to make the science feel real. Still others, like **Jordan Wells**, demonstrated a sense of wonder and curiosity, posing thoughtful questions and exploring the broader implications of the concepts. **Ruby Whitehawk** brought a unique perspective, grounding the material in her family's traditional ecological knowledge.\n\n## What's Working in This Assignment\n\nThe prompt's explicit validation of non-standard English is clearly working. Students are experimenting with different registers to express their understanding, and the classroom feels like a safe space for them to do so. The connection to a real-world example (the lab activity) provided a concrete starting point for their reflections, and the opportunity to connect those observations to broader scientific principles sparked a lot of insightful thinking.\n\n## Moments for the Classroom\n\nSeveral students are wrestling with the \"invisible\" nature of osmosis \u2013 the speed and constant occurrence of these processes. This could spark a productive class conversation about how we perceive scientific phenomena and how our understanding of scale influences our observations. A follow-up activity that emphasizes the speed of these processes and encourages students to consider how they might be happening constantly within their own bodies could be a great next step.\n\n## Structural Power Moves to Address\n\n*   **Daniela Reyes\u2019s concluding statement:** While seemingly progressive in its recognition of non-traditional knowledge, her statement subtly reinforces the idea that her abuela's knowledge is *less* than, because it exists *outside* of formal scientific institutions. It positions \"real\" science as happening in classrooms, and then grants a limited recognition to knowledge gained elsewhere. *How to address it pedagogically:* In a future discussion about knowledge systems, gently challenge the assumption that formal education is the *only* valid pathway to scientific understanding. Encourage students to consider the limitations of relying solely on textbooks and traditional scientific institutions. You could ask, \"What are the benefits and drawbacks of relying on formal education as the primary source of scientific knowledge?\""
+}

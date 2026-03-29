@@ -25,9 +25,9 @@ from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QDialogButtonBox,
     QFrame, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QScrollArea, QSizePolicy, QStackedWidget,
-    QTextEdit, QVBoxLayout, QWidget,
+    QTextBrowser, QTextEdit, QVBoxLayout, QWidget,
 )
-from PySide6.QtCore import QObject, Qt, QTimer, Signal
+from PySide6.QtCore import QObject, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QRadialGradient
 
 from gui.widgets.status_pip import draw_pip
@@ -43,7 +43,9 @@ from gui.styles import (
     ASSET_CHIP_BG, ASSET_CHIP_BORDER, ASSET_CHIP_TEXT,
     make_run_button, make_secondary_button,
     make_section_label, make_h_rule, make_content_pane,
+    apply_phosphor_glow,
     GripSplitter,
+    MONO_FONT, PANEL_GRADIENT,
     combo_qss,
 )
 from gui.widgets.crt_combo import CRTComboBox
@@ -365,6 +367,7 @@ def _muted_label(text: str, wrap: bool = True) -> QLabel:
     return lbl
 
 
+
 def _placeholder_layer(name: str) -> QWidget:
     """Styled placeholder for layers not yet implemented."""
     w = QWidget()
@@ -662,6 +665,11 @@ class InsightsPanel(QWidget):
             ("Deep Thinking", "deep_thinking"),
             accent="amber",
         )
+        # Restore last-used tier from settings (Issue 9)
+        from settings import load_settings as _load_s
+        _saved_tier = _load_s().get("insights_model_tier", "auto")
+        if _saved_tier != "auto":
+            self._depth_toggle.set_mode(_saved_tier)
         self._depth_toggle.mode_changed.connect(self._on_depth_changed)
         self._depth_toggle.mode_changed.connect(lambda _: self._update_summary())
         lo.addWidget(self._depth_toggle)
@@ -706,6 +714,37 @@ class InsightsPanel(QWidget):
         lo.addWidget(self._feedback_toggle)
         lo.addWidget(_muted_label(
             "Based on your analysis lens. You review and approve before posting."
+        ))
+
+        # Per-run enhancement toggle (Issue 15c)
+        from settings import load_settings as _load_settings
+        _s = _load_settings()
+        _cloud_privacy = _s.get("insights_cloud_privacy", "")
+        if _cloud_privacy in ("free_enhancement", "privacy_enhancement"):
+            lo.addWidget(make_h_rule())
+            self._enhance_toggle = SwitchToggle(
+                "Enhance analysis with cloud service", wrap_width=220
+            )
+            self._enhance_toggle.setChecked(True)
+            lo.addWidget(self._enhance_toggle)
+            lo.addWidget(_muted_label(
+                "Sends anonymized class patterns after local analysis "
+                "completes. ~20 seconds."
+            ))
+        else:
+            self._enhance_toggle = None
+
+        # AI use policy (Issue 12) — resets to default each time
+        lo.addWidget(make_h_rule())
+        lo.addWidget(make_section_label("AI USE POLICY"))
+        self._ai_policy_combo = CRTComboBox()
+        self._ai_policy_combo.addItem("AI use not expected", "not_expected")
+        self._ai_policy_combo.addItem("AI prohibited for this assignment", "prohibited")
+        self._ai_policy_combo.addItem("AI allowed / encouraged", "allowed")
+        self._ai_policy_combo.setFixedWidth(280)
+        lo.addWidget(self._ai_policy_combo)
+        lo.addWidget(_muted_label(
+            "How the system handles submissions flagged as likely AI-generated."
         ))
 
         lo.addWidget(make_h_rule())
@@ -1003,6 +1042,29 @@ class InsightsPanel(QWidget):
             f"}}"
         )
         lo.addWidget(self._progress_bar)
+
+        # Stage info row: stage description (primary, left) + elapsed (secondary, right)
+        stage_row = QHBoxLayout()
+        stage_row.setContentsMargins(0, SPACING_XS, 0, SPACING_XS)
+        self._stage_desc_label = QLabel("")
+        self._stage_desc_label.setWordWrap(True)
+        self._stage_desc_label.setStyleSheet(
+            f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
+            f" font-style: italic; background: transparent; border: none;"
+        )
+        stage_row.addWidget(self._stage_desc_label, 1)
+        self._elapsed_label = QLabel("")
+        self._elapsed_label.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+            f" background: transparent; border: none;"
+        )
+        stage_row.addWidget(self._elapsed_label)
+        lo.addLayout(stage_row)
+
+        # Elapsed timer
+        self._elapsed_timer = QTimer(self)
+        self._elapsed_timer.timeout.connect(self._update_elapsed)
+        self._elapsed_start = None
 
         # Split pane: left = system log, right = live results
         splitter = GripSplitter.create(Qt.Orientation.Horizontal)
@@ -2015,10 +2077,23 @@ class InsightsPanel(QWidget):
         filter_combo = CRTComboBox()
         filter_combo.addItems(["Show: All students",
                                "Show: Flagged concerns only",
+                               "Show: Wellbeing signals",
                                "Show: Has analysis only",
                                "Show: Insufficient text"])
         filter_combo.setFixedWidth(200)
         filter_row.addWidget(filter_combo)
+
+        search_input = QLineEdit()
+        search_input.setPlaceholderText("Search by name...")
+        search_input.setFixedWidth(160)
+        search_input.setStyleSheet(
+            f"QLineEdit {{ background: {BG_INSET}; color: {PHOSPHOR_MID};"
+            f" border: 1px solid {BORDER_DARK}; border-radius: 4px;"
+            f" padding: 4px 8px; font-size: {px(11)}px; }}"
+            f"QLineEdit:focus {{ border-color: {BORDER_AMBER}; }}"
+        )
+        filter_row.addWidget(search_input)
+
         filter_row.addStretch()
         lo.addLayout(filter_row)
 
@@ -2065,6 +2140,11 @@ class InsightsPanel(QWidget):
 
                 if filter_mode == "Show: Flagged concerns only" and not concerns:
                     continue
+                if filter_mode == "Show: Wellbeing signals":
+                    _wb = record.get("wellbeing_axis", "")
+                    _ci = record.get("checkin_flag")
+                    if _wb not in ("CRISIS", "BURNOUT") and not _ci:
+                        continue
                 if filter_mode == "Show: Has analysis only" and has_no_analysis:
                     continue
                 if filter_mode == "Show: Insufficient text" and not has_no_analysis:
@@ -2091,6 +2171,12 @@ class InsightsPanel(QWidget):
                 reverse=(sort_mode == "Sort: Name Z–A"),
             )
 
+            # Name search filter
+            search_text = search_input.text().strip().lower()
+            if search_text:
+                visible = [c for c in visible if search_text in
+                    (c[1].get("student_name", "") or c[0].get("student_name", "")).lower()]
+
             for row_data, record in visible:
                 card = self._build_coding_card(
                     run_id, row_data, record, all_tags,
@@ -2101,6 +2187,7 @@ class InsightsPanel(QWidget):
 
         sort_combo.currentIndexChanged.connect(lambda _: _rebuild_cards())
         filter_combo.currentIndexChanged.connect(lambda _: _rebuild_cards())
+        search_input.textChanged.connect(lambda _: _rebuild_cards())
 
         # Initial build
         _rebuild_cards()
@@ -2148,6 +2235,114 @@ class InsightsPanel(QWidget):
             )
             header_row.addWidget(wc_lbl)
         pane_lo.addLayout(header_row)
+
+        # ── Observation (primary content — from observation architecture) ──
+        obs_text = record.get("observation", "")
+        if obs_text:
+            obs_frame = self._build_observation_frame(record)
+            pane_lo.addWidget(obs_frame)
+            pane_lo.addWidget(make_h_rule())
+
+        # ── Wellbeing classification (4-axis: Issue 16) ──
+        wb_axis = record.get("wellbeing_axis", "")
+        wb_signal = record.get("wellbeing_signal", "")
+        wb_confidence = record.get("wellbeing_confidence", 0.0)
+        checkin_flag = record.get("checkin_flag")
+        checkin_reasoning = record.get("checkin_reasoning", "")
+
+        # Show chips for non-ENGAGED axes (ENGAGED is the default — no chip)
+        has_wb_display = (
+            wb_axis in ("CRISIS", "BURNOUT")
+            or (wb_axis == "ENGAGED" and checkin_flag)
+        )
+        if has_wb_display:
+            wb_row = QHBoxLayout()
+            wb_row.setSpacing(4)
+
+            if wb_axis == "CRISIS":
+                crisis_chip = PhosphorChip(
+                    "\u26a0 CRISIS", active=True, accent="rose"
+                )
+                wb_row.addWidget(crisis_chip)
+            elif wb_axis == "BURNOUT":
+                burn_chip = PhosphorChip(
+                    "\u25cb BURNOUT", active=True, accent="amber"
+                )
+                wb_row.addWidget(burn_chip)
+
+            if checkin_flag:
+                checkin_chip = PhosphorChip(
+                    "? CHECK-IN", active=False, accent="amber"
+                )
+                wb_row.addWidget(checkin_chip)
+
+            if wb_confidence > 0:
+                conf_text = f"Confidence: {wb_confidence:.0%}"
+                if wb_confidence < 0.75:
+                    conf_text += " \u2014 review suggested"
+                conf_lbl = QLabel(conf_text)
+                conf_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_DIM}; font-size: {px(10)}px;"
+                    f" background: transparent; border: none;"
+                )
+                wb_row.addWidget(conf_lbl)
+
+            wb_row.addStretch()
+            pane_lo.addLayout(wb_row)
+
+            # Signal explanation (the teacher-valuable part)
+            signal_text = wb_signal or checkin_reasoning
+            if signal_text:
+                sig_frame = QFrame()
+                sig_color = ROSE_ACCENT if wb_axis == "CRISIS" else PHOSPHOR_DIM
+                sig_frame.setStyleSheet(
+                    f"QFrame {{ background: {BG_INSET};"
+                    f" border-left: 3px solid {sig_color};"
+                    f" border-radius: 4px; padding: {SPACING_SM}px; }}"
+                )
+                sig_lo = QVBoxLayout(sig_frame)
+                sig_lo.setContentsMargins(
+                    SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM
+                )
+                sig_lo.setSpacing(SPACING_XS)
+
+                sig_lbl = QLabel(signal_text)
+                sig_lbl.setWordWrap(True)
+                sig_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
+                    f" font-style: italic; font-family: {MONO_FONT};"
+                    f" background: transparent; border: none;"
+                )
+                sig_lo.addWidget(sig_lbl)
+                pane_lo.addWidget(sig_frame)
+
+            # Suggested actions
+            if wb_axis == "CRISIS":
+                action_lbl = QLabel(
+                    "\u26a0 Consider connecting this student with your "
+                    "school counselor."
+                )
+                action_lbl.setWordWrap(True)
+                action_lbl.setStyleSheet(
+                    f"color: {ROSE_ACCENT}; font-size: {px(11)}px;"
+                    f" background: transparent; border: none;"
+                )
+                pane_lo.addWidget(action_lbl)
+            elif wb_axis == "BURNOUT":
+                action_lbl = QLabel(
+                    "\u25cb Consider flexible timing or a check-in "
+                    "about workload."
+                )
+                action_lbl.setWordWrap(True)
+                action_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: {px(11)}px;"
+                    f" background: transparent; border: none;"
+                )
+                pane_lo.addWidget(action_lbl)
+            # CHECK-IN: no prescribed action — signal text presents
+            # competing interpretations, teacher decides
+
+            pane_lo.addWidget(make_h_rule())
 
         # ── Integrity flag banner (Tier 1 — above engagement chips) ──
         integrity_flags = record.get("integrity_flags") or {}
@@ -2957,7 +3152,14 @@ class InsightsPanel(QWidget):
 
         # Detect GuidedSynthesisResult (new) vs SynthesisReport (legacy)
         if "class_temperature" in data:
-            self._display_guided_synthesis(lo, data, run_id)
+            obs_text = (row.get("observation_synthesis") or "").strip()
+            if obs_text:
+                # New architecture: observation synthesis with master-detail
+                codings = self._store.get_codings(run_id) if self._store else []
+                self._display_obs_report(lo, data, obs_text, codings, run_id)
+            else:
+                # Guided synthesis without observation narrative
+                self._display_guided_synthesis(lo, data, run_id)
             return
 
         sections = data.get("sections", {})
@@ -3339,7 +3541,71 @@ class InsightsPanel(QWidget):
             cloud_te.setMaximumHeight(400)
             lo.addWidget(cloud_te)
 
+        # ── Enhancement failure banner (Issue 15d) ──
+        from settings import load_settings as _ls
+        _cloud_priv = _ls().get("insights_cloud_privacy", "")
+        if not cloud_narrative and _cloud_priv in (
+            "free_enhancement", "privacy_enhancement"
+        ):
+            fail_frame = QFrame()
+            fail_frame.setStyleSheet(
+                f"QFrame {{ background: rgba(216,112,32,0.08);"
+                f" border: 1px solid {STATUS_WARN}; border-radius: 4px;"
+                f" padding: {SPACING_SM}px; }}"
+            )
+            fail_lo_inner = QVBoxLayout(fail_frame)
+            fail_lo_inner.setContentsMargins(
+                SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM
+            )
+            fail_lo_inner.setSpacing(SPACING_XS)
+            fail_lbl = QLabel(
+                "Cloud enhancement was attempted but the service was "
+                "unavailable. Showing local analysis only."
+            )
+            fail_lbl.setWordWrap(True)
+            fail_lbl.setStyleSheet(
+                f"color: {STATUS_WARN}; font-size: {px(12)}px;"
+                f" background: transparent; border: none;"
+            )
+            fail_lo_inner.addWidget(fail_lbl)
+
+            fail_btn_row = QHBoxLayout()
+            retry_btn = QPushButton("Retry Enhancement")
+            make_secondary_button(retry_btn)
+            retry_btn.clicked.connect(
+                lambda: self._on_enhance_clicked(run_id)
+            )
+            fail_btn_row.addWidget(retry_btn)
+
+            fail_copy = QPushButton("Copy for Chatbot")
+            make_secondary_button(fail_copy)
+            fail_copy.clicked.connect(lambda d=data: self._copy_for_chatbot_from_data(d))
+            fail_btn_row.addWidget(fail_copy)
+            fail_btn_row.addStretch()
+            fail_lo_inner.addLayout(fail_btn_row)
+            lo.addWidget(fail_frame)
+
+        # ── Browser handoff row (always visible — Issue 15e) ──
+        lo.addWidget(make_h_rule())
+        handoff_row = QHBoxLayout()
+        handoff_label = QLabel(
+            "Or enhance by pasting into your school\u2019s AI tool \u2192"
+        )
+        handoff_label.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+            f" background: transparent; border: none; font-style: italic;"
+        )
+        handoff_row.addWidget(handoff_label)
+
+        handoff_copy = QPushButton("Copy for Chatbot")
+        make_secondary_button(handoff_copy)
+        handoff_copy.clicked.connect(lambda d=data: self._copy_for_chatbot_from_data(d))
+        handoff_row.addWidget(handoff_copy)
+        handoff_row.addStretch()
+        lo.addLayout(handoff_row)
+
         # ── Export buttons ────────────────────────────────────────────────
+        lo.addWidget(make_h_rule())
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
@@ -3430,6 +3696,568 @@ class InsightsPanel(QWidget):
         if path:
             with open(path, "w") as f:
                 f.write(text)
+
+    # ------------------------------------------------------------------
+    # Observation helpers (Issues 4 + 5 — shared by cards & detail panel)
+    # ------------------------------------------------------------------
+
+    def _build_observation_frame(self, record: dict) -> QFrame:
+        """Build the observation inset frame for a student.
+
+        Used in Student Work cards and the Report detail panel.
+        """
+        obs = record.get("observation", "")
+        reaching = record.get("what_student_is_reaching_for", "")
+
+        frame = QFrame()
+        frame.setStyleSheet(
+            f"QFrame {{ background: qradialgradient("
+            f"cx:0.5,cy:0.5,radius:0.9,"
+            f"stop:0.00 #141008,stop:0.70 #0E0A02,stop:1.00 #090702);"
+            f" border-left: 3px solid {PHOSPHOR_DIM};"
+            f" border-radius: 4px; padding: {SPACING_SM}px; }}"
+        )
+        frame_lo = QVBoxLayout(frame)
+        frame_lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+        frame_lo.setSpacing(SPACING_XS)
+
+        if obs:
+            obs_lbl = QLabel(obs)
+            obs_lbl.setWordWrap(True)
+            obs_lbl.setStyleSheet(
+                f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
+                f" font-style: italic; font-family: {MONO_FONT};"
+                f" background: transparent; border: none;"
+                f" line-height: 1.5;"
+            )
+            frame_lo.addWidget(obs_lbl)
+
+        if reaching:
+            reach_lbl = QLabel(f"\u2192 Reaching for: {reaching}")
+            reach_lbl.setWordWrap(True)
+            reach_lbl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+                f" font-family: {MONO_FONT}; background: transparent;"
+                f" border: none;"
+            )
+            frame_lo.addWidget(reach_lbl)
+
+        return frame
+
+    def _build_student_detail_content(self, record: dict) -> QWidget:
+        """Build the student detail view for the Report layer detail panel.
+
+        Shows observation, tags, register, concerns — everything the
+        teacher needs to understand this student's work.
+        """
+        coding = record.get("coding_record", {})
+        if isinstance(coding, str):
+            try:
+                coding = json.loads(coding)
+            except Exception:
+                coding = {}
+
+        widget = QWidget()
+        lo = QVBoxLayout(widget)
+        lo.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+        lo.setSpacing(SPACING_SM)
+
+        # Header: name + word count
+        name = coding.get("student_name", "Unknown")
+        wc = coding.get("word_count", 0)
+        header = QHBoxLayout()
+        name_lbl = QLabel(name)
+        name_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_HOT}; font-size: {px(14)}px; font-weight: bold;"
+            f" background: transparent; border: none;"
+        )
+        apply_phosphor_glow(name_lbl, PHOSPHOR_HOT, blur=8, strength=0.60)
+        header.addWidget(name_lbl)
+        header.addStretch()
+        if wc:
+            wc_lbl = QLabel(f"{wc} words")
+            wc_lbl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+                f" background: transparent; border: none;"
+            )
+            header.addWidget(wc_lbl)
+        lo.addLayout(header)
+        lo.addWidget(make_h_rule())
+
+        # Observation (primary content)
+        obs = coding.get("observation", "")
+        if obs:
+            obs_frame = self._build_observation_frame(coding)
+            lo.addWidget(obs_frame)
+            lo.addWidget(make_h_rule())
+
+        # Wellbeing classification (Issue 16)
+        _wb_axis = coding.get("wellbeing_axis", "")
+        _wb_signal = coding.get("wellbeing_signal", "")
+        _checkin = coding.get("checkin_flag")
+        _checkin_reason = coding.get("checkin_reasoning", "")
+        if _wb_axis in ("CRISIS", "BURNOUT") or _checkin:
+            wb_chips = QHBoxLayout()
+            wb_chips.setSpacing(4)
+            if _wb_axis == "CRISIS":
+                wb_chips.addWidget(PhosphorChip("\u26a0 CRISIS", active=True, accent="rose"))
+            elif _wb_axis == "BURNOUT":
+                wb_chips.addWidget(PhosphorChip("\u25cb BURNOUT", active=True, accent="amber"))
+            if _checkin:
+                wb_chips.addWidget(PhosphorChip("? CHECK-IN", active=False, accent="amber"))
+            wb_chips.addStretch()
+            lo.addLayout(wb_chips)
+
+            _sig = _wb_signal or _checkin_reason
+            if _sig:
+                sig_lbl = QLabel(_sig)
+                sig_lbl.setWordWrap(True)
+                sig_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: {px(11)}px;"
+                    f" font-style: italic; background: transparent; border: none;"
+                )
+                lo.addWidget(sig_lbl)
+            lo.addWidget(make_h_rule())
+
+        # Theme tags
+        tags = coding.get("theme_tags", [])
+        if tags:
+            tag_row = QHBoxLayout()
+            tag_row.setSpacing(SPACING_XS)
+            for tag in tags[:5]:
+                chip = PhosphorChip(tag, active=False, accent="amber")
+                tag_row.addWidget(chip)
+            tag_row.addStretch()
+            lo.addLayout(tag_row)
+
+        # Register + linguistic assets (metadata line)
+        reg = coding.get("emotional_register", "")
+        assets = coding.get("linguistic_assets", [])
+        if reg or assets:
+            meta_parts = []
+            if reg:
+                meta_parts.append(f"Register: {reg}")
+            if assets:
+                meta_parts.append(f"Linguistic: {', '.join(str(a) for a in assets[:2])}")
+            meta_lbl = QLabel(" \u00b7 ".join(meta_parts))
+            meta_lbl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+                f" background: transparent; border: none;"
+            )
+            lo.addWidget(meta_lbl)
+
+        # Concerns (rose frames)
+        concerns = coding.get("concerns", [])
+        for concern in concerns:
+            lo.addWidget(make_h_rule())
+            c_frame = QFrame()
+            c_frame.setStyleSheet(
+                f"QFrame {{ background: rgba(204,82,130,0.08);"
+                f" border-left: 3px solid {ROSE_ACCENT};"
+                f" border-radius: 4px; padding: {SPACING_SM}px; }}"
+            )
+            c_lo = QVBoxLayout(c_frame)
+            c_lo.setContentsMargins(SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM)
+            c_lo.setSpacing(SPACING_XS)
+            c_type = concern.get("type", "concern")
+            c_text = concern.get("why_flagged", concern.get("description", ""))
+            type_lbl = QLabel(c_type.upper())
+            type_lbl.setStyleSheet(
+                f"color: {PHOSPHOR_HOT}; font-size: {px(11)}px;"
+                f" font-weight: bold; background: transparent; border: none;"
+            )
+            c_lo.addWidget(type_lbl)
+            if c_text:
+                c_desc = QLabel(c_text)
+                c_desc.setWordWrap(True)
+                c_desc.setStyleSheet(
+                    f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
+                    f" background: transparent; border: none;"
+                )
+                c_lo.addWidget(c_desc)
+            lo.addWidget(c_frame)
+
+        # "View semester trajectory" cross-link (Issue 17)
+        semester_link = QLabel(
+            f'<a style="color: {PHOSPHOR_DIM}; font-style: italic;">'
+            f'View semester trajectory \u2192</a>'
+        )
+        semester_link.setCursor(Qt.CursorShape.PointingHandCursor)
+        semester_link.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+            f" background: transparent; border: none; padding-top: 8px;"
+        )
+        semester_link.mousePressEvent = (
+            lambda _: self._layer_toggle.set_mode("semester")
+            if hasattr(self, "_layer_toggle") else None
+        )
+        lo.addWidget(semester_link)
+
+        lo.addStretch()
+        return widget
+
+    # ------------------------------------------------------------------
+    # Observation synthesis display (Issue 5 — Report layer master-detail)
+    # ------------------------------------------------------------------
+
+    def _render_obs_synthesis_with_links(
+        self, text: str, codings: list
+    ) -> QWidget:
+        """Render observation synthesis with student names as clickable links."""
+        import re
+
+        # Build name → student_id lookup from coding records
+        name_map: Dict[str, str] = {}
+        for c in codings:
+            rec = c.get("coding_record", {})
+            if isinstance(rec, str):
+                try:
+                    rec = json.loads(rec)
+                except Exception:
+                    rec = {}
+            sname = rec.get("student_name") or c.get("student_name", "")
+            sid = str(c.get("student_id", ""))
+            if sname and sid:
+                name_map[sname] = sid
+
+        container = QWidget()
+        lo = QVBoxLayout(container)
+        lo.setContentsMargins(0, 0, 0, 0)
+        lo.setSpacing(SPACING_XS)
+
+        # Sort names longest-first so "Ingrid Vasquez" matches before "Ingrid"
+        sorted_names = sorted(name_map.keys(), key=len, reverse=True)
+
+        for para in text.split("\n\n"):
+            if not para.strip():
+                continue
+
+            # Section headers (## or **)
+            stripped = para.strip()
+            if stripped.startswith("##") or (
+                stripped.startswith("**") and stripped.endswith("**")
+            ):
+                header_text = stripped.lstrip("#").strip().strip("*").strip()
+                lo.addWidget(make_section_label(header_text))
+                lo.addWidget(make_h_rule())
+                continue
+
+            # Regular paragraphs: QTextBrowser with HTML links for names
+            html = para.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+            # Replace student names with clickable links
+            for name in sorted_names:
+                if name in para:
+                    escaped_name = name.replace("&", "&amp;")
+                    sid = name_map[name]
+                    link = (
+                        f'<a href="student://{sid}" style="color: {PHOSPHOR_HOT};'
+                        f' text-decoration: underline; font-weight: bold;">'
+                        f'{escaped_name}</a>'
+                    )
+                    html = html.replace(escaped_name, link)
+
+            browser = QTextBrowser()
+            browser.setOpenLinks(False)
+            browser.setReadOnly(True)
+            browser.setTextInteractionFlags(
+                Qt.TextInteractionFlag.LinksAccessibleByMouse
+                | Qt.TextInteractionFlag.LinksAccessibleByKeyboard
+            )
+            browser.setHtml(
+                f'<div style="color: {PHOSPHOR_MID}; font-family: {MONO_FONT};'
+                f' font-size: {px(12)}px; line-height: 1.6;">{html}</div>'
+            )
+            browser.anchorClicked.connect(self._on_student_link_clicked)
+            browser.setStyleSheet(
+                f"QTextBrowser {{ background: transparent; border: none;"
+                f" color: {PHOSPHOR_MID}; }}"
+            )
+            browser.setTabChangesFocus(False)  # Tab navigates links, not focus
+            # Auto-resize to content height
+            browser.document().setTextWidth(500)
+            doc_height = int(browser.document().size().height()) + SPACING_SM
+            browser.setFixedHeight(max(doc_height, 30))
+            browser.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+            lo.addWidget(browser)
+
+        return container
+
+    def _on_student_link_clicked(self, url: QUrl) -> None:
+        """Handle click on a student name in the observation synthesis."""
+        if url.scheme() == "student":
+            sid = url.host() or url.path().lstrip("/")
+            if sid:
+                self._show_student_detail(sid)
+
+    def _show_student_detail(self, student_id: str) -> None:
+        """Populate and reveal the right-side detail panel in Report layer."""
+        if not self._current_run_id or not self._store:
+            return
+
+        record = self._store.get_coding_record(self._current_run_id, student_id)
+        if not record:
+            return
+
+        detail_panel = getattr(self, "_report_detail_scroll", None)
+        if detail_panel is None:
+            return
+
+        # Build detail content
+        detail_widget = self._build_student_detail_content(record)
+
+        # Wrap with close button and "View all students" link
+        wrapper = QWidget()
+        wrapper_lo = QVBoxLayout(wrapper)
+        wrapper_lo.setContentsMargins(0, SPACING_SM, 0, 0)
+        wrapper_lo.setSpacing(SPACING_SM)
+
+        # Close button row
+        close_row = QHBoxLayout()
+        close_row.addStretch()
+        close_btn = QPushButton("\u00d7")
+        close_btn.setFixedSize(24, 24)
+        close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        close_btn.setStyleSheet(
+            f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
+            f" border: 1px solid {BORDER_DARK}; border-radius: 12px;"
+            f" font-size: {px(14)}px; }}"
+            f"QPushButton:hover {{ color: {PHOSPHOR_HOT};"
+            f" border-color: {BORDER_AMBER}; }}"
+        )
+        close_btn.clicked.connect(self._hide_student_detail)
+        close_row.addWidget(close_btn)
+        wrapper_lo.addLayout(close_row)
+
+        wrapper_lo.addWidget(detail_widget, 1)
+
+        # "View all students" link at bottom
+        all_link = QLabel(
+            f'<a style="color: {PHOSPHOR_DIM}; font-style: italic;">'
+            f'View all students \u2192</a>'
+        )
+        all_link.setCursor(Qt.CursorShape.PointingHandCursor)
+        all_link.setStyleSheet(
+            f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+            f" background: transparent; border: none;"
+        )
+        all_link.mousePressEvent = lambda _: self._layer_toggle.set_mode("codings")
+        wrapper_lo.addWidget(all_link)
+
+        detail_panel.setWidget(wrapper)
+        detail_panel.setVisible(True)
+
+    def _hide_student_detail(self) -> None:
+        """Hide the student detail panel in the Report layer."""
+        detail_panel = getattr(self, "_report_detail_scroll", None)
+        if detail_panel:
+            detail_panel.setVisible(False)
+
+    def _navigate_to_student(self, student_id: str) -> None:
+        """Navigate to a student in the Student Work layer."""
+        # Switch to Student Work layer
+        if hasattr(self, "_layer_toggle"):
+            self._layer_toggle.set_mode("codings")
+        # TODO: scroll to the specific student card once layer loads
+
+    def _copy_for_chatbot_from_data(self, data: dict) -> None:
+        """Copy GuidedSynthesisResult to clipboard in chatbot-friendly format."""
+        from PySide6.QtWidgets import QApplication
+        lines = []
+        temp = data.get("class_temperature", "")
+        if temp:
+            lines.append(f"CLASS TEMPERATURE\n{temp}\n")
+        areas = data.get("attention_areas") or []
+        if areas:
+            lines.append("ATTENTION AREAS\n" + "\n".join(f"- {a}" for a in areas) + "\n")
+        patterns = data.get("concern_patterns") or []
+        if patterns:
+            lines.append("CONCERN PATTERNS")
+            for p in patterns:
+                lines.append(f"- {p.get('description', '')}")
+            lines.append("")
+        hi = data.get("engagement_highlights") or []
+        if hi:
+            lines.append("ENGAGEMENT HIGHLIGHTS")
+            for h in hi:
+                lines.append(f"- {h.get('description', '')}")
+            lines.append("")
+        QApplication.clipboard().setText("\n".join(lines))
+        self._show_toast("Copied to clipboard")
+
+    def _on_enhance_clicked(self, run_id: str) -> None:
+        """Show enhancement preview and send if confirmed."""
+        if not self._store:
+            return
+        from gui.dialogs.enhancement_preview_dialog import EnhancementPreviewDialog
+        from settings import load_settings as _ls
+        from insights.synthesizer import run_cloud_enhancement
+
+        _s = _ls()
+        _priv = _s.get("insights_cloud_privacy", "")
+        provider_map = {
+            "free_enhancement": "Google Gemma 27B (free, via OpenRouter)",
+            "privacy_enhancement": "Mistral Small (privacy-first, via Venice)",
+        }
+        provider = provider_map.get(_priv, "Cloud service")
+
+        # Build anonymized payload
+        codings = self._store.get_codings(run_id)
+        if not codings:
+            self._show_toast("No coding records to enhance.")
+            return
+
+        # Build the payload preview text
+        records = []
+        for c in codings:
+            rec = c.get("coding_record", {})
+            if isinstance(rec, str):
+                try:
+                    rec = json.loads(rec)
+                except Exception:
+                    rec = {}
+            records.append(rec)
+
+        row = self._store.get_themes(run_id)
+        assignment_name = ""
+        if row:
+            assignment_name = row.get("assignment_name", "")
+
+        # Simple payload preview (teacher sees what leaves the machine)
+        payload_lines = ["[Anonymized class patterns — no student names or text]", ""]
+        themes = set()
+        registers = {}
+        for rec in records:
+            for t in rec.get("theme_tags", []):
+                themes.add(t)
+            r = rec.get("emotional_register", "")
+            if r:
+                registers[r] = registers.get(r, 0) + 1
+        if themes:
+            payload_lines.append(f"Themes: {', '.join(sorted(themes))}")
+        if registers:
+            payload_lines.append(f"Registers: {registers}")
+        payload_lines.append(f"Students: {len(records)}")
+
+        dlg = EnhancementPreviewDialog(
+            "\n".join(payload_lines), provider, parent=self
+        )
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        # Run enhancement
+        try:
+            narrative = run_cloud_enhancement(records, assignment_name, _s)
+            if narrative:
+                self._store.save_themes(
+                    run_id, synthesis_report_json=narrative
+                )
+                self._show_toast("Enhancement complete!")
+                # Refresh the report layer
+                self._invalidate_layers("report")
+                self._display_report(run_id)
+            else:
+                self._show_toast("Enhancement returned no results.")
+        except Exception as e:
+            self._show_toast(f"Enhancement failed: {e}")
+
+    def _display_obs_report(
+        self,
+        lo: QVBoxLayout,
+        data: dict,
+        obs_text: str,
+        codings: list,
+        run_id: str,
+    ) -> None:
+        """Render the Report layer with observation synthesis master-detail.
+
+        Left pane: observation synthesis narrative + guided synthesis cards.
+        Right pane: student detail panel (hidden until a name is clicked).
+        """
+        # Create splitter
+        splitter = GripSplitter.create(Qt.Orientation.Horizontal)
+
+        # ── Left pane: scrollable narrative ──
+        left_scroll = QScrollArea()
+        left_scroll.setWidgetResizable(True)
+        left_scroll.setStyleSheet(
+            "QScrollArea { border: none; background: transparent; }"
+        )
+        left_widget = QWidget()
+        left_lo = QVBoxLayout(left_widget)
+        left_lo.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+        left_lo.setSpacing(SPACING_MD)
+
+        # Primary: observation synthesis with clickable student names
+        left_lo.addWidget(make_section_label("CLASS OBSERVATIONS"))
+        left_lo.addWidget(make_h_rule())
+        obs_widget = self._render_obs_synthesis_with_links(obs_text, codings)
+        left_lo.addWidget(obs_widget)
+
+        # Silence visibility: how many students are discussed vs total
+        n_total = len(codings)
+        if n_total > 0:
+            # Count students whose names appear in the synthesis
+            n_discussed = 0
+            for c in codings:
+                rec = c.get("coding_record", {})
+                if isinstance(rec, str):
+                    try:
+                        rec = json.loads(rec)
+                    except Exception:
+                        rec = {}
+                sname = rec.get("student_name") or c.get("student_name", "")
+                if sname and sname in obs_text:
+                    n_discussed += 1
+            coverage_row = QHBoxLayout()
+            coverage_lbl = QLabel(
+                f"This summary discusses {n_discussed} of {n_total} "
+                f"students explicitly."
+            )
+            coverage_lbl.setStyleSheet(
+                f"color: {PHOSPHOR_DIM}; font-size: {px(11)}px;"
+                f" font-style: italic; background: transparent; border: none;"
+            )
+            coverage_row.addWidget(coverage_lbl)
+            view_all = QPushButton("View all students \u2192")
+            view_all.setCursor(Qt.CursorShape.PointingHandCursor)
+            view_all.setStyleSheet(
+                f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
+                f" border: none; font-size: {px(11)}px; font-style: italic;"
+                f" text-decoration: underline; }}"
+                f"QPushButton:hover {{ color: {PHOSPHOR_HOT}; }}"
+            )
+            view_all.clicked.connect(
+                lambda: self._layer_toggle.set_mode("codings")
+            )
+            coverage_row.addWidget(view_all)
+            coverage_row.addStretch()
+            left_lo.addLayout(coverage_row)
+
+        # Supporting: 4-card guided synthesis below
+        left_lo.addWidget(make_h_rule())
+        left_lo.addWidget(make_section_label("ANALYSIS DETAIL"))
+        self._display_guided_synthesis(left_lo, data, run_id)
+
+        left_scroll.setWidget(left_widget)
+
+        # ── Right pane: student detail (hidden until click) ──
+        self._report_detail_scroll = QScrollArea()
+        self._report_detail_scroll.setWidgetResizable(True)
+        self._report_detail_scroll.setVisible(False)
+        self._report_detail_scroll.setMinimumWidth(320)
+        self._report_detail_scroll.setStyleSheet(
+            f"QScrollArea {{ background: {PANEL_GRADIENT};"
+            f" border-left: 1px solid {BORDER_DARK}; }}"
+        )
+
+        splitter.addWidget(left_scroll)
+        splitter.addWidget(self._report_detail_scroll)
+        splitter.setStretchFactor(0, 3)  # 60% narrative
+        splitter.setStretchFactor(1, 2)  # 40% detail
+
+        lo.addWidget(splitter, 1)
 
     # ------------------------------------------------------------------
     # Feedback layer (Phase 4)
@@ -4865,6 +5693,12 @@ class InsightsPanel(QWidget):
         self._switch_view(1)
         self._progress_label.setText("Starting analysis...")
         self._progress_bar.setValue(0)
+        # Start elapsed timer
+        import time as _time_mod
+        self._elapsed_start = _time_mod.time()
+        self._elapsed_label.setText("Elapsed: 0m 0s")
+        self._stage_desc_label.setText("")
+        self._elapsed_timer.start(1000)
         self._log_output.clear()
         # Clear live results feed
         while self._live_lo.count():
@@ -4874,6 +5708,12 @@ class InsightsPanel(QWidget):
         self._live_lo.addStretch()
         self._append_log("Starting analysis pipeline...")
         self._progress_detail.setText("")
+
+        # Persist selected tier for next session (Issue 9)
+        from settings import load_settings as _load_s2, save_settings as _save_s2
+        _cur = _load_s2()
+        _cur["insights_model_tier"] = tier
+        _save_s2(_cur)
 
         # Show which assignment is being analyzed
         checked = self._get_checked_assignments()
@@ -4899,8 +5739,6 @@ class InsightsPanel(QWidget):
         # Gather teacher input
         teacher_context = self._week_input.toPlainText().strip()
         next_week = self._next_week_input.toPlainText().strip()
-        if next_week:
-            teacher_context += f"\nNext week: {next_week}"
 
         lens_text = self._lens_input.toPlainText().strip()
         analysis_lens = None
@@ -4924,6 +5762,13 @@ class InsightsPanel(QWidget):
             if analysis_lens:
                 self._profile_mgr.record_analysis_lens(analysis_lens)
 
+        # Read AI policy for this run
+        _ai_pol = (
+            self._ai_policy_combo.currentData()
+            if hasattr(self, "_ai_policy_combo") and self._ai_policy_combo
+            else "not_expected"
+        )
+
         # Batch mode when >1 assignment selected
         if len(checked) > 1:
             from gui.workers import BatchInsightsWorker
@@ -4939,6 +5784,9 @@ class InsightsPanel(QWidget):
                 teacher_interests=teacher_interests,
                 settings=self._get_settings(),
                 course_profile_id=self._profile_combo.currentData() or "default",
+                next_week_topic=next_week,
+                teacher_lens=lens_text,
+                ai_policy=_ai_pol,
             )
             self._worker.progress_update.connect(self._on_progress)
             self._worker.result_ready.connect(self._append_live_result)
@@ -4967,6 +5815,9 @@ class InsightsPanel(QWidget):
                 teacher_interests=teacher_interests,
                 settings=self._get_settings(),
                 course_profile_id=self._profile_combo.currentData() or "default",
+                next_week_topic=next_week,
+                teacher_lens=lens_text,
+                ai_policy=_ai_pol,
             )
             self._worker.progress_update.connect(self._on_progress)
             self._worker.result_ready.connect(self._append_live_result)
@@ -5015,6 +5866,25 @@ class InsightsPanel(QWidget):
                 overall = int(run_base + sub_pct * run_slice)
                 self._progress_bar.setValue(min(overall, 99))
 
+        # Stage descriptions for teacher context (Issue 7)
+        _STAGE_DESCRIPTIONS = {
+            "class_reading": (
+                "Reading all submissions together \u2014 some patterns are "
+                "only visible when student work is read as a conversation."
+            ),
+            "coding": "Generating detailed observations for each student.",
+            "observation": "Generating detailed observations for each student.",
+            "concerns": "Checking for students who may need support.",
+            "themes": "Identifying shared themes across student work.",
+            "synthesis": "Writing the class summary from observations.",
+            "feedback": "Drafting feedback for each student.",
+        }
+        msg_lower = message.lower()
+        for stage_key, desc in _STAGE_DESCRIPTIONS.items():
+            if stage_key in msg_lower:
+                self._stage_desc_label.setText(desc)
+                break
+
         # Stage-level progress for non-submission stages
         if not sub_match:
             stage_keywords = {
@@ -5028,13 +5898,30 @@ class InsightsPanel(QWidget):
                 "re-run complete": 100,
                 "batch complete": 100,
             }
-            msg_lower = message.lower()
             for keyword, pct in stage_keywords.items():
                 if keyword in msg_lower:
                     self._progress_bar.setValue(pct)
                     break
 
+    def _update_elapsed(self) -> None:
+        """Update the elapsed time display in the running view."""
+        if self._elapsed_start:
+            import time as _time_mod
+            elapsed = int(_time_mod.time() - self._elapsed_start)
+            m, s = divmod(elapsed, 60)
+            h, m = divmod(m, 60)
+            if h:
+                self._elapsed_label.setText(f"Elapsed: {h}h {m}m")
+            else:
+                self._elapsed_label.setText(f"Elapsed: {m}m {s}s")
+
+    def _stop_elapsed_timer(self) -> None:
+        """Stop the elapsed timer."""
+        self._elapsed_timer.stop()
+        self._elapsed_start = None
+
     def _on_analysis_complete(self, run_id: str) -> None:
+        self._stop_elapsed_timer()
         self._progress_label.setText("Analysis complete!")
         self._progress_bar.setValue(100)
         self._append_log("✓ Analysis complete! Switching to results...")
@@ -5045,6 +5932,7 @@ class InsightsPanel(QWidget):
 
     def _on_batch_complete(self, run_ids: list) -> None:
         """Handle batch insights completion."""
+        self._stop_elapsed_timer()
         n = len(run_ids)
         self._progress_label.setText(f"Batch complete! {n} run{'s' if n != 1 else ''}.")
         self._progress_detail.setText("Switching to review...")
@@ -5054,6 +5942,7 @@ class InsightsPanel(QWidget):
             self._load_run(run_ids[0])
 
     def _on_analysis_error(self, message: str) -> None:
+        self._stop_elapsed_timer()
         self._progress_label.setText(f"Error: {message}")
         self._progress_detail.setText("Return to setup to try again.")
 
@@ -5246,6 +6135,239 @@ class InsightsPanel(QWidget):
             self._worker.analysis_complete.connect(self._on_analysis_complete)
             self._worker.error.connect(self._on_analysis_error)
             self._worker.start()
+
+    # ------------------------------------------------------------------
+    # Growth reports (Issue 18)
+    # ------------------------------------------------------------------
+
+    def _generate_growth_reports(
+        self, course_id: str, course_name: str, container_lo: QVBoxLayout
+    ) -> None:
+        """Launch growth report generation in a worker thread."""
+        from insights.llm_backend import auto_detect_backend
+        from settings import load_settings as _ls
+
+        _s = _ls()
+        backend = auto_detect_backend(
+            tier=_s.get("insights_model_tier", "auto"), settings=_s
+        )
+        if not backend:
+            self._show_toast("No LLM backend available for report generation.")
+            return
+
+        # Add progress label to container
+        progress_lbl = QLabel("Generating reports...")
+        progress_lbl.setStyleSheet(
+            f"color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
+            f" font-style: italic; background: transparent; border: none;"
+        )
+        container_lo.addWidget(progress_lbl)
+
+        # Run in background thread
+        from concurrent.futures import ThreadPoolExecutor
+
+        def _run():
+            from insights.trajectory_report import generate_course_trajectory_reports
+
+            def _progress(name, idx, total):
+                progress_lbl.setText(
+                    f"Generating report {idx}/{total}: {name}..."
+                )
+
+            return generate_course_trajectory_reports(
+                backend=backend,
+                store=self._store,
+                course_id=course_id,
+                course_name=course_name,
+                progress_callback=_progress,
+            )
+
+        def _done(future):
+            try:
+                reports = future.result()
+                n = sum(1 for v in reports.values() if v)
+                progress_lbl.setText(f"Generated {n} report(s).")
+                self._show_toast(f"Generated {n} growth reports.")
+                # Refresh semester view
+                if self._current_run_id:
+                    self._invalidate_layers("semester")
+                    self._display_semester(self._current_run_id)
+            except Exception as e:
+                progress_lbl.setText(f"Error: {e}")
+
+        pool = ThreadPoolExecutor(max_workers=1)
+        future = pool.submit(_run)
+        future.add_done_callback(_done)
+
+    def _export_growth_reports(
+        self, reports: dict, course_name: str, mode: str = "teacher"
+    ) -> None:
+        """Export growth reports as a single markdown file.
+
+        mode="teacher": full report including Teacher Notes
+        mode="student": strips Teacher Notes, uses second person
+        """
+        from PySide6.QtWidgets import QFileDialog
+
+        suffix = "teacher_records" if mode == "teacher" else "student_reports"
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export Growth Reports",
+            f"{course_name}_{suffix}.md",
+            "Markdown (*.md)",
+        )
+        if not path:
+            return
+
+        lines = [f"# Growth Reports — {course_name}\n"]
+
+        for sid, text in reports.items():
+            if not text:
+                continue
+            if mode == "student":
+                # Strip Teacher Notes section
+                import re
+                text = re.sub(
+                    r"## Teacher Notes.*?(?=\n## |\Z)",
+                    "", text, flags=re.DOTALL
+                ).strip()
+                # Convert third person to second person (basic)
+                # The LLM should generate with second-person option; this is fallback
+            lines.append(text)
+            lines.append("\n---\n")
+
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("\n".join(lines))
+            self._show_toast(f"Exported {len(reports)} reports to {path}")
+        except Exception as e:
+            self._show_toast(f"Export failed: {e}")
+
+    def _post_growth_reports_to_canvas(
+        self, reports: dict, course_id: str, course_name: str
+    ) -> None:
+        """Create Canvas assignment and post reports as submission comments."""
+        from PySide6.QtWidgets import QDialog, QDialogButtonBox
+
+        # Dialog to confirm assignment creation
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Post Growth Reports to Canvas")
+        dlg.setMinimumWidth(450)
+        dlg.setStyleSheet(f"background: {BG_VOID};")
+
+        dlg_lo = QVBoxLayout(dlg)
+        dlg_lo.setSpacing(SPACING_MD)
+
+        dlg_lo.addWidget(make_section_label("POST GROWTH REPORTS"))
+        dlg_lo.addWidget(make_h_rule())
+
+        dlg_lo.addWidget(_muted_label(
+            "This will create a Canvas assignment and post each student's "
+            "growth report as a submission comment. Students will see their "
+            "own report only. Teacher Notes are not included."
+        ))
+
+        # Assignment name field
+        name_label = _field_label("Assignment Name")
+        dlg_lo.addWidget(name_label)
+        name_edit = QLineEdit()
+        name_edit.setText("Semester Growth Reflection")
+        name_edit.setStyleSheet(
+            f"QLineEdit {{ background: {BG_INSET}; color: {PHOSPHOR_MID};"
+            f" border: 1px solid {BORDER_DARK}; border-radius: 4px;"
+            f" padding: 6px; font-size: {px(12)}px; }}"
+        )
+        dlg_lo.addWidget(name_edit)
+
+        # Description field
+        desc_label = _field_label("Assignment Description")
+        dlg_lo.addWidget(desc_label)
+        desc_edit = QTextEdit()
+        desc_edit.setPlainText(
+            "Your semester growth report. This narrative summarizes your "
+            "intellectual journey across the semester — the themes you "
+            "explored, the connections you made, and the strengths you "
+            "developed. Please read it and respond with your own reflection."
+        )
+        desc_edit.setMaximumHeight(100)
+        desc_edit.setStyleSheet(
+            f"QTextEdit {{ background: {BG_INSET}; color: {PHOSPHOR_MID};"
+            f" border: 1px solid {BORDER_DARK}; border-radius: 4px;"
+            f" padding: 6px; font-size: {px(12)}px; }}"
+        )
+        dlg_lo.addWidget(desc_edit)
+
+        # Buttons
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok
+            | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText(
+            "Create Assignment & Post"
+        )
+        make_run_button(buttons.button(QDialogButtonBox.StandardButton.Ok))
+        make_secondary_button(
+            buttons.button(QDialogButtonBox.StandardButton.Cancel)
+        )
+        buttons.accepted.connect(dlg.accept)
+        buttons.rejected.connect(dlg.reject)
+        dlg_lo.addWidget(buttons)
+
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        assign_name = name_edit.text().strip() or "Semester Growth Reflection"
+        assign_desc = desc_edit.toPlainText().strip()
+
+        # Create assignment + post comments via Canvas API
+        if not self._api:
+            self._show_toast("No Canvas API configured.")
+            return
+
+        import re
+
+        try:
+            # Create assignment (no submission, no points)
+            assign_data = self._api.create_assignment(
+                course_id,
+                name=assign_name,
+                description=assign_desc,
+                submission_types=["none"],
+                points_possible=0,
+                published=True,
+            )
+            assign_id = assign_data.get("id")
+            if not assign_id:
+                self._show_toast("Failed to create Canvas assignment.")
+                return
+
+            # Post each report as a submission comment
+            posted = 0
+            for sid, text in reports.items():
+                if not text:
+                    continue
+                # Strip Teacher Notes for student-facing version
+                student_text = re.sub(
+                    r"## Teacher Notes.*?(?=\n## |\Z)",
+                    "", text, flags=re.DOTALL
+                ).strip()
+                if not student_text:
+                    continue
+                try:
+                    self._api.post_submission_comment(
+                        course_id, assign_id, sid, student_text
+                    )
+                    posted += 1
+                except Exception as e:
+                    _log = logging.getLogger(__name__)
+                    _log.warning(
+                        "Failed to post report for %s: %s", sid, e
+                    )
+
+            self._show_toast(
+                f"Created '{assign_name}' and posted {posted} reports."
+            )
+        except Exception as e:
+            self._show_toast(f"Canvas posting failed: {e}")
 
     def cleanup(self) -> None:
         """Clean shutdown — call from MainWindow.closeEvent."""
@@ -5640,12 +6762,18 @@ class InsightsPanel(QWidget):
                 arc_row = QHBoxLayout()
                 arc_row.setSpacing(SPACING_SM)
 
-                # Student name
+                # Student name (clickable — jumps to Student Work layer)
                 name_lbl = QLabel(arc.student_name[:20])
                 name_lbl.setFixedWidth(140)
+                name_lbl.setCursor(Qt.CursorShape.PointingHandCursor)
                 name_lbl.setStyleSheet(
-                    f"color: {PHOSPHOR_MID}; font-size: {px(11)}px;"
+                    f"color: {PHOSPHOR_HOT}; font-size: {px(11)}px;"
                     f" background: transparent; border: none;"
+                    f" text-decoration: underline;"
+                )
+                _sid = arc.student_id
+                name_lbl.mousePressEvent = (
+                    lambda _, sid=_sid: self._navigate_to_student(sid)
                 )
                 arc_row.addWidget(name_lbl)
 
@@ -5747,5 +6875,176 @@ class InsightsPanel(QWidget):
                     cv_lo.addWidget(note_lbl)
 
                 lo.addWidget(cv_pane)
+
+        # ── Growth Reports ── (Issue 18)
+        gr_pane = make_content_pane("semesterGrowthPane")
+        gr_lo = QVBoxLayout(gr_pane)
+        gr_lo.setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)
+        gr_lo.setSpacing(SPACING_SM)
+
+        gr_lo.addWidget(make_section_label("STUDENT GROWTH REPORTS"))
+        gr_lo.addWidget(make_h_rule())
+
+        gr_lo.addWidget(_muted_label(
+            "Generate a narrative trajectory report for each student, "
+            "summarizing their intellectual growth across the semester. "
+            "Reports can be exported as teacher records or shared with "
+            "students."
+        ))
+
+        # Check for existing reports (list of dicts from store)
+        existing_reports: dict = {}
+        try:
+            raw_reports = self._store.get_course_trajectory_reports(course_id) or []
+            for rpt in raw_reports:
+                sid = rpt.get("student_id", "")
+                text = rpt.get("report_text", "")
+                if sid and text:
+                    existing_reports[sid] = text
+        except Exception:
+            pass
+
+        if existing_reports:
+            stale_note = _muted_label(
+                f"{len(existing_reports)} report(s) already generated. "
+                f"Generate again to update with latest data."
+            )
+            gr_lo.addWidget(stale_note)
+
+        # Generate button + progress area
+        gen_row = QHBoxLayout()
+        gen_btn = QPushButton("Generate Growth Reports")
+        make_run_button(gen_btn)
+        gen_btn.clicked.connect(
+            lambda: self._generate_growth_reports(course_id, course_name, gr_lo)
+        )
+        gen_row.addWidget(gen_btn)
+        gen_row.addStretch()
+
+        # Export buttons (visible when reports exist)
+        if existing_reports:
+            export_teacher = QPushButton("Export All (Teacher)")
+            make_secondary_button(export_teacher)
+            export_teacher.clicked.connect(
+                lambda: self._export_growth_reports(
+                    existing_reports, course_name, mode="teacher"
+                )
+            )
+            gen_row.addWidget(export_teacher)
+
+            export_student = QPushButton("Export All (Student-Facing)")
+            make_secondary_button(export_student)
+            export_student.clicked.connect(
+                lambda: self._export_growth_reports(
+                    existing_reports, course_name, mode="student"
+                )
+            )
+            gen_row.addWidget(export_student)
+
+            canvas_btn = QPushButton("Post to Canvas")
+            make_secondary_button(canvas_btn)
+            canvas_btn.clicked.connect(
+                lambda: self._post_growth_reports_to_canvas(
+                    existing_reports, course_id, course_name
+                )
+            )
+            gen_row.addWidget(canvas_btn)
+
+        gr_lo.addLayout(gen_row)
+
+        # Collapsible student report cards
+        if existing_reports:
+            for sid, report_text in existing_reports.items():
+                if not report_text:
+                    continue
+                # Extract student name from first line
+                first_line = report_text.split("\n")[0].strip()
+                sname = first_line.lstrip("#").strip() if first_line else sid
+
+                card = make_content_pane(f"growthCard_{sid}")
+                card_lo = QVBoxLayout(card)
+                card_lo.setContentsMargins(
+                    SPACING_SM, SPACING_SM, SPACING_SM, SPACING_SM
+                )
+                card_lo.setSpacing(SPACING_XS)
+
+                # Collapsed header (clickable)
+                card_header = QHBoxLayout()
+                expand_lbl = QLabel(f"\u25b8 {sname}")
+                expand_lbl.setCursor(Qt.CursorShape.PointingHandCursor)
+                expand_lbl.setStyleSheet(
+                    f"color: {PHOSPHOR_HOT}; font-size: {px(12)}px;"
+                    f" font-weight: bold; background: transparent; border: none;"
+                )
+                card_header.addWidget(expand_lbl)
+
+                # Staleness badge
+                try:
+                    staleness = self._store.get_trajectory_report_staleness(sid, course_id)
+                    if staleness and staleness > 0:
+                        stale_lbl = QLabel(f"new work since report · ↻ update")
+                        stale_lbl.setStyleSheet(
+                            f"color: {STATUS_WARN}; font-size: {px(10)}px;"
+                            f" background: transparent; border: none;"
+                        )
+                        card_header.addWidget(stale_lbl)
+                except Exception:
+                    pass
+
+                card_header.addStretch()
+
+                # Per-student export button
+                export_btn = QPushButton("⬇")
+                export_btn.setFixedSize(24, 24)
+                export_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+                export_btn.setToolTip("Export this student's report (parent-safe)")
+                export_btn.setStyleSheet(
+                    f"QPushButton {{ background: transparent; color: {PHOSPHOR_DIM};"
+                    f" border: 1px solid {BORDER_DARK}; border-radius: 12px;"
+                    f" font-size: {px(12)}px; }}"
+                    f"QPushButton:hover {{ color: {PHOSPHOR_HOT}; border-color: {BORDER_AMBER}; }}"
+                )
+                def _export_single(text=report_text, name=sname):
+                    import re
+                    from PySide6.QtWidgets import QFileDialog
+                    clean = re.sub(r"## Teacher Notes.*", "", text, flags=re.DOTALL).strip()
+                    path, _ = QFileDialog.getSaveFileName(
+                        self, "Export Growth Report", f"{name}_growth_report.md", "Markdown (*.md)"
+                    )
+                    if path:
+                        with open(path, "w", encoding="utf-8") as f:
+                            f.write(clean)
+                export_btn.clicked.connect(_export_single)
+                card_header.addWidget(export_btn)
+
+                card_lo.addLayout(card_header)
+
+                # Report text (initially hidden)
+                report_te = QTextEdit()
+                report_te.setPlainText(report_text)
+                report_te.setReadOnly(False)  # Editable by teacher
+                report_te.setVisible(False)
+                report_te.setMinimumHeight(200)
+                report_te.setMaximumHeight(500)
+                report_te.setStyleSheet(
+                    f"QTextEdit {{ background: {BG_INSET};"
+                    f" border: 1px solid {BORDER_DARK}; border-radius: 4px;"
+                    f" color: {PHOSPHOR_MID}; font-size: {px(12)}px;"
+                    f" font-family: {MONO_FONT}; padding: 8px; }}"
+                    f"QTextEdit:focus {{ border-color: {BORDER_AMBER}; }}"
+                )
+                card_lo.addWidget(report_te)
+
+                # Toggle expand/collapse
+                def _toggle(te=report_te, lbl=expand_lbl, name=sname):
+                    vis = not te.isVisible()
+                    te.setVisible(vis)
+                    lbl.setText(f"\u25be {name}" if vis else f"\u25b8 {name}")
+
+                expand_lbl.mousePressEvent = lambda _, fn=_toggle: fn()
+
+                gr_lo.addWidget(card)
+
+        lo.addWidget(gr_pane)
 
         lo.addStretch()
