@@ -80,7 +80,7 @@ significant change to catch breakage early:
 
 ```bash
 python3 -m pytest tests/ -v --tb=short
-# Expected: ~255 tests, ~0.7s, 0 failures
+# Expected: ~614 tests, ~2min, 0 failures
 ```
 
 ### What's covered (pure unit tests — no LLM, no MLX, no Canvas)
@@ -93,8 +93,9 @@ python3 -m pytest tests/ -v --tb=short
 | `test_prompts.py` | All prompt constants exist, required `{placeholders}` present, equity-critical content guards |
 | `test_submission_coder.py` | `_chunk_text`, `_validate_concepts` (hallucination guard), `_coerce_str`, format helpers |
 | `test_feedback_drafter.py` | Data-sufficiency check, wellbeing context builder (CRISIS/BURNOUT never leak to student), preprocessing fragment |
-| `test_linguistic_features.py` | AAVE feature detection, multilingual tier suppression, `_derive_tier`, `detect_features` output shape |
+| `test_linguistic_features.py` | AAVE feature detection, multilingual tier suppression, `_derive_tier`, `detect_features` output shape, two-tier short-submission thresholds by assignment type |
 | `test_human_presence_detector.py` | `_normalize_score` math, `HumanPresenceDetector.analyze` output contract, empty/short text edge cases |
+| `test_quick_analyzer.py` | `_strip_html`, `_tokenize`, `_deduplicate_names`, `_detect_engagement_type`, `match_submission_references`, stats computation, truncation detection, word frequency, `analyze()` contract |
 
 ### What is NOT here (by design)
 
