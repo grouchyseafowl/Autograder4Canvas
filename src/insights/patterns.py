@@ -313,7 +313,11 @@ _AAVE_MARKERS: re.Pattern = re.compile(
 
 _AAVE_SUPPRESS_THRESHOLD = 2   # ≥ 2 distinct AAVE markers → suppressed
 _AAVE_CAUTION_THRESHOLD = 1    # 1 AAVE marker → low (caveat)
-_SHORT_SUBMISSION_WORDS = 80   # < 80 words → suppressed (sample too small)
+# Two-tier word-count thresholds — mirrors linguistic_features.py logic.
+# Hard suppress only below 15 words; caveat for the 15–60 range.
+# See linguistic_features._CAVEAT_THRESHOLDS for type-specific values.
+_SHORT_SUPPRESS_WORDS = 15     # universal hard floor
+_SHORT_CAVEAT_WORDS = 60       # default soft gate (conservative; type-aware in linguistic_features)
 _LOW_VOCAB_OVERLAP = 0.10      # assignment_connection vocab overlap below this → low
 
 
@@ -379,8 +383,8 @@ def assess_sentiment_reliability(
 
     # --- Hard suppression checks (any one → tier: suppressed) ---
 
-    # Too short: sample size insufficient for any sentiment signal
-    if word_count < _SHORT_SUBMISSION_WORDS:
+    # Hard floor: genuinely too brief for any sentiment signal
+    if word_count < _SHORT_SUPPRESS_WORDS:
         triggers.append(f"short_submission({word_count}_words)")
 
     # ESL: translated submission + non-trivial compound score
@@ -410,6 +414,10 @@ def assess_sentiment_reliability(
 
     # --- Soft caution checks (any one → tier: low) ---
     soft_triggers: List[str] = []
+
+    # Short but not at the hard floor: signal is present, treat as weak
+    if _SHORT_SUPPRESS_WORDS <= word_count < _SHORT_CAVEAT_WORDS:
+        soft_triggers.append(f"short_submission({word_count}_words)")
 
     # Single AAVE marker (caution, not full suppression)
     if distinct_aave == _AAVE_CAUTION_THRESHOLD:

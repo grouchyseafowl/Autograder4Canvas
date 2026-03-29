@@ -904,22 +904,95 @@ def _detect_academic_convention(text: str) -> List[LinguisticFeature]:
 
 _SENTENCE_SPLIT = re.compile(r"[.!?]\s+(?=[A-Z])")
 
-_SHORT_SUBMISSION_WORDS = 80
+# Two-tier word-count thresholds for sentiment reliability.
+#
+# Different teachers, different assignment formats, different students:
+#   - A discussion forum teacher expects 20-30 word replies by design
+#   - A teacher working with students with writing accommodations cannot use
+#     word count as a proxy for engagement or sentiment reliability
+#   - Multilingual students writing in a second language are often more precise,
+#     not less, in fewer words
+#   - A 12-word exit ticket can capture exactly what the teacher needs
+#
+# #CRIP_TIME: word count thresholds encode assumptions about pace and capacity
+# #NEURODIVERSITY: concise writing is a valid and often sophisticated register
+# #COMMUNITY_CULTURAL_WEALTH: precision and efficiency are academic strengths
+# #LANGUAGE_JUSTICE: L2 writers are often maximally precise in fewer words
+#
+# Architecture:
+#   _HARD_SUPPRESS: universal floor — VADER is genuinely noisy below this
+#   _CAVEAT_THRESHOLDS: assignment-type-specific soft gate (tier="low", not suppress)
+#   A teacher-supplied short_word_threshold overrides the type-based caveat threshold.
+
+_HARD_SUPPRESS_WORDS = 15   # Below this: genuinely too brief for any signal (any type)
+
+_CAVEAT_THRESHOLDS: Dict[str, int] = {
+    # Short-form assignments: brief by pedagogical design
+    "discussion_post": 25,
+    "discussion": 25,
+    "journal_entry": 25,
+    "journal": 25,
+    "exit_ticket": 15,      # at floor — exit tickets are structurally brief
+    "response": 30,
+    # Medium-form assignments
+    "reflection": 40,
+    "creative_writing": 30,
+    "creative": 30,
+    "personal_response": 30,
+    # Longer-form assignments
+    "lab_report": 50,
+    "lab": 50,
+    "essay": 60,
+    "analysis": 60,
+    "research": 80,
+    # Conservative default (unknown type)
+    "default": 60,
+}
 
 
-def _detect_structural(text: str, word_count: int) -> List[LinguisticFeature]:
+def _get_caveat_threshold(
+    assignment_type: Optional[str],
+    short_word_threshold: Optional[int],
+) -> int:
+    """Return the caveat word-count threshold for this assignment context.
+
+    Priority: explicit override > assignment_type lookup > default.
+    """
+    if short_word_threshold is not None:
+        return short_word_threshold
+    key = (assignment_type or "default").lower().strip()
+    return _CAVEAT_THRESHOLDS.get(key, _CAVEAT_THRESHOLDS["default"])
+
+
+def _detect_structural(
+    text: str,
+    word_count: int,
+    assignment_type: Optional[str] = None,
+    short_word_threshold: Optional[int] = None,
+) -> List[LinguisticFeature]:
     """Detect structural features (short submission, high variance)."""
     features: List[LinguisticFeature] = []
 
-    # Short submission — sample too small for reliable sentiment
-    if word_count < _SHORT_SUBMISSION_WORDS:
+    caveat_threshold = _get_caveat_threshold(assignment_type, short_word_threshold)
+
+    # Hard suppress: genuinely too brief for any sentiment signal
+    if word_count < _HARD_SUPPRESS_WORDS:
         features.append(LinguisticFeature(
             name="short_submission",
             category="structural",
-            evidence=[f"{word_count} words (threshold: {_SHORT_SUBMISSION_WORDS})"],
-            # NOT an asset — just a data quality gate. No asset_label.
+            evidence=[f"{word_count} words (hard floor: {_HARD_SUPPRESS_WORDS})"],
             asset_label="",
             sentiment_effect="suppress",
+        ))
+    # Caveat zone: short for this assignment type, but signal is present — treat as weak
+    elif word_count < caveat_threshold:
+        asgn_label = assignment_type or "this assignment type"
+        features.append(LinguisticFeature(
+            name="short_submission",
+            category="structural",
+            evidence=[f"{word_count} words (caveat threshold for {asgn_label}: {caveat_threshold})"],
+            asset_label="",
+            sentiment_effect="caveat",
         ))
 
     # High variance sentence structure
@@ -1171,6 +1244,8 @@ def detect_features(
     keyword_hits: Optional[Dict[str, int]] = None,
     assignment_connection_overlap: Optional[float] = None,
     baseline: Optional["FeatureBaseline"] = None,
+    assignment_type: Optional[str] = None,
+    short_word_threshold: Optional[int] = None,
 ) -> LinguisticFeatureResult:
     """Detect linguistic features in a student submission.
 
@@ -1249,7 +1324,11 @@ def detect_features(
         log.warning("Academic convention detection failed: %s", e)
 
     try:
-        features.extend(_detect_structural(text, word_count))
+        features.extend(_detect_structural(
+            text, word_count,
+            assignment_type=assignment_type,
+            short_word_threshold=short_word_threshold,
+        ))
     except Exception as e:
         log.warning("Structural detection failed: %s", e)
 

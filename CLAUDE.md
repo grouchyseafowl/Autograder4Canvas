@@ -73,6 +73,45 @@ All future testing with MLX should follow these practices:
 - Test scripts default to `mlx-gemma` (Gemma 12B 4-bit via MLX).
 - Production code uses `auto_detect_backend()` which respects user config.
 
+## Unit Test Suite
+
+A fast regression suite lives in `tests/`. Run it before and after any
+significant change to catch breakage early:
+
+```bash
+python3 -m pytest tests/ -v --tb=short
+# Expected: ~255 tests, ~0.7s, 0 failures
+```
+
+### What's covered (pure unit tests — no LLM, no MLX, no Canvas)
+
+| File | Covers |
+|---|---|
+| `test_models.py` | Pydantic validators, `vader_sentiment` migration, `SynthesisReport` numeric-section filter, `Theme.sub_themes` dict coercion |
+| `test_insights_store.py` | SQLite run lifecycle, stage completion (idempotent), codings upsert, profile/template round-trips, resume persistence |
+| `test_teacher_profile.py` | Wellbeing floor enforcement, concern sensitivity, prompt fragment builders, template save/fork |
+| `test_prompts.py` | All prompt constants exist, required `{placeholders}` present, equity-critical content guards |
+| `test_submission_coder.py` | `_chunk_text`, `_validate_concepts` (hallucination guard), `_coerce_str`, format helpers |
+| `test_feedback_drafter.py` | Data-sufficiency check, wellbeing context builder (CRISIS/BURNOUT never leak to student), preprocessing fragment |
+| `test_linguistic_features.py` | AAVE feature detection, multilingual tier suppression, `_derive_tier`, `detect_features` output shape |
+| `test_human_presence_detector.py` | `_normalize_score` math, `HumanPresenceDetector.analyze` output contract, empty/short text edge cases |
+
+### What is NOT here (by design)
+
+- **LLM calls** — mock them and you're testing your mocks, not the system.
+  Use the empirical integration tests in `tests/test_wellbeing_classifier.py`
+  and `scripts/run_trajectory_tests.py` for that.
+- **MLX/Metal** — process-isolation constraint; see MLX Testing Conventions below.
+- **GUI panels** — PySide6 widget tests require `pytest-qt` and are not installed.
+- **Canvas API** — live API; would need `requests` mocking infra not yet built.
+
+### Constraints for new tests
+
+- **No real student data** — all fixtures must be synthetic (FERPA).
+- **No MLX** — unit tests must mock `send_text` / `call_llm` entirely.
+- Integration tests must be marked `@pytest.mark.integration` and kept separate.
+- Use `tmp_path` for any database; never a fixed path that could collide.
+
 ## .gitignore Recommendations
 
 Add to `.gitignore`:
