@@ -1781,6 +1781,8 @@ SUBMISSION:
 {submission_text}
 ---
 
+{trajectory_context}
+
 {teacher_lens}
 
 In 3-4 sentences, share what you notice about this student's work. Consider:
@@ -1789,6 +1791,12 @@ In 3-4 sentences, share what you notice about this student's work. Consider:
 - What is their emotional relationship to the material?
 - Is there anything about their engagement, capacity, or circumstances the
   teacher might want to be aware of?
+- If trajectory context is provided above, note any significant changes from
+  this student's own prior pattern — describe what shifted, not what's wrong.
+  Variable output across assignments is normal for many students. A single
+  week's change is a data point, not a diagnosis. Register shifts often reflect
+  the material, not the student. Do not reference specific numbers or metrics
+  in your observation — describe what you notice as a reader.
 
 If the student's writing contains a STRUCTURAL POWER MOVE — language that appears
 reasonable or even progressive on the surface but functions to maintain existing
@@ -1843,6 +1851,8 @@ CLASS CONTEXT (from reading all submissions as a community):
 {class_context}
 ---
 
+{class_trajectory}
+
 STUDENT OBSERVATIONS (one per student, from reading each submission):
 ---
 {observations}
@@ -1883,9 +1893,15 @@ the student might benefit from the instructor's attention. For each:
 Do NOT include students whose passionate engagement with difficult material
 might be mistaken for distress — that's engagement, not concern.
 
-IMPORTANT: Check-ins should be PRIVATE and CARE-FOCUSED. Never suggest
-addressing a student's situation publicly or using their work as an example
-of struggle. The goal is quiet, individual support — not visibility.
+IMPORTANT: Trajectory data is for teacher use only — it is a proxy for
+identifying potential burnout or crisis, not a diagnostic tool. When the class
+trajectory shows widespread shifts (decreasing word counts, increasing late
+submissions), name that structural pattern rather than attributing it to
+individual students. Check-ins should be PRIVATE and CARE-FOCUSED. Never
+suggest addressing a student's situation publicly or using their work as an
+example of struggle. Do not reference data, metrics, or trajectory information
+in conversations with students — lead with care, not evidence. The goal is
+quiet, individual support — not visibility.
 
 ## How Students Entered the Material
 How did students approach this assignment differently from each other? Describe
@@ -1948,8 +1964,10 @@ WELLBEING_CLASSIFIER_SYSTEM = (
     "enforcement threat, recent loss/grief. The writing reveals present-tense "
     "personal circumstances beyond the assignment scope.\n"
     "- BURNOUT: The student is depleted — exhaustion, overwork, caregiving burden, "
-    "sleep deprivation. They're functioning but running on empty. Metacommentary "
-    "about fatigue, trailing off, apologies for quality.\n"
+    "sleep deprivation. They're functioning but running on empty. Requires EXPLICIT "
+    "metacommentary about fatigue, trailing off, or apologies for quality. A student "
+    "who writes 'I don't know if this is what was expected' or 'it's what I needed "
+    "to write' is reflecting on their process, not expressing depletion.\n"
     "- ENGAGED: The student is doing the assignment. This includes passionate, "
     "angry, emotional, or confrontational engagement with difficult material. "
     "Writing about racism, immigration, poverty, violence AS COURSE MATERIAL "
@@ -1962,6 +1980,12 @@ WELLBEING_CLASSIFIER_SYSTEM = (
     "OWN current circumstances leaking through the assignment, or course "
     "material they're engaging with intellectually? The former is CRISIS/BURNOUT; "
     "the latter is ENGAGED.\n\n"
+    "CRISIS supersedes ENGAGED: If a student discloses domestic violence, "
+    "housing loss, food insecurity, or immigration enforcement threat — even "
+    "while maintaining strong analytical engagement with the assignment — "
+    "classify as CRISIS. A student can be intellectually engaged AND in crisis. "
+    "The presence of crisis-level content in the student's OWN life is the "
+    "determining factor, not whether they also engaged with the reading.\n\n"
     "Respond with JSON only: {\"axis\": \"CRISIS\"|\"BURNOUT\"|\"ENGAGED\"|\"NONE\", "
     "\"signal\": \"brief description\", \"confidence\": 0.0-1.0}"
 )
@@ -1974,3 +1998,164 @@ SUBMISSION:
 ---
 
 Classify this submission. Respond with JSON only."""
+
+
+# ---------------------------------------------------------------------------
+# Pass 2: Targeted CHECK-IN — runs ONLY on ENGAGED students
+# Validated: Test P v3 @0.1 (2/7 corpus, 0/2 control FPs, S028 clear).
+# The prompt distinguishes self-disclosure from course material engagement,
+# approach metacommentary, and rhetorical expressions. Boolean calibration
+# resolves reasoning/output misalignment (v3 fix).
+# ---------------------------------------------------------------------------
+
+TARGETED_CHECKIN_SYSTEM = (
+    "A colleague classified this student as ENGAGED — they are doing the "
+    "work. Most engaged students need no further attention.\n\n"
+    "Occasionally, an engaged student will say something about their OWN "
+    "current state that a teacher might want to note — not the course "
+    "material, but a direct comment about themselves. Examples:\n"
+    "- An apology for quality (\"sorry this isn't great\")\n"
+    "- A mention of exhaustion or time pressure (\"it's late\", \"I ran out "
+    "of time\")\n"
+    "- A reference to personal difficulty (\"things have been rough\")\n\n"
+    "A strong indicator is REGISTER SHIFT: the student breaks from their "
+    "engaged analysis into a different mode — apologetic, exhausted, or "
+    "deflated — as if stepping outside the assignment to comment on "
+    "themselves.\n\n"
+    "Does this student explicitly say anything about their own current "
+    "state?\n\n"
+    "If YES: Quote the specific words, then explain competing "
+    "interpretations (it might be nothing, or it might be worth noting).\n"
+    "If NO: Say so clearly.\n\n"
+    "IMPORTANT distinctions:\n"
+    "- A submission ending without a formal conclusion is NORMAL student "
+    "writing — not a signal.\n"
+    "- Students drawing on personal or community experience AS COURSE "
+    "MATERIAL are engaged, not disclosing their state. A student writing "
+    "about family hardship to analyze a concept is doing the assignment.\n"
+    "- Rhetorical or analytical expressions about the material (\"I'm tired "
+    "of how...\", \"I don't know if...\") are engaged writing, not self-"
+    "disclosure.\n"
+    "- Statements about the student's APPROACH to the assignment (\"I'm "
+    "just gonna be real\", \"let me try to explain\", \"here's my take\") "
+    "are about method, not state.\n"
+    "- Only flag words the student actually wrote about THEMSELVES. Do not "
+    "infer signals from writing style, structure, or lack of a conclusion.\n\n"
+    "Set check_in to true ONLY when the competing interpretations are "
+    "genuinely balanced — when a reasonable teacher could go either way. "
+    "If your analysis leans toward 'nothing to note,' check_in is false.\n\n"
+    "Respond with JSON: {\"check_in\": true|false, "
+    "\"reasoning\": \"quote and explanation if flagging, or why nothing to note\"}"
+)
+
+TARGETED_CHECKIN_PROMPT = """\
+STUDENT: {student_name}
+SUBMISSION:
+---
+{submission_text}
+---
+
+Does this student say anything about their own state? Respond with JSON only."""
+
+
+# ---------------------------------------------------------------------------
+# Student Trajectory Report — asset-framed semester narrative
+# Per-student longitudinal report for parent conferences, progress reports,
+# IEP/504 meetings, end-of-semester reflection.
+#
+# Two-phase architecture: the semester arc (structured data) is built by
+# trajectory_report.py Phase 1 (pure Python). This prompt receives the
+# fixed-size arc, NOT raw coding records. Scales to any number of assignments.
+# ---------------------------------------------------------------------------
+
+TRAJECTORY_REPORT_SYSTEM_PROMPT = (
+    "You are a thoughtful teaching colleague helping a teacher write a "
+    "narrative semester summary for one student.\n\n"
+    "This is an asset-based report — it describes what the student has BUILT "
+    "intellectually over the semester, not what they're lacking. The teacher "
+    "may share sections of this with the student as affirmation, use it in "
+    "parent conferences, or reference it in IEP/504 meetings.\n\n"
+    "Write as a colleague who has read all of this student's work and is "
+    "sharing your reading of their intellectual journey. Use the student's "
+    "name naturally. Quote their own words when possible — use quotes from "
+    "the data provided, do not invent quotes.\n\n"
+    "Never compare this student to other students. Every observation is "
+    "relative to this student's own trajectory."
+)
+
+TRAJECTORY_REPORT_PROMPT = """\
+STUDENT: {student_name}
+COURSE: {course_name}
+ASSIGNMENTS ANALYZED: {submission_count}
+
+SEMESTER ARC (structured analysis of all submissions):
+---
+{semester_arc}
+---
+
+Write a narrative semester summary with these sections:
+
+## Intellectual Arc
+What has {student_name} been reaching for across assignments? How has their
+thinking evolved? Be specific — name the concepts, connections, or arguments
+they've built over time. Trace the development, not just the endpoints. If
+their questions have matured or shifted, name that movement. If they connect
+course material to events in the world, name those connections.
+
+## Key Moments
+Select 2-3 quotes from the curated quotes above that best show growth or
+distinctive thinking. For each, briefly note what it reveals about the
+student's intellectual development. Use the student's exact words only —
+do not paraphrase or invent.
+
+## Theme Evolution
+What has {student_name} engaged with and how has it shifted? What threads
+persisted? What emerged? What faded, and does the fading tell you anything?
+If their thematic focus deepened or narrowed, describe that movement.
+
+## Developing Strengths
+What kind of intellectual work does {student_name} thrive in? Name the
+specific modes of thinking that produce their strongest engagement — not
+"essay vs discussion" but personal-to-theory connection, structural analysis,
+narrative, current events engagement, or whatever this student's modes are.
+
+If their questions have grown more sophisticated, name how. If their
+linguistic repertoire expanded (new registers, more authentic voice), name
+that as a developing capacity. If they act on prior feedback, name the growth.
+
+Name specific skills or habits of mind — not generic praise, but what THIS
+student does that is distinctive.
+
+## Growth Edges
+Two parts, both framed through what {student_name} is already building:
+
+First: Based on the intellectual threads {student_name} has been pulling,
+what directions might they find compelling to explore further? What readings,
+ideas, or questions connect to the moves they're already making? Follow THEIR
+threads — suggest from their demonstrated interests, not from a generic list.
+
+Second: What is the specific move that would take {student_name}'s work to
+the next level? Name one concrete skill, habit, or intellectual practice —
+framed as the lever between where they already are and where they're reaching.
+If the data shows an example where they already did this well, reference it.
+
+## Teacher Notes
+PRIVATE — not for sharing with the student without careful reframing.
+Note any trajectory signals worth attending to: shifts in engagement, schedule
+changes, wellbeing arc, signs of burnout or overwhelm. If integrity pattern
+notes appear in the data, describe the structural observation without
+attributing cause — the teacher knows their student.
+
+Describe what you notice without diagnosing. If nothing notable, say so.
+
+Guidelines:
+- Frame everything through what {student_name} HAS BUILT, not what they lack.
+- This report must work for any course — do not assume a specific subject area.
+- Variable output across assignments is normal. Describe it, don't pathologize it.
+- Register shifts (passionate to analytical) often reflect the material, not decline.
+- If word count or engagement shifted, describe the pattern without attributing cause.
+- AAVE, multilingual mixing, and nonstandard English are linguistic repertoire.
+- Do not invent quotes. Use only the quotes provided in the semester arc.
+- If the data includes teacher priorities, weight your emphasis accordingly.
+- If prior feedback is noted, avoid repeating the same suggestions.
+- Keep the total report under 600 words."""

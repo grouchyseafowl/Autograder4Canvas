@@ -720,12 +720,18 @@ def observe_student(
     *,
     is_ai_flagged: bool = False,
     teacher_lens: str = "",
+    trajectory_context: str = "",
     max_tokens: int = 400,
 ) -> str:
     """Generate a 3-4 sentence observation for one student.
 
     This is the single source of truth for the observation stage.
     Both InsightsEngine and generate_demo_insights.py call this.
+
+    Args:
+        trajectory_context: Optional longitudinal context from prior
+            submissions. Injected into the prompt so the LLM can see
+            pattern breaks against the student's own baseline.
 
     Returns the observation text (may be prefixed with an AI-flag note).
     Returns empty string on failure.
@@ -736,17 +742,21 @@ def observe_student(
     if wc < 15:
         return "Submission too brief for observation."
 
+    # Allow slightly more output when trajectory context is present
+    effective_max_tokens = max_tokens + (100 if trajectory_context else 0)
+
     prompt = OBSERVATION_PROMPT.format(
         class_context=class_context,
         assignment=assignment,
         student_name=student_name,
         submission_text=submission_text,
+        trajectory_context=trajectory_context,
         teacher_lens=teacher_lens,
     )
 
     try:
         raw = send_text(backend, prompt, OBSERVATION_SYSTEM_PROMPT,
-                        max_tokens=max_tokens)
+                        max_tokens=effective_max_tokens)
         obs_text = raw.strip()
         # Strip model preamble ("Okay, here are my observations...",
         # "Okay, here's what I'm noticing about...", etc.)
@@ -754,7 +764,7 @@ def observe_student(
         # colon-terminated ("Okay, here's what I'm noticing about X:")
         import re as _re
         obs_text = _re.sub(
-            r"^(?:Okay|OK|Sure|Here are)[^.]*(?:observations?|thoughts?|notes?)[^.]*\.\s*",
+            r"^(?:Okay|OK|Sure|Here(?:'s| is| are))[^.]*(?:observations?|thoughts?|notes?|notic\w+)[^.]*\.\s*",
             "", obs_text, count=1, flags=_re.IGNORECASE,
         )
         obs_text = _re.sub(
@@ -817,3 +827,54 @@ def classify_wellbeing(
     except Exception as exc:
         log.warning("Wellbeing classification failed for %s: %s", student_name, exc)
         return {"axis": "NONE", "signal": "", "confidence": 0.0}
+
+
+def classify_checkin(
+    backend: BackendConfig,
+    student_name: str,
+    submission_text: str,
+    *,
+    max_tokens: int = 200,
+) -> dict:
+    """Pass 2: Targeted CHECK-IN for ENGAGED students only.
+
+    Surfaces subtle self-disclosure signals (exhaustion, time pressure,
+    personal difficulty) that a teacher might want to note. Only called
+    on students already classified as ENGAGED by Pass 1 (4-axis).
+
+    The prompt requires quotable self-reference about the student's OWN
+    state, register shift as a strong indicator, and boolean calibration
+    to prevent reasoning/output misalignment.
+
+    Returns dict with keys: check_in (bool), reasoning (str).
+    Returns {"check_in": False, "reasoning": ""} on failure.
+    """
+    from insights.prompts import (
+        TARGETED_CHECKIN_SYSTEM, TARGETED_CHECKIN_PROMPT
+    )
+
+    wc = len(submission_text.split())
+    if wc < 15:
+        return {"check_in": False, "reasoning": "Too brief for check-in analysis."}
+
+    prompt = TARGETED_CHECKIN_PROMPT.format(
+        student_name=student_name,
+        submission_text=submission_text,
+    )
+
+    try:
+        raw = send_text(backend, prompt, TARGETED_CHECKIN_SYSTEM,
+                        max_tokens=max_tokens)
+        parsed = _parse_response(raw, student_name, "checkin")
+
+        check_in = parsed.get("check_in", False)
+        if not isinstance(check_in, bool):
+            check_in = str(check_in).lower() in ("true", "1", "yes")
+
+        return {
+            "check_in": check_in,
+            "reasoning": parsed.get("reasoning", ""),
+        }
+    except Exception as exc:
+        log.warning("CHECK-IN classification failed for %s: %s", student_name, exc)
+        return {"check_in": False, "reasoning": ""}
