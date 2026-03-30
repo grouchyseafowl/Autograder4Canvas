@@ -2301,7 +2301,7 @@ def test_n_four_axis_submissions(model_key: str = "gemma12b"):
         ("S023", "lived_exp", "ENGAGED"),
         ("S028", "AAVE", "ENGAGED"),
         ("S029", "neurodivergent", "ENGAGED"),
-        ("S031", "minimal_effort", "ENGAGED"),
+        ("S031", "minimal_effort", "NONE"),  # minimal summary, no wellbeing signal → NONE
     ]
 
     results = []

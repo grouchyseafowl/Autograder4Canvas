@@ -5,16 +5,20 @@ Old content gets archived to `docs/research/logs/` when > 200 lines.
 
 ---
 
-## Current state (2026-03-30, early morning)
+## Current state (2026-03-30, ~01:30)
 
 ### Pipeline status
 
 | Run | Course | Status | Notes |
 |-----|--------|--------|-------|
-| 0cb5b7e8 | 90003 (Ethnic Studies, 32 subs) | **INCOMPLETE** | Themes may have crashed mid-run. Retry after ee5386e2 finishes. |
-| ee5386e2 | 90005 (Chicano Studies, 25 subs) | **RUNNING** | Currently in observations stage (1/25). |
+| 0cb5b7e8 | 90003 (Ethnic Studies, 32 subs) | **INCOMPLETE** | Themes stage: groups 1-7 generated, but meta-synthesis timed out twice (compact retry also failed at 00:51). Stage not marked complete. Retry after equity tests finish. |
+| ee5386e2 | 90005 (Chicano Studies/Biology, 25 subs) | **DONE** | All stages complete. 25/25 feedback drafted. |
 
-Pipeline background task `bgcfq9jb1` is still running. Notification will fire when done.
+### Active background tasks
+
+| Task | Status | Notes |
+|------|--------|-------|
+| `bo63hw52i` | **RUNNING** | Equity trajectory tests — `caffeinate -i python3 scripts/run_equity_trajectory_tests.py --model gemma12b`. MLX, will take hours. |
 
 ### What was done this session (evening into early morning)
 
@@ -86,7 +90,8 @@ Existing trajectory report corpus. Tests trajectory report generator (separate f
 ## For next agent
 
 - **Test N 27B validation COMPLETE** (00:34). WB06 → CRISIS ✓. All guards validated. Logged.
-- **Pipeline `bgcfq9jb1` still running** (pid 16964 as of 00:34). On notification → immediately launch equity trajectory tests.
-- Do NOT wait to read equity test output before launching — it's caffeinate MLX, will run for hours.
-- After equity tests launch → retry 0cb5b7e8 themes: `caffeinate -i python3 scripts/generate_demo_insights.py`
-- After that → trajectory tests (existing corpus): `caffeinate -i python3 scripts/run_trajectory_tests.py --model gemma12b`
+- **ee5386e2 COMPLETE**. **0cb5b7e8 still INCOMPLETE** — themes groups generated, meta-synthesis timed out (twice). Will resume after equity tests finish.
+- **Equity trajectory tests RUNNING** (task `bo63hw52i`). On completion → retry 0cb5b7e8: `caffeinate -i python3 scripts/generate_demo_insights.py`
+- After 0cb5b7e8 complete → trajectory tests: `caffeinate -i python3 scripts/run_trajectory_tests.py --model gemma12b`
+- MLX queue is sequential (GPU contention). Do not run two MLX tasks at once.
+- **0cb5b7e8 meta-synthesis issue**: meta-synthesis timed out at 300s even on compact retry. If it fails again, check `theme_generator.py` for whether compact input actually reduces token count for 32-student merged themes, or consider increasing timeout/chunking the merge differently.
