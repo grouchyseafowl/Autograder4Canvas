@@ -44,7 +44,7 @@ Run before and after any significant change:
 
 ```bash
 python3 -m pytest tests/ -v --tb=short
-# Expected: ~736 tests, ~35s, 0 failures
+# Expected: ~814 tests, ~35s, 0 failures
 ```
 
 ### What's covered (pure unit tests — no LLM, no MLX, no Canvas)
@@ -63,6 +63,9 @@ python3 -m pytest tests/ -v --tb=short
 | `test_gibberish_gate.py` | Equity exemptions (AAVE, vernacular, translated, poor grammar must NOT be flagged), Lorem Ipsum, keyboard mash, repetition spam, `should_skip_llm` threshold |
 | `test_patterns.py` | VADER polarity thresholds, signal matrix (negative+critical → APPROPRIATE, not a concern), `assess_sentiment_reliability` two-tier thresholds, AAVE suppression, ESL translation caveat |
 | `test_concern_detector.py` | Anti-bias post-processing (tone-policing + structural critique → warning added), content-flag demotion, APPROPRIATE signal filtering, no-backend fallback |
+| `test_citation_checker.py` | URL/DOI/APA extraction, Canvas infrastructure URLs excluded, dedup, class-level aggregation, generic vs specific source separation |
+| `test_short_sub_reviewer.py` | Anti-bias post-processing (deficit framing + AAVE register + placeholder reclassification), thread context formatter |
+| `test_cohort_calibration.py` | Class-relative distributions, percentile rank (engagement-framed labels), cold-start Bayesian blending, EMA evolution, student percentile mapping |
 
 ### What is NOT here (by design)
 

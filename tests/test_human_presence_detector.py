@@ -325,9 +325,8 @@ class TestConfidenceLevelThresholds:
         assert self._determine_confidence(detector, 0.0) == "very_low"
 
     def test_boundary_85(self, detector):
-        # high range is 65-84 (inclusive); very_high starts at 85.
-        # 84.9 falls in a gap between the two ranges → falls through to 'very_low'.
-        # Testing the actual defined boundaries:
+        # high range is 65-84.9; very_high starts at 85.
+        assert self._determine_confidence(detector, 84.9) == "high"
         assert self._determine_confidence(detector, 84.0) == "high"
         assert self._determine_confidence(detector, 85.0) == "very_high"
 

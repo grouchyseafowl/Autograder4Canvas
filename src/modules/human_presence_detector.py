@@ -371,8 +371,8 @@ class HumanPresenceDetector:
 
     # Confidence thresholds (based on weighted score 0-100)
     CONFIDENCE_THRESHOLDS = {
-        'very_high': (85, 100),    # 85-100: Deep contextual + multiple dimensions
-        'high': (65, 84),          # 65-84: Strong contextual + other dimensions
+        'very_high': (85, 100),      # 85-100: Deep contextual + multiple dimensions
+        'high': (65, 84.9),        # 65-84.9: Strong contextual + other dimensions
         'medium': (40, 64),        # 40-64: Multi-dimensional but lighter
         'low': (20, 39),           # 20-39: Unclear, needs review
         'very_low': (0, 19)        # 0-19: Little/no human presence
