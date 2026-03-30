@@ -6286,3 +6286,62 @@ The S031 ENGAGED/NONE edge case is worth keeping as an open design question: sho
 - 17-case corpus — WB guard tested on one community-resilience pattern (Somali mutual aid). Other patterns (Indigenous students, non-mosque-based mutual aid, immigrant community networks) not yet tested
 - Guard text is now identical across all three prompts; any future prompt revision must update all three
 
+
+---
+
+## Test P — Equity Trajectory Test: First End-to-End Run (2026-03-30, 07:51–12:55)
+
+**File**: `data/research/raw_outputs/equity_observations_gemma12b_2026-03-30_1255.json`
+**Model**: Gemma 3 12B (mlx-community/gemma-3-12b-it-4bit)
+**Designed to test**: Whether the 4-axis observation pipeline handles 4 longitudinal equity risks without bias: (1) normative development narratives (ESL/AAVE voice), (2) disability/variable output, (3) silence-after-disclosure, (4) working student patterns. First test using cross-phase student history (12 students × 4 assignments).
+**Method**: 12-student corpus (`trajectory_equity_corpus.json`) × 4 assignments (Intersectionality, Structural Racism, Midterm, Resistance Movements). Each assignment run as independent pipeline phase (stop_after=observations). OBSERVATIONS phase runs LLM-semantic evaluation using rubric checks against per-student cross-phase observations. 42 checks across 12 students (2–5 per student). Gemma 12B throughout (coding + evaluation).
+**Duration**: ~5h total (7:51–12:55); ~75 min/phase
+
+### Results
+
+| Risk area | Students | Checks passed | Students all-pass |
+|-----------|----------|--------------|-------------------|
+| Control (no equity risk) | E011, E012 | 4/6 | 1/2 |
+| Risk 1: normative development narratives | E001, E002, E003 | 9/10 | 2/3 |
+| Risk 2: disability/variable output | E004, E005 | 7/8 | 1/2 |
+| Risk 3: silence-after-disclosure | E006, E007, E008 | 9/9 | 3/3 |
+| Risk 4: working student patterns | E009, E010 | 6/9 | 0/2 |
+| **Total** | **12** | **35/42 (83%)** | **7/12** |
+
+### Qualitative findings
+
+**Risk 3 (silence-after-disclosure): Solid pass.** All 9 checks passed across deportation fear (E006 Marisol Vega), racial violence (E007 Kayla Thompson), and disability disclosure (E008 Jesse Larson). The observation pipeline correctly characterizes silence/engagement shifts without framing them as motivational problems. Strongest area.
+
+**Risk 1 (linguistic voice development): AAVE and code-switching handled; ESL linguistic transfer partially missed.** E001 (code-switching/Amara) 4/4, E003 (AAVE/Destiny) 3/3. E002 (Jin-Young Oh, esl_syntax_deepening) failed `transfer_as_intellectual_stretch`: observations noted "complexity arrives first in Korean" as disclosure content but did not frame Korean-influenced syntax or cross-linguistic transfer as an *intellectual strength* or pedagogical resource. The intellectual content (model minority myth analysis) was recognized; the bilingual processing as intellectual stretching was not.
+
+**Risk 2 (disability/variable output): Naomi Lee solid; Sam Ortega trajectory check failed to parse.** E005 (chronic illness clustering) 4/4. E004 (Sam Ortega, variable quality/ADHD) 3/4 — `trajectory_ctx_no_decline_narrative` failed due to JSON parse error (LLM evaluator output truncated). Likely infrastructure issue, not an observation failure. The other 3 checks passed, suggesting the observation itself handled variable quality without decline framing.
+
+**Risk 4 (working student): Two patterns missed.** 
+- **E009 Marcus Stone** (consistent_late_night_worker) 3/5: Observations mentioned late-night work but did not name it as an *established pattern* spanning all 4 assignments. More critically, `trajectory_ctx_late_night_normalized` failed because "there is no trajectory context block provided" — the observation prompt does not include submission timestamp history. This is a confirmed infrastructure gap: per-student submission metadata (timestamps, word counts across prior phases) is not yet passed into the observation prompt.
+- **E010 Tanya Reyes** (midterm_capacity_dip) 3/4: `a4_return_not_anomalous` failed — the A4 observation was correctly asset-based (focused on her Chicana feminist analysis), but did not explicitly connect A4 quality back to her A1/A2 baseline, leaving implicit the idea that A4 is continuity rather than exceptional recovery. The evaluator's stated reason ("focuses on her promise to do better") is a hallucination — that framing appears in A3, not A4. Real gap: observations don't synthesize across phases to contextualize current quality.
+
+**Evaluator reliability issues (distinct from observation quality):**
+- E011 Priya Nair control failed 2/4 checks — LLM evaluator simply did not answer `specific_argument_named` and `comparative_analysis_recognized`. Evaluator output issue, not an observation failure. The 2 checks it *did* answer passed.
+- E010 A4: evaluator explanation hallucinated "promise to do better" framing from A3 into A4 check. When presented with 4 observations simultaneously, the evaluator confuses which observation belongs to which assignment.
+- E004 Sam Ortega: JSON parse truncation on one check.
+
+### Implications
+
+1. **Silence-after-disclosure is production-ready.** The observation prompt handles this well across diverse disclosure types without special guarding.
+2. **Linguistic transfer as intellectual stretch: add explicit framing.** The observation prompt should be updated to frame bilingual processing (code-switching, topic-comment syntax, cross-linguistic complexity) as intellectual resources, not just as identity signals.
+3. **Working student trajectory requires timestamp data.** Per-student submission time history needs to be included in the observation prompt's trajectory context block. Currently absent — this is the most significant infrastructure gap identified.
+4. **Cross-phase synthesis not yet present.** Observations are per-assignment; there is no mechanism for the A4 observation to reference "this is consistent with your A1/A2 baseline" because the observation prompt doesn't receive prior observation summaries. Longitudinal narrative requires cross-phase context.
+5. **Evaluator rubric needs cross-phase ordering guards.** When asking about specific assignment observations, the evaluator should receive observations one-at-a-time or clearly labeled, not all four simultaneously.
+
+### Proposed follow-up
+
+- Test P2: Add submission timestamp + prior word count to trajectory context block; rerun E009/E010 checks only
+- Test P3: Update observation prompt with linguistic-transfer-as-strength framing; rerun E002 check
+- Test P4: Cross-phase observation synthesis (pass A1–A3 observation summaries into A4 observation prompt); rerun E010 a4_return_not_anomalous
+
+### Limitations
+
+- n=1 run (no model temperature variation)
+- All 4 phases on same 12-student corpus — cross-phase dependencies may inflate inter-phase consistency
+- Evaluator is also Gemma 12B — same model coding and evaluating creates potential for self-consistency bias (model may rate its own framing choices as correct)
+- `trajectory_ctx_*` checks cannot pass until infrastructure is updated; those failures are infrastructure, not prompt failures
