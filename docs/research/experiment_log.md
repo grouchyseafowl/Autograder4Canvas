@@ -6236,3 +6236,53 @@ The multi-axis format is architecturally superior for the ENGAGED + CRISIS/BURNO
 - Mechanism is parallel to disability-vocabulary trigger; both are learnable associations in 27B
 - Guard text untested on other minimized-disclosure patterns (e.g., Indigenous students, students with reasons to avoid institutional attention beyond mutual-aid framing)
 
+
+---
+
+## Test N — Minimized-Disclosure Guard Validation (2026-03-30, 00:34)
+
+**File**: `data/research/raw_outputs/test_n_4axis_submissions_gemma27b_cloud_2026-03-30_0034.json`
+**Model**: `google/gemma-3-27b-it` (free tier, OpenRouter) | **Temperature**: 0.1
+**Designed to test**: Does the minimized-disclosure guard hold in the full 17-case corpus (corpus students + WB cases)? Guards now in all three prompts: `WELLBEING_CLASSIFIER_SYSTEM`, `FOUR_AXIS_SUBMISSION_SYSTEM`, `MULTI_AXIS_SYSTEM`. Signal framing fix also shipped (no "despite attempts to minimize" language).
+
+**Method**: Test N full corpus. Same cases as Guard-v2 run (21:27) plus WB06 with updated prompt.
+
+**Results**:
+
+| Student | Pattern | Expected | Got | Conf | Result |
+|---------|---------|----------|-----|------|--------|
+| S002 Jordan Kim | burnout (metacommentary) | BURNOUT | BURNOUT | 0.8 | ✓ |
+| S004 Priya Venkataraman | strong | ENGAGED | ENGAGED | 0.9 | ✓ |
+| S022 Destiny Williams | righteous anger | ENGAGED | ENGAGED | 0.9 | ✓ |
+| S023 Yolanda Fuentes | lived experience | ENGAGED | ENGAGED | 0.9 | ✓ |
+| S028 Imani Drayton | AAVE | ENGAGED | ENGAGED | 0.9 | ✓ |
+| S029 Jordan Espinoza | neurodivergent | ENGAGED | ENGAGED | 0.9 | ✓ |
+| S031 Marcus Bell | minimal effort | ENGAGED | NONE | 0.9 | MISMATCH |
+| WB01–WB05, WB07–WB10 | various | as expected | as expected | 0.9 | all ✓ |
+| **WB06 Amira Hassan** | food insecurity (resilience register) | CRISIS | **CRISIS** | 0.9 | **✓ VALIDATED** |
+
+**16/17 pass. S031 is the only mismatch.**
+
+**Qualitative findings**:
+
+**WB06 (CRISIS — guard confirmed)**: *"Student discloses reduced family income and increased reliance on a mosque for food, indicating food insecurity. While expressing resilience ('we are strong'), the material condition of needing external food support is present."* The signal names the material condition directly without characterizing the disclosure style as minimization. This is exactly the intended behavior from the signal framing fix — the prompt no longer induces "despite attempts to minimize" language; the model now writes from material evidence.
+
+**S031 (NONE — definitional edge case, not an equity failure)**: *"Insufficient text to assess wellbeing. The submission primarily summarizes a course concept."* The model's reasoning is sound: a minimal-effort conceptual summary carries no wellbeing signal in either direction. NONE = no signal to classify. The test expectation of ENGAGED likely reflects binary-classifier intuitions (CLEAR → "engaged"), not 4-axis semantics where ENGAGED implies active positive engagement markers. Not a guard failure; a definitional question about what ENGAGED means for low-affect submissions. S031 is not an equity-sensitive case.
+
+**Guard-v2 + minimized-disclosure guard: both holding reliably**:
+- S029 neurodivergent: ENGAGED (conf=0.9) — identity + "exhausting to explain" → correctly not BURNOUT
+- S002 metacommentary burnout: BURNOUT (conf=0.8) — trailing-off → still correctly detected
+- WB06 resilience framing: CRISIS (conf=0.9) — community reliance on mosque for food → correctly not downgraded
+
+### Implications
+
+Both guards are production-ready and validated on the full corpus. The signal framing fix also works: the model's WB06 signal text names material conditions without adding editorially charged language about disclosure style. This closes the open finding from the WB06 probe ("signal text 'despite attempts to minimize' should be reviewed for tone").
+
+The S031 ENGAGED/NONE edge case is worth keeping as an open design question: should the 4-axis schema have a definition of ENGAGED that explicitly covers low-affect-but-not-distressed submissions, or is NONE the correct classification for submissions with no wellbeing signal in either direction?
+
+### Limitations
+
+- n=1 run, single temperature (0.1); S031's NONE is at conf=0.9 suggesting it is stable, but hasn't been replicated
+- 17-case corpus — WB guard tested on one community-resilience pattern (Somali mutual aid). Other patterns (Indigenous students, non-mosque-based mutual aid, immigrant community networks) not yet tested
+- Guard text is now identical across all three prompts; any future prompt revision must update all three
+

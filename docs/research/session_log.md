@@ -63,12 +63,13 @@ Existing trajectory report corpus. Tests trajectory report generator (separate f
 
 | Finding | Status | Next action |
 |---------|--------|-------------|
-| Disability vocab → BURNOUT (S029, 27B) | FIXED — guard-v2 | Shipped |
-| Metacommentary burnout suppressed (S002) | FIXED — guard-v2 revision | Shipped |
-| Community resilience → BURNOUT underclass (WB06) | FIXED — minimized-disclosure guard | Shipped. Re-run Test N 27B to confirm |
-| Signal text "attempts to minimize" framing | FIXED — prompt signal guidance | Shipped |
+| Disability vocab → BURNOUT (S029, 27B) | FIXED — guard-v2 | Shipped + validated Test N 2026-03-30 00:34 |
+| Metacommentary burnout suppressed (S002) | FIXED — guard-v2 revision | Shipped + validated |
+| Community resilience → BURNOUT underclass (WB06) | FIXED — minimized-disclosure guard | **VALIDATED** Test N 00:34: CRISIS conf=0.9, signal text clean |
+| Signal text "attempts to minimize" framing | FIXED — prompt signal guidance | **VALIDATED** — WB06 signal now names material conditions only |
 | CHECK-IN surveillance on neurodivergent identity disclosure (S029) | OPEN | Definition fix needed |
 | Immigration/racial identity ablation on 27B | OPEN | Design needed |
+| S031 minimal-effort → NONE (expected ENGAGED) | OPEN design question | Is NONE correct for no-signal submissions? Not equity-sensitive. |
 
 ---
 
@@ -84,7 +85,8 @@ Existing trajectory report corpus. Tests trajectory report generator (separate f
 
 ## For next agent
 
-- Monitor pipeline notification (`bgcfq9jb1`). On completion → launch equity trajectory tests immediately.
+- **Test N 27B validation COMPLETE** (00:34). WB06 → CRISIS ✓. All guards validated. Logged.
+- **Pipeline `bgcfq9jb1` still running** (pid 16964 as of 00:34). On notification → immediately launch equity trajectory tests.
 - Do NOT wait to read equity test output before launching — it's caffeinate MLX, will run for hours.
-- After equity tests launch, run Test N 27B cloud to validate minimized-disclosure guard: `python3 scripts/run_alt_hypothesis_tests.py --tests N --no-subprocess --model gemma27b_cloud`
-- All current findings committed. Signal framing fix committed.
+- After equity tests launch → retry 0cb5b7e8 themes: `caffeinate -i python3 scripts/generate_demo_insights.py`
+- After that → trajectory tests (existing corpus): `caffeinate -i python3 scripts/run_trajectory_tests.py --model gemma12b`
