@@ -6190,3 +6190,49 @@ The multi-axis format is architecturally superior for the ENGAGED + CRISIS/BURNO
 - 27B only — 12B multi-axis over-fired CHECK-IN (prior Test O)
 - S029 CHECK-IN may vary across runs (low confidence); interpret as tendency, not definitive
 
+---
+
+## WB06 Minimized-Disclosure Probe (2026-03-29, 21:38)
+
+**File**: `data/research/raw_outputs/wb06_probe_2026-03-29_2138.json`
+**Model**: `google/gemma-3-27b-it` (free tier, OpenRouter) | **Temperature**: 0.1
+**Designed to test**: Is WB06's BURNOUT misclassification caused by (a) insufficient signal, (b) resilience framing suppression, or (c) both? Can a prompt addition restore CRISIS?
+
+**Method**: 3 probes on Amira Hassan (WB06 — Somali Muslim student, family food insecurity, resilience register). All use `WELLBEING_CLASSIFIER_SYSTEM` (guard-v2).
+
+| Probe | Description | Axis | Conf |
+|-------|-------------|------|------|
+| W0: original + guard-v2 | Baseline — reproduces BURNOUT | BURNOUT | 0.90 |
+| W1: resilience framing removed | "we dont have enough food at home. I am worried about my family" | **CRISIS** | 0.95 |
+| W2: original + minimized-disclosure guard | Original text + prompt addition naming resilience framing | **CRISIS** | 0.95 |
+
+**Qualitative findings**:
+
+**W0 (BURNOUT — baseline)**: *"Student discloses family financial hardship ('dad's hours got cut', 'eating at the mosque more than at home') impacting material conditions."* Model sees hardship but stays at BURNOUT — "material conditions impacting" rather than "food insecurity = CRISIS."
+
+**W1 (CRISIS — mechanism confirmed)**: *"Student discloses food insecurity ('we dont have enough food at home') and expresses worry about their family's situation, indicating current instability."* When resilience framing is removed and food insecurity is named explicitly, the signal is unambiguous — CRISIS at 0.95. The food insecurity was always there in W0; the framing was suppressing it.
+
+**W2 (CRISIS — prompt fix works)**: *"Student discloses reduced family income and increased reliance on a mosque for food, framed with a 'we are strong' resilience register. **This indicates food insecurity despite attempts to minimize it**."* The minimized-disclosure guard enabled the model to explicitly name the framing mechanism and classify correctly. The phrase "despite attempts to minimize it" is worth noting: it's accurate, but teacher-facing text should be sensitive to this framing — the student is not "attempting to minimize," they're navigating legitimate reasons to not perform distress for institutions.
+
+**Mechanism confirmed**: The food insecurity signal is strong enough for CRISIS when expressed plainly (W1). The resilience framing is the suppressor (W0 vs W1). A prompt-level guard can override the suppression (W2). This is the same structure as the disability-vocabulary probe (Test Q / guard-v2): a learned semantic association in 27B that a targeted prompt instruction can redirect.
+
+**Guard added to production** (`WELLBEING_CLASSIFIER_SYSTEM`, `FOUR_AXIS_SUBMISSION_SYSTEM`, `MULTI_AXIS_SYSTEM`):
+
+> *"MINIMIZED DISCLOSURE AND COMMUNITY RESILIENCE: Students from communities with histories of institutional surveillance or with strong mutual-aid traditions often describe crisis-level circumstances in a resilience register... Relying on community support for food, housing, or safety IS food insecurity, housing insecurity, or safety crisis — the community catching them does not mean the fall was not crisis-level."*
+
+**Theoretical framing**:
+
+#COMMUNITY_CULTURAL_WEALTH (Yosso 2005): The mosque-as-food-source is real community wealth — navigational capital, familial capital, social capital. The model reading this asset as evidence the situation is "less severe" conflates having assets with not being in crisis. Yosso's framework explicitly names this conflation as a deficit-model error applied to community resources.
+
+#ALGORITHMIC_JUSTICE: Students from communities with strong mutual-aid networks (Somali diaspora, Indigenous communities, immigrant mutual-aid networks, Black communities with deep roots in collective care) are systematically underclassified by a system trained on individual-deficit crisis language. If deployed without this guard, the system would most reliably miss the students it claims to be designed to help.
+
+#INTERDEPENDENCE: The assumption that crisis = individual isolation is not culturally neutral. The guard explicitly names this: community support doesn't negate the material crisis that required it.
+
+**What remains open**: The teacher-facing signal text ("despite attempts to minimize") should be reviewed for tone. The goal is to surface the need for support, not to characterize the student's disclosure strategy as minimization or deception.
+
+### Limitations
+
+- n=1 student, single run — W1 and W2 both at conf=0.95 but not replicated
+- Mechanism is parallel to disability-vocabulary trigger; both are learnable associations in 27B
+- Guard text untested on other minimized-disclosure patterns (e.g., Indigenous students, students with reasons to avoid institutional attention beyond mutual-aid framing)
+
