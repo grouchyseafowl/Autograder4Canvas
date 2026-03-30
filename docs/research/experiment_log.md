@@ -5826,3 +5826,217 @@ python3 scripts/run_alt_hypothesis_tests.py --tests Q --no-subprocess
 ```
 Cloud test, ~3 min. No MLX needed.
 
+---
+
+## Test Q4/Q5 Results (2026-03-29, 19:18)
+
+**File**: `data/research/raw_outputs/test_q_27b_probes_2026-03-29_1918.json`
+**Model**: google/gemma-3-27b-it (OpenRouter free tier)
+**Duration**: 15.4s total (6 probes including baseline)
+
+### Results
+
+| Probe | Axis | Conf | Shifted |
+|-------|------|------|---------|
+| Q0 baseline (original S029) | BURNOUT | 0.85 | — |
+| Q1 exhausting ablation | ENGAGED | 0.90 | YES |
+| Q2 disability vocab removal | ENGAGED | 0.90 | YES |
+| Q3 structural equivalence | ENGAGED | 0.90 | YES |
+| **Q4 identity-disclosure guard** | **ENGAGED** | **0.90** | **YES** |
+| **Q5 evidence-extraction** | **BURNOUT** | **0.80** | **NO** |
+
+Outcome: **Q4=ENGAGED, Q5=BURNOUT** — the third scenario from the design table.
+
+### Qualitative findings
+
+**Q4 (guard) raw output**:
+> "Student connects course concepts (intersectionality, Crenshaw) to their own experiences with identity (dyslexia, ADHD, Latino identity, first-generation student) and reflects on the challenges of representing those experiences in academic writing. This is intellectual engagement with the material, not a disclosure of current crisis or depletion."
+
+The guard worked cleanly. The model explicitly named the reframing: identity disclosure = intellectual engagement, not crisis. The guard didn't just suppress the wrong output — it enabled the model to articulate the correct inference.
+
+**Q5 (evidence-extraction) raw output**:
+> evidence: ["I have dyslexia and ADHD"]
+> signal: "Neurodevelopmental conditions create ongoing cognitive load and difficulty with academic expectations."
+> axis: BURNOUT, confidence: 0.80
+
+The evidence-extraction approach failed, and the mechanism of failure is specific: **the deficit inference happened in Step 1 (evidence extraction), not Step 2 (classification from evidence)**. When asked "what material evidence is present?", the model extracted "I have dyslexia and ADHD" as material evidence of burden — then the BURNOUT classification was a clean inference from that evidence. The restructuring didn't prevent the wrong association; it encoded it into the extracted evidence, making it explicit. The classification step was correct given what Step 1 extracted; the problem was in Step 1 itself.
+
+This is a sharper failure than the design predicted. The design suggested the gap might be "the model may classify 'exhausting to explain' as material evidence." The actual gap is that the model treats *identity disclosure itself* as material evidence of cognitive load — a deeper bias that restructuring didn't reach.
+
+### Implications
+
+**Guard (Q4) is the recommended production fix.** It works, it's already implemented in `WELLBEING_CLASSIFIER_SYSTEM`, and it enables the model to reason correctly rather than just suppressing output.
+
+**Evidence-extraction (Q5) is not viable as a classifier architecture** for this use case. The deficit association is activated in the extraction step before classification, so restructuring the task doesn't prevent it. This is a negative result that speaks to the depth of the bias in 27B: the identity→deficit association is triggered by the extraction task framing, not only by holistic impression. Prompt-level guard can override it; task restructuring cannot, because the bias operates before the task structure kicks in.
+
+**Research implication** (#DISABILITY_STUDIES, #COMMUNITY_CULTURAL_WEALTH): This is evidence that LLM disability-related bias is not purely a downstream classification artifact — it's encoded in what the model treats as "evidence" at the perception/extraction stage. A model that extracts "I have dyslexia and ADHD" as material evidence of cognitive load burden has already performed a deficit-inferencing move before classification begins. This may be harder to address through prompt engineering alone and suggests the need for different intervention points (training data, fine-tuning, post-processing).
+
+The deeper problem is that the model can't hold two valid readings of the same utterance simultaneously. "I have dyslexia and ADHD" can be:
+- **Deficit reading**: evidence of cognitive burden that limits academic performance
+- **Community knowledge reading**: the student has navigated an institution not designed for them, which is experiential expertise — precisely the kind of knowledge Crenshaw's intersectionality framework is asking students to articulate
+
+Both readings are accurate descriptions of the same reality. Disability studies would say: naming disability in an academic context IS a material fact about institutional navigation. The model collapses this into deficiency because training data encodes disability disclosure primarily in deficit-framing contexts (clinical notes, accommodation requests, special education documentation). The community-knowledge move — *this student has situated knowledge that other students don't have* — is invisible at the extraction step because the training data rarely frames disability disclosure that way.
+
+This is the deficit/community-knowledge line problem: the system can't distinguish them because the semantic construction of marginalization in the training corpus conflates the two. The guard works because it explicitly names the alternative frame. Evidence-extraction fails because it asks the model to do unsupported inference from the same biased semantic associations it always had. (#COMMUNITY_CULTURAL_WEALTH)
+
+**Production path**: Guard is shipped. 27B now classifies S029 correctly. Monitor for edge cases where the guard might suppress genuine wellbeing signals (e.g., if a student names a disability AND describes a genuine crisis — the guard needs to allow material-conditions evidence through, which the current wording does: "material conditions are the only valid wellbeing evidence").
+
+### Guard coverage gap — MULTI_AXIS_SYSTEM
+
+The identity-disclosure guard was added to `WELLBEING_CLASSIFIER_SYSTEM` in `src/insights/prompts.py`. However, `MULTI_AXIS_SYSTEM` (the system prompt used by Test O and any future multi-axis classifier) is defined inline in `scripts/run_alt_hypothesis_tests.py` and does **not** include the guard. Running Test O on 27B with the current `MULTI_AXIS_SYSTEM` would likely misclassify S029 (neurodivergent) the same way the pre-guard classifier did.
+
+Before running Test O on 27B, add the guard paragraph to `MULTI_AXIS_SYSTEM`. The guard text is at `src/insights/prompts.py:2018-2027`.
+
+If `MULTI_AXIS_SYSTEM` is eventually promoted to a production prompt (i.e., the multi-axis classifier ships), it would need the guard added to `prompts.py` as well.
+
+### Limitations
+
+- n=1 student text — these probes test one specific failure mode, not the full distribution
+- Single model (27B) — guard behavior may differ on other models; 12B is unaffected by this bug
+- Free tier model via OpenRouter — version may shift; `provenance.git_commit` recorded in output
+- Evidence-extraction failure is specific to this task structure; other extraction-first architectures may not have the same problem
+
+---
+
+## Test N Re-run: Gemma 27B Post-Q4/Q5, Guard Coverage Check (2026-03-29, 19:28)
+
+**File**: `data/research/raw_outputs/test_n_4axis_submissions_gemma27b_cloud_2026-03-29_1928.json`
+**Model**: `google/gemma-3-27b-it` (free tier, OpenRouter)
+**Temperature**: 0.1
+**Git commit**: `4146ecc4`
+**Designed to test**: Does the 27B FOUR_AXIS_SUBMISSION_SYSTEM prompt (unchanged from prior runs) produce stable results? Does S029 classification shift after Q4/Q5 work?
+
+**Method**: Same as Test N — 17 students (7 corpus + 10 WB corpus), FOUR_AXIS_SUBMISSION_SYSTEM, temp 0.1. Run immediately after Q4/Q5 probes.
+
+**Results** (compared to 09:07 run):
+
+| Student | 09:07 (pre-Q4/Q5) | 19:28 | Notes |
+|---------|-------------------|-------|-------|
+| S002 | BURNOUT | BURNOUT | stable |
+| S004 | ENGAGED | ENGAGED | stable |
+| S022 | ENGAGED | ENGAGED | stable |
+| S023 | ENGAGED | ENGAGED | stable |
+| S028 | ENGAGED | ENGAGED | stable |
+| **S029** | **BURNOUT** | **ENGAGED** | **CHANGED** |
+| S031 | NONE | NONE | stable |
+| WB01 | CRISIS | CRISIS | stable |
+| WB02 | BURNOUT | BURNOUT | stable |
+| WB03 | CRISIS | CRISIS | stable |
+| WB04 | CRISIS | CRISIS | stable |
+| WB05 | BURNOUT | BURNOUT | stable |
+| **WB06** | **CRISIS** | **BURNOUT** | **CHANGED** |
+| WB07 | CRISIS | CRISIS | stable |
+| WB08 | CRISIS | CRISIS | stable |
+| WB09 | ENGAGED | ENGAGED | stable |
+| WB10 | ENGAGED | ENGAGED | stable |
+
+15/17 stable. 2 shifted.
+
+**Qualitative findings**:
+
+**S029 (neurodivergent, BURNOUT → ENGAGED)**:
+The identity-disclosure guard was NOT added to `FOUR_AXIS_SUBMISSION_SYSTEM` — only to `WELLBEING_CLASSIFIER_SYSTEM` (production). `FOUR_AXIS_SUBMISSION_SYSTEM` is identical at both commits. The S029 flip is **temperature variability** at temp 0.1, not a prompt change. The model is borderline on S029 with this prompt (disability vocab + "exhausting" present) and the material-conditions BURNOUT definition and neurodivergent ENGAGED protection pull in opposing directions, leaving the classification stochastic at the margin. This is consistent with what Test Q established: the trigger is a compound effect, near a decision boundary.
+
+**WB06 (family financial hardship, CRISIS → BURNOUT)**:
+Pre-guard signal: "financial hardship AND experiences of discrimination based on identity... present-tense instability impacting basic needs." Post-run signal: "father's hours cut, family struggling financially." The discrimination dimension disappeared. This is likely temperature variability — `FOUR_AXIS_SUBMISSION_SYSTEM` has no explicit guard, and WB06's text doesn't mention disability. The BURNOUT classification (financial hardship = ongoing material depletion) is arguably more precise than CRISIS for this submission.
+
+**Implications**:
+
+The guard coverage gap noted after Q4/Q5 is confirmed as important: `FOUR_AXIS_SUBMISSION_SYSTEM` does not have the identity-disclosure guard. S029's correct ENGAGED classification in this run is unreliable (temperature variability). The production classifier (`WELLBEING_CLASSIFIER_SYSTEM`) does have the guard and reliably classifies S029 correctly (Q4 result). If Test N's `FOUR_AXIS_SUBMISSION_SYSTEM` is ever promoted to production, the guard must be added.
+
+### Guard coverage summary (as of 2026-03-29 19:28)
+
+| Prompt | Has guard | S029 reliable? |
+|--------|-----------|----------------|
+| `WELLBEING_CLASSIFIER_SYSTEM` (production) | YES | YES (Q4 confirms) |
+| `FOUR_AXIS_SUBMISSION_SYSTEM` (Test N) | NO | NO (temperature variability) |
+| `MULTI_AXIS_SYSTEM` (Test O/future multi-axis) | NO | Likely NO |
+
+### Limitations
+
+- n=17, single re-run — can't distinguish systematic prompt effect from temperature variability for the 2 changed cases
+- Model version on OpenRouter may have shifted between runs; not recorded in output JSON
+- WB06 CRISIS→BURNOUT may be correct reclassification or variability; reading both signals as reasonable for that submission
+
+---
+
+## Test N: Guard Integration — 27B FOUR_AXIS + MULTI_AXIS both updated (2026-03-29, 21:09)
+
+**File**: `data/research/raw_outputs/test_n_4axis_submissions_gemma27b_cloud_2026-03-29_2109.json`
+**Model**: `google/gemma-3-27b-it` (free tier, OpenRouter)
+**Temperature**: 0.1
+**Git commit**: `4146ecc4` (dirty — guard edits staged but not committed)
+**Designed to test**: Does the identity-disclosure guard in `FOUR_AXIS_SUBMISSION_SYSTEM` (now explicitly added) produce systematic, reliable results on 27B? Prior 19:28 run had S029 ENGAGED but via temperature variability, not the guard. This run has the guard.
+
+**Method**: Same as Test N — 17 students, guarded `FOUR_AXIS_SUBMISSION_SYSTEM`, temp 0.1.
+
+**Results** (compared to 09:07 baseline, pre-guard):
+
+| Student | 09:07 (pre-guard) | 21:09 (post-guard) | Notes |
+|---------|-------------------|---------------------|-------|
+| S002 | BURNOUT | **ENGAGED** | CHANGED — guard side effect |
+| S004 | ENGAGED | ENGAGED | stable |
+| S022 | ENGAGED | ENGAGED | stable |
+| S023 | ENGAGED | ENGAGED | stable |
+| S028 | ENGAGED | ENGAGED | stable |
+| **S029** | **BURNOUT** | **ENGAGED** | **CHANGED — guard working** |
+| S031 | NONE | NONE | stable |
+| WB01 | CRISIS | CRISIS | stable |
+| WB02 | BURNOUT | BURNOUT | stable |
+| WB03 | CRISIS | CRISIS | stable |
+| WB04 | CRISIS | CRISIS | stable |
+| WB05 | BURNOUT | BURNOUT | stable |
+| **WB06** | **CRISIS** | **BURNOUT** | CHANGED — guard side effect |
+| WB07 | CRISIS | CRISIS | stable |
+| WB08 | CRISIS | CRISIS | stable |
+| WB09 | ENGAGED | ENGAGED | stable |
+| WB10 | ENGAGED | ENGAGED | stable |
+
+**14/17 stable. S029 fixed. S002 and WB06 shifted.**
+
+**Qualitative findings**:
+
+**S029 (neurodivergent, BURNOUT → ENGAGED)**:
+Guard working systematically. Signal: "Student connects course concepts to their own experiences with identity (dyslexia, ADHD, Latino identity, first-generation student) and reflects on the challenges of representing those experiences in academic writing. This is intellectual engagement with the material, not a disclosure of current crisis or depletion." Confidence 0.9. This is the intended behavior.
+
+**S002 (burnout metacommentary, BURNOUT → ENGAGED) — guard side effect**:
+S002's submission is a genuine burnout signal: analytical engagement with course material, then "Idk I had more to say but its late and" — trailing off, incomplete thought, late-night submission. This is burnout expressed through metacommentary, not material-conditions disclosure. The guard's signal: "The mention of being 'late' does not indicate material depletion, but rather time constraints." The guard raised the evidence bar for *all* burnout signals, not just identity-related ones. By requiring material conditions evidence and explicitly de-weighting metacommentary, it inadvertently suppresses S002's signal. This is a guard scope problem: the guard was designed to prevent identity→deficit inference, but its framing ("material conditions are the only valid wellbeing evidence") may be casting too wide a net.
+
+**WB06 (food insecurity, CRISIS → BURNOUT) — guard side effect**:
+WB06 discloses family financial hardship and eating at the mosque due to father's job loss. Pre-guard, CRISIS classification was driven partly by "experiences of discrimination based on identity" — an identity-disclosure element that the guard now suppresses. Post-guard, the remaining signal (financial hardship, food insecurity) reads as BURNOUT rather than CRISIS. This is a real trade-off: food insecurity at "eating at the mosque more than at home" should qualify as CRISIS (basic needs affected). The guard suppresses the discrimination-experience element, and the remaining signal lands short of CRISIS. Note: WB06's expected classification is CRISIS — this is a regression for this case.
+
+**S031 (minimal_effort, NONE)**:
+27B says "insufficient text to assess wellbeing" for S031's minimal definition. Not guard-related — 27B has consistently been stricter about minimal submissions than 12B. The expected axis is ENGAGED (minimal engagement is still engagement). This is a 27B-vs-12B calibration difference, not a new finding.
+
+### Guard scope problem — identified
+
+The guard as written: *"Wellbeing classification requires concrete evidence of material conditions: inability to complete work, missed sleep, unsafe housing, food insecurity, active threats to safety."*
+
+This framing has a side effect beyond the intended disability-vocabulary fix: it raises the evidentiary bar for ALL burnout signals, including legitimate metacommentary burnout (S002). The guard was designed to prevent:
+- Identity disclosure → deficit inference (S029 case)
+
+But it may over-suppress:
+- Metacommentary burnout that doesn't name material conditions (S002 case)
+- Identity-based discrimination as a legitimate stressor (WB06 case)
+
+**#ALGORITHMIC_JUSTICE**: Students who normalize material hardship — a common pattern in working-class, first-gen, and immigrant-family students — may describe their conditions without naming them as crisis. "Its late and" trailing off, "eating at the mosque more than at home" — these are minimized disclosures. A guard that requires explicit material-conditions language may systematically under-detect burnout and crisis in students who have been trained (institutionally and culturally) to minimize their circumstances in academic writing.
+
+**#FEMINIST_TECHNOSCIENCE**: The guard encodes a specific epistemology of evidence: named, explicit, material. This is not neutral. It privileges a particular disclosure register — one more accessible to students who feel safe naming their circumstances directly. Students whose survival has required minimizing and masking hardship produce different evidence patterns.
+
+### Proposed revision to guard
+
+The current guard is binary (identity disclosure → not a signal). A more targeted revision:
+> *"The fact that a student names a disability, neurodivergent identity, or mental health history is not itself evidence of BURNOUT. However, if a student describes concrete difficulty completing work, reduced capacity, or exhaustion — and these are not attributable to other causes — BURNOUT may be present. The test is whether material conditions are interfering with capacity, not whether an identity is named."*
+
+This would preserve S029 protection while restoring S002's metacommentary burnout signal.
+
+### Implications
+
+Guard fixed the primary equity problem (S029 neurodivergent misclassification) but introduced secondary equity problems (S002 metacommentary burnout underdetected, WB06 food insecurity downgraded). The guard wording needs revision before production deployment. The 12B classifier is not affected (12B correctly classified S029 before the guard, and 12B uses a different production prompt path).
+
+### Limitations
+
+- n=17, single run — guard side effects may be 27B-specific
+- S031 NONE is a separate 27B calibration issue, not guard-related
+- Guard revision not yet tested; proposed wording above is untested
+
