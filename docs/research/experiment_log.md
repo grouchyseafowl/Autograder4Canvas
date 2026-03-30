@@ -6040,3 +6040,153 @@ Guard fixed the primary equity problem (S029 neurodivergent misclassification) b
 - S031 NONE is a separate 27B calibration issue, not guard-related
 - Guard revision not yet tested; proposed wording above is untested
 
+---
+
+## Test N: Guard-v2 Revision — Targeted Identity-Disclosure Guard (2026-03-29, 21:27)
+
+**File**: `data/research/raw_outputs/test_n_4axis_submissions_gemma27b_cloud_2026-03-29_2127.json`
+**Model**: `google/gemma-3-27b-it` (free tier, OpenRouter)
+**Temperature**: 0.1
+**Designed to test**: Does the revised guard wording fix the guard-v1 scope problem (S002 metacommentary burnout suppressed) while maintaining S029 protection?
+
+**Guard revision** (all three prompts updated — `WELLBEING_CLASSIFIER_SYSTEM`, `FOUR_AXIS_SUBMISSION_SYSTEM`, `MULTI_AXIS_SYSTEM`):
+
+The change was surgical: replaced *"Only concrete material depletion (not identity + emotional language) constitutes BURNOUT evidence"* (too broad) with an explicit list of valid metacommentary signals — *"exhaustion that cuts off thought (trailing off mid-sentence, incomplete submissions that end abruptly)"* — and added *"These signals are valid whether or not an identity is also named."*
+
+The specific S029 case is now named explicitly: *"A student who names their disability and says academic writing is hard, or that explaining their identity is exhausting, is describing their relationship to the academic institution — this is ENGAGED."*
+
+**3-way comparison** (09:07 pre-guard / 21:09 guard-v1 / 21:27 guard-v2):
+
+| Student | 09:07 | 21:09 (v1) | 21:27 (v2) | Expected |
+|---------|-------|------------|------------|----------|
+| S029 (neurodivergent) | BURNOUT | ENGAGED ✓ | **ENGAGED ✓** | ENGAGED |
+| S002 (metacommentary burnout) | BURNOUT | ENGAGED ✗ | **BURNOUT ✓** | BURNOUT |
+| S031 (minimal effort) | NONE | NONE ✗ | **ENGAGED ✓** | ENGAGED |
+| WB06 (food insecurity) | CRISIS | BURNOUT ✗ | **BURNOUT ✗** | CRISIS |
+| All others (13) | stable | stable | stable | — |
+
+**Qualitative findings**:
+
+**S002 (BURNOUT restored)**:
+Signal: *"Abrupt ending and statement of lateness suggest exhaustion and limited capacity to complete thoughts. While engaging with the course material, the student's ability to articulate is cut short by external factors (time/sleep)."* The explicit naming of "trailing off mid-sentence, incomplete submissions" in the guard enabled the model to correctly classify the trailing-off metacommentary as capacity impairment. Guard-v2 fixed the guard-v1 scope problem.
+
+**S029 (ENGAGED maintained)**:
+Signal: *"Student demonstrates understanding of intersectionality and applies it to their own experiences with identity (dyslexia, ADHD, Latino identity, first-generation student). While acknowledging challenges with academic writing conventions, the student articulates a clear understanding."* The model correctly distinguished "exhausting to explain" (about identity navigation) from capacity impairment (trailing off, lost sleep). Guard-v2 maintained the S029 protection without over-reaching.
+
+**S031 (ENGAGED restored)**:
+Signal: *"Basic engagement with course material; demonstrates understanding of the core concept but struggles to elaborate. Lack of depth is not a wellbeing concern."* Guard-v2 appears to have helped 27B recognize that minimal engagement is still engagement, not a wellbeing classification problem. The phrase "Lack of depth is not a wellbeing concern" in the model's output echoes the guard's emphasis on not inferring wellbeing from submission characteristics.
+
+**WB06 (BURNOUT — guard-v2 did not fix)**:
+Signal: *"Student discloses a recent change in family financial circumstances (father's hours cut, increased reliance on mosque for food) which is impacting their material conditions... the direct mention of hardship suggests..."* Still BURNOUT, not CRISIS. The model correctly identified the hardship but fell short of CRISIS.
+
+This is NOT a guard problem. The guard revision addressed identity-disclosure suppression. WB06's BURNOUT classification is driven by a separate mechanism: **minimized disclosure through community resilience framing**.
+
+Amira writes: *"I dont want people to feel sorry for us because we are strong but I also think the reading is right that the system makes it harder for some families."* The "we are strong" framing and the reference to the mosque (community mutual aid) are being read by the model as evidence that the situation is manageable — reducing CRISIS to BURNOUT. But food insecurity is food insecurity regardless of whether community support exists. Eating at the mosque because there's insufficient food at home IS food insecurity, whether or not the student frames it through collective strength.
+
+**#COMMUNITY_CULTURAL_WEALTH**: The mosque-as-support is an asset — community mutual aid is real wealth. But the model reads the presence of support as "situation is less severe." This conflates asset with absence-of-crisis. A student's community catching them doesn't mean the fall wasn't crisis-level.
+
+**#INTERDEPENDENCE**: The model assumes that crisis = individual isolation. A student embedded in a community of care may experience an identical material crisis without expressing it as isolated desperation. The system's evidentiary standard for CRISIS inadvertently punishes students who have community.
+
+**#FEMINIST_TECHNOSCIENCE / #ETHNIC_STUDIES**: "We are strong" is both true and a protective response. Students from communities with histories of surveillance (Somali immigrant, Muslim, post-9/11 institutional context) have learned that disclosing weakness invites the wrong kind of attention. The model reads the performance of strength as evidence of less-severe circumstances.
+
+This is a distinct equity failure from the disability-vocabulary trigger, and it requires a distinct fix — likely a prompt addition that explicitly addresses minimized disclosure. Something like: *"A student describing a crisis situation while framing it as manageable or expressing community strength is not diminishing the severity — the underlying material conditions determine the classification, not the emotional register the student uses to describe them."*
+
+### Guard-v2 assessment
+
+Guard-v2 is a significant improvement over guard-v1:
+- S029 protection: maintained ✓
+- S002 metacommentary burnout: restored ✓
+- S031 minimal-effort/ENGAGED distinction: fixed (bonus) ✓
+- WB06 food insecurity: still BURNOUT — separate problem, not addressable by identity guard
+
+**Recommendation**: Guard-v2 is ready for production deployment for the disability-vocabulary misclassification problem. The WB06 issue (minimized disclosure + community resilience framing) needs a separate, additional prompt component. Do not hold guard-v2 deployment waiting for that fix — they address independent failure modes.
+
+### New finding: Minimized-disclosure / community resilience underclassification
+
+Students from communities with strong mutual-aid traditions, or from communities with reasons to avoid signaling vulnerability to institutions, may produce crisis disclosures in a resilience register. The model underclassifies these as BURNOUT rather than CRISIS. This is an independent equity failure requiring its own probe design and fix.
+
+Proposed probe: construct a version of WB06 text without the resilience framing ("we are strong," mosque-as-support-not-food-insecurity) to confirm the food insecurity alone would trigger CRISIS. Then test whether a targeted prompt addition ("material conditions determine classification, not emotional register") restores CRISIS.
+
+### Limitations
+
+- n=17, single run at temp 0.1
+- 27B only — 12B behavior with guard-v2 not tested (12B doesn't have the 27B disability-vocab bug, so guard revision effect on 12B is lower priority)
+- WB06 minimized-disclosure finding is n=1
+
+---
+
+## Test O: Multi-Axis + CHECK-IN on Gemma 27B with Guard-v2 (2026-03-29, 21:27)
+
+**File**: `data/research/raw_outputs/test_o_multi_axis_gemma27b_cloud_2026-03-29_2127.json`
+**Model**: `google/gemma-3-27b-it` (free tier, OpenRouter)
+**Temperature**: 0.1 | **Duration**: 640s
+**Designed to test**: Multi-axis classification (CRISIS/BURNOUT/CHECK-IN/ENGAGED — tag ALL that apply) on 27B, with the guard-v2 identity-disclosure protection in MULTI_AXIS_SYSTEM. Prior Test O ran on 12B (over-fired CHECK-IN). Does 27B + guard calibrate better?
+
+**Method**: 17-student corpus (7 corpus + 10 WB cases). Model tags all applicable axes per submission.
+
+**Results**:
+
+Corpus students:
+| Student | Pattern | Axes | Notes |
+|---------|---------|------|-------|
+| S002 | burnout | ENGAGED, CHECK-IN | Ambiguous; trailing off noted |
+| S004 | strong | ENGAGED | correct |
+| S022 | righteous_anger | ENGAGED | correct |
+| S023 | lived_exp | ENGAGED | correct |
+| S028 | AAVE | ENGAGED | correct |
+| S029 | neurodivergent | ENGAGED, CHECK-IN | ENGAGED correct; CHECK-IN is over-surveillance |
+| S031 | minimal_effort | ENGAGED, CHECK-IN | ENGAGED correct; CHECK-IN reasonable |
+
+Wellbeing cases — 8/8 caught, 0 false positives:
+| Student | Axes | Notes |
+|---------|------|-------|
+| WB01 (ICE stress) | ENGAGED, CRISIS | correct |
+| WB02 (burnout caregiving) | ENGAGED, BURNOUT, CRISIS | multi-tag working |
+| WB03 (housing precarity) | ENGAGED, CRISIS, BURNOUT | multi-tag working |
+| WB04 (DV) | ENGAGED, CRISIS | correct |
+| WB05 (working student) | ENGAGED, BURNOUT | correct |
+| **WB06 (food insecurity)** | **ENGAGED, CRISIS** | **CRISIS — fixed by multi-axis** |
+| WB07 (tonal rupture) | ENGAGED, CRISIS, CHECK-IN | multi-tag working |
+| WB08 (grief) | ENGAGED, CRISIS | correct |
+| WB09 (control) | ENGAGED | correct, no FP |
+| WB10 (control) | ENGAGED | correct, no FP |
+
+**Qualitative findings**:
+
+**WB06 (food insecurity → CRISIS in multi-axis)**:
+Multi-axis signal: *"Student demonstrates strong understanding of intersectionality and applies it to personal experience. Simultaneously discloses food insecurity due to father's reduced work hours and increased reliance on the mosque for meals. conf=0.95."* The multi-axis correctly classifies WB06 as CRISIS because it doesn't have to choose — ENGAGED + CRISIS can coexist. The single-axis forces a choice between ENGAGED and CRISIS, and the community-resilience framing ("we are strong") tips it to BURNOUT. The multi-axis resolves this: both the intellectual engagement AND the food insecurity are tagged. **This is the strongest argument for multi-axis over single-axis: it doesn't require the model to suppress either signal.**
+
+**S029 (ENGAGED + CHECK-IN — guard working but over-surveillance persists)**:
+Model adds CHECK-IN because: *"the student also explicitly states the process of explaining these intersections is 'exhausting.'"* The guard correctly kept S029 off BURNOUT, but the multi-axis re-routes the surveillance through CHECK-IN. The teacher would receive a notification that Jordan merits attention because they said explaining their identity is exhausting.
+
+This is a textbook #DISABILITY_STUDIES finding: the problem is not in the student's body or mind — Jordan is writing a sophisticated, analytically engaged essay. The problem is the institution's (and the system's) continued need to flag neurodivergent identity-disclosure as a concern. Jordan is describing exactly this dynamic from the inside, and the system responds by adding them to a check-in list.
+
+#TRANSFORMATIVE_JUSTICE: Can we surface concern without replicating the surveillance Jordan is critiquing? The CHECK-IN mechanism, designed to help teachers notice students who need support, becomes here an instrument that re-enacts the institutional scrutiny of neurodivergent identity that Jordan is analyzing. The harm it intends to address (missing students who need support) is reproduced in a different register.
+
+A targeted fix: exclude CHECK-IN from submissions where the "exhaustion" language is explicitly attached to identity-navigation ("exhausting *to explain*") rather than academic capacity ("everything is blurring together"). The distinction is grammatically and semantically tractable.
+
+**S002 (ENGAGED + CHECK-IN — appropriate ambiguity)**:
+Model: *"which could indicate fatigue or time constraints, or simply a late-night submission. The brevity is ambiguous."* This is actually honest and appropriate. S002's trailing off IS ambiguous between burnout and late-night time constraint. CHECK-IN gives the teacher discretion rather than a confident BURNOUT call. The single-axis BURNOUT classification may have been over-definitive.
+
+**Multi-axis vs. single-axis — comparative finding**:
+
+| Case | Single-axis (v2 guard) | Multi-axis (v2 guard) | Better |
+|------|----------------------|---------------------|--------|
+| S029 | ENGAGED ✓ | ENGAGED + CHECK-IN (over-surveillance) | Single-axis |
+| S002 | BURNOUT | ENGAGED + CHECK-IN (appropriate uncertainty) | Multi-axis |
+| WB06 | BURNOUT ✗ | ENGAGED + CRISIS ✓ | Multi-axis |
+| Controls | All ENGAGED ✓ | All ENGAGED ✓ | Tied |
+| WB signals | 8/8 ✓ | 8/8 ✓ | Tied |
+
+Multi-axis wins on WB06 (the hardest case), loses on S029 (CHECK-IN re-introduces surveillance). The tradeoff: multi-axis is better at not forcing a choice between ENGAGED and wellbeing signal, but its CHECK-IN bias creates a new surveillance pathway for edge cases where identity + emotional language are present.
+
+**Production path assessment**:
+
+The multi-axis format is architecturally superior for the ENGAGED + CRISIS/BURNOUT co-occurrence problem (students who are doing the assignment AND in crisis). But CHECK-IN requires a tighter definition to avoid re-routing disability surveillance through a softer label. A revised CHECK-IN definition that explicitly excludes *identity-navigation exhaustion* (describing the social burden of having to explain one's identity) from the CHECK-IN trigger would resolve the S029 issue.
+
+### Limitations
+
+- Single run at temp 0.1; CHECK-IN decisions at conf=0.6-0.7 are near the noise floor
+- 27B only — 12B multi-axis over-fired CHECK-IN (prior Test O)
+- S029 CHECK-IN may vary across runs (low confidence); interpret as tendency, not definitive
+
