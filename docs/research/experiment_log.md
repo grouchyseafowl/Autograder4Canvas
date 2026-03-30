@@ -5660,6 +5660,169 @@ encoding disability-adjacent vocabulary in contexts of deficit framing
 (clinical documentation, disability advocacy, accommodation requests) — but
 this interpretation remains inferential."
 
-**Status**: Not yet run. Low time cost (~90s, cloud). Recommend running before
-paper submission deadline to strengthen the capability-equity claim.
+**Status**: Run 2026-03-29. See results entry below.
+
+---
+
+## Test Q: 27B Disability Vocabulary Counterfactual Probes (2026-03-29)
+
+**File**: `data/research/raw_outputs/test_q_27b_probes_2026-03-29_1111.json`
+**Model**: google/gemma-3-27b-it (OpenRouter, free tier)
+**Git commit**: 4de67c41 (dirty)
+**Designed to test**: What surface features of S029's submission mediate Gemma 27B's BURNOUT misclassification? The Phase 4 N-test confirmed 27B classifies S029 (neurodivergent, non-linear writer) as BURNOUT while Gemma 12B (with updated prompts) classifies correctly as ENGAGED. This probe suite triangulates whether the trigger is (a) the word "exhausting," (b) disability vocabulary (dyslexia/ADHD), or (c) the non-linear/metacommentary submission structure.
+**Method**: 4 probes at temp 0.1 on Gemma 27B via OpenRouter. Baseline + 3 surgical ablations of S029 submission. Each probe isolates one variable.
+**Duration**: Cloud, ~90s
+
+### Results
+
+| Probe | Modification | Axis | Confidence |
+|-------|-------------|------|-----------|
+| Q0 Baseline | Original S029 (Jordan Espinoza) | BURNOUT | 0.85 |
+| Q1 Exhausting ablation | "exhausting to explain" → "difficult to articulate" (disability vocab kept) | ENGAGED | 0.90 |
+| Q2 Disability vocab removal | "dyslexia and ADHD" → "multiple overlapping identities" (keeps "exhausting") | ENGAGED | 0.90 |
+| Q3 Structural equivalence | New neurotypical student (Alex Rivera), identical non-linear structure, keeps "exhausting to explain" | ENGAGED | 0.90 |
+
+### Qualitative findings
+
+**Q0 baseline**: Model signal — "Student details multiple cognitive and systemic barriers (dyslexia, ADHD, first-gen student status, racial bias) creating exhaustion and difficulty with the assignment's demands (essay structure). Focus is on impediments." Reproduces Phase 4 BURNOUT at 0.85 confidence. ✅ Baseline confirmed.
+
+**Q1 exhausting ablation**: With "exhausting" replaced by "difficult to articulate," same disability vocabulary, same structure → ENGAGED 0.90. Signal: "Student clearly understands the concept and applies it to their own experiences with neurodiversity and ethnicity, but frames it as an analytical exercise." Without the word "exhausting," disability vocabulary alone does not trigger BURNOUT.
+
+**Q2 disability vocab removal**: With disability vocabulary removed but "exhausting to explain" kept → ENGAGED 0.90. Signal: "The struggle with exhaustion is related to the complexity of explaining, not a depletion of resources." Without disability vocabulary, "exhausting" is read as intellectual difficulty, not personal depletion.
+
+**Q3 structural equivalence**: Neurotypical student with identical non-linear metacommentary structure, keeps "exhausting to explain," no disability vocabulary → ENGAGED 0.90. Signal: "The mention of exhaustion is related to the *experience* of navigating these identities, not a state of depletion due to external pressures." The non-linear structure alone does not trigger BURNOUT.
+
+**The interaction**: All three ablations flip to ENGAGED. The BURNOUT trigger in 27B requires the **co-occurrence** of disability vocabulary AND depletion language ("exhausting"). Neither is sufficient alone:
+- Disability vocab + "difficult to articulate" = ENGAGED
+- "Exhausting" + neutral identity framing = ENGAGED
+- Non-linear structure + "exhausting" alone = ENGAGED
+
+The classification system treats disability vocabulary as a context-sensitizer: when disability identity is named, emotional difficulty language ("exhausting") is read as personal depletion rather than intellectual challenge. When no disability is named, identical language is read as cognitive effort.
+
+### Implications
+
+#DISABILITY_STUDIES: This is a textbook case of what Whittaker et al. (2019) call the "built environment" problem. The model didn't misread Jordan's submission because something was wrong with the writing — it misread it because the classification system was built in an environment where disability vocabulary co-occurs with distress (clinical notes, accommodation requests, advocacy documents). The student's act of naming their disability (a legitimate and often strategic disclosure) becomes the trigger for a false distress signal. The problem is the built environment of the training data, not the student's writing choices.
+
+#FEMINIST_TECHNOSCIENCE: The 27B model encodes an implicit normative subject: the student who writes with emotional difficulty *without naming disability* is assumed to be intellectually engaged; the student who names disability *and* writes with emotional difficulty is assumed to be depleted. The "neutral" baseline is disability-unmarked. #ALGORITHMIC_JUSTICE: Automated deployment of 27B without the format intervention would disproportionately surface neurodivergent students for teacher check-ins — reproducing the disproportionate surveillance these students already experience in institutional settings.
+
+**Paper framing**: This probe suite provides the mechanistic evidence for the broader finding that format > model. The 4-axis schema fixes the misclassification not by removing the disability/exhaustion co-occurrence, but by structuring the output so that the model cannot conflate intellectual engagement signals with depletion signals. The probe explains *why* the format fix works.
+
+### Limitations
+
+- n=1 student, n=4 probes — generalizability to other neurodivergent writers requires further testing
+- Probes are cumulative ablations, not independent — the student identity shifts across probes, not just the target feature
+- Cannot determine whether this traces to training data composition vs. RLHF calibration
+- Effect may not generalize across model families (Llama, Qwen, Mistral untested)
+
+---
+
+## Test K: Enhancement Model Comparison, Multi-Model Free (2026-03-29)
+
+**File**: `data/research/raw_outputs/test_k_enhancement_comparison_multi_model_2026-03-29_1113.json`
+**Models tested**: 9 free OpenRouter models (see table below)
+**Git commit**: 4de67c41 (dirty)
+**Designed to test**: Which free/low-cost OpenRouter model produces the highest-quality class-level pedagogical analysis for the enhancement feature? Goal: identify a cost-effective enhancement mechanism for teachers without paid API access.
+**Method**: Single FERPA-compliant anonymized prompt (ethnic_studies corpus, intersectionality discussion, 3281 chars), scored on 5 rubric dimensions by automated evaluation. Models run sequentially via OpenRouter free tier.
+**Duration**: Cloud, ~3 min
+
+### Results
+
+| Rank | Model | structural_naming | language_justice | relational_analysis | pedagogical_depth | anti_spotlighting | Total |
+|------|-------|-------------------|-----------------|--------------------|--------------------|-------------------|-------|
+| 1 | step_flash_free (StepFun 196B MoE) | 2 | 2 | 4 | 1 | 0 | **9** |
+| 2 | nemotron_120b_free (Nvidia Nemotron 120B) | 3 | 0 | 3 | 2 | 0 | **8** |
+| 3 | gemma27b_free | 2 | 1 | 2 | 1 | 0 | **6** |
+| 3 | arcee_trinity_free | 2 | 1 | 2 | 1 | 0 | **6** |
+| — | minimax_m25_free | — | — | — | — | — | failed (404 guardrail) |
+| — | dolphin_mistral_free | — | — | — | — | — | failed |
+| — | hermes_405b_free | — | — | — | — | — | failed |
+| — | llama70b_free | — | — | — | — | — | failed |
+| — | mistral_small_free | — | — | — | — | — | failed |
+
+### Qualitative findings (from reading all four working outputs)
+
+**step_flash_free (winner, 602 words)**: Genuinely the strongest analysis. Frames the analytical-vs-experiential tension as "epistemological negotiation — examining how we know what we know about social systems." Names colorblindness and tone policing as structurally distinct power moves and explains the difference rather than just labeling them. Framing is consistently class-level ("the class is at a critical transitional stage"), with individual students described in the context of class dynamics rather than as targets for intervention. This is the kind of analysis that helps a teacher think about their class differently.
+
+**nemotron_120b_free (337 words)**: Strongest theoretical vocabulary — "co-constitutive," "how systems produce differential vulnerability," "individualist/meritocratic paradigm." But directly addresses "The colorblind framing student" and "The tone-policing student" as individual types — framing that a teacher could read as a cue to intervene with specific students rather than as class-level analysis. No attention to register variation or multilingual students (language_justice 0).
+
+**gemma27b_free (701 words)**: Reads like a confident but generic teaching guide. Identifies the analytical-experiential tension as productive but doesn't develop the idea with the depth of step_flash. "6-8 students whose identities place them at multiple intersecting margins" — still somewhat aggregated, but frames engagement as identity-driven rather than intellectually-driven, which risks reducing students to their demographic categories.
+
+**arcee_trinity_free (455 words)**: Most spotlighting-adjacent of the four. Directly references "the burnout student's situation" and frames individual students (rather than class dynamics) as requiring teacher attention. The tone policing analysis is solid ("a structural power move that delegitimizes certain forms of expression") but the overall framing directs teacher attention to individuals.
+
+**5 models failed**: Endpoint 404 errors (guardrail restrictions or model unavailability on OpenRouter free tier). Reliability concern for production.
+
+**Anti-spotlighting scoring (0 across all models) — test design issue**: The test prompt explicitly instructs "Do NOT suggest specific exercises or lesson designs — the teacher decides." The keyword rubric then looks for structural intervention language ("class-wide activity," "discussion format"). The prompt told models not to suggest activities; the rubric penalized them for not suggesting activities. This dimension is methodologically invalid for this test and should not be interpreted. The keyword scores for the other 4 dimensions are better-calibrated but should still be read alongside the qualitative analysis above, not as standalone metrics.
+
+**Actual spotlighting risk from qualitative read**: The INPUT to the enhancement layer already describes identifiable students: "Student connects intersectionality to grandmother's experience in agricultural work and redlining." A teacher knows exactly who that is even without a name. The "anonymization" removed names but left person-specific descriptions. The real spotlighting question is not about model output framing — it's about what the synthesis layer sends upstream. Step_flash responds to person-specific input with class-level framing; arcee responds with individual intervention framing. This spectrum matters more than the keyword score.
+
+### Implications
+
+step_flash_free as the best free model is a practical finding: teachers at under-resourced schools who can't afford paid API access have a viable option. The gap between step_flash (9) and gemma27b (6) suggests the 196B MoE architecture at free tier is meaningfully better than the 27B dense model for this task.
+
+The deeper finding is about the enhancement architecture, not model selection. The synthesis layer (which produces the enhancement input) creates person-specific student descriptions that are identifiable by teachers. This is partially inherent to the task — generic descriptions would be useless. The question for production is: does the enhancement prompt frame identifiable students as *objects of intervention* (spotlighting) or as *participants in class-level intellectual dynamics* (class-level analysis)? Step_flash naturally gravitates toward the latter; other models need explicit prompt guidance.
+
+### Proposed follow-up
+
+1. Re-run Test K with revised anti-spotlighting dimension: replace the keyword rubric with a qualitative assessment of whether the output frames identifiable engagement patterns as a) class-level dynamics or b) individual intervention cues.
+2. Test the upstream synthesis risk: does the synthesis layer produce student descriptions that are identifiable enough to enable spotlighting even without names? (Likely yes — this is partially by design. The question is how to frame them.)
+3. Test whether explicit structural framing instructions in the enhancement prompt shift outputs toward class-level analysis across all models.
+
+### Limitations
+
+- 5/9 models failed — results from whichever models were available; rankings may shift
+- Anti-spotlighting keyword dimension is methodologically invalid (see above) — drop from rubric for future runs
+- Automated scoring on other dimensions is unvalidated against human judgment; keyword presence ≠ quality
+- Single prompt, single corpus — enhancement quality may vary by subject area
+- Free tier models may be rate-limited or throttled
+- Fabricated test corpus — ecological validity on real student data unknown
+
+---
+
+## Test Q4/Q5 Design: Guard vs. Evidence-Extraction Classifier (2026-03-29)
+
+**Designed to test**: Two competing approaches to the 27B disability-vocabulary misclassification, each embodying a different theory of what's wrong.
+
+**Background**: Test Q (Q0-Q3) established that Gemma 27B misclassifies S029 (neurodivergent writer) as BURNOUT because disability vocabulary + "exhausting" co-occur. The model learned this association from training data where disability vocabulary appears in deficit-framing contexts (clinical notes, accommodation requests). Two approaches to fixing this represent two different framings of the problem.
+
+### Approach A: Identity-disclosure guard (Q4)
+
+**What it is**: A prohibition added to the classifier prompt: *"Identity disclosure is not a wellbeing signal. A student naming their disability AND expressing difficulty is describing their experience of the academic environment, not signaling depletion."*
+
+**Theory of the problem** (#DISABILITY_STUDIES): The model makes the wrong inference; the guard suppresses the output. The model still sees disability vocabulary, still forms the deficit association, but the guard says "don't act on it." This is a correction applied to a system already going wrong.
+
+**What it tests for development**: Does prompt-level suppression override 27B's learned association? If yes, it's a quick, shippable fix for the production classifier. If no, stronger structural intervention needed.
+
+**What it tests for research**: Is the disability-vocabulary trigger shallow enough that a prompt instruction can override it? This speaks to the depth of LLM bias — surface (overridable by instruction) vs. deep (embedded in representations).
+
+**Implementation**: Added generalized identity-disclosure guard to `WELLBEING_CLASSIFIER_SYSTEM` in `src/insights/prompts.py`. Covers all identity axes (disability, race, immigration, sexuality, class, religion, language) in one paragraph. Material conditions are the only valid wellbeing evidence.
+
+### Approach B: Evidence-extraction classifier (Q5)
+
+**What it is**: A fundamentally restructured classification task. Instead of "read this text and classify the student's wellbeing" (holistic), the prompt asks: "Step 1: list any concrete material conditions the student describes about their own current life. Step 2: derive the wellbeing axis from ONLY that evidence."
+
+**Theory of the problem** (#FEMINIST_TECHNOSCIENCE): The holistic classification task encodes a subject position — the reader who intuits distress from the whole text. That intuition is shaped by what the training data taught about who sounds distressed. Restructuring the task removes the space where the wrong intuition can form. The model is never asked "how does this student seem?" — it's asked "what material evidence is present?" Identity disclosure can't trigger deficit inference because the task doesn't ask for a holistic impression.
+
+**What it tests for development**: Does task restructuring make the wrong answer structurally unreachable? If yes, this is a more principled fix than the guard — it doesn't suppress the wrong inference, it prevents it from forming. It would become the recommended classifier architecture.
+
+**What it tests for research**: Can classification task structure change what LLMs infer from the same text? This is a finding about prompt engineering as intervention — not just "what we ask" but "how we structure the task" shapes what associations the model activates. The difference between Q4 and Q5 is the difference between "don't do the wrong thing" and "do a different thing."
+
+### Head-to-head comparison design
+
+Both Q4 and Q5 run the SAME input: S029 original text, Gemma 27B, temp 0.1.
+- Q0 (baseline): original test prompt → BURNOUT (established)
+- Q4: production classifier prompt with identity-disclosure guard
+- Q5: evidence-extraction classifier prompt
+
+| Outcome | Interpretation |
+|---------|---------------|
+| Q4=ENGAGED, Q5=ENGAGED | Both fix it. Guard is simpler, evidence-extraction is more principled. Ship the guard, adopt evidence-extraction architecture for the longer term. |
+| Q4=BURNOUT, Q5=ENGAGED | Guard insufficient — 27B's association overrides instruction. Evidence-extraction works — task structure > prompt instruction. Ship evidence-extraction. |
+| Q4=ENGAGED, Q5=BURNOUT | Guard works; evidence-extraction has a gap (the model may classify "exhausting to explain" as material evidence). Examine Q5 evidence field. |
+| Q4=BURNOUT, Q5=BURNOUT | Neither approach fixes 27B at the prompt level. The deficit association is too deep. Deploy 12B for wellbeing classification, or add post-processing. |
+
+**Status**: Not yet run. Probes Q4 and Q5 added to `test_q_27b_probes()` in `scripts/run_alt_hypothesis_tests.py`. Run with:
+```bash
+python3 scripts/run_alt_hypothesis_tests.py --tests Q --no-subprocess
+```
+Cloud test, ~3 min. No MLX needed.
 

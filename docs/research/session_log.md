@@ -5,102 +5,79 @@ Old content gets archived to `docs/research/logs/` when > 200 lines.
 
 ---
 
-## Current state (2026-03-29)
+## Current state (2026-03-29, evening session)
 
 ### Pipeline status
 
 | Process | Status | Notes |
 |---------|--------|-------|
-| `generate_demo_insights.py --course ethnic_studies` | **RUNNING** (PID 15264) | 32/32 codings done (run `0cb5b7e8`), awaiting synthesis/report stages. ~80+ min elapsed. |
+| ethnic_studies pipeline (0cb5b7e8) | **Resuming** | Crashed after observations (7/11 stages). Fixed: added 5s sleep to `unload_mlx_model()` for Metal reclaim. Relaunched — check `ps aux` and store on startup. |
 | Trajectory tests | Waiting | Launch after pipeline completes |
 
-### InsightsStore
+### What was done this session
 
-| Run | Status | Course | Codings | Notes |
-|-----|--------|--------|---------|-------|
-| `0cb5b7e8` | INCOMPLETE | 90003 (ethnic_studies) | 32 | ONLY incomplete — auto-resume will land here |
-| `1fabfb04` | INCOMPLETE | TRAJ_TEST_1 | 0 | Safe to ignore — preprocessing only, no codings |
-
-4 junk runs from 2026-03-28 marked complete directly in SQLite to fix auto-resume.
-
----
-
-## Completed tests (this sprint)
-
-| Test | File | Summary |
-|------|------|---------|
-| N@0.3 × 9 | `test_n_4axis_submissions_gemma12b_2026-03-28_1*.json` | 9/9 identical. S029 ENGAGED all 9. Deterministic at temp 0.3. |
-| P@0.3 × 4 | `test_p_two_pass_gemma12b_2026-03-28_1*.json` | 4/4 identical v3 prompt. 2/6 corpus CHECK-INs (S002+S029 only). |
-| Phase 1 (long-form) | `insights_phase1_long_form_gemma12b_mlx.json` | 7 students, 86 min. LF02 BURNOUT correct. LF06/LF03 issues — fixed by prompts. |
-| Phase 2 (biology) | `insights_phase2_biology_gemma12b_mlx.json` | 11 students, 76 min. Zero FPs on 7 equity-critical students. |
-| Phase 3 (translated) | `insights_phase3_translated_gemma12b_mlx.json` | Crashed on TR01 (list coercion bug, fixed). Re-run complete. 6/6 correct. |
-| Qwen 7B N-test | `test_n_4axis_submissions_qwen7b_2026-03-28_2338.json` | S029 ENGAGED ✅. S023 false CRISIS (abuela narrative misread). |
-| Gemma 27B N-test | `test_n_4axis_submissions_gemma27b_cloud_2026-03-29_0907.json` | Run complete. Log findings to experiment_log. |
-| Test Q (27B probes) | `test_q_27b_probes_2026-03-29_1111.json` | 4 probes. Q3 key finding: disability vocab mediates BURNOUT trigger, not non-linear structure. |
-| Test K (enhancement) | `test_k_enhancement_comparison_multi_model_2026-03-29_1113.json` | step_flash_free (StepFun 196B) ranked #1. Venice quota status: check file. |
+1. **Test-monitor skill created** (`~/.claude/skills/test-monitor/SKILL.md`) — global skill for multi-agent research sessions. Includes session log protocol, commit-on-exit, context management. Reviewed by Opus, trimmed 30%.
+2. **Mycelial model doc** (`~/.claude/skills/test-monitor/mycelial_model.md`) — distributed intelligence architecture reference.
+3. **Test Q logged** to experiment log — 27B probes confirm disability vocab + "exhausting" are both necessary for BURNOUT. Neither alone triggers it.
+4. **Test K logged** to experiment log — then **revised** after qualitative read of actual outputs. Anti-spotlighting keyword rubric was methodologically invalid (prompt told models not to suggest activities; rubric scored for activity suggestions). Rewritten with qualitative findings.
+5. **TR04 hallucination diagnosed and fixed** — `OBSERVATION_SYSTEM_PROMPT` now guards against inventing prior submissions. Conditional on trajectory context presence.
+6. **Pipeline crash root cause found** — `unload_mlx_model()` had no sleep after Metal cleanup; driver reclaim is async. Added 5s sleep. This was the recurring crash cause.
+7. **Identity-disclosure guard implemented** — generalized guard added to `WELLBEING_CLASSIFIER_SYSTEM` in prompts.py. Covers all identity axes. Material conditions = only valid wellbeing evidence.
+8. **Evidence-extraction classifier designed** — `WELLBEING_EVIDENCE_EXTRACTION_SYSTEM` added to prompts.py. Two-step: extract material evidence → derive axis. Alternative to guard approach.
+9. **Q4/Q5 probes added** to `test_q_27b_probes()` — head-to-head comparison of guard vs evidence-extraction on same S029 text with 27B.
 
 ---
 
 ## Queue
 
-### Now
-- **Pipeline watching**: PID 15264 running. When it finishes, verify all stages complete.
+### Immediate (cloud, ~3 min)
+```bash
+python3 scripts/run_alt_hypothesis_tests.py --tests Q --no-subprocess
+```
+Runs Q0-Q5: baseline + 3 ablations + guard test + evidence-extraction test. All on 27B via OpenRouter.
 
-### After pipeline completes
+### After pipeline completes (MLX, 4-6 hrs)
+```bash
+caffeinate -i python scripts/run_trajectory_tests.py --model gemma12b
+```
 
-| Priority | Test | Command | Notes |
-|----------|------|---------|-------|
-| 1 (MLX) | Trajectory reports | `caffeinate -i python scripts/run_trajectory_tests.py --model gemma12b` | 4-6 hrs. Resume via phase flags. |
-| 1 (cloud, parallel) | Test K retry if needed | `python3 scripts/run_alt_hypothesis_tests.py --tests K --no-subprocess` | Check 2026-03-29 K file first — may already be done. |
-
-### Pending (no blocker)
-- Log Test Q findings to `docs/research/experiment_log.md` — verified numbers needed
-- Log Test K findings to experiment log
-- Investigate TR04 hallucination (observation references "prior submission" that doesn't exist)
-
----
-
-## Bugs fixed this sprint
-
-| Bug | Fix | Commit |
-|-----|-----|--------|
-| LF06 DV under-classified as BURNOUT | CRISIS supersedes ENGAGED in classifier | 900e3ae |
-| LF03 emotional engagement → false BURNOUT | BURNOUT anchored to material conditions | 6b009b5 |
-| Observation preamble "Okay, here's what I'm noticing" | Extended regex in submission_coder.py | 900e3ae |
-| Phase 3 crash: emotional_register as list | `_coerce_str()` in submission_coder.py | d677560 |
-| `send_text()` arg order in Metal warmup | Fixed call signature in all 3 scripts | (uncommitted) |
-| `_build_provenance()` NameError in Test Q | Changed to `_git_provenance()` | (uncommitted) |
+### Pending design work (pass to other agents)
+- Longitudinal equity tests: `docs/research/longitudinal_test_design_prompt.md` — 4 risk areas (normative development, variable output, silence-after-disclosure, working student patterns)
+- Binary vs 4-axis GUI comparison: feature-flagged research mode (another agent implementing)
+- Identity vocabulary probes: immigration + racial identity ablations on 27B (design needed, similar to Q methodology)
+- Test K anti-spotlighting redesign: replace keyword rubric with qualitative framing assessment
 
 ---
 
 ## Active issues
 
-### TR04 hallucination (INVESTIGATE)
-Phase 1 observation for TR04-style student references "a prior submission" that doesn't exist.
-Likely cause: class reading synthesizes all submissions; model infers longitudinal data.
-May require prompt guard for trajectory context. Priority: investigate before trajectory tests launch.
-See handoff doc for full notes.
+### TR04 hallucination — FIXED
+Fixed in `OBSERVATION_SYSTEM_PROMPT` (prompts.py). Conditional on trajectory context: when no prior submissions, guard fires. When trajectory context present, longitudinal language allowed.
+
+### Pipeline crash — FIXED
+Root cause: `unload_mlx_model()` had no async reclaim pause. Added 5s sleep. Pipeline relaunched.
 
 ### Phase 2 pre-fix prompts
-Phase 2 ran on pre-fix prompts (launched before CRISIS supersedes commit). BIO-WB04 (brother's arrest) classified BURNOUT instead of CRISIS — expected to be fixed. Re-run optional, not blocking.
+Phase 2 ran before CRISIS-supersedes commit. BIO-WB04 may be fixed now. Re-run optional.
 
 ---
 
-## Key findings for paper
+## Key findings (updated)
 
-1. **Format > model**: 4-axis format eliminates disparate impact on neurodivergent writers (S029: 25/25 FP binary → 9/9 correct 4-axis). Format change alone, no model change.
-2. **Cross-domain equity transfer**: Phase 2 zero FPs on equity-critical STEM students — protections transfer without domain-specific prompt changes.
-3. **Two-pass reduces FPs**: 6/7 corpus → 2/7 while maintaining sensitivity.
-4. **Disability vocab mediates BURNOUT trigger** (Test Q, Q3): neurotypical student with identical structure + "exhausting to explain" = ENGAGED; disability vocab added = BURNOUT. Structural explanation ruled out.
-5. **Qwen 7B limitation**: S023 false CRISIS (intergenerational narrative misread as student's own crisis). Model comprehension ceiling, not prompt issue. Document as lower-tier deployment limitation.
-6. **step_flash_free (StepFun 196B MoE) > Gemma 27B free** for enhancement quality (Test K).
+1. **Format > model (12B)**: 4-axis eliminates disparate impact on neurodivergent writers (25/25 FP binary → 9/9 correct 4-axis). But does NOT fix 27B.
+2. **Disability vocab mediates 27B trigger** (Test Q): both disability vocabulary AND "exhausting" needed. Neither alone sufficient. Interaction effect.
+3. **Guard vs evidence-extraction**: two competing fixes implemented, not yet tested. Guard = suppress wrong inference. Evidence-extraction = restructure task so wrong inference can't form. Q4/Q5 probes ready to run.
+4. **Anti-spotlighting keyword rubric invalid** (Test K): prompt told models not to suggest activities; rubric scored for activity language. Real finding from qualitative read: step_flash frames class-level, arcee drifts individual. Spotlighting risk is upstream (synthesis layer input), not in enhancement model.
+5. **All test corpora are fabricated** — findings speak to pipeline capability, not to real student populations. Binary vs 4-axis on real anonymized data is the ecological validity test (pending GUI research mode).
 
 ---
 
 ## For next agent
 
-- Pipeline (PID 15264) may have finished by the time you read this. Check `ps aux` first.
-- If pipeline done: verify run `0cb5b7e8` moved to DONE in InsightsStore, check all 11 stages completed.
+- Check `ps aux` — pipeline may have completed or crashed again.
+- If completed: run Q4/Q5 probes immediately (cloud, ~3 min) — this is the most important open test.
+- Read Q4/Q5 output QUALITATIVELY (skill rule: always read raw output before logging).
+- If Q5 works and Q4 doesn't: the evidence-extraction architecture is the recommended production classifier. This is a significant finding.
 - Then launch trajectory tests with caffeinate.
-- Test Q and K findings still need to be logged to experiment_log.md.
-- TR04 hallucination issue still open.
+- Experiment log entries for Q4/Q5 results need to be written after the run.
+- `docs/research/longitudinal_test_design_prompt.md` is ready for the design agent.

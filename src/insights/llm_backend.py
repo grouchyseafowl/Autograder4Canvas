@@ -293,6 +293,12 @@ def unload_mlx_model() -> None:
         except Exception:
             pass
         gc.collect()
+        # Give the Metal driver time to asynchronously reclaim freed buffers.
+        # Without this pause, the next model load can race the driver's cleanup
+        # and hit OOM on 16 GB machines — same reason test scripts sleep 5s
+        # between subprocesses.
+        import time as _time
+        _time.sleep(5)
         log.info("MLX model unloaded.")
 
 _mlx_available: Optional[bool] = None

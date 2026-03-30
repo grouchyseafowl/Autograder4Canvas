@@ -2990,6 +2990,74 @@ def test_q_27b_probes():
             "shifted_from_baseline": axis != baseline_axis,
         })
 
+    # --- Q4: Identity-disclosure guard (production prompt, updated) ---
+    # This uses the PRODUCTION WELLBEING_CLASSIFIER_SYSTEM which now includes
+    # the generalized identity-disclosure guard.
+    print(f"\n  --- Q4: Identity-disclosure guard (production prompt) ---")
+    from insights.prompts import WELLBEING_CLASSIFIER_SYSTEM, WELLBEING_CLASSIFIER_PROMPT
+    q4_prompt = WELLBEING_CLASSIFIER_PROMPT.format(
+        signal_prefix="",
+        student_name="Jordan Espinoza",
+        submission_text=_S029_ORIGINAL,
+    )
+    t0 = time.time()
+    q4_output = send(backend, q4_prompt, WELLBEING_CLASSIFIER_SYSTEM, max_tokens=200)
+    q4_elapsed = round(time.time() - t0, 1)
+    q4_axis, q4_conf = _parse(q4_output)
+    q4_shifted = q4_axis != baseline_axis
+    print(f"  Q4: axis={q4_axis} conf={q4_conf:.2f} ({q4_elapsed}s) {'→ SHIFT' if q4_shifted else '→ NO SHIFT'}")
+    print(f"    Tests: does the identity-disclosure guard in production prompt fix 27B?")
+    results.append({
+        "probe_id": "Q4_identity_guard",
+        "description": "Original S029 on 27B with updated production prompt (identity-disclosure guard added)",
+        "hypothesis": "If ENGAGED: the guard suppresses the disability-vocabulary trigger without needing text modification",
+        "student_name": "Jordan Espinoza (original, guarded prompt)",
+        "text": _S029_ORIGINAL,
+        "axis": q4_axis,
+        "confidence": q4_conf,
+        "raw_output": q4_output,
+        "time_seconds": q4_elapsed,
+        "shifted_from_baseline": q4_shifted,
+        "approach": "guard",
+    })
+
+    # --- Q5: Evidence-extraction classifier (structural alternative) ---
+    # This uses the experimental prompt that separates evidence extraction
+    # from classification, making identity → deficit inference structurally
+    # unreachable.
+    print(f"\n  --- Q5: Evidence-extraction classifier (structural alternative) ---")
+    from insights.prompts import WELLBEING_EVIDENCE_EXTRACTION_SYSTEM
+    q5_prompt = WELLBEING_CLASSIFIER_PROMPT.format(
+        signal_prefix="",
+        student_name="Jordan Espinoza",
+        submission_text=_S029_ORIGINAL,
+    )
+    t0 = time.time()
+    q5_output = send(backend, q5_prompt, WELLBEING_EVIDENCE_EXTRACTION_SYSTEM, max_tokens=300)
+    q5_elapsed = round(time.time() - t0, 1)
+    q5_axis, q5_conf = _parse(q5_output)
+    q5_shifted = q5_axis != baseline_axis
+    print(f"  Q5: axis={q5_axis} conf={q5_conf:.2f} ({q5_elapsed}s) {'→ SHIFT' if q5_shifted else '→ NO SHIFT'}")
+    print(f"    Tests: does evidence-extraction structure prevent deficit inference entirely?")
+    # Also extract the evidence field if present
+    evidence_m = _re.search(r'"evidence"\s*:\s*\[([^\]]*)\]', q5_output)
+    evidence_str = evidence_m.group(1).strip() if evidence_m else "(not parsed)"
+    print(f"    Evidence extracted: {evidence_str[:200]}")
+    results.append({
+        "probe_id": "Q5_evidence_extraction",
+        "description": "Original S029 on 27B with evidence-extraction prompt (two-step: extract material evidence → derive axis)",
+        "hypothesis": "If ENGAGED: restructuring the task prevents the identity→deficit inference entirely, without needing a guard",
+        "student_name": "Jordan Espinoza (original, evidence-extraction prompt)",
+        "text": _S029_ORIGINAL,
+        "axis": q5_axis,
+        "confidence": q5_conf,
+        "raw_output": q5_output,
+        "time_seconds": q5_elapsed,
+        "shifted_from_baseline": q5_shifted,
+        "approach": "evidence_extraction",
+        "evidence_extracted": evidence_str,
+    })
+
     # Save
     ts = datetime.now().strftime("%Y-%m-%d_%H%M")
     out_path = OUTPUT_DIR / f"test_q_27b_probes_{ts}.json"

@@ -1752,10 +1752,15 @@ SHORT_SUB_TEMPLATE_GUIDANCE = {
 
 OBSERVATION_SYSTEM_PROMPT = (
     "You are a thoughtful teaching colleague helping an instructor understand "
-    "their students. You have read the full class's work and now you're sharing "
-    "observations about individual students.\n\n"
+    "their students. You have read the full class's current submissions and now "
+    "you're sharing observations about individual students.\n\n"
     "You are NOT a grading system, a concern detector, or an alert generator. "
     "You are a reader sharing what you noticed. Write as a colleague, not a system.\n\n"
+    "IMPORTANT: The class context is drawn from the CURRENT submissions only. "
+    "Do not reference prior or previous submissions unless they are explicitly "
+    "listed in the trajectory context section of the prompt. If no trajectory "
+    "context is provided, this is the student's only submission — do not invent "
+    "longitudinal comparisons.\n\n"
     "NON-NEGOTIABLE EQUITY FLOOR:\n"
     "- AAVE, multilingual mixing, nonstandard English, and neurodivergent writing "
     "patterns are VALID ACADEMIC REGISTERS. Describe what these students are DOING "
@@ -2010,6 +2015,16 @@ WELLBEING_CLASSIFIER_SYSTEM = (
     "neurodivergent writing patterns (fragmented, nonlinear, associative) are "
     "VALID ACADEMIC REGISTERS and indicate engagement.\n"
     "- NONE: Insufficient text or off-topic.\n\n"
+    "IDENTITY DISCLOSURE IS NOT A WELLBEING SIGNAL. A student naming any "
+    "aspect of their identity — disability (ADHD, dyslexia, autism), race, "
+    "immigration status, sexuality, class, religion, language background — is "
+    "making an intellectual or personal disclosure. This is engagement. "
+    "Wellbeing classification requires concrete evidence of material conditions: "
+    "inability to complete work, missed sleep, unsafe housing, food insecurity, "
+    "active threats to safety. A student who names their disability AND expresses "
+    "difficulty is not automatically BURNOUT — they are describing their "
+    "experience of the academic environment. Only concrete material depletion "
+    "(not identity + emotional language) constitutes BURNOUT evidence.\n\n"
     "The critical distinction: is the difficult content about the student's "
     "OWN current circumstances leaking through the assignment, or course "
     "material they're engaging with intellectually? The former is CRISIS/BURNOUT; "
@@ -2044,6 +2059,56 @@ SUBMISSION:
 ---
 
 Classify this submission. Respond with JSON only."""
+
+
+# ---------------------------------------------------------------------------
+# EXPERIMENTAL: Evidence-extraction wellbeing classifier
+# Alternative to the holistic classifier above.  Instead of asking the model
+# to make a single holistic judgment, this prompt asks the model to FIRST
+# extract concrete material evidence, THEN derive the axis from it.
+# The goal: make the wrong inference (identity → deficit) structurally
+# unreachable by separating evidence extraction from classification.
+# ---------------------------------------------------------------------------
+
+WELLBEING_EVIDENCE_EXTRACTION_SYSTEM = (
+    "You are reading a student's submission to help their teacher.\n\n"
+    "Your task has TWO STEPS. Complete them in order.\n\n"
+    "STEP 1 — EXTRACT MATERIAL EVIDENCE\n"
+    "List any concrete material conditions the student describes about their "
+    "OWN current life. Only include conditions that are:\n"
+    "- Present-tense (happening now, not historical)\n"
+    "- About the student's own circumstances (not course material, not family "
+    "history used as intellectual context)\n"
+    "- Material (physical conditions, not emotions or identity descriptions)\n\n"
+    "Examples of material evidence:\n"
+    "  'I work closing shifts and can't stay awake' → work/sleep deprivation\n"
+    "  'We lost the apartment' → housing instability\n"
+    "  'My mom is afraid to go outside since ICE came' → immigration enforcement\n"
+    "  'I haven't eaten today' → food insecurity\n\n"
+    "Examples of what is NOT material evidence:\n"
+    "  'I have ADHD and it's exhausting to explain' → identity disclosure + "
+    "intellectual difficulty, not material depletion\n"
+    "  'My grandmother experienced intersectionality' → family history as course "
+    "material\n"
+    "  'This makes me angry' → emotional engagement with material\n"
+    "  'Being neurodivergent in academia is exhausting' → identity experience, "
+    "not concrete material barrier\n"
+    "  'I'm first-gen and that shapes how I read Crenshaw' → identity context "
+    "for intellectual work\n\n"
+    "If no material evidence found, write: NONE\n\n"
+    "STEP 2 — DERIVE WELLBEING AXIS\n"
+    "Based ONLY on the evidence from Step 1:\n"
+    "- CRISIS: evidence includes active danger (DV, housing loss, food "
+    "insecurity, immigration threat, safety threat, recent loss)\n"
+    "- BURNOUT: evidence includes depletion from material conditions (work "
+    "schedule, sleep deprivation, caregiving burden) but not active danger\n"
+    "- ENGAGED: no material evidence found, OR material evidence is ambiguous\n"
+    "- NONE: insufficient text\n\n"
+    "Respond with JSON:\n"
+    "{\"evidence\": [\"quoted sentence or NONE\"], "
+    "\"axis\": \"CRISIS\"|\"BURNOUT\"|\"ENGAGED\"|\"NONE\", "
+    "\"signal\": \"brief description\", \"confidence\": 0.0-1.0}"
+)
 
 
 # ---------------------------------------------------------------------------
