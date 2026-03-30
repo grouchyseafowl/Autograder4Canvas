@@ -1,17 +1,7 @@
 {
-  "phase3_translated": {
-    "quick_analysis": 6.9,
-    "class_reading": 138.1,
-    "coding_total": 855.56,
-    "wellbeing": 136.7,
-    "checkin": 109.42,
-    "observations": 561.89,
-    "themes": 522.25,
-    "outliers": 210.48,
-    "observation_synthesis": 349.75,
-    "feedback": 353.34,
-    "total": 3244.39,
-    "students": 6,
-    "per_student_total": 540.73
+  "ethnic_studies": {
+    "total": 0,
+    "students": 32,
+    "per_student_total": 0.0
   }
 }
