@@ -25,7 +25,10 @@ Old content gets archived to `docs/research/logs/` when > 200 lines.
 1. Q4/Q5 probes, guard-v2, Test O 27B — all logged.
 2. WB06 minimized-disclosure probe — W0 BURNOUT, W1 CRISIS, W2 CRISIS. Mechanism confirmed. Guard added.
 3. Signal framing fix: "despite attempts to minimize" → prompt tells model to name material conditions directly without characterizing disclosure style. Updated all three prompts.
-4. Pipeline launched — resumed 0cb5b7e8 (themes may have stalled), then auto-started ee5386e2 (90005 corpus fresh run). ee5386e2 currently in observations.
+4. Pipeline launched — resumed 0cb5b7e8 (themes ran via _manual_merge but complete_stage never called — bug), ee5386e2 COMPLETED (25 subs, all stages, 11638s).
+5. Test N 27B validated — WB06 → CRISIS, all guards holding. Logged.
+6. Equity trajectory tests launched (MLX, gemma12b). Phase A1 running.
+7. **Bug fixed in engine.py `run_partial()`**: never called `complete_stage()` — stages appeared incomplete forever. Also: fake `stages_run.append("synthesis")` claimed synthesis done without running it. Fixed: added `complete_stage()` after each stage, implemented synthesis + feedback in run_partial(), added "feedback" check to resume_run().
 
 ---
 
@@ -94,4 +97,5 @@ Existing trajectory report corpus. Tests trajectory report generator (separate f
 - **Equity trajectory tests RUNNING** (task `bo63hw52i`). On completion → retry 0cb5b7e8: `caffeinate -i python3 scripts/generate_demo_insights.py`
 - After 0cb5b7e8 complete → trajectory tests: `caffeinate -i python3 scripts/run_trajectory_tests.py --model gemma12b`
 - MLX queue is sequential (GPU contention). Do not run two MLX tasks at once.
-- **0cb5b7e8 meta-synthesis issue**: meta-synthesis timed out at 300s even on compact retry. If it fails again, check `theme_generator.py` for whether compact input actually reduces token count for 32-student merged themes, or consider increasing timeout/chunking the merge differently.
+- **0cb5b7e8 `run_partial()` bug FIXED** in `src/insights/engine.py`. Next resume will correctly run themes→outliers→synthesis→feedback and mark each complete. Retry after equity tests finish.
+- **Meta-synthesis orphaned thread**: when 300s timeout fires, the background thread calling `send_text()` continues running (Python threads can't be killed mid-execution). This is why "phantom" JSON parse warnings appear ~14min after the timeout — they're from the orphaned thread, already irrelevant. Not a crash, not a new failure. The pipeline correctly used `_manual_merge()` result.

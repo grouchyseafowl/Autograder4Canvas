@@ -1460,6 +1460,7 @@ class InsightsEngine:
                 self._store.save_themes(
                     run_id, theme_set_json=theme_set.model_dump_json()
                 )
+                self._store.complete_stage(run_id, "themes")
                 stages_run.append("themes")
             else:
                 import json as _json
@@ -1483,6 +1484,7 @@ class InsightsEngine:
                 self._store.save_themes(
                     run_id, outlier_report_json=outlier_report.model_dump_json()
                 )
+                self._store.complete_stage(run_id, "outliers")
                 stages_run.append("outliers")
             else:
                 import json as _json
@@ -1493,9 +1495,87 @@ class InsightsEngine:
             if self._cancelled:
                 return None
 
-            # Observation synthesis is generated in the main pipeline and
-            # stored directly — no guided synthesis chain to re-run.
+            # Observation synthesis — rebuild from stored observations + class reading.
+            if start_stage in ("themes", "outliers", "synthesis"):
+                from insights.llm_backend import send_text as _send
+                from insights.prompts import (
+                    OBSERVATION_SYNTHESIS_SYSTEM_PROMPT,
+                    OBSERVATION_SYNTHESIS_PROMPT,
+                )
+
+                observations_map = {
+                    r.student_id: r.observation
+                    for r in coding_records
+                    if r.observation
+                }
+                if observations_map:
+                    progress("Generating observation-based class summary...")
+                    _obs_formatted = ""
+                    for sid, obs in observations_map.items():
+                        _rec = next((r for r in coding_records if r.student_id == sid), None)
+                        _name = _rec.student_name if _rec else sid
+                        _obs_formatted += f"\n**{_name}** ({sid}):\n{obs}\n"
+
+                    _class_reading = self._store.get_class_reading(run_id) or ""
+                    _synth_prompt = OBSERVATION_SYNTHESIS_PROMPT.format(
+                        assignment=assignment_name,
+                        class_context=_class_reading,
+                        class_trajectory="",
+                        observations=_obs_formatted,
+                        teacher_lens="",
+                        forward_looking="",
+                    )
+                    try:
+                        obs_synthesis = _send(
+                            backend, _synth_prompt,
+                            OBSERVATION_SYNTHESIS_SYSTEM_PROMPT,
+                            max_tokens=2000,
+                        )
+                        self._store.save_themes(
+                            run_id, observation_synthesis=obs_synthesis.strip()
+                        )
+                        log.info("Observation synthesis: %d words", len(obs_synthesis.split()))
+                    except Exception as _exc:
+                        log.warning("Observation synthesis failed (non-fatal): %s", _exc)
+
+            self._store.complete_stage(run_id, "synthesis")
             stages_run.append("synthesis")
+
+            if self._cancelled:
+                return None
+
+            # Feedback drafting
+            if start_stage in ("themes", "outliers", "synthesis", "feedback"):
+                from insights.feedback_drafter import FeedbackDrafter
+                drafter = FeedbackDrafter()
+                profile = self._load_teacher_profile()
+                progress("Drafting feedback for students...")
+                for i, record in enumerate(coding_records):
+                    if self._cancelled:
+                        return None
+                    progress(
+                        f"Drafting feedback {i + 1}/{len(coding_records)}: "
+                        f"{record.student_name}..."
+                    )
+                    draft = drafter.draft_feedback(
+                        coding_record=record.model_dump(),
+                        assignment_prompt=assignment_name,
+                        analysis_lens=analysis_lens,
+                        preprocessing_meta={"was_translated": False, "was_transcribed": False},
+                        teacher_profile=profile,
+                        tier=model_tier,
+                        backend=backend,
+                    )
+                    self._store.save_feedback(
+                        run_id=run_id,
+                        student_id=record.student_id,
+                        student_name=record.student_name,
+                        draft_text=draft.feedback_text,
+                        confidence=draft.confidence,
+                    )
+
+            self._store.complete_stage(run_id, "feedback")
+            stages_run.append("feedback")
 
             progress(f"Re-run complete ({', '.join(stages_run)}).")
             return run_id
@@ -1991,6 +2071,8 @@ class InsightsEngine:
                 start = "outliers"
             elif "synthesis" not in completed_set:
                 start = "synthesis"
+            elif "feedback" not in completed_set:
+                start = "feedback"
             else:
                 progress("All stages already complete.")
                 self._stop_sleep_prevention()
