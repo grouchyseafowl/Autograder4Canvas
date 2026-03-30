@@ -312,6 +312,7 @@ class InsightsEngine:
         backend_override=None,
         teacher_lens: str = "",
         ai_policy: str = "not_expected",
+        stop_after: str = "",
     ) -> Optional[str]:
         """Run the analysis pipeline on pre-loaded submissions.
 
@@ -1110,6 +1111,12 @@ class InsightsEngine:
 
             self._store.complete_stage(run_id, "observations")
             self._emit_timing(timing_callback, "observations", _stage_t0)
+
+            if stop_after == "observations":
+                self._store.complete_run(run_id)
+                self._stop_sleep_prevention()
+                progress("Pipeline complete (stopped after observations).")
+                return run_id
 
             # Release MLX model between observations → themes
             if backend and backend.name == "mlx":
