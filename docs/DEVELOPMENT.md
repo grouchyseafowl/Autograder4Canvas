@@ -44,7 +44,7 @@ Run before and after any significant change:
 
 ```bash
 python3 -m pytest tests/ -v --tb=short
-# Expected: ~614 tests, ~2min, 0 failures
+# Expected: ~736 tests, ~35s, 0 failures
 ```
 
 ### What's covered (pure unit tests — no LLM, no MLX, no Canvas)
@@ -60,6 +60,9 @@ python3 -m pytest tests/ -v --tb=short
 | `test_linguistic_features.py` | AAVE feature detection, multilingual tier suppression, `_derive_tier`, `detect_features` output shape, two-tier short-submission thresholds by assignment type |
 | `test_human_presence_detector.py` | `_normalize_score` math, `HumanPresenceDetector.analyze` output contract, empty/short text edge cases |
 | `test_quick_analyzer.py` | `_strip_html`, `_tokenize`, `_deduplicate_names`, `_detect_engagement_type`, `match_submission_references`, stats computation, truncation detection, word frequency, `analyze()` contract |
+| `test_gibberish_gate.py` | Equity exemptions (AAVE, vernacular, translated, poor grammar must NOT be flagged), Lorem Ipsum, keyboard mash, repetition spam, `should_skip_llm` threshold |
+| `test_patterns.py` | VADER polarity thresholds, signal matrix (negative+critical → APPROPRIATE, not a concern), `assess_sentiment_reliability` two-tier thresholds, AAVE suppression, ESL translation caveat |
+| `test_concern_detector.py` | Anti-bias post-processing (tone-policing + structural critique → warning added), content-flag demotion, APPROPRIATE signal filtering, no-backend fallback |
 
 ### What is NOT here (by design)
 
