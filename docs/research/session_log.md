@@ -5,83 +5,86 @@ Old content gets archived to `docs/research/logs/` when > 200 lines.
 
 ---
 
-## Current state (2026-03-29, late night)
+## Current state (2026-03-30, early morning)
 
 ### Pipeline status
 
-| Process | Status | Notes |
-|---------|--------|-------|
-| Ethnic studies pipeline (0cb5b7e8) | **INCOMPLETE** | 32 codings, 7/11 stages. Waiting on MLX memory. |
-| Test N guard-v2 (27B) | DONE | Logged |
-| Test O 27B + guard-v2 | DONE | Logged |
-| Trajectory equity tests | **Waiting on MLX** | Corpus + runner built, ready to launch |
+| Run | Course | Status | Notes |
+|-----|--------|--------|-------|
+| 0cb5b7e8 | 90003 (Ethnic Studies, 32 subs) | **INCOMPLETE** | Themes may have crashed mid-run. Retry after ee5386e2 finishes. |
+| ee5386e2 | 90005 (Chicano Studies, 25 subs) | **RUNNING** | Currently in observations stage (1/25). |
 
-### What was done this session (full evening)
+Pipeline background task `bgcfq9jb1` is still running. Notification will fire when done.
 
-1. Q4/Q5 probes: guard works, evidence-extraction fails. Logged.
-2. Test N 27B post-guard-v1: S002 over-suppressed, WB06 downgraded. Guard scope problem identified.
-3. Guard-v2 revision: changed "only material conditions" → explicit metacommentary list. Updated all three prompts (production + test script).
-4. Test N 27B guard-v2: S029 ✓, S002 restored ✓, S031 fixed ✓. WB06 still BURNOUT — separate problem (minimized-disclosure + community resilience framing underclassification).
-5. Test O 27B + guard-v2: 8/8 wellbeing caught, 0 FP. WB06 → CRISIS in multi-axis (multi-axis resolves single-axis BURNOUT failure). S029 ENGAGED + CHECK-IN (guard blocks BURNOUT, but CHECK-IN re-routes surveillance). Multi-axis vs single-axis tradeoff documented.
-6. All runs logged with qualitative analysis.
+### What was done this session (evening into early morning)
+
+1. Q4/Q5 probes, guard-v2, Test O 27B — all logged.
+2. WB06 minimized-disclosure probe — W0 BURNOUT, W1 CRISIS, W2 CRISIS. Mechanism confirmed. Guard added.
+3. Signal framing fix: "despite attempts to minimize" → prompt tells model to name material conditions directly without characterizing disclosure style. Updated all three prompts.
+4. Pipeline launched — resumed 0cb5b7e8 (themes may have stalled), then auto-started ee5386e2 (90005 corpus fresh run). ee5386e2 currently in observations.
 
 ---
 
-## Queue
+## Queue — IN ORDER, DO NOT SKIP
 
-### MLX — when memory available
+### 1. WHEN PIPELINE NOTIFICATION FIRES — immediately launch equity trajectory tests
 
-**Priority 1: Resume pipeline (0cb5b7e8)**
 ```bash
-caffeinate -i python scripts/generate_demo_insights.py --resume
-```
-Remaining stages: themes, outliers, synthesis, feedback.
-
-**Priority 2: Equity trajectory tests**
-```bash
-caffeinate -i python scripts/run_equity_trajectory_tests.py --model gemma12b
-```
-12 students × 4 submissions, 4 equity risk areas. LLM-semantic evaluation.
-
-**Priority 3: Trajectory tests (existing corpus)**
-```bash
-caffeinate -i python scripts/run_trajectory_tests.py --model gemma12b
+caffeinate -i python3 scripts/run_equity_trajectory_tests.py --model gemma12b
 ```
 
-### Cloud — remaining design work
+12 students × 4 submissions, 4 equity risk areas (#LANGUAGE_JUSTICE, #CRIP_TIME, silence-after-disclosure, working students). LLM-semantic eval (NOT keyword rubric).
 
-- **Minimized-disclosure probe**: Construct WB06 variant without resilience framing ("we are strong"). Confirm food insecurity alone → CRISIS. Then test prompt addition: "material conditions determine classification, not emotional register." n=1 ablation.
-- **CHECK-IN disambiguation**: Define CHECK-IN to exclude identity-navigation exhaustion. Test with S029.
-- **Identity vocabulary probes**: Immigration + racial identity ablations on 27B (design not written). Similar methodology to Test Q.
+### 2. AFTER equity trajectory tests complete — retry 0cb5b7e8
+
+```bash
+caffeinate -i python3 scripts/generate_demo_insights.py
+```
+
+Will auto-detect 0cb5b7e8 as incomplete and resume from themes. If it fails again, check theme_generator.py for crash on group 5-7 (likely a long LLM response or timeout).
+
+### 3. AFTER 0cb5b7e8 complete (OR while it runs if cloud-only) — trajectory tests
+
+```bash
+caffeinate -i python3 scripts/run_trajectory_tests.py --model gemma12b
+```
+
+Existing trajectory report corpus. Tests trajectory report generator (separate from equity tests).
+
+### 4. Cloud tests available any time (no MLX needed)
+
+- Minimized-disclosure guard validation: re-run Test N 27B with updated prompts — does WB06 now classify as CRISIS? (~3 min)
+- CHECK-IN definition fix for S029 (design needed — low priority)
+- Immigration/racial identity vocabulary probes on 27B (design needed)
 
 ---
 
-## Key findings (complete, 2026-03-29 evening)
+## Active findings requiring follow-up (for paper)
 
-1. **4-axis + format** eliminates neurodivergent false-flags on 12B. Root fix for production.
-2. **Guard-v2** (targeted, not broad): fixes S029 disability-vocab trigger on 27B. Does not over-suppress metacommentary burnout. Shipped to all three prompts.
-3. **Minimized-disclosure / community resilience underclassification**: WB06 food insecurity reads as BURNOUT in single-axis when student uses resilience framing. Multi-axis resolves this (WB06 → CRISIS). Independent from guard.
-4. **Multi-axis wins on co-occurrence** (ENGAGED + CRISIS simultaneously). Loses on CHECK-IN over-surveillance of identity-navigating students (S029).
-5. **CHECK-IN surveillance pathway**: Guard blocks BURNOUT for S029, but multi-axis adds CHECK-IN because "exhausting to explain" remains. Fix: exclude identity-navigation exhaustion from CHECK-IN trigger definition.
-6. **Equity trajectory tests ready**: corpus and runner already built. 4 risk areas. MLX only.
+| Finding | Status | Next action |
+|---------|--------|-------------|
+| Disability vocab → BURNOUT (S029, 27B) | FIXED — guard-v2 | Shipped |
+| Metacommentary burnout suppressed (S002) | FIXED — guard-v2 revision | Shipped |
+| Community resilience → BURNOUT underclass (WB06) | FIXED — minimized-disclosure guard | Shipped. Re-run Test N 27B to confirm |
+| Signal text "attempts to minimize" framing | FIXED — prompt signal guidance | Shipped |
+| CHECK-IN surveillance on neurodivergent identity disclosure (S029) | OPEN | Definition fix needed |
+| Immigration/racial identity ablation on 27B | OPEN | Design needed |
 
 ---
 
-## Unresolved equity issues (for paper + future tests)
+## Key findings (complete, 2026-03-30)
 
-| Issue | Mechanism | Tested | Fix direction |
-|-------|-----------|--------|---------------|
-| Disability vocab → BURNOUT (S029, 27B) | identity disclosure + emotional language | Test Q, guard-v2 | DONE — guard-v2 shipped |
-| Metacommentary burnout suppressed (S002) | guard-v1 too broad | Test N guard comparison | DONE — guard-v2 fixed |
-| Minimized-disclosure underclassification (WB06) | community resilience framing | Test N/O | Open — probe needed |
-| CHECK-IN surveillance on identity disclosure (S029) | multi-axis bias toward CHECK-IN | Test O | Open — definition fix needed |
-| Unknown: immigration/racial identity triggers | ablation not yet run | Not yet | Design needed |
+1. **4-axis + format** (12B): Eliminates neurodivergent false-flags. Production path.
+2. **Guard-v2**: Fixes disability-vocab trigger without over-suppressing metacommentary burnout.
+3. **Minimized-disclosure guard**: Community resilience framing suppresses CRISIS; prompt-level fix restores it. Parallel mechanism to disability guard.
+4. **Multi-axis vs single-axis**: Multi-axis wins on ENGAGED+CRISIS co-occurrence (WB06). Single-axis wins on S029 (no CHECK-IN surveillance). Neither is clearly dominant — depends on use case.
+5. **Evidence-extraction fails (Q5)**: Bias activates before task structure kicks in.
 
 ---
 
 ## For next agent
 
-- **MLX available**: run equity trajectory tests first (highest research value), then resume pipeline.
-- **Cloud while waiting**: minimized-disclosure WB06 probe is fast (~3 min), high value.
-- Guard-v2 is committed. All findings logged.
-- `docs/research/longitudinal_test_design_prompt.md` is implemented — no need to re-design.
+- Monitor pipeline notification (`bgcfq9jb1`). On completion → launch equity trajectory tests immediately.
+- Do NOT wait to read equity test output before launching — it's caffeinate MLX, will run for hours.
+- After equity tests launch, run Test N 27B cloud to validate minimized-disclosure guard: `python3 scripts/run_alt_hypothesis_tests.py --tests N --no-subprocess --model gemma27b_cloud`
+- All current findings committed. Signal framing fix committed.

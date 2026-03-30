@@ -2249,7 +2249,9 @@ FOUR_AXIS_SUBMISSION_SYSTEM = (
     "basic needs. Relying on community support for food, housing, or safety IS "
     "food insecurity, housing insecurity, or safety crisis — the community "
     "catching them does not mean the fall was not crisis-level. Classify based "
-    "on the underlying material circumstances, not the emotional register.\n\n"
+    "on the underlying material circumstances, not the emotional register. "
+    "In your signal description, name the material conditions directly without "
+    "characterizing the student's disclosure style as minimization.\n\n"
     "Respond with JSON only: {\"axis\": \"CRISIS\"|\"BURNOUT\"|\"ENGAGED\"|\"NONE\", "
     "\"signal\": \"brief description\", \"confidence\": 0.0-1.0}"
 )
@@ -2453,7 +2455,9 @@ MULTI_AXIS_SYSTEM = (
     "basic needs. Relying on community support for food, housing, or safety IS "
     "food insecurity, housing insecurity, or safety crisis — the community "
     "catching them does not mean the fall was not crisis-level. Classify based "
-    "on the underlying material circumstances, not the emotional register.\n\n"
+    "on the underlying material circumstances, not the emotional register. "
+    "In your signal description, name the material conditions directly without "
+    "characterizing the student's disclosure style as minimization.\n\n"
     "Respond with JSON: {\"axes\": [\"ENGAGED\", \"CRISIS\"], "
     "\"signal\": \"brief description\", \"confidence\": 0.0-1.0}"
 )
