@@ -38,7 +38,15 @@ caffeinate -i python3 scripts/run_trajectory_tests.py --model gemma12b
 
 Existing trajectory report corpus. Tests trajectory report generator (separate from equity tests).
 
-### 2. Cloud tests available any time (no MLX needed)
+### 2. AFTER trajectory tests complete — second equity trajectory run (replication)
+
+```bash
+caffeinate -i python scripts/run_equity_trajectory_tests.py --model gemma12b
+```
+
+Second run on same corpus, same model. Addresses n=1 limitation. If silence-after-disclosure holds at 9/9 and same gaps reproduce, test-retest reliability established. Compare check-level results against Test P (2026-03-30_1255).
+
+### 3. Cloud tests available any time (no MLX needed)
 
 - CHECK-IN definition fix for S029 (design needed — low priority)
 - Immigration/racial identity vocabulary probes on 27B (design needed)

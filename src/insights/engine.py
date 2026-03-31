@@ -1584,6 +1584,7 @@ class InsightsEngine:
             self._store.complete_stage(run_id, "feedback")
             stages_run.append("feedback")
 
+            self._store.complete_run(run_id)
             progress(f"Re-run complete ({', '.join(stages_run)}).")
             return run_id
 
