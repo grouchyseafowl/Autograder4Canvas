@@ -6345,3 +6345,63 @@ The S031 ENGAGED/NONE edge case is worth keeping as an open design question: sho
 - All 4 phases on same 12-student corpus — cross-phase dependencies may inflate inter-phase consistency
 - Evaluator is also Gemma 12B — same model coding and evaluating creates potential for self-consistency bias (model may rate its own framing choices as correct)
 - `trajectory_ctx_*` checks cannot pass until infrastructure is updated; those failures are infrastructure, not prompt failures
+
+---
+
+## Test Q — Trajectory Report Generator: First End-to-End Run (2026-03-31, 01:31–04:24)
+
+**File**: `data/research/raw_outputs/trajectory_reports_gemma12b_2026-03-31_0424.json`
+**Model**: Gemma 3 12B (mlx-community/gemma-3-12b-it-4bit) for all phases
+**Designed to test**: Whether the trajectory report generator produces teacher-facing semester summaries that (a) name specific intellectual arguments, (b) recognize equity-relevant patterns (burnout structural context, tone policing, neurodivergent variable output, etc.), and (c) avoid harmful framings. First successful end-to-end run — prior attempts timed out at coding phases.
+**Method**: 17-student trajectory corpus × 4 assignments. A1–A4 coding phases (`stop_after=observations`, 7200s timeout), then REPORTS phase generates narrative summaries + LLM evaluation against per-student rubric checks. 48 checks across 17 students (2–4 per student). Gemma 12B for both report generation and evaluation.
+**Duration**: ~7h total (A1–A4 overnight + REPORTS 01:31–04:24)
+
+### Results
+
+| Category | Students | Checks passed | All-pass |
+|----------|----------|--------------|---------|
+| 9 all-pass students | T001,T003,T004,T005,T011,T012,T013,T015,T017 | 26/26 | 9 |
+| 8 students with failures | T002,T006,T007,T008,T009,T010,T014,T016 | 7/22 | 0 |
+| **Total** | **17** | **33/48 (69%)** | **9/17** |
+
+### Passing patterns (what works)
+
+- **T001 Maria Ndiaye** (ESL growing voice): 3/3 — ESL trajectory correctly characterized
+- **T003 DeShawn Williams** (steady deep engagement): 2/2
+- **T004 Aisha Patel** (variable neurodivergent): 3/3 — variable output not pathologized
+- **T005 Tyler Nguyen** (sudden style shift): 2/2
+- **T011 Jaylen Carter** (minimal but present): 3/3 — minimal engagement not framed as deficit
+- **T012 Destiny Washington** (care responsibilities): 3/3
+- **T013 Kai Robinson** (speculative futures / Afrofuturist): 2/2 — speculative mode recognized as valid analysis
+- **T015 Nolan Begay** (pushback on analysis / sovereignty frame): 3/3 — intellectual pushback correctly read as critique, not disengagement
+- **T017 River Chen-Nakamura** (deepening through narrowing): 3/3
+
+### Failing patterns — three distinct failure modes
+
+**Failure mode 1: Specificity loss (most common).** The report generator produces well-written smooth narratives but loses assignment-level specificity. Reports describe "intellectual growth" and "evolving framework" without naming *which* assignments showed which development, without citing the specific argument the student makes, and without preserving key moments by their assignment label. Affected: T002, T006, T007, T008, T009, T014, T016. The reports read fluently as teacher-facing documents but strip the structural detail that makes them actionable.
+
+**Failure mode 2: Structural context buried in Teacher Notes (T002 Jordan Kim, burnout_trajectory).** The report correctly avoids blaming Jordan for the late-semester dip and uses the word count plateau as "shift towards more focused analysis" rather than decline. However, the structural cause (work obligations, family business labor) appears only in the private Teacher Notes section: "Jordan's wellbeing arc, shifting from a period of burnout to a more engaged state." The main narrative doesn't weave structural context into the intellectual arc. The check asks whether the narrative itself contains structural context — it doesn't. This is a design question: structural information belongs in the narrative, not quarantined to private notes.
+
+**Failure mode 3: Asset framing misses meta-level resistance patterns (T006 Ingrid Johansson, tone_policing).** This is the most analytically interesting failure. Ingrid's report quotes her three most revealing statements — including "I think it's important to approach these discussions with objectivity rather than emotion" and the A4 "divisive identity politics" quote — but frames each as intellectual strength. The breakthrough *IS* in the report ("Nobody in my district decided to be racist. The formula is neutral. But the outcomes aren't."), but the surrounding rhetorical resistance (appeals to objectivity, "both sides," universal principles) is read as analytical sophistication rather than as a pattern of semiotic resistance to structural analysis. The report even frames her discomfort when challenged ("I feel like when I try to offer a different perspective, the response is sometimes dismissive") as a reason to create more inclusive dialogue — inverting the pedagogical dynamics. The observation pipeline's asset-based framing propagates forward: because per-assignment observations took her arguments at face value, the trajectory report inherits that framing and produces a narrative that validates the rhetorical strategies. **Asset framing is necessary but not sufficient — some patterns require structural diagnosis, not just asset recognition.** The coding's `lens_observations` field flags power moves, but those flags don't propagate into trajectory reports.
+
+**Evaluator reliability (T008, T010):** Two "Not answered by evaluator" failures each. T008 also produced malformed check IDs ("1", "2") suggesting partial JSON parse failure. Same multi-question evaluator confusion as Test P.
+
+### Implications
+
+1. **Report specificity is a design problem, not a prompt problem.** The generator receives observations (which are already synthesized) not raw codings. Assignment-level specificity is lost before report generation begins. Fix: pass coding records or key quotes directly alongside observations.
+2. **Structural wellbeing context should be in the narrative arc, not Teacher Notes.** Currently the pipeline puts structural context in private notes. For equity-relevant wellbeing (working student, care responsibilities), this information should shape the intellectual arc narrative.
+3. **Tone policing and rhetorical resistance require a different analytical mode than asset recognition.** The `lens_observations` coding field captures power moves, but this data doesn't reach the trajectory report. A "teacher-only diagnostic section" (private) could name patterns that asset framing would miss.
+4. **69% pass rate (vs 83% in equity trajectory tests)** — trajectory reports are harder than single-assignment observations. Synthesis across 4 assignments introduces specificity loss that doesn't occur in per-assignment coding.
+
+### Proposed follow-up
+
+- Test Q2: Pass key quotes + assignment labels directly to report generator; rerun T002, T006, T008 specificity checks
+- Test Q3: Add `lens_observations` power move flags to report generator input; rerun T006 tone policing checks
+- Test Q4: Structural context in narrative arc section (not only Teacher Notes); rerun T002
+
+### Limitations
+
+- n=1, single model temperature
+- Same model generates and evaluates — self-consistency bias
+- 17-student corpus; larger cohorts may show different patterns
+- Test Q evaluator reliability: 4 unanswered checks across T008/T010; results for those students should be treated cautiously
