@@ -915,7 +915,7 @@ def _run_phase_subprocess(phase_id: str, model: str) -> Optional[int]:
         "--model", model,
     ]
     log.info("Subprocess for phase %s: %s", phase_id, " ".join(cmd))
-    timeout = 3600 if phase_id == "REPORTS" else 7200
+    timeout = 7200 if phase_id == "REPORTS" else 7200
     result = sp.run(cmd, timeout=timeout)
     return result.returncode
 
