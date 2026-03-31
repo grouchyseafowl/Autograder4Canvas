@@ -581,6 +581,7 @@ def run_coding_phase(assignment_id: str, model_key: str):
         teacher_context=cfg["teacher_context"],
         next_week_topic=cfg.get("next_week_topic") or "",
         progress_callback=lambda msg: log.info("  %s", msg),
+        stop_after="observations",
     )
 
     if run_id is None:
@@ -914,7 +915,7 @@ def _run_phase_subprocess(phase_id: str, model: str) -> Optional[int]:
         "--model", model,
     ]
     log.info("Subprocess for phase %s: %s", phase_id, " ".join(cmd))
-    timeout = 3600 if phase_id == "REPORTS" else 1800
+    timeout = 3600 if phase_id == "REPORTS" else 7200
     result = sp.run(cmd, timeout=timeout)
     return result.returncode
 
