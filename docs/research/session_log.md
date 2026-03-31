@@ -5,103 +5,71 @@ Old content gets archived to `docs/research/logs/` when > 200 lines.
 
 ---
 
-## Current state (2026-03-30, ~13:00)
+## Current state (2026-03-31, ~10:30)
 
 ### Pipeline status
 
 | Run | Course | Status | Notes |
 |-----|--------|--------|-------|
-| 0cb5b7e8 | 90003 (Ethnic Studies, 32 subs) | **RUNNING** | Resumed ~13:00. Bug fixed: `run_partial()` now calls `complete_stage()`. Will run themes→outliers→synthesis→feedback. bj80omqw8. |
-| ee5386e2 | 90005 (Chicano Studies/Biology, 25 subs) | **DONE** | All stages complete. 25/25 feedback drafted. Demo corpus content mismatch (biology.json uses placeholder phone/driving submissions). |
+| 0cb5b7e8 | 90003 (Ethnic Studies, 32 subs) | **DONE** | All stages complete. Manually called complete_run(). Demo JSON baked 14:18 yesterday. |
+| ee5386e2 | 90005 (Biology, 25 subs) | **DONE** | Complete. Demo corpus content mismatch (placeholder submissions). |
+| d3e2011c | 90005 (Biology fresh re-run) | **DONE** | Full pipeline re-run with fixed run_partial(). |
 
 ### Active background tasks
 
-| Task | Status | Notes |
-|------|--------|-------|
-| `bj80omqw8` | **RUNNING** | 0cb5b7e8 resume via generate_demo_insights.py. On completion → trajectory tests. |
+None running.
 
-### What was done this session (morning)
+### What was done this session (2026-03-30 evening – 2026-03-31 morning)
 
-1. Equity trajectory tests (b2yl0yqw4) COMPLETE — all 5 phases (A1–A4 + OBSERVATIONS).
-2. Test P logged: 35/42 checks (83%), 7/12 students all-pass. Silence-after-disclosure: 9/9 ✓.
-3. 0cb5b7e8 pipeline resumed (bj80omqw8). Fixed `run_partial()` bug last session.
+1. Equity trajectory tests (b2yl0yqw4) **COMPLETE** — Test P logged (35/42, 83%).
+2. 0cb5b7e8 pipeline resumed (bj80omqw8) — all stages done, but missing `complete_run()`. Fixed + manually marked DONE.
+3. Bug fixed: `run_partial()` now calls `complete_run()` at end.
+4. Trajectory tests first attempt timed out (1800s) — fixed timeout (7200s) + `stop_after=observations`.
+5. Trajectory tests **COMPLETE** (bc7sa5700) — Test Q logged (33/48, 69%).
+6. Equity replication (blh0qcwtr) **COMPLETE** — Test P2 logged (53/56, 95%, expanded 16-student corpus).
 
 ---
 
 ## Queue — IN ORDER, DO NOT SKIP
 
-### 1. WHEN bj80omqw8 NOTIFICATION FIRES — launch trajectory tests
+### 1. Clean isolation replication (important methodological fix)
 
-```bash
-caffeinate -i python3 scripts/run_trajectory_tests.py --model gemma12b
-```
+Before running another equity test, clear prior EQ_TEST_1 runs from store OR use a new course_id. P2 was confounded by P's history. Command TBD — need to either:
+- Delete prior EQ_TEST_1 runs from InsightsStore before each run, OR
+- Add `--isolation` flag to equity test script that uses a unique course_id per run
 
-Existing trajectory report corpus. Tests trajectory report generator (separate from equity tests).
-
-### 2. AFTER trajectory tests complete — second equity trajectory run (replication)
-
-```bash
-caffeinate -i python scripts/run_equity_trajectory_tests.py --model gemma12b
-```
-
-Second run on same corpus, same model. Addresses n=1 limitation. If silence-after-disclosure holds at 9/9 and same gaps reproduce, test-retest reliability established. Compare check-level results against Test P (2026-03-30_1255).
-
-### 3. Cloud tests available any time (no MLX needed)
+### 2. Cloud tests available any time (no MLX needed)
 
 - CHECK-IN definition fix for S029 (design needed — low priority)
-- Immigration/racial identity vocabulary probes on 27B (design needed)
-- Test P follow-up probes: P2 (timestamp in trajectory ctx), P3 (linguistic transfer framing), P4 (cross-phase observation synthesis)
+- Test Q2: Pass key quotes + assignment labels to report generator → rerun T002, T006, T008
+- Test Q3: Add lens_observations power move flags to report generator → rerun T006
 
 ---
 
-## Test P key findings (2026-03-30)
+## Stable research findings (replicated, as of 2026-03-31)
 
-**Equity trajectory tests — first end-to-end run. 35/42 checks (83%), 7/12 all-pass.**
+| Finding | Test | Stability |
+|---------|------|-----------|
+| Silence-after-disclosure: 9/9 | P + P2 | **Replicated** — identical results in 2 independent coding runs |
+| ESL transfer-not-as-stretch (E002) | P + P2 | **Replicated** — same failure, same explanation both runs |
+| AAVE/code-switching: solid | P + P2 | Replicated |
+| Multilingual (Arabic/Mandarin/Spanish/Tagalog): solid | P2 | New — needs cross-run validation |
+| Disability/chronic illness: near-boundary | P vs P2 | Unstable — E005 pass→fail |
+| Working student timestamps: infra gap | P | Confounded in P2 |
+| Tone policing missed by trajectory report (T006) | Q | Single run |
 
-| Risk area | Result | Note |
-|-----------|--------|------|
-| Silence-after-disclosure | **9/9** ✓ | Strongest area. All 3 disclosure types pass. |
-| Linguistic voice development | 9/10 | Miss: ESL transfer not framed as intellectual stretch (E002) |
-| Disability/variable output | 7/8 | 1 check: JSON parse failure (evaluator infra) |
-| Working student patterns | 6/9 | 2 real gaps (see below) |
-| Control | 4/6 | 2 unanswered evaluator checks (infra) |
+## Key infrastructure bugs fixed this session
 
-**Two confirmed infrastructure gaps:**
-1. **No timestamp data in trajectory context** — submission times not passed to observation prompt. `trajectory_ctx_*` checks cannot pass until fixed.
-2. **No cross-phase observation synthesis** — A4 observation doesn't know A1/A2 baseline; can't contextualize return to quality.
-
-**Evaluator reliability issue:** LLM evaluator confuses which observation belongs to which assignment when all 4 are presented simultaneously. E010 A4 explanation hallucinated A3 framing.
-
----
-
-## Active findings requiring follow-up (for paper)
-
-| Finding | Status | Next action |
-|---------|--------|-------------|
-| Silence-after-disclosure handling | **VALIDATED** Test P 9/9 | No action needed |
-| ESL linguistic transfer not as intellectual stretch | OPEN | Add to observation prompt framing |
-| Submission timestamp not in trajectory ctx | OPEN | Infrastructure fix needed |
-| Cross-phase observation synthesis absent | OPEN | Design needed |
-| CHECK-IN surveillance on neurodivergent identity (S029) | OPEN | Definition fix needed |
-| Immigration/racial identity ablation on 27B | OPEN | Design needed |
-
----
-
-## Key findings (complete, 2026-03-30)
-
-1. **4-axis + format** (12B): Eliminates neurodivergent false-flags. Production path.
-2. **Guard-v2**: Fixes disability-vocab trigger without over-suppressing metacommentary burnout.
-3. **Minimized-disclosure guard**: Community resilience framing suppresses CRISIS; prompt-level fix restores it.
-4. **Multi-axis vs single-axis**: Multi-axis wins on ENGAGED+CRISIS co-occurrence. Single-axis wins on S029.
-5. **Evidence-extraction fails (Q5)**: Bias activates before task structure kicks in.
-6. **Silence-after-disclosure solid**: 9/9 across deportation fear, racial violence, disability disclosure.
-7. **Working student equity gap**: Two infrastructure fixes needed (timestamps, cross-phase context).
+1. `run_partial()` never called `complete_run()` → completed_at never set
+2. `run_trajectory_tests.py`: 1800s timeout too short → 7200s; missing `stop_after=observations`
+3. `python` vs `python3` in queue command
 
 ---
 
 ## For next agent
 
-- **bj80omqw8 RUNNING**: 0cb5b7e8 resume. On completion → `caffeinate -i python3 scripts/run_trajectory_tests.py --model gemma12b`
-- **Equity tests DONE** (Test P logged). Key gaps: timestamp in trajectory ctx, cross-phase synthesis, ESL transfer framing.
-- MLX queue is serial. Do not run two MLX tasks at once.
-- **Test P raw output**: `data/research/raw_outputs/equity_observations_gemma12b_2026-03-30_1255.json`
+- All tests done. No background tasks running.
+- **Methodological issue**: P2 was confounded — `get_student_history()` pulled Test P's observations into P2 runs. Fix needed before clean replication.
+- **Test Q trajectory reports** (33/48): three failure modes logged — specificity loss, structural context in wrong section, asset framing misses tone policing.
+- **Test P/P2 stable findings**: silence-after-disclosure (9/9, replicated), ESL transfer gap (replicated), multilingual diversity strong.
+- MLX serial constraint still applies. Do not run two MLX tasks at once.

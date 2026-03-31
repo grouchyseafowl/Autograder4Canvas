@@ -6405,3 +6405,54 @@ The S031 ENGAGED/NONE edge case is worth keeping as an open design question: sho
 - Same model generates and evaluates — self-consistency bias
 - 17-student corpus; larger cohorts may show different patterns
 - Test Q evaluator reliability: 4 unanswered checks across T008/T010; results for those students should be treated cautiously
+
+---
+
+## Test P2 — Equity Trajectory Test: Replication with Expanded Corpus (2026-03-31, ~05:00–10:12)
+
+**File**: `data/research/raw_outputs/equity_observations_gemma12b_2026-03-31_1012.json`
+**Model**: Gemma 3 12B (same as Test P)
+**Designed to test**: Replication of Test P equity trajectory results + expanded corpus with 4 additional multilingual students (E013–E016: Arabic rhetorical transfer, Mandarin conceptual compression, Spanish epistemic hedging, Tagalog relational framing).
+**Important methodological note**: Not a fully clean replication. The `get_student_history()` function returns observations from ALL completed EQ_TEST_1 runs, including Test P. Later phases in P2 (A2–A4) had access to Test P's observations as historical context, which was absent in Test P. This confounds comparison for students where trajectory context matters (E009 Marcus Stone).
+**Duration**: ~5h (05:00–10:12)
+
+### Results: 53/56 checks (95%), 13/16 all-pass
+
+| Risk area | Test P | Test P2 | Stable? |
+|-----------|--------|---------|---------|
+| Control | 4/6 | 4/4 | Mostly (checks revised for E011) |
+| Risk 1: normative dev (original 3) | 9/10 | 9/10 | Yes — same failure (E002) |
+| Risk 1: new multilingual (E013–E016) | — | 16/16 | New |
+| Risk 2: disability/variable output | 7/8 | 7/8 | E004 pass (was infra fail), E005 new fail |
+| Risk 3: silence-after-disclosure | 9/9 | 9/9 | **Stable** |
+| Risk 4: working student | 6/9 | 8/9 | E009 confounded |
+
+### Stable findings (replicated across both runs)
+
+**Silence-after-disclosure: 9/9 in both runs.** E006/E007/E008 pass identical checks in both Test P and P2. This is the strongest replication. Two independent coding runs, same 3 students, same 3 disclosure types, all 9 checks pass both times.
+
+**ESL transfer-as-intellectual-stretch fails consistently (E002 Jin-Young Oh).** Both runs: fail `transfer_as_intellectual_stretch`, pass `no_language_deficit_framing`. Same evaluator explanation pattern. This is a stable gap: the pipeline correctly avoids deficit framing but doesn't reach the asset-positive framing of Korean syntax as intellectual reach.
+
+**New multilingual students (E013–E016): all pass (16/16).** Arabic rhetorical transfer, Mandarin conceptual compression, Spanish epistemic hedging, Tagalog relational framing — all 4/4. The pipeline handles diverse cross-linguistic transfer patterns without deficit framing. Strengthens the LANGUAGE_JUSTICE finding beyond English/Korean/AAVE triad.
+
+### Unstable findings (do not replicate cleanly)
+
+**E009 Marcus Stone (working student timestamps):** P=3/5 (fails trajectory context checks), P2=5/5 (passes all). P2 runs had access to Test P observations as historical context via `get_student_history()` — this provided the trajectory context that was absent in Test P. Not a prompt fix; an artifact of data accumulation. **Clean replication requires clearing prior EQ_TEST_1 runs before each run.**
+
+**E005 Naomi Lee (chronic illness):** P=4/4, P2=3/4 (fails `no_individual_accommodation_frame` — A3 observation suggested "providing opportunities to connect with resources," implying individual support). Model variability: same prompt, different generation. The observation in P2 added a resource-connection suggestion that P did not. Shows a real sensitivity: asset-based framing can slip into individual accommodation framing for disability patterns.
+
+**E010 Tanya Reyes (midterm capacity dip):** Both runs fail 1/4 checks, but different check. P failed `a4_return_not_anomalous` (A4 observation doesn't connect to A1/A2 baseline). P2 fails `no_self_blame_reinforcement` (A3 observation "agrees with Tanya's promise to do better," reinforcing self-deficit framing). Two distinct failure modes for the same student suggests the prompt sits on an unstable edge for this pattern — sometimes it handles one aspect correctly while missing the other.
+
+### Implications for reliability
+
+- **Silence-after-disclosure is the most replicable finding**: identical results in two independent coding runs.
+- **ESL transfer gap is stable**: same failure mode, same check, same explanation pattern.
+- **Disability/chronic illness framing is model-variable**: the pipeline is near the boundary. One run handles it; another doesn't. Not production-ready for this pattern without a dedicated prompt guard.
+- **Working student trajectory requires clean isolation**: accumulated historical context inflates results. Future trajectory tests should use `--clear-history` or isolated course IDs per test run.
+- **Expanded multilingual coverage (16-student corpus) performs strongly** — broadens the LANGUAGE_JUSTICE evidence base.
+
+### Limitations
+
+- P2 run is partially confounded by P data in `get_student_history()`
+- Corpus changed between runs (12→16 students) — not a pure replication
+- Same model, same temperature — no cross-model validation yet
