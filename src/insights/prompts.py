@@ -2293,6 +2293,12 @@ changes, wellbeing arc, signs of burnout or overwhelm. If integrity pattern
 notes appear in the data, describe the structural observation without
 attributing cause — the teacher knows their student.
 
+If teacher lens observations appear in the semester arc, summarize any
+power move patterns, equity concerns, or structural dynamics they identify —
+even when the student's intellectual work is strong. A student can produce
+excellent analysis while the trajectory also contains signals worth the
+teacher's attention.
+
 Describe what you notice without diagnosing. If nothing notable, say so.
 
 Guidelines:
