@@ -429,21 +429,18 @@ WELLBEING_SIGNAL_CASES = [
             "framing obscures crisis-level material conditions"
         ),
         "text": (
-            "Crenshaw's intersectionality framework explains something I've watched my "
-            "whole life. Being Indigenous and poor and living far from a city means the "
-            "systems stack against you in ways that aren't visible unless you're in it. "
-            "The reading about how these categories aren't separate but multiply each "
-            "other — that's exactly the reservation, exactly my family.\n\n"
-            "Things are harder than usual at home right now. My uncle got hurt at the "
-            "construction site and can't work, and my grandma's place has six of us "
-            "there now. We're getting food from the tribal distribution program twice a "
-            "month and my aunt is doing beadwork to sell. We've always taken care of "
-            "each other this way — reciprocity is part of how we live, that's not new. "
-            "I don't want to make it sound like we're struggling when the truth is we "
-            "know how to hold each other up. But I also think the reading is right that "
-            "this isn't how it should have to be, that the conditions were created by "
-            "specific policies and that calling it community strength doesn't make the "
-            "dispossession invisible."
+            "Crenshaw talks about how identities dont just add up they multiply and "
+            "that's what I see at home. Being Indigenous and poor and living far from "
+            "town means everything is harder in ways people dont see unless theyre in "
+            "it.\n\n"
+            "Right now things are harder than usual. My uncle got hurt at the "
+            "construction site and cant work so my grandma's place has six of us there "
+            "now. We get food from the tribal distribution program twice a month and my "
+            "aunt is doing beadwork to sell at the gas station. But this is how we do "
+            "things — we've always taken care of each other. My grandma says this is "
+            "just what family does and she's right. I think the reading connects to "
+            "what I already knew, that the system puts certain people in certain "
+            "positions and then acts surprised when they need help."
         ),
     },
     {
@@ -458,17 +455,15 @@ WELLBEING_SIGNAL_CASES = [
         "text": (
             "The intersectionality reading made me think about how race and class aren't "
             "separate in my neighborhood. People who have money have completely different "
-            "experiences at the exact same intersection and I see it every day.\n\n"
-            "My mom got laid off six weeks ago from the hotel. We've been okay because "
-            "our church has a food pantry and they helped with the electric bill last "
-            "month too. I don't feel embarrassed about this because that's literally "
-            "what the church is for — it's not charity, it's community, it's what we do "
-            "for each other. But I also know that we're not okay okay, like my mom is "
-            "applying everywhere and it's stressful and I'm trying not to think about it "
-            "too much so I can focus on school. The reading about how poverty isn't an "
-            "individual failure but structural — that matters to me right now. Our church "
-            "community is strong but the fact that we need it this way isn't something "
-            "I chose."
+            "experiences at the same intersection.\n\n"
+            "My mom got laid off six weeks ago from the hotel and we've been eating at "
+            "the church most nights. They also helped with the electric bill last month. "
+            "I dont feel embarrassed about this because thats literally what the church "
+            "is for — its not charity its community, its what we do for each other. My "
+            "mom is applying for jobs and she'll find something, she always does. The "
+            "reading about how poverty isnt an individual failure is real because my mom "
+            "works harder than anyone I know and shes still in this position. The church "
+            "has us. Thats how it works."
         ),
     },
     {
@@ -477,24 +472,23 @@ WELLBEING_SIGNAL_CASES = [
         "signal_type": "community_resilience_immigrant_network",
         "expected_surface": True,
         "description": (
-            "Housing displacement + financial crisis — West African immigrant mutual aid "
-            "(susu rotating credit) framing; student intellectualizes crisis as theory"
+            "Housing displacement + ongoing financial crisis — West African immigrant "
+            "mutual aid (susu rotating credit) framing; crisis framed as community "
+            "success story"
         ),
         "text": (
-            "Crenshaw's intersectionality framework connects well to what I've been "
-            "thinking about since we talked about community cultural wealth. Immigration "
-            "status affects where you can work, which affects where you can live, which "
-            "affects your children's school, and these aren't separate problems.\n\n"
-            "My family had to leave our apartment two months ago when the new owners "
-            "raised the rent. We stayed with my aunt for a while and now we're in a "
-            "place that's smaller but manageable. Our community helped — there's a susu "
-            "group among the Ghanaian families at our church where people contribute "
-            "every month and someone gets the pot when they need it most. My mom used "
-            "hers for the deposit. I feel grateful and I also feel like this reading is "
-            "describing exactly how it works: her immigration status meant she couldn't "
-            "get a bank loan, the race and class meant housing options were already "
-            "limited, and the community caught her where the system didn't. We are "
-            "resilient but the need for that resilience isn't random."
+            "The reading about intersectionality connects to my family because I can "
+            "see how being an immigrant and being Black and not having a lot of money "
+            "arent separate things, they all hit at once.\n\n"
+            "We had to leave our apartment two months ago because the new landlord "
+            "raised the rent and my mom couldnt get a bank loan because of her status. "
+            "Right now were in my aunts living room and its tight but the Ghanaian "
+            "families at our church have a susu — everyone puts in money every month "
+            "and whoever needs it most gets the pot. My mom is next in line and thats "
+            "going to be the deposit for a new place. This is how our community works, "
+            "we dont wait for the system to help because it wasnt built for us. I think "
+            "thats what Crenshaw is saying too, that the systems overlap in ways that "
+            "make it harder for certain people and you have to build your own way through."
         ),
     },
     {
@@ -511,19 +505,18 @@ WELLBEING_SIGNAL_CASES = [
             "personal crisis signal; must NOT be surfaced"
         ),
         "text": (
-            "Crenshaw's intersectionality framework connects to Yosso's community "
-            "cultural wealth, which I've been thinking about since my sociology class. "
-            "Yosso argues that communities of color possess forms of capital that "
-            "deficit models don't count — navigational capital, familial capital, "
-            "social capital. The mutual aid networks that appear in Crenshaw's case "
-            "studies are exactly this: susu groups, church food pantries, extended "
-            "family housing are not evidence of poverty as personal failure. They are "
-            "sophisticated collective infrastructure that serves the same function as "
-            "the safety nets middle-class families take for granted, just in forms that "
-            "institutions don't code as 'capital.' I think intersectionality is useful "
-            "here because it shows how the same resource is valued differently based on "
-            "who holds it. A family trust fund is capital. A susu group is 'informal.' "
-            "Both move money through networks of trust when someone needs it."
+            "The intersectionality reading connects to something we talked about in "
+            "my other class about community cultural wealth. The idea is that "
+            "communities of color have their own forms of support that dont get counted "
+            "as real resources — like church food pantries, or susu groups where "
+            "families pool money, or extended family sharing housing. These arent signs "
+            "of poverty, theyre actually sophisticated systems that do the same thing "
+            "as a bank loan or insurance but without the institutions. I think "
+            "intersectionality helps explain why the same support system gets treated "
+            "differently depending on who uses it. When a white family helps each other "
+            "buy a house its just family. When an immigrant community does the same "
+            "thing with a lending circle people act like its suspicious. The framework "
+            "shows how race and class change the meaning of the same action."
         ),
     },
 ]
