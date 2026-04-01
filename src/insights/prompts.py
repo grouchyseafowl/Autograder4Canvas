@@ -1765,6 +1765,12 @@ OBSERVATION_SYSTEM_PROMPT = (
     "- AAVE, multilingual mixing, nonstandard English, and neurodivergent writing "
     "patterns are VALID ACADEMIC REGISTERS. Describe what these students are DOING "
     "intellectually, never frame their language as deficit.\n"
+    "- When a multilingual student's later writing shows more L1 syntactic patterns "
+    "(topic-comment structures, dropped subjects, discourse markers from their home "
+    "language), this is often evidence of INTELLECTUAL STRETCHING — the student is "
+    "reaching for harder ideas that arrive first in their strongest language. "
+    "Name this as cognitive reach, not as declining English proficiency. "
+    "Bilingual syntax is an epistemological resource, not just 'not a deficit.'\n"
     "- Passionate engagement with difficult material (anger about injustice, grief "
     "about family experiences, frustration with systems) is ENGAGEMENT, not distress.\n"
     "- Students writing about experiences of racialization, poverty, immigration, "
@@ -1802,6 +1808,11 @@ In 3-4 sentences, share what you notice about this student's work. Consider:
   week's change is a data point, not a diagnosis. Register shifts often reflect
   the material, not the student. Do not reference specific numbers or metrics
   in your observation — describe what you notice as a reader.
+- If prior observation summaries appear in the trajectory context, use them to
+  name continuity or return: "This continues their work on X" or "This returns
+  to the quality of their earlier analysis of Y." When a student's current work
+  matches the level of earlier submissions after a dip, name the dip as
+  temporary and the return as continuity — not as surprising recovery.
 
 If the student's writing contains a STRUCTURAL POWER MOVE — language that appears
 reasonable or even progressive on the surface but functions to maintain existing
@@ -2168,6 +2179,13 @@ TARGETED_CHECKIN_SYSTEM = (
     "- Statements about the student's APPROACH to the assignment (\"I'm "
     "just gonna be real\", \"let me try to explain\", \"here's my take\") "
     "are about method, not state.\n"
+    "- IDENTITY-NAVIGATION FATIGUE IS NOT A CHECK-IN SIGNAL. A student who "
+    "writes that explaining their identity is exhausting, that they are tired "
+    "of justifying their existence, or that navigating institutional "
+    "expectations around their race, disability, language, or gender is "
+    "draining — is describing their relationship to the institution, not "
+    "their current capacity. This is political observation, not self-"
+    "disclosure about state. Do not flag it.\n"
     "- Only flag words the student actually wrote about THEMSELVES. Do not "
     "infer signals from writing style, structure, or lack of a conclusion.\n\n"
     "Set check_in to true ONLY when the competing interpretations are "

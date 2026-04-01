@@ -542,6 +542,28 @@ def _truncate_reaching_for(text: Optional[str]) -> str:
     return sentence
 
 
+def _truncate_observation_summary(text: Optional[str]) -> str:
+    """Extract first sentence of an observation, capped at 100 chars.
+
+    Provides a compact summary of what a prior observation noticed,
+    enabling later observations to reference continuity or shifts
+    in the student's intellectual work across assignments.
+    """
+    if not text:
+        return ""
+    # Take first sentence
+    for sep in (".", "!", "?"):
+        idx = text.find(sep)
+        if idx != -1 and idx < 120:
+            sentence = text[: idx + 1].strip()
+            break
+    else:
+        sentence = text.strip()
+    if len(sentence) > 100:
+        sentence = sentence[:97].rstrip() + "..."
+    return sentence
+
+
 def _build_prior_line(record: Dict[str, Any], run_data: Dict[str, Any]) -> str:
     """Build a single bullet line for one prior submission."""
     parts: List[str] = []
@@ -585,7 +607,15 @@ def _build_prior_line(record: Dict[str, Any], run_data: Dict[str, Any]) -> str:
     if time_str:
         parts.append(time_str)
 
-    return "- " + header + " " + ", ".join(parts)
+    line = "- " + header + " " + ", ".join(parts)
+
+    # Append compact observation summary so later observations can reference
+    # continuity or shifts in the student's intellectual arc.
+    obs_summary = _truncate_observation_summary(record.get("observation"))
+    if obs_summary:
+        line += f"\n  Prior observation: {obs_summary}"
+
+    return line
 
 
 def _build_summary_line(earlier_records: List[Dict[str, Any]]) -> str:

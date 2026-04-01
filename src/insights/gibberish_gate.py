@@ -62,19 +62,32 @@ def _has_vowel(word: str) -> bool:
 
 
 def _is_keyboard_sequence(word: str) -> bool:
-    """Check if a word looks like consecutive keys on a keyboard row."""
+    """Check if a word looks like adjacent keys mashed on a keyboard row.
+
+    Requires 5+ consecutive characters that are both on the same keyboard
+    row AND within 1 position of each other.  This prevents false positives
+    on common English words whose letters happen to fall on the same row
+    but aren't spatially adjacent (e.g. 'people', 'power', 'equity').
+    """
     word = word.lower()
-    if len(word) < 4:
+    if len(word) < 5:
         return False
     for row in _KEYBOARD_ROWS:
         streak = 0
+        prev_idx = -100
         for ch in word:
-            if ch in row:
+            idx = row.find(ch)
+            if idx >= 0 and (streak == 0 or abs(idx - prev_idx) <= 1):
                 streak += 1
-                if streak >= 4:
+                if streak >= 5:
                     return True
+                prev_idx = idx
+            elif idx >= 0:
+                streak = 1
+                prev_idx = idx
             else:
                 streak = 0
+                prev_idx = -100
     return False
 
 

@@ -2,8 +2,8 @@
 linguistic_features.py — unit tests.
 
 Tests AAVE detection, multilingual tier suppression, ESL feature detection,
-`_derive_tier` logic, `detect_features` output contract, and the
-hallucination-guard-adjacent `_validate_concepts`.
+`_derive_tier` logic, `detect_features` output contract, and short-submission
+tier thresholds.
 
 All pure functions — no LLM, no DB, no MLX.
 
@@ -318,20 +318,21 @@ class TestAaveEquityRegressions:
     for single features. Suppression requires 2+ distinct AAVE markers.
     """
 
-    def test_aave_text_produces_asset_labels(self):
-        """AAVE writing must surface asset labels, not empty labels."""
+    def test_aave_text_produces_aave_asset_labels(self):
+        """AAVE writing must surface AAVE-specific asset labels."""
         wc = len(AAVE_TEXT.split())
         result = detect_features(AAVE_TEXT, word_count=wc)
-        # AAVE detection should produce at least one asset label
-        assert len(result.asset_labels) > 0
+        assert any("AAVE" in label or "aave" in label.lower() for label in result.asset_labels), (
+            f"AAVE text must produce AAVE-specific asset labels. Got: {result.asset_labels}"
+        )
 
-    def test_aave_text_suppresses_or_caveats_sentiment(self):
-        """AAVE writing: the SENTIMENT TOOL is biased, so tier must be low or suppressed."""
+    def test_aave_text_suppresses_sentiment(self):
+        """AAVE writing with 4+ distinct markers → tier must be 'suppressed'."""
         wc = len(AAVE_TEXT.split())
         result = detect_features(AAVE_TEXT, word_count=wc)
-        assert result.sentiment_tier in ("low", "suppressed"), (
-            "AAVE writing must reduce sentiment reliability — VADER/GoEmotions are "
-            "biased against AAVE register (Blodgett et al., EMNLP 2017)"
+        assert result.sentiment_tier == "suppressed", (
+            f"AAVE text with multiple markers must suppress sentiment — "
+            f"VADER/GoEmotions are biased against AAVE register. Got: {result.sentiment_tier}"
         )
 
     def test_aave_asset_label_not_deficit_framing(self):
@@ -350,6 +351,20 @@ class TestAaveEquityRegressions:
         wc = len(STANDARD_TEXT.split())
         result = detect_features(STANDARD_TEXT, word_count=wc)
         assert result.sentiment_tier == "high"
+
+    def test_righteous_anger_not_suppressed(self):
+        """
+        #COMMUNITY_CULTURAL_WEALTH: Political urgency and righteous anger
+        are engagement, not distress. VADER reads fury about injustice as
+        'negative', but this text is 98 words of sophisticated critique.
+        Must not be suppressed.
+        """
+        wc = len(RIGHTEOUS_ANGER_TEXT.split())
+        result = detect_features(RIGHTEOUS_ANGER_TEXT, word_count=wc)
+        assert result.sentiment_tier == "high", (
+            f"Righteous anger about injustice must not suppress sentiment. "
+            f"Got: {result.sentiment_tier}, triggers: {result.sentiment_triggers}"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -429,9 +444,8 @@ class TestShortSubmissionTiers:
             "a 30-word response is often substantive"
         )
 
-    def test_discussion_post_20_words_is_high(self):
-        """A 20-word discussion post is above the discussion threshold (25) — high tier."""
-        # Wait, 20 < 25, so it should be caveat. Let's test 30 words.
+    def test_discussion_post_30_words_is_high(self):
+        """A 30-word discussion post is above the discussion threshold (25) — high tier."""
         text = "x " * 30  # 30 words — above discussion_post threshold of 25
         result = detect_features(text, word_count=30, assignment_type="discussion_post")
         assert result.sentiment_tier == "high", (
@@ -478,6 +492,12 @@ class TestShortSubmissionTiers:
         result = detect_features(text, word_count=14, assignment_type="exit_ticket")
         assert result.sentiment_tier == "suppressed"
 
+    def test_exit_ticket_15_words_is_high(self):
+        """Exit ticket caveat threshold = hard floor (15). At 15 words → high tier."""
+        text = "x " * 15
+        result = detect_features(text, word_count=15, assignment_type="exit_ticket")
+        assert result.sentiment_tier == "high"
+
     def test_no_structural_feature_above_threshold(self):
         """No short_submission feature fires above the caveat threshold."""
         text = "x " * 70
@@ -509,10 +529,11 @@ class TestBaselineAdjustments:
 # ---------------------------------------------------------------------------
 
 class TestEdgeCases:
-    def test_very_short_text(self):
+    def test_very_short_text_suppressed(self):
+        """4 words < 15-word hard suppress floor → suppressed."""
         result = detect_features(SHORT_TEXT, word_count=4)
         assert isinstance(result, LinguisticFeatureResult)
-        assert result.sentiment_tier in ("high", "low", "suppressed")
+        assert result.sentiment_tier == "suppressed"
 
     def test_empty_text(self):
         """Empty text (0 words) is below hard suppress floor → suppressed."""

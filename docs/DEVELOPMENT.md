@@ -44,7 +44,7 @@ Run before and after any significant change:
 
 ```bash
 python3 -m pytest tests/ -v --tb=short
-# Expected: ~814 tests, ~35s, 0 failures
+# Expected: ~906 tests, ~35s, 0 failures
 ```
 
 ### What's covered (pure unit tests — no LLM, no MLX, no Canvas)
@@ -66,6 +66,8 @@ python3 -m pytest tests/ -v --tb=short
 | `test_citation_checker.py` | URL/DOI/APA extraction, Canvas infrastructure URLs excluded, dedup, class-level aggregation, generic vs specific source separation |
 | `test_short_sub_reviewer.py` | Anti-bias post-processing (deficit framing + AAVE register + placeholder reclassification), thread context formatter |
 | `test_cohort_calibration.py` | Class-relative distributions, percentile rank (engagement-framed labels), cold-start Bayesian blending, EMA evolution, student percentile mapping |
+| `test_settings.py` | `load_settings()` defaults fallback, bool/int/string coercion, comment skipping, round-trip persistence, I/O failure handling |
+| `test_organizational_analyzer.py` | Header detection (excessive/hierarchical), section balance (neurodivergent-aware: uneven depth not flagged), paragraph/sentence uniformity, starter diversity, Phase A signals equity check (comma_density + avg_word_length excluded from total score), circular reference detection |
 
 ### What is NOT here (by design)
 

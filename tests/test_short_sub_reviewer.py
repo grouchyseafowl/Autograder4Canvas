@@ -93,7 +93,18 @@ class TestDeficitLanguageBias:
             confidence=0.45,
         )
         result = check_engagement_bias(review, PLAIN_TEXT)
-        assert result.confidence <= 0.6
+        assert result.confidence == pytest.approx(0.6)  # min(0.6, 0.45+0.2=0.65) = 0.6
+
+    def test_deficit_plus_evidence_high_confidence_warning_no_nudge(self):
+        """Deficit language + evidence + confidence >= 0.5 → warning but NO nudge."""
+        review = make_review(
+            rationale="This lacks depth and shows limited vocabulary.",
+            engagement_evidence=["Connects reading to family experience."],
+            confidence=0.55,
+        )
+        result = check_engagement_bias(review, PLAIN_TEXT)
+        assert result.bias_warning is not None  # warning still fires
+        assert result.confidence == pytest.approx(0.55)  # not nudged (already >= 0.5)
 
     def test_deficit_without_evidence_no_warning(self):
         """If the model found no evidence, deficit framing might be correct — don't warn."""
@@ -233,6 +244,20 @@ class TestPlaceholderReclassification:
         assert "⚠ Prior warning." in result.bias_warning
         assert "Reclassified" in result.bias_warning or "|" in result.bias_warning
 
+    def test_reclassification_forces_teacher_review_verdict(self):
+        """
+        Verdict must be escalated to TEACHER_REVIEW on reclassification.
+        Without this, a reclassified submission could auto-credit despite
+        contradictory evidence.
+        """
+        review = make_review(
+            brevity_category="placeholder",
+            verdict="CREDIT",
+            engagement_evidence=["some real content here"],
+        )
+        result = check_engagement_bias(review, PLAIN_TEXT)
+        assert result.verdict == "TEACHER_REVIEW"
+
     def test_non_placeholder_brevity_category_unchanged(self):
         review = make_review(
             brevity_category="concise_complete",
@@ -276,8 +301,8 @@ class TestFormatThreadContext:
     def test_long_parent_post_truncated(self):
         ctx = {"parent_post": "x" * 1000}
         result = _format_thread_context(ctx)
-        # Should not include all 1000 chars — truncated to 500
-        assert len(result) < 1000 + 50  # 50 slack for formatting
+        # Truncated to 500 chars + formatting label
+        assert len(result) < 600
 
     def test_no_sibling_replies_no_reply_section(self):
         ctx = {"parent_post": "Original question here."}

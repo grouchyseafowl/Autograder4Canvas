@@ -239,7 +239,12 @@ class TestWordMinimum:
 
     def test_word_minimum_reason_set(self):
         result = check_gibberish("Three words here.")
-        assert result.reason == "below_word_minimum" or result.is_gibberish is False
+        assert result.reason == "below_word_minimum"
+
+    def test_14_word_text_reason_set(self):
+        result = check_gibberish("word " * 14)
+        assert result.reason == "below_word_minimum"
+        assert result.is_gibberish is False
 
 
 # ---------------------------------------------------------------------------
@@ -295,3 +300,55 @@ class TestGibberishDetection:
         text = ("dolor sit amet consectetur adipiscing elit " * 6).strip()
         result = check_gibberish(text)
         assert result.is_gibberish is True
+
+
+# ---------------------------------------------------------------------------
+# _is_keyboard_sequence — adjacency fix regression tests
+# ---------------------------------------------------------------------------
+
+class TestKeyboardSequenceAdjacency:
+    """
+    #LANGUAGE_JUSTICE: The keyboard mash detector must NOT flag common
+    English words whose letters happen to sit on the same row. Without
+    the adjacency check, words like 'people', 'power', 'equity' trigger
+    false positives — silently excluding students from analysis.
+    """
+
+    def test_people_not_keyboard(self):
+        assert _is_keyboard_sequence("people") is False
+
+    def test_power_not_keyboard(self):
+        assert _is_keyboard_sequence("power") is False
+
+    def test_pretty_not_keyboard(self):
+        assert _is_keyboard_sequence("pretty") is False
+
+    def test_equity_not_keyboard(self):
+        assert _is_keyboard_sequence("equity") is False
+
+    def test_write_not_keyboard(self):
+        assert _is_keyboard_sequence("write") is False
+
+    def test_require_not_keyboard(self):
+        assert _is_keyboard_sequence("require") is False
+
+    def test_territory_not_keyboard(self):
+        assert _is_keyboard_sequence("territory") is False
+
+    def test_deadass_not_keyboard(self):
+        """AAVE truth marker must not be flagged as keyboard mash."""
+        assert _is_keyboard_sequence("deadass") is False
+
+    def test_qwerty_still_caught(self):
+        assert _is_keyboard_sequence("qwerty") is True
+
+    def test_asdfgh_still_caught(self):
+        assert _is_keyboard_sequence("asdfgh") is True
+
+    def test_reversed_sequence_caught(self):
+        """Reversed keyboard mash: lkjhgf."""
+        assert _is_keyboard_sequence("lkjhgf") is True
+
+    def test_four_char_sequence_not_caught(self):
+        """4-char sequences now fall below the 5-streak threshold — acceptable trade-off."""
+        assert _is_keyboard_sequence("asdf") is False

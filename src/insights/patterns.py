@@ -301,12 +301,12 @@ _AAVE_MARKERS: re.Pattern = re.compile(
     r"fr\s+fr|no\s+cap|on\s+god|"                      # truth verification phrases
     r"fasho|"                                           # for sure
     r"bruh|"                                            # address term
-    r"y'?all|"                                          # 2nd-person plural — very reliable AAVE/Southern marker
     r"they\s+was|we\s+was|you\s+was|"                  # leveled 'was' agreement
-    r"(?:he|she|they|we|y'?all)\s+be\b|"               # habitual be — syntactic AAVE marker
+    r"(?:he|she|they|we|y'?all)\s+be\b|"               # habitual be — MUST precede bare y'all
+    r"y'?all|"                                          # 2nd-person plural
     r"he\s+don'?t|she\s+don'?t|they\s+don'?t|"        # 3rd-person singular don't
-    r"done\s+told|done\s+said|done\s+went|"            # AAVE completive done (original)
-    r"done\s+(?:knew|seen|ran|got|came|lost|left|finished)"  # completive done (expanded irregular forms)
+    r"done\s+(?:told|said|went|knew|seen|ran|got|came|lost|left|finished)|"  # completive done (irregular)
+    r"done\s+\w{3,}ed\b"                               # completive done (regular past tense)
     r")",
     re.IGNORECASE,
 )

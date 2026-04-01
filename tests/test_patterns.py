@@ -228,6 +228,14 @@ class TestSignalMatrixClassify:
         assert "PERFUNCTORY" not in signal_types
         assert "LOW ENGAGEMENT" not in signal_types
 
+    def test_positive_distress_is_verify(self):
+        """Positive VADER + distress keywords → VERIFY (masked distress).
+        A student writing 'I'm scared but trying to stay positive' could
+        score positive while expressing real fear."""
+        results = signal_matrix_classify(DISTRESS_TEXT, vader_compound=0.3)
+        signal_types = [r[0] for r in results]
+        assert "VERIFY" in signal_types
+
     def test_empty_text_no_signals(self):
         results = signal_matrix_classify("", vader_compound=0.0)
         assert results == []
@@ -352,7 +360,22 @@ class TestAssessSentimentReliability:
         )
         # compound_score=0.0 → abs() = 0.0 ≤ 0.1 → no ESL trigger
         # No other triggers on PLAIN_TEXT with sufficient word count
-        assert result.tier in ("high", "low")
+        assert result.tier == "high"
+
+    def test_esl_suppression_boundary_at_01(self):
+        """abs(compound_score) must be > 0.1 (not >=) to trigger ESL suppression."""
+        # 0.1 exactly → NOT suppressed (boundary is strictly >)
+        result_at = assess_sentiment_reliability(
+            PLAIN_TEXT, word_count=80,
+            was_translated=True, compound_score=0.1,
+        )
+        assert result_at.tier == "high"
+        # 0.11 → suppressed
+        result_above = assess_sentiment_reliability(
+            PLAIN_TEXT, word_count=80,
+            was_translated=True, compound_score=0.11,
+        )
+        assert result_above.tier == "suppressed"
 
     # --- Soft caution (low) ---
 

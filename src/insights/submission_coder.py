@@ -744,6 +744,10 @@ def code_submission_reading_first(
         free_form_reading=reading,
         what_student_is_reaching_for=reaching_for,
         confusion_or_questions=parsed.get("confusion_or_questions") or None,
+        # Non-LLM metadata — must be set here (unlike code_submission which
+        # sets it post-return). Trajectory context depends on word_count > 0
+        # to include prior records via _is_usable().
+        word_count=len(submission_text.split()),
     )
 
 

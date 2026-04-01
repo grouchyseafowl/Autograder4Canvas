@@ -2450,3 +2450,148 @@ class PostCanvasCommentWorker(QThread):
         except Exception as exc:
             log.exception("PostCanvasCommentWorker failed: %s", exc)
             self.comment_result.emit(False, str(exc))
+
+
+# ---------------------------------------------------------------------------
+# Research comparison worker
+# ---------------------------------------------------------------------------
+
+class ResearchComparisonWorker(CancellableWorker):
+    """Background thread for the 3-way classification comparison.
+
+    Two run modes:
+      "full"          — fetch from Canvas, run all shared stages + all 3 tracks
+      "track_a_only"  — use stored submission texts, run only binary Track A
+    """
+
+    progress_update = Signal(str)
+    track_result = Signal(str, str, dict)   # (track_name, student_id, data)
+    comparison_complete = Signal(dict)
+    # error(str) inherited from CancellableWorker
+
+    def __init__(
+        self,
+        api,
+        *,
+        store=None,
+        course_id: int,
+        course_name: str,
+        assignment_id: int,
+        assignment_name: str,
+        is_discussion: bool = False,
+        model_tier: str = "auto",
+        settings: Optional[dict] = None,
+        run_mode: str = "full",         # "full" | "track_a_only"
+        prior_run_id: Optional[str] = None,
+        parent=None,
+    ):
+        super().__init__(api, parent)
+        self._store = store
+        self._course_id = course_id
+        self._course_name = course_name
+        self._assignment_id = assignment_id
+        self._assignment_name = assignment_name
+        self._is_discussion = is_discussion
+        self._model_tier = model_tier
+        self._settings = settings or {}
+        self._run_mode = run_mode
+        self._prior_run_id = prior_run_id
+
+    def run(self) -> None:
+        try:
+            from dataclasses import asdict
+            from insights.research_engine import ResearchEngine
+
+            engine = ResearchEngine(
+                api=self._api,
+                store=self._store,
+                settings=self._settings,
+            )
+
+            def _progress(msg: str) -> None:
+                self.progress_update.emit(msg)
+                if self.is_cancelled():
+                    engine.cancel()
+
+            def _track(track: str, sid: str, data: dict) -> None:
+                self.track_result.emit(track, sid, data)
+
+            if self._run_mode == "track_a_only":
+                if not self._prior_run_id:
+                    self.error.emit("track_a_only mode requires prior_run_id")
+                    return
+
+                # Load stored submission texts from the prior run
+                texts = engine.get_stored_texts(self._prior_run_id)
+                if not texts:
+                    self.error.emit(
+                        "No stored submission texts found in prior run. "
+                        "Run Full Comparison instead."
+                    )
+                    return
+
+                # Build student_names from prior run codings
+                names: dict = {}
+                if engine._store:
+                    try:
+                        codings = engine._store.get_codings(self._prior_run_id)
+                        names = {
+                            str(row["student_id"]): row.get("student_name", "")
+                            for row in codings
+                            if row.get("student_id")
+                        }
+                    except Exception:
+                        pass
+
+                track_a_results = engine.run_track_a_only(
+                    texts=texts,
+                    student_names=names,
+                    assignment_prompt=self._assignment_name,
+                    model_tier=self._model_tier,
+                    progress=_progress,
+                    track_cb=_track,
+                )
+
+                if self.is_cancelled():
+                    return
+
+                # Merge Track A into the prior comparison result
+                prior = engine.load_prior_run(
+                    self._prior_run_id,
+                    course_id=str(self._course_id),
+                    course_name=self._course_name,
+                    assignment_id=str(self._assignment_id),
+                    assignment_name=self._assignment_name,
+                )
+                if prior is None:
+                    self.error.emit("Could not load prior run data.")
+                    return
+
+                for sid, ta in track_a_results.items():
+                    if sid in prior.comparisons:
+                        prior.comparisons[sid].track_a = ta
+
+                prior.metadata.tracks_freshly_run = ["track_a"]
+                prior.metadata.tracks_from_prior = ["track_b", "track_c"]
+                self.comparison_complete.emit(asdict(prior))
+
+            else:
+                # Full comparison
+                result = engine.run_comparison(
+                    course_id=self._course_id,
+                    course_name=self._course_name,
+                    assignment_id=self._assignment_id,
+                    assignment_name=self._assignment_name,
+                    is_discussion=self._is_discussion,
+                    model_tier=self._model_tier,
+                    progress=_progress,
+                    track_cb=_track,
+                )
+                if result and not self.is_cancelled():
+                    self.comparison_complete.emit(asdict(result))
+                elif not self.is_cancelled():
+                    self.error.emit("Comparison returned no results.")
+
+        except Exception as exc:
+            log.exception("ResearchComparisonWorker failed: %s", exc)
+            self.error.emit(str(exc))

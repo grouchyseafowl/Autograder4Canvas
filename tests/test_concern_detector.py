@@ -185,16 +185,16 @@ class TestCheckBiasInOutput:
         )
         result = _check_bias_in_output([concern], concern.flagged_passage)
         assert len(result) == 1
-        assert "BIAS" in result[0].why_flagged or "bias" in result[0].why_flagged.lower()
+        assert "POSSIBLE MODEL BIAS" in result[0].why_flagged
 
-    def test_bias_warning_lowers_confidence(self):
+    def test_bias_warning_lowers_confidence_by_03(self):
         concern = make_concern(
             flagged_passage="Liberation requires confronting colonialism directly.",
             why_flagged="This student is too emotional and irrational.",
             confidence=0.8,
         )
         result = _check_bias_in_output([concern], concern.flagged_passage)
-        assert result[0].confidence < 0.8
+        assert result[0].confidence == pytest.approx(0.5)  # 0.8 - 0.3
 
     def test_confidence_floor_at_01(self):
         concern = make_concern(
@@ -223,7 +223,7 @@ class TestCheckBiasInOutput:
             confidence=0.9,
         )
         result = _check_bias_in_output([concern], "The reading covered historical violence.")
-        assert result[0].confidence < 0.9
+        assert result[0].confidence == pytest.approx(0.5)  # 0.9 - 0.4
         assert "COURSE CONTENT" in result[0].why_flagged
 
     def test_subject_matter_explanation_demoted(self):
@@ -234,7 +234,7 @@ class TestCheckBiasInOutput:
             confidence=0.85,
         )
         result = _check_bias_in_output([concern], concern.flagged_passage)
-        assert result[0].confidence < 0.85
+        assert result[0].confidence == pytest.approx(0.45)  # 0.85 - 0.4
 
     def test_content_demotion_lowers_confidence_by_04(self):
         concern = make_concern(
@@ -285,7 +285,23 @@ class TestCheckBiasInOutput:
             why_flagged="Student comes across as hysterical about these issues.",
         )
         result = _check_bias_in_output([concern], concern.flagged_passage)
-        assert "BIAS" in result[0].why_flagged or "bias" in result[0].why_flagged.lower()
+        assert "POSSIBLE MODEL BIAS" in result[0].why_flagged
+
+    def test_bias_markers_without_critique_no_warning(self):
+        """
+        #TRANSFORMATIVE_JUSTICE: Bias markers WITHOUT structural critique must
+        NOT trigger the bias warning. If they did, genuine wellbeing concerns
+        from frustrated students would get a bias-dismissal label.
+        """
+        concern = make_concern(
+            flagged_passage="I hate everything and I want to give up.",
+            why_flagged="Student is too emotional and seems aggressive in their frustration.",
+            confidence=0.8,
+        )
+        result = _check_bias_in_output([concern], "I hate this class and everything about it.")
+        # No structural critique → no bias rewrite → confidence unchanged
+        assert result[0].confidence == pytest.approx(0.8)
+        assert "POSSIBLE MODEL BIAS" not in result[0].why_flagged
 
 
 # ---------------------------------------------------------------------------
