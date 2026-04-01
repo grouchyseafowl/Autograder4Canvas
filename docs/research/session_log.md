@@ -5,7 +5,7 @@ Old content gets archived to `docs/research/logs/` when > 200 lines.
 
 ---
 
-## Current state (2026-04-01, ~12:45)
+## Current state (2026-04-01, ~16:10)
 
 ### Pipeline status
 
@@ -16,18 +16,45 @@ Old content gets archived to `docs/research/logs/` when > 200 lines.
 | d3e2011c | 90005 (Biology fresh re-run) | **DONE** | Full pipeline re-run. |
 
 ### Active background tasks
+None.
 
-| Task ID | Test | Phase | Progress | Notes |
-|---------|------|-------|----------|-------|
-| bps52a800 | P3 equity trajectory (16 students, `--run-id P3`) | A1 | 12/16 codings done | MLX Gemma 12B. caffeinate running. Expected ~4-6h total. |
+### P3 state — CRASHED, NEEDS RESTART
 
-**P3 InsightsStore state**: run `361411a0`, course `EQ_TEST_P3`, INCOMPLETE, 12 codings, 3 stages.
+P3 crashed mid-A1 (student 13/16) due to Metal OOM (`mlx::core::gpu::check_error` SIGABRT). Root cause: Metal memory fragmentation accumulates across 16 sequential LLM calls within a single subprocess. The crash happens at the 13th–14th student.
+
+Two partial runs in InsightsStore for EQ_TEST_P3:
+- `361411a0` — A1, INCOMPLETE, 13 codings (crashed)
+- `3f34465f` — A2, INCOMPLETE, 16 codings (orchestrator continued after crash; A2 data invalid — built on incomplete A1 trajectory context)
+
+Neither affects restart: `get_student_history()` only reads COMPLETED runs.
+
+**To restart P3**:
+```bash
+caffeinate -i python3 scripts/run_equity_trajectory_tests.py --model gemma12b --run-id P3 --reset-flags
+```
+`--reset-flags` is safe (equity flags dir is empty). Expected ~6-7h with new batching.
 
 ### Equity flags (`.equity_flags/`)
-Empty — A1 still running.
+Empty.
 
 ### Trajectory flags (`.trajectory_flags/`)
 A1.done, A2.done, A3.done, A4.done, REPORTS.done — from prior Test Q run. **Must `--reset-flags` before Q3 runs.**
+
+---
+
+## What was done this session (2026-04-01, continued)
+
+### Crash investigation + fixes (this agent)
+
+1. **Crash diagnosed**: 9 Python SIGABRT crashes since March 28 — all `mlx::core::gpu::check_error` in a Metal command buffer completion callback. Two triggers: (a) sleep during run [caffeinate fix], (b) Metal OOM from memory fragmentation across 16 sequential LLM calls [batch fix].
+
+2. **caffeinate auto-applied** (`scripts/run_equity_trajectory_tests.py`): `_run_phase_subprocess()` now wraps each subprocess in `caffeinate -i` on macOS+MLX automatically. No longer relies on user remembering.
+
+3. **Mid-phase batch unload** (`scripts/run_equity_trajectory_tests.py`): `run_coding_phase()` now splits 16 students into batches of 8 (`_CODING_BATCH_SIZE=8`). Full `unload_mlx_model()` (weight eviction + `set_cache_limit(0)`) between batches. Adds ~20s per phase.
+
+4. **Observations phase robustness fix** (`run_observations_phase()`): `prior_history` now filters by `assignment_name != A4_aname` instead of `exclude_run_id`. Handles split-batch A4 correctly (two run_ids for A4 → old exclude approach missed batch 2 students). Per-student A4 run_id lookup added.
+
+5. **Test N extension completed**: WB11–14 (community resilience guard, 4 new cultural contexts). All 4 correct: WB11/12/13 → CRISIS, WB14 → ENGAGED. Logged as "Test N Extension" in experiment_log.md.
 
 ---
 
@@ -87,19 +114,9 @@ caffeinate -i python3 scripts/run_trajectory_tests.py --model gemma12b --reset-f
 
 Log results as **Test Q3** in experiment log. Compare to Test Q (33/48, 69%).
 
-### 3. Test N extension — cloud (can run ANYTIME, independent of MLX)
+### 3. Test N extension — **DONE** (2026-04-01 16:07)
 
-No MLX needed — runs on 27B via OpenRouter cloud.
-
-```bash
-python3 scripts/run_alt_hypothesis_tests.py --tests N --no-subprocess
-```
-
-**What it tests**: WB11–WB14 against community resilience guard. Expected: WB11/12/13 = CRISIS or BURNOUT (classifier sees through resilience framing); WB14 = ENGAGED (no false positive on analytical writing).
-
-**Key question**: Does the guard generalize beyond Somali/mosque (WB06) to Indigenous tribal distribution, Black church pantry, and West African susu? If WB14 false-positive, the guard is over-firing on analytical writing about these topics.
-
-Log as **Test N extension** in experiment log under Test N entry.
+Results: 4/4 correct. WB11/12/13 = CRISIS, WB14 = ENGAGED. Guard generalizes across Indigenous, Black church, and West African susu contexts. Logged in experiment_log.md.
 
 ---
 

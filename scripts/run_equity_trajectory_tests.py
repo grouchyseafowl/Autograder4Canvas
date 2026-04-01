@@ -706,7 +706,13 @@ def _mark_done(phase_id: str):
 
 
 def run_coding_phase(assignment_id: str, model_key: str):
-    """Run InsightsEngine coding for one assignment."""
+    """Run InsightsEngine coding for one assignment.
+
+    Processes submissions in batches of _CODING_BATCH_SIZE and performs a full
+    MLX model unload between batches.  Each batch creates its own run_id in
+    InsightsStore (same course_id / assignment_name), so run_observations_phase
+    and get_student_history pick up all codings correctly.
+    """
     from settings import load_settings
     from insights.engine import InsightsEngine
     from insights.insights_store import InsightsStore
@@ -718,27 +724,48 @@ def run_coding_phase(assignment_id: str, model_key: str):
     log.info("Coding phase %s: %d submissions", assignment_id, len(submissions))
 
     user_settings = load_settings()
-    store = InsightsStore()
-    engine = InsightsEngine(api=None, store=store, settings=user_settings)
 
-    run_id = engine.run_from_submissions(
-        submissions=submissions,
-        course_id=COURSE_ID,
-        course_name=COURSE_NAME,
-        assignment_id=cfg["assignment_id"],
-        assignment_name=cfg["assignment_name"],
-        model_tier="lightweight",
-        teacher_context=cfg["teacher_context"],
-        next_week_topic=cfg.get("next_week_topic") or "",
-        progress_callback=lambda msg: log.info("  %s", msg),
-        stop_after="observations",  # skip themes/outliers/synthesis/feedback
-    )
+    batches = [submissions[i:i + _CODING_BATCH_SIZE]
+               for i in range(0, len(submissions), _CODING_BATCH_SIZE)]
 
-    if run_id is None:
-        log.error("Coding phase %s returned None run_id", assignment_id)
-        sys.exit(1)
+    last_run_id = None
+    for batch_num, batch in enumerate(batches):
+        if batch_num > 0:
+            # Full model unload between batches: releases weight tensors, sets
+            # Metal cache limit to 0 so fragmented buffers are returned to the
+            # driver, then restores the limit.  Prevents the cumulative Metal
+            # OOM that crashes check_error() mid-phase.
+            log.info("Batch %d/%d: unloading model to reclaim Metal memory...",
+                     batch_num + 1, len(batches))
+            from insights.llm_backend import unload_mlx_model
+            unload_mlx_model()
 
-    log.info("Coding phase %s complete: run_id=%s", assignment_id, run_id)
+        log.info("Coding phase %s batch %d/%d: %d submissions",
+                 assignment_id, batch_num + 1, len(batches), len(batch))
+        store = InsightsStore()
+        engine = InsightsEngine(api=None, store=store, settings=user_settings)
+
+        run_id = engine.run_from_submissions(
+            submissions=batch,
+            course_id=COURSE_ID,
+            course_name=COURSE_NAME,
+            assignment_id=cfg["assignment_id"],
+            assignment_name=cfg["assignment_name"],
+            model_tier="lightweight",
+            teacher_context=cfg["teacher_context"],
+            next_week_topic=cfg.get("next_week_topic") or "",
+            progress_callback=lambda msg: log.info("  %s", msg),
+            stop_after="observations",  # skip themes/outliers/synthesis/feedback
+        )
+
+        if run_id is None:
+            log.error("Coding phase %s batch %d returned None run_id",
+                      assignment_id, batch_num + 1)
+            sys.exit(1)
+
+        last_run_id = run_id
+
+    log.info("Coding phase %s complete: last run_id=%s", assignment_id, last_run_id)
     _unload_model()
     _mark_done(assignment_id)
 
@@ -831,16 +858,22 @@ def run_observations_phase(model_key: str) -> dict:
         # Rebuild trajectory context for A4 to inspect for deficit language.
         # We call build_trajectory_context() directly, passing the A4 run as
         # "current" and A1+A2+A3 records as prior history.
-        a4_run = runs_by_assignment_name.get(
-            ASSIGNMENT_CONFIGS["A4"]["assignment_name"]
-        )
+        a4_aname = ASSIGNMENT_CONFIGS["A4"]["assignment_name"]
+        a4_run = runs_by_assignment_name.get(a4_aname)
         trajectory_ctx_a4 = ""
         if a4_run:
-            a4_run_id = a4_run.get("run_id", "")
-            # get_student_history with exclude_run_id=A4 gives us A1+A2+A3
-            prior_history = store.get_student_history(
-                sid, COURSE_ID, exclude_run_id=a4_run_id
+            # When coding is split into batches, A4 may span multiple run_ids.
+            # Use this student's actual A4 run_id (from their history) so that
+            # build_trajectory_context excludes the right run.
+            a4_run_id = next(
+                (r.get("run_id", "") for r in history
+                 if r.get("assignment_name") == a4_aname),
+                a4_run.get("run_id", ""),  # fallback: first batch's run_id
             )
+            # Filter by assignment name rather than exclude_run_id — handles
+            # the case where A4 codings are spread across multiple run_ids.
+            prior_history = [r for r in history
+                             if r.get("assignment_name") != a4_aname]
             if prior_history:
                 # Find A4 coding record for current signals
                 a4_coding: Dict = {}
@@ -1180,12 +1213,14 @@ def _print_summary(results: dict):
 # Subprocess runner (Metal memory isolation)
 # ---------------------------------------------------------------------------
 
-_INTER_PHASE_PAUSE = 5  # seconds
+_INTER_PHASE_PAUSE = 30   # seconds between phases
+_CODING_BATCH_SIZE  = 8   # students per batch; model unloads between batches to prevent Metal OOM
 
 
 def _run_phase_subprocess(phase_id: str, model: str, run_id: str = "1") -> Optional[int]:
     """Run a single phase in an isolated subprocess."""
     import subprocess as sp
+    import shutil
 
     if _phase_done(phase_id):
         log.info("Phase %s already done (flag file exists), skipping.", phase_id)
@@ -1197,6 +1232,15 @@ def _run_phase_subprocess(phase_id: str, model: str, run_id: str = "1") -> Optio
         "--model", model,
         "--run-id", run_id,
     ]
+
+    # On macOS with MLX, wrap in caffeinate to prevent sleep from invalidating
+    # the Metal GPU context mid-run (the leading cause of check_error SIGABRT crashes).
+    if sys.platform == "darwin" and MODELS.get(model, {}).get("name") == "mlx":
+        caffeinate = shutil.which("caffeinate")
+        if caffeinate:
+            cmd = [caffeinate, "-i"] + cmd
+            log.info("Using caffeinate to prevent Metal sleep-induced crashes")
+
     log.info("Subprocess for phase %s: %s", phase_id, " ".join(cmd))
     timeout = 3600 if phase_id == "OBSERVATIONS" else 7200  # 2h for coding+observations
     result = sp.run(cmd, timeout=timeout)
@@ -1279,8 +1323,12 @@ def main():
     if not args.no_subprocess:
         print(f"  Mode:   subprocess isolation (Metal memory reclaimed per phase)")
     if MODELS.get(model, {}).get("name") == "mlx":
-        print(f"  NOTE:   Run with 'caffeinate -i' to prevent Metal deadlocks on sleep:")
-        print(f"          caffeinate -i python scripts/run_equity_trajectory_tests.py --model {model}")
+        import shutil as _shutil
+        if _shutil.which("caffeinate") and not args.no_subprocess:
+            print(f"  Metal:  caffeinate -i auto-applied per phase (sleep protection)")
+        else:
+            print(f"  NOTE:   Run with 'caffeinate -i' to prevent Metal deadlocks on sleep:")
+            print(f"          caffeinate -i python scripts/run_equity_trajectory_tests.py --model {model}")
     print(f"{'═'*70}")
 
     if not args.no_subprocess:

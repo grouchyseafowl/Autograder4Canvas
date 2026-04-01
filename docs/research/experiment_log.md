@@ -6456,3 +6456,52 @@ The S031 ENGAGED/NONE edge case is worth keeping as an open design question: sho
 - P2 run is partially confounded by P data in `get_student_history()`
 - Corpus changed between runs (12→16 students) — not a pure replication
 - Same model, same temperature — no cross-model validation yet
+
+---
+
+## Test N Extension: Community Resilience Guard Across Cultural Contexts (2026-04-01, 16:07)
+
+**File**: `data/research/raw_outputs/test_n_4axis_submissions_gemma27b_cloud_2026-04-01_1607.json`
+**Model**: `google/gemma-3-27b-it` (free tier, OpenRouter)
+**Temperature**: 0.1
+**Git commit**: `d4253eb`
+**Duration**: 698.5s
+**Designed to test**: Does the FOUR_AXIS_SUBMISSION_SYSTEM community resilience guard generalize to community contexts beyond the original WB06 (Somali family / mosque food assistance)? Three new cases test Indigenous tribal distribution, Black church food pantry, and West African susu rotating credit. WB14 tests for false positive on analytical writing about community wealth (no personal hardship).
+
+**Method**: Test N corpus extended from 17 → 21 students (7 corpus + WB01–WB14). Same `FOUR_AXIS_SUBMISSION_SYSTEM` prompt, same evaluation structure. WB11–WB14 were added in commit `f9e2988` / `924d139`; this is their first run.
+
+**Results — WB11–14 (new cases)**:
+
+| ID | Student | Pattern | Expected | Got | Notes |
+|----|---------|---------|----------|-----|-------|
+| WB11 | Kaya Runningwater | Indigenous / tribal food distribution + housing crowding | CRISIS | CRISIS | ✓ |
+| WB12 | Jasmine Rollins | Black church food pantry after parent job loss | CRISIS | CRISIS | ✓ |
+| WB13 | Amara Osei | Ghanaian susu rotating credit after eviction | CRISIS | CRISIS | ✓ |
+| WB14 | Marcus Tran | Control — analytical writing about community wealth frameworks | ENGAGED | ENGAGED | ✓ no false positive |
+
+All prior WB01–WB10 results stable. S031 still ENGAGED (expect NONE) — known recurring issue, not related to this extension.
+
+**Qualitative findings — WB11–13**:
+
+The model consistently names the tension between resilience framing and underlying material conditions, rather than accepting the resilience register at face value:
+
+- **WB11**: *"housing and food insecurity, even framed within a narrative of community resilience"* — flags the framing explicitly.
+- **WB12**: *"While framing this within a community support network, the underlying conditions indicate active material hardship"* — same pattern, different community context.
+- **WB13**: *"Recent housing loss due to rent increase and mother's immigration status preventing a bank loan... relying on a community-based mutual aid system ('susu') for a deposit"* — reads material facts without being deflected by the mutual-aid frame.
+
+In all three cases, the model doesn't mistake community interdependence for absence of crisis. It names the support system accurately while still surfacing the underlying precarity that triggered it.
+
+**WB14 control**: *"The writing is analytical and reflects thoughtful consideration of the frameworks"* — ENGAGED classification, confidence 0.95. No false positive on academic engagement with community wealth as a topic.
+
+**Implications**:
+
+The community resilience guard (established by WB06 in prior runs) is not specific to the Somali/mosque context. It generalizes across at least four distinct cultural community support structures: mosque food assistance, tribal distribution, Black church pantry, West African susu. The guard's mechanism appears to be material-conditions reading rather than pattern-matching to a specific cultural vocabulary — the model asks "what are the underlying conditions?" regardless of how community support is named.
+
+WB14 confirms the guard doesn't over-fire: writing analytically about community wealth as a scholarly concept does not trigger CRISIS/BURNOUT. The model distinguishes between "experiencing community-mediated crisis" and "analyzing community resilience as an intellectual framework."
+
+**Limitations**:
+
+- n=1 per case; all four are novel (no prior runs to compare)
+- Self-authorship: all four submissions were designed to test this specific guard; real student writing may use more ambiguous framing
+- No cross-model validation — only 27B tested here
+- S031 NONE→ENGAGED mismatch persists across all Test N runs; the NONE axis may be under-represented in the prompt's examples or the model may interpret minimal-effort submissions as ENGAGED by default
