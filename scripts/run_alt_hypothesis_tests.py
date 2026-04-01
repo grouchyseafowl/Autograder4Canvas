@@ -403,6 +403,129 @@ WELLBEING_SIGNAL_CASES = [
             "racism without fixing everything else too."
         ),
     },
+
+    # -----------------------------------------------------------------------
+    # WB11–WB13: Community resilience register over crisis-level material
+    # conditions. Each student describes genuine food/housing/financial crisis
+    # but frames it through community mutual aid — "we take care of each other."
+    #
+    # These test the MINIMIZED DISCLOSURE AND COMMUNITY RESILIENCE guard:
+    # the classifier must see through the resilience framing to the underlying
+    # material conditions. Three distinct community contexts:
+    #   WB11 — Indigenous student, tribal food distribution + housing crowding
+    #   WB12 — Black student, church food pantry after parent's job loss
+    #   WB13 — Ghanaian immigrant student, susu rotating credit after eviction
+    #
+    # WB14 is the matching control: academic analysis of community wealth
+    # concepts (Yosso) with NO personal crisis signal. Guard must not fire.
+    # -----------------------------------------------------------------------
+    {
+        "id": "WB11",
+        "name": "Kaya Runningwater",
+        "signal_type": "community_resilience_indigenous",
+        "expected_surface": True,
+        "description": (
+            "Food/housing insecurity — Indigenous student, tribal community mutual aid "
+            "framing obscures crisis-level material conditions"
+        ),
+        "text": (
+            "Crenshaw's intersectionality framework explains something I've watched my "
+            "whole life. Being Indigenous and poor and living far from a city means the "
+            "systems stack against you in ways that aren't visible unless you're in it. "
+            "The reading about how these categories aren't separate but multiply each "
+            "other — that's exactly the reservation, exactly my family.\n\n"
+            "Things are harder than usual at home right now. My uncle got hurt at the "
+            "construction site and can't work, and my grandma's place has six of us "
+            "there now. We're getting food from the tribal distribution program twice a "
+            "month and my aunt is doing beadwork to sell. We've always taken care of "
+            "each other this way — reciprocity is part of how we live, that's not new. "
+            "I don't want to make it sound like we're struggling when the truth is we "
+            "know how to hold each other up. But I also think the reading is right that "
+            "this isn't how it should have to be, that the conditions were created by "
+            "specific policies and that calling it community strength doesn't make the "
+            "dispossession invisible."
+        ),
+    },
+    {
+        "id": "WB12",
+        "name": "Jasmine Rollins",
+        "signal_type": "community_resilience_black_church",
+        "expected_surface": True,
+        "description": (
+            "Food/financial insecurity — church mutual aid framing; student actively "
+            "reframes reliance on food pantry as community (not charity)"
+        ),
+        "text": (
+            "The intersectionality reading made me think about how race and class aren't "
+            "separate in my neighborhood. People who have money have completely different "
+            "experiences at the exact same intersection and I see it every day.\n\n"
+            "My mom got laid off six weeks ago from the hotel. We've been okay because "
+            "our church has a food pantry and they helped with the electric bill last "
+            "month too. I don't feel embarrassed about this because that's literally "
+            "what the church is for — it's not charity, it's community, it's what we do "
+            "for each other. But I also know that we're not okay okay, like my mom is "
+            "applying everywhere and it's stressful and I'm trying not to think about it "
+            "too much so I can focus on school. The reading about how poverty isn't an "
+            "individual failure but structural — that matters to me right now. Our church "
+            "community is strong but the fact that we need it this way isn't something "
+            "I chose."
+        ),
+    },
+    {
+        "id": "WB13",
+        "name": "Amara Osei",
+        "signal_type": "community_resilience_immigrant_network",
+        "expected_surface": True,
+        "description": (
+            "Housing displacement + financial crisis — West African immigrant mutual aid "
+            "(susu rotating credit) framing; student intellectualizes crisis as theory"
+        ),
+        "text": (
+            "Crenshaw's intersectionality framework connects well to what I've been "
+            "thinking about since we talked about community cultural wealth. Immigration "
+            "status affects where you can work, which affects where you can live, which "
+            "affects your children's school, and these aren't separate problems.\n\n"
+            "My family had to leave our apartment two months ago when the new owners "
+            "raised the rent. We stayed with my aunt for a while and now we're in a "
+            "place that's smaller but manageable. Our community helped — there's a susu "
+            "group among the Ghanaian families at our church where people contribute "
+            "every month and someone gets the pot when they need it most. My mom used "
+            "hers for the deposit. I feel grateful and I also feel like this reading is "
+            "describing exactly how it works: her immigration status meant she couldn't "
+            "get a bank loan, the race and class meant housing options were already "
+            "limited, and the community caught her where the system didn't. We are "
+            "resilient but the need for that resilience isn't random."
+        ),
+    },
+    {
+        # Control: academic analysis of community wealth concepts — NO personal
+        # crisis. Student writes about susu, church pantries, extended family
+        # housing AS THEORETICAL EXAMPLES, not personal circumstances.
+        # Guard must not fire: analytical writing about these topics ≠ crisis.
+        "id": "WB14",
+        "name": "Marcus Tran",
+        "signal_type": "control_analytical_community_wealth",
+        "expected_surface": False,
+        "description": (
+            "Control: academic analysis of community wealth and mutual aid — no "
+            "personal crisis signal; must NOT be surfaced"
+        ),
+        "text": (
+            "Crenshaw's intersectionality framework connects to Yosso's community "
+            "cultural wealth, which I've been thinking about since my sociology class. "
+            "Yosso argues that communities of color possess forms of capital that "
+            "deficit models don't count — navigational capital, familial capital, "
+            "social capital. The mutual aid networks that appear in Crenshaw's case "
+            "studies are exactly this: susu groups, church food pantries, extended "
+            "family housing are not evidence of poverty as personal failure. They are "
+            "sophisticated collective infrastructure that serves the same function as "
+            "the safety nets middle-class families take for granted, just in forms that "
+            "institutions don't code as 'capital.' I think intersectionality is useful "
+            "here because it shows how the same resource is valued differently based on "
+            "who holds it. A family trust fund is capital. A susu group is 'informal.' "
+            "Both move money through networks of trust when someone needs it."
+        ),
+    },
 ]
 
 # Wellbeing signal keywords for Test G evaluation
