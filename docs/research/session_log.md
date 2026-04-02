@@ -18,21 +18,11 @@ Old content gets archived to `docs/research/logs/` when > 200 lines.
 ### Active background tasks
 None.
 
-### P3 state — CRASHED, NEEDS RESTART
+### P3 state — RUNNING (task bk3un5vea, started ~16:15)
 
-P3 crashed mid-A1 (student 13/16) due to Metal OOM (`mlx::core::gpu::check_error` SIGABRT). Root cause: Metal memory fragmentation accumulates across 16 sequential LLM calls within a single subprocess. The crash happens at the 13th–14th student.
+Restarted after Metal OOM crash. New run has caffeinate auto-applied per phase + mid-phase batch unload (8 students/batch). Expected ~6-7h total.
 
-Two partial runs in InsightsStore for EQ_TEST_P3:
-- `361411a0` — A1, INCOMPLETE, 13 codings (crashed)
-- `3f34465f` — A2, INCOMPLETE, 16 codings (orchestrator continued after crash; A2 data invalid — built on incomplete A1 trajectory context)
-
-Neither affects restart: `get_student_history()` only reads COMPLETED runs.
-
-**To restart P3**:
-```bash
-caffeinate -i python3 scripts/run_equity_trajectory_tests.py --model gemma12b --run-id P3 --reset-flags
-```
-`--reset-flags` is safe (equity flags dir is empty). Expected ~6-7h with new batching.
+Two stale INCOMPLETE runs remain in InsightsStore for EQ_TEST_P3 from the crash (`361411a0` A1, `3f34465f` A2) — do not affect results; `get_student_history()` only reads COMPLETED runs.
 
 ### Equity flags (`.equity_flags/`)
 Empty.
@@ -82,7 +72,7 @@ A1.done, A2.done, A3.done, A4.done, REPORTS.done — from prior Test Q run. **Mu
 
 ## Queue — IN ORDER (MLX serial constraint applies)
 
-### 1. P3 — RUNNING (background bps52a800)
+### 1. P3 — RUNNING (background bk3un5vea, started ~16:15)
 
 **What P3 tests**: Clean equity replication with:
 - Isolation fix (EQ_TEST_P3 course_id, no history bleed)
@@ -126,19 +116,18 @@ Results: 4/4 correct. WB11/12/13 = CRISIS, WB14 = ENGAGED. Guard generalizes acr
 |---------|------|-----------|
 | Silence-after-disclosure: 9/9 | P + P2 | **Replicated** — 3 disclosure types (deportation, racial violence, disability) |
 | ESL transfer-not-as-stretch (E002) | P + P2 | **Replicated failure** — prompt fix in P3, awaiting clean test |
-| AAVE/code-switching: solid | P + P2 | Replicated |
-| Multilingual (Arabic/Mandarin/Spanish/Tagalog) | P2 | New — tested in P3 for first time with prompt fix |
-| Disability/chronic illness | P vs P2 | Unstable — E005 pass→fail; P2 confounded, P3 will clarify |
-| Working student timestamps: infra present | P3 | Infrastructure confirmed present (corpus has timestamps, trajectory context processes them) |
+| AAVE/code-switching: solid | P + P2 | Replicated (E001 4/4, E003 3/3 both runs) |
+| Multilingual (Arabic/Mandarin/Spanish/Tagalog) | P2 | 16/16 in P2 (confounded); P3 = first clean run with isolation + prompt fix |
+| Disability/chronic illness | P vs P2 | Unstable — E005 4/4→3/4; different direction each run |
+| Working student (E009) timestamp gap | P | Infra gap identified in P (3/5); P2 5/5 confounded by history bleed; P3 = first clean test |
 | Tone policing missed by trajectory report (T006) | Q | Single run — Q3 prompt fix applied |
-| Community resilience guard (WB06) | Q4/Q5 | Single test — extensions WB11-14 pending |
+| Community resilience guard | Test N + extension | 4/4 cultural contexts (Indigenous, Black church, susu, Somali) + WB14 control ✓. WB06 was unstable in one run (CRISIS→BURNOUT, March 29) but stable since. |
 
 ---
 
 ## Key infrastructure notes for new monitor
 
 - **MLX serial constraint**: Do NOT run two MLX tasks simultaneously. P3 must finish before Q3 starts.
-- **Test N extension is cloud-safe**: Can run in parallel with P3 right now. Use `--no-subprocess`.
 - **Trajectory flags are stale**: `.trajectory_flags/` has all phases done from prior Test Q run. Always `--reset-flags` before Q3.
 - **Commit before leaving**: `git add docs/research/session_log.md docs/research/experiment_log.md src/ scripts/ && git commit -m "Research session $(date +%Y-%m-%d): [summary]"`
-- **P2 confound documented**: Test P2's 95% rate is not reliable — `get_student_history()` pulled Test P's observations in. P3 is the clean baseline.
+- **P2 confound documented**: Test P2's 94.6% rate is not reliable — `get_student_history()` pulled Test P's observations in. P3 is the clean baseline.

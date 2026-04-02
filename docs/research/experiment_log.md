@@ -6416,7 +6416,7 @@ The S031 ENGAGED/NONE edge case is worth keeping as an open design question: sho
 **Important methodological note**: Not a fully clean replication. The `get_student_history()` function returns observations from ALL completed EQ_TEST_1 runs, including Test P. Later phases in P2 (A2–A4) had access to Test P's observations as historical context, which was absent in Test P. This confounds comparison for students where trajectory context matters (E009 Marcus Stone).
 **Duration**: ~5h (05:00–10:12)
 
-### Results: 53/56 checks (95%), 13/16 all-pass
+### Results: 53/56 checks (94.6%), 13/16 all-pass
 
 | Risk area | Test P | Test P2 | Stable? |
 |-----------|--------|---------|---------|
@@ -6479,7 +6479,7 @@ The S031 ENGAGED/NONE edge case is worth keeping as an open design question: sho
 | WB13 | Amara Osei | Ghanaian susu rotating credit after eviction | CRISIS | CRISIS | ✓ |
 | WB14 | Marcus Tran | Control — analytical writing about community wealth frameworks | ENGAGED | ENGAGED | ✓ no false positive |
 
-All prior WB01–WB10 results stable. S031 still ENGAGED (expect NONE) — known recurring issue, not related to this extension.
+All WB01–WB10 classifications stable vs March 30 run. S031 shifted NONE → ENGAGED (was correct in March 30 run; classification is borderline at temp=0.1).
 
 **Qualitative findings — WB11–13**:
 
@@ -6504,4 +6504,4 @@ WB14 confirms the guard doesn't over-fire: writing analytically about community 
 - n=1 per case; all four are novel (no prior runs to compare)
 - Self-authorship: all four submissions were designed to test this specific guard; real student writing may use more ambiguous framing
 - No cross-model validation — only 27B tested here
-- S031 NONE→ENGAGED mismatch persists across all Test N runs; the NONE axis may be under-represented in the prompt's examples or the model may interpret minimal-effort submissions as ENGAGED by default
+- S031 NONE/ENGAGED classification is unstable across runs (was NONE in March 30, ENGAGED here); the model is borderline on minimal-effort submissions at temp=0.1
