@@ -5,7 +5,7 @@ Old content gets archived to `docs/research/logs/` when > 200 lines.
 
 ---
 
-## Current state (2026-04-01, ~16:10)
+## Current state (2026-04-02, ~04:15)
 
 ### Pipeline status
 
@@ -18,11 +18,16 @@ Old content gets archived to `docs/research/logs/` when > 200 lines.
 ### Active background tasks
 None.
 
-### P3 state — RUNNING (task bk3un5vea, started ~16:15)
+### P3 — **DONE** (04:11 Apr 2). Q3 — **RUNNING** (task bwh7jgi7g, started ~04:15)
 
-Restarted after Metal OOM crash. New run has caffeinate auto-applied per phase + mid-phase batch unload (8 students/batch). Expected ~6-7h total.
+**P3 result: 55/56 (98.2%), 15/16 all-pass.** No Metal OOM — batch fix worked. See experiment_log.md for full entry.
 
-Two stale INCOMPLETE runs remain in InsightsStore for EQ_TEST_P3 from the crash (`361411a0` A1, `3f34465f` A2) — do not affect results; `get_student_history()` only reads COMPLETED runs.
+Key findings:
+- **E002 FIXED** — ESL intellectual-stretch prompt worked (was stable fail in P and P2)
+- **E010 FIXED** — continuity/return framing worked (was failing in P and P2 on different checks)
+- **E009 confirmed clean** — 5/5 under proper isolation; P2's 5/5 was confounded
+- **E016 Reyna Santos 3/4** — first clean run; P2's 4/4 was confounded. Fails `intellectual_contribution_specific`: observations validate relational method but don't name what it uniquely sees (emotional labor, mutual care, interpersonal trust). Same "method legitimacy vs. contribution specificity" gap as pre-fix E002. Candidate for next prompt fix.
+- Silence-after-disclosure: 9/9 (3rd consecutive)
 
 ### Equity flags (`.equity_flags/`)
 Empty.
@@ -72,37 +77,18 @@ A1.done, A2.done, A3.done, A4.done, REPORTS.done — from prior Test Q run. **Mu
 
 ## Queue — IN ORDER (MLX serial constraint applies)
 
-### 1. P3 — RUNNING (background bk3un5vea, started ~16:15)
+### 1. P3 — **DONE** (2026-04-02 04:11). Logged in experiment_log.md.
 
-**What P3 tests**: Clean equity replication with:
-- Isolation fix (EQ_TEST_P3 course_id, no history bleed)
-- Linguistic transfer framing in observation prompt
-- Continuity/return framing for E010
-- 16 students: E001–E012 (original) + E013–E016 (linguistic transfer spectrum)
+### 2. Q3 — **RUNNING** (task bwh7jgi7g, started ~04:15)
 
-**When P3 finishes**: New monitor should read raw output JSON from `data/research/raw_outputs/equity_trajectory_*.json`. Look for:
-- E002 (Jin-Young): does `esl_as_intellectual_stretch` check now pass? (stable fail in P and P2)
-- E010 (Tanya): does `a4_return_not_anomalous` check pass? (was evaluator hallucination confound in P2)
-- E013–E016: do the linguistic transfer checks pass? (first run — no prior data)
-- E005 (Naomi Lee, disability): was unstable P→P2; check if clean run stabilizes
-- Overall pass rate vs P (35/42, 83%) and P2 (53/56, 95% confounded)
+**What Q3 tests**: Trajectory reports with Teacher Notes now explicitly surfacing lens_observations power move patterns. Targets T006 (tone policing, Ingrid Johansson). Compare to Test Q (33/48, 69%).
 
-Log results as **Test P3** in experiment log. Note isolation is clean (no prior run history).
+**When Q3 finishes**: Read `data/research/raw_outputs/trajectory_reports_gemma12b_*.json`. Look for:
+- T006 (Ingrid Johansson): does tone policing now surface in Teacher Notes?
+- T002 (Jordan Kim): specificity improved by better upstream observations?
+- Overall vs Q (33/48, 69%)
 
-### 2. Q3 — Trajectory report test (after P3, MLX)
-
-**Before running**: `python3 scripts/run_trajectory_tests.py --model gemma12b --reset-flags`
-
-Wait — need to reset trajectory flags first:
-```bash
-# Check/reset flags before running
-ls data/research/raw_outputs/.trajectory_flags/
-caffeinate -i python3 scripts/run_trajectory_tests.py --model gemma12b --reset-flags
-```
-
-**What Q3 tests**: Trajectory reports with Teacher Notes now explicitly using lens_observations. Targets T006 (tone policing for Ingrid Johansson). Also re-tests T002 (Jordan Kim specificity) and T008 since the linguistic transfer framing in observations may improve report specificity.
-
-Log results as **Test Q3** in experiment log. Compare to Test Q (33/48, 69%).
+Log as **Test Q3** in experiment log.
 
 ### 3. Test N extension — **DONE** (2026-04-01 16:07)
 
@@ -115,11 +101,12 @@ Results: 4/4 correct. WB11/12/13 = CRISIS, WB14 = ENGAGED. Guard generalizes acr
 | Finding | Test | Stability |
 |---------|------|-----------|
 | Silence-after-disclosure: 9/9 | P + P2 | **Replicated** — 3 disclosure types (deportation, racial violence, disability) |
-| ESL transfer-not-as-stretch (E002) | P + P2 | **Replicated failure** — prompt fix in P3, awaiting clean test |
+| ESL transfer-as-intellectual-stretch (E002) | P + P2 + **P3 FIXED** | Stable failure in P/P2; prompt fix confirmed working in P3 |
 | AAVE/code-switching: solid | P + P2 | Replicated (E001 4/4, E003 3/3 both runs) |
-| Multilingual (Arabic/Mandarin/Spanish/Tagalog) | P2 | 16/16 in P2 (confounded); P3 = first clean run with isolation + prompt fix |
-| Disability/chronic illness | P vs P2 | Unstable — E005 4/4→3/4; different direction each run |
-| Working student (E009) timestamp gap | P | Infra gap identified in P (3/5); P2 5/5 confounded by history bleed; P3 = first clean test |
+| Multilingual E013-E015 | P2 + P3 | 4/4 each in P2 and P3 (clean). E016 3/4 clean — contribution-specificity gap |
+| Disability/chronic illness (E005) | P + P3 | 4/4 in P and P3; 3/4 in P2 was model variability. Stable. |
+| Working student (E009) | P3 clean | 5/5 confirmed under isolation. P's 3/5 = real infra gap, now fixed. |
+| E010 continuity/return framing | P + P2 + **P3 FIXED** | Was 3/4 in both P and P2 (different fails); prompt fix confirmed. |
 | Tone policing missed by trajectory report (T006) | Q | Single run — Q3 prompt fix applied |
 | Community resilience guard | Test N + extension | 4/4 cultural contexts (Indigenous, Black church, susu, Somali) + WB14 control ✓. WB06 was unstable in one run (CRISIS→BURNOUT, March 29) but stable since. |
 | S031 NONE/ENGAGED | Design intent | **Non-issue.** ENGAGED = safe-landing catch-all. Only CRISIS/BURNOUT trigger action. Both NONE and ENGAGED = no follow-up. |

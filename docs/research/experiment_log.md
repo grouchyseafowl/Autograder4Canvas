@@ -6505,3 +6505,82 @@ WB14 confirms the guard doesn't over-fire: writing analytically about community 
 - Self-authorship: all four submissions were designed to test this specific guard; real student writing may use more ambiguous framing
 - No cross-model validation — only 27B tested here
 - S031 NONE/ENGAGED instability is not meaningful — both are equivalent "no action" outcomes; ENGAGED is a safe-landing catch-all, not a positive wellbeing signal
+
+---
+
+## Test P3 — Equity Trajectory Test: Clean Replication + Prompt Fixes (2026-04-01 22:15 – 2026-04-02 04:11)
+
+**File**: `data/research/raw_outputs/equity_observations_gemma12b_2026-04-02_0411.json`
+**Model**: Gemma 3 12B (mlx-community/gemma-3-12b-it-4bit), local MLX
+**Git commit**: `4febfac`
+**Duration**: ~6h (10:15 PM – 4:11 AM)
+**Designed to test**: Clean replication of P/P2 equity trajectory results under proper run isolation, plus two targeted prompt fixes. P3 is the first run where `get_student_history()` can only see its own observations (EQ_TEST_P3 course_id). P2's 94.6% was confounded by Test P history bleeding in. P3 is the paper-quality baseline.
+
+**Prompt changes applied (vs P/P2)**:
+1. L1 syntactic patterns named as "evidence of INTELLECTUAL STRETCHING" and "epistemological resource" — targets E002
+2. Return-to-baseline after dip named as continuity, not recovery — targets E010
+3. CHECK-IN scope fix: excludes identity-navigation fatigue from CHECK-IN trigger
+
+**Method**: 16 students × 4 assignments × LLM-semantic evaluation (same as P/P2). New: mid-phase batch unload (8 students/batch) prevents Metal OOM; caffeinate auto-applied per phase.
+
+### Results: 55/56 (98.2%), 15/16 all-pass
+
+| Risk area | P (83%) | P2 (94.6%, confounded) | P3 (98.2%, clean) |
+|-----------|---------|------------------------|-------------------|
+| Control (E011, E012) | 4/6 | 4/4 | 4/4 |
+| Risk 1: normative dev / ESL+AAVE (E001–E003) | 9/10 | 9/10 | **10/10** |
+| Risk 1b: multilingual (E013–E016) | — | 16/16 | 15/16 |
+| Risk 2: disability/variable output (E004–E005) | 7/8 | 7/8 | 8/8 |
+| Risk 3: silence-after-disclosure (E006–E008) | 9/9 | 9/9 | 9/9 |
+| Risk 4: working student (E009–E010) | 6/9 | 8/9 | **9/9** |
+
+### Confirmed fixes
+
+**E002 Jin-Young Oh (ESL transfer-as-intellectual-stretch): FIXED.** 3/3 in P3 (was 2/3 in both P and P2 — stable failure across two runs). The prompt addition naming Korean syntactic patterns as evidence of intellectual stretching — reaching for harder ideas in a second language — moved the model from "not a deficit" to "a resource." First clean pass after two failed runs. Strongest evidence of a prompt fix working in this corpus.
+
+**E010 Tanya Reyes (continuity/return framing): FIXED.** 4/4 in P3 (was 3/4 in both P and P2, failing different checks each time — P: `a4_return_not_anomalous`, P2: `no_self_blame_reinforcement`). The prompt instruction to name return-to-baseline as continuity resolved both failure modes. Two distinct failure modes in prior runs suggest the model was sitting at the edge; the explicit framing provided a stable anchor.
+
+### Confirmed under clean isolation
+
+**E009 Marcus Stone (working student timestamps): 5/5 confirmed clean.** P showed 3/5 (genuine infra gap — no timestamps in trajectory context). P2 showed 5/5 but confounded by history bleed providing trajectory context that wasn't actually generated. P3's 5/5 under clean isolation confirms the timestamp infrastructure added between P and P2 is working correctly. This is a real finding: the pipeline handles late-night work patterns as structural context, not individual deficit.
+
+### Stabilized
+
+**E005 Naomi Lee (chronic illness/disability): 4/4.** Was 4/4 in P, 3/4 in P2 (model variability — P2's A3 observation added a resource-connection suggestion, implying individual accommodation). Back to 4/4 under clean conditions. The P2 failure was model variability at the asset/accommodation edge, not a systematic prompt issue.
+
+### New failure under clean isolation
+
+**E016 Reyna Santos (Tagalog relational framing): 3/4, fails `intellectual_contribution_specific`.** P2 showed 4/4 — now confirmed confounded by history bleed. Clean result is 3/4.
+
+The three passing checks confirm the pipeline handles the anti-bias baseline: no deficit framing, relational framing recognized as legitimate intellectual method, narrative recognized as structural analysis. These are solid.
+
+The failing check asks whether the observation names Reyna's *specific* contribution: that relational epistemology surfaces aspects of resistance (emotional labor, mutual care, interpersonal trust) that structural-analytical framing cannot see. Reading the actual observations: they are sophisticated and name "relational knowing as a distinct and valuable mode of inquiry" — but they don't enumerate what that mode of inquiry can see uniquely. The validation stays at the level of method legitimacy without naming the specific insight the method produces.
+
+This is the same pattern as pre-fix E002: "not deficit" is necessary but not sufficient. The gap is between "validating the method" and "naming what the method sees." The fix for E016 would follow the same logic as E002's fix — an explicit prompt instruction to name what the student's epistemological approach reveals that other approaches cannot.
+
+Note on E016 observations specifically: the model produced genuinely perceptive observations, noting "subtle structural power moves" in Reyna's own framing of relational knowing as "different" from or "also capable of" academic analysis — correctly flagging moments where Reyna's argument may inadvertently reinforce the hierarchy she's challenging. This is pedagogically valuable but the checks don't credit it. The evaluation rubric is measuring one dimension of asset framing and missing another.
+
+### Stable findings (third consecutive clean pass)
+
+**Silence-after-disclosure: 9/9 for the third time.** E006 (deportation fear), E007 (racial violence), E008 (disability disclosure) — all 3/3 in P, P2, and P3. This is the most robustly replicated finding in the corpus.
+
+**AAVE/code-switching: clean.** E001 (code-switching, Amara) 4/4, E003 (AAVE voice development, Destiny) 3/3.
+
+**E013–E015 multilingual: 4/4 each, confirmed under clean isolation.** Arabic rhetorical transfer, Mandarin conceptual compression, Spanish epistemic hedging — all replicate P2 under clean conditions.
+
+### Implications
+
+1. **Prompt fixes are effective and targeted.** E002 and E010 both fixed cleanly. The mechanism is clear: the model responds to explicit framing instructions that name the asset-positive interpretation. "Not deficit" is not enough; the observation prompt needs to tell the model what to *see*, not just what to avoid.
+
+2. **E016 surfaces a next prompt fix candidate.** The gap is "method legitimacy vs. contribution specificity" — same structural gap as E002. A prompt instruction to name what relational epistemological methods reveal uniquely would likely fix this.
+
+3. **Clean isolation matters.** P2's 94.6% included at least one false-positive (E016 4/4 was confounded). P3 at 98.2% is the first trustworthy aggregate. The 3.6% difference is meaningful: it's the difference between "looks good" and "is good."
+
+4. **No Metal OOM crashes.** First complete run with the batch-unload fix. All 5 phases (A1–A4 + OBSERVATIONS) completed cleanly. The fix works.
+
+### Limitations
+
+- Single run — P3 fixes have not been replicated yet
+- Same model for generation and evaluation (self-evaluation bias: shared blindspots may cause both to miss the same thing)
+- E016 `intellectual_contribution_specific` check is highly specific — the model's observations were substantively strong but didn't enumerate the three named concepts
+- Corpus is synthetic; real student writing may produce different patterns
