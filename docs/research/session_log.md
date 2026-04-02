@@ -122,6 +122,7 @@ Results: 4/4 correct. WB11/12/13 = CRISIS, WB14 = ENGAGED. Guard generalizes acr
 | Working student (E009) timestamp gap | P | Infra gap identified in P (3/5); P2 5/5 confounded by history bleed; P3 = first clean test |
 | Tone policing missed by trajectory report (T006) | Q | Single run — Q3 prompt fix applied |
 | Community resilience guard | Test N + extension | 4/4 cultural contexts (Indigenous, Black church, susu, Somali) + WB14 control ✓. WB06 was unstable in one run (CRISIS→BURNOUT, March 29) but stable since. |
+| S031 NONE/ENGAGED | Design intent | **Non-issue.** ENGAGED = safe-landing catch-all. Only CRISIS/BURNOUT trigger action. Both NONE and ENGAGED = no follow-up. |
 
 ---
 

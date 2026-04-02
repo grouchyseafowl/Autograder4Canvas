@@ -6278,7 +6278,7 @@ The multi-axis format is architecturally superior for the ENGAGED + CRISIS/BURNO
 
 Both guards are production-ready and validated on the full corpus. The signal framing fix also works: the model's WB06 signal text names material conditions without adding editorially charged language about disclosure style. This closes the open finding from the WB06 probe ("signal text 'despite attempts to minimize' should be reviewed for tone").
 
-The S031 ENGAGED/NONE edge case is worth keeping as an open design question: should the 4-axis schema have a definition of ENGAGED that explicitly covers low-affect-but-not-distressed submissions, or is NONE the correct classification for submissions with no wellbeing signal in either direction?
+**S031 ENGAGED/NONE is not a meaningful failure.** Design intent confirmed: ENGAGED is a safe-landing catch-all to prevent miscategorization of life-experience writing. The only actionable categories are CRISIS and BURNOUT; ENGAGED and NONE both result in no teacher follow-up. S031 landing on either is correct behavior. Stop tracking this as a mismatch.
 
 ### Limitations
 
@@ -6504,4 +6504,4 @@ WB14 confirms the guard doesn't over-fire: writing analytically about community 
 - n=1 per case; all four are novel (no prior runs to compare)
 - Self-authorship: all four submissions were designed to test this specific guard; real student writing may use more ambiguous framing
 - No cross-model validation — only 27B tested here
-- S031 NONE/ENGAGED classification is unstable across runs (was NONE in March 30, ENGAGED here); the model is borderline on minimal-effort submissions at temp=0.1
+- S031 NONE/ENGAGED instability is not meaningful — both are equivalent "no action" outcomes; ENGAGED is a safe-landing catch-all, not a positive wellbeing signal
