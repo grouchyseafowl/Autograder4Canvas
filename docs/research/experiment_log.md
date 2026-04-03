@@ -6584,3 +6584,77 @@ Note on E016 observations specifically: the model produced genuinely perceptive 
 - Same model for generation and evaluation (self-evaluation bias: shared blindspots may cause both to miss the same thing)
 - E016 `intellectual_contribution_specific` check is highly specific — the model's observations were substantively strong but didn't enumerate the three named concepts
 - Corpus is synthetic; real student writing may produce different patterns
+
+---
+
+## Test Q3 — Trajectory Reports: Teacher Notes Fix + P3 Upstream Observations (2026-04-02 04:15 – 09:56)
+
+**File**: `data/research/raw_outputs/trajectory_reports_gemma12b_2026-04-02_0956.json`
+**Model**: Gemma 3 12B (mlx-community/gemma-3-12b-it-4bit), local MLX
+**Git commit**: `9aca87e`
+**Duration**: ~5h40m
+**Designed to test**: Two changes from Test Q (baseline 33/48, 68.8%): (1) `TRAJECTORY_REPORT_PROMPT` Teacher Notes section now explicitly instructs LLM to surface lens_observations power move patterns and equity concerns — targets T006 Ingrid Johansson (tone policing missed in Q). (2) Report generator runs over P3 observations (clean, 55/56), vs Q running over Test P observations (confounded by history bleed).
+
+### Results: 35/48 (72.9%), 9/17 all-pass (vs Q: 33/48, 68.8%, 9/17 all-pass)
+
+| Student | Q | Q3 | Change |
+|---------|---|----|--------|
+| T001 Maria Ndiaye | 3/3 ✓ | 3/3 ✓ | — |
+| T002 Jordan Kim | 1/3 | **3/3 ✓** | +2 |
+| T003 DeShawn Williams | 2/2 ✓ | 2/2 ✓ | — |
+| T004 Aisha Patel | 3/3 ✓ | 2/3 | −1 |
+| T005 Tyler Nguyen | 2/2 ✓ | 2/2 ✓ | — |
+| T006 Ingrid Johansson | 0/3 | **0/3** | 0 |
+| T007 Sophia Chen | 1/2 | **2/2 ✓** | +1 |
+| T008 Marcus Jackson | 0/4 | **2/4** | +2 |
+| T009 Rosa Gutierrez-Santos | 2/3 | 2/3 | — |
+| T010 Alex Rivera | 2/4 | 2/4 | — |
+| T011 Jaylen Carter | 3/3 ✓ | 3/3 ✓ | — |
+| T012 Destiny Washington | 3/3 ✓ | 3/3 ✓ | — |
+| T013 Kai Robinson | 2/2 ✓ | 2/2 ✓ | — |
+| T014 Ixchel Ramirez Caal | 2/3 | 2/3 | — |
+| T015 Nolan Begay | 3/3 ✓ | 3/3 ✓ | — |
+| T016 Connor Mitchell | 1/2 | 1/2 | — |
+| T017 River Chen-Nakamura | 3/3 ✓ | 1/3 | −2 |
+
+### Key findings
+
+**T002 Jordan Kim: 1/3 → 3/3 (fixed).** Was failing `earlier_strength_recognized` and `structural_context_present`. Both pass in Q3. Jordan's case is burnout trajectory — P3 observations had better access to clean history (proper isolation, no history bleed), which likely gave the report generator accurate structural context. This is an indirect benefit of the P3 isolation fix, not the Teacher Notes change.
+
+**T006 Ingrid Johansson: 0/3 → 0/3 (Teacher Notes fix had no effect).** Still failing all three: `genuine_breakthrough_recognized`, `power_moves_named`, `partial_regression_noted`. The report opens with "Okay, here's a draft..." preamble and describes Ingrid's arc in generic terms — intellectual growth across the semester, strong critical thinking. Nothing about A3's property tax formula breakthrough. Nothing about the "both sides" power move. Nothing about A4 partial regression.
+
+Root cause confirmed: the problem is upstream, not in Teacher Notes. The Teacher Notes section can only surface what's already in the observation summaries. For tone policing to appear in Teacher Notes, the observation for A3 and A4 must have already named (a) the specific breakthrough and (b) the "both sides"/"individual agency" pattern as a structural power move. P3's observations for Ingrid were checked qualitatively — they name strong intellectual work without naming the power move mechanics. The report generator is working correctly; it has nothing to surface.
+
+What T006 actually requires: the observation prompt must instruct the model to name explicit moves that flatten systemic analysis into individual responsibility when they appear in student writing — and flag the pedagogical significance when a student corrects (A3) and then partially reverts (A4) this pattern.
+
+**T007 Sophia Chen: 1/2 → 2/2 (fixed).** Was failing `growth_arc_named`. Now passes. Likely a downstream benefit of cleaner P3 observations.
+
+**T008 Marcus Jackson: 0/4 → 2/4 (partial improvement).** Was failing all four. Now passes 2; still fails `specific_intellectual_work_named` and `community_grounding_as_asset`. The latter is a persistent failure across both runs — the model doesn't surface Marcus's community grounding as intellectual asset even when it appears in the observations. Could be observation specificity or report framing; unclear without reading both.
+
+**T004 Aisha Patel: 3/3 → 2/3 (minor regression, likely model variability).** Was all-pass in Q; fails `variable_output_normalized` in Q3. Aisha is the neurodivergent variable-output student. The check asks whether output variability is treated as non-pathological. Nothing in Q3's prompt changes would affect this direction. Most likely model variability — the model produces slightly different framing run-to-run and occasionally drifts into productivity language.
+
+**T017 River Chen-Nakamura: 3/3 → 1/3 (partially evaluator false positive in Q, partially real).** Q's all-pass is now suspect: Q's `associative_thinking_as_discovery` showed a PASS with an explanation that said the criteria weren't met — evaluator false positive. Q3's failure on that check is the more accurate result. The `intellectual_thesis_named` failure is real: Q3's report doesn't name River's specific thesis about cultural identity as constructed through negotiation rather than inherited. This is a specificity problem — the report characterizes the deepening arc correctly but stays at the meta-level.
+
+### Persistent failures (unchanged across Q and Q3)
+
+- **T009** (`transnational_analysis_recognized`): Rosa's transnational frame not surfaced in either run
+- **T010** (`gap_noted_without_judgment`, `present_work_quality_recognized`): missing-assignment student; report either over-focuses on the gap or underweights present-work quality
+- **T014** (`conceptual_work_foregrounded`): Ixchel's conceptual work not foregrounded
+- **T016** (`pattern_named_across_arc`): Connor's power move pattern not named across arc; single-run only
+
+### Implications
+
+1. **Teacher Notes prompt fix is insufficient for T006.** The fix correctly instructs the report generator to surface equity patterns — but it cannot surface what isn't in the observations. T006 requires changes upstream at the observation level: explicit instruction to name "both sides" framing and individual-agency framing as structural power moves when they appear in student writing.
+
+2. **T002 fix likely attributable to P3 isolation.** The improvement is real and welcome, but the mechanism is clean upstream observations (P3), not the Teacher Notes change. This makes Q3 a mixed-signal run: two changes applied simultaneously, gains may come from either or both.
+
+3. **Modest overall gain is real but small.** +2 total checks, same all-pass count. Most persistent failures persist. The report generator is not the bottleneck for the cases that matter most (T006, T009, T014) — the observations are.
+
+4. **T017 Q baseline was overcounted.** Future comparisons should treat T017 in Q as 1/3 effective (the two evaluator false positives should not be credited).
+
+### Limitations
+
+- Two simultaneous changes (Teacher Notes + P3 observations) — improvement cannot be cleanly attributed
+- Same model for generation and evaluation (self-evaluation bias)
+- T004 regression likely model variability — single run cannot distinguish from real change
+- T017 Q baseline has confirmed evaluator false positive; Q3 is the more reliable measure

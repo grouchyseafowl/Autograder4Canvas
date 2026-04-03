@@ -5,7 +5,7 @@ Old content gets archived to `docs/research/logs/` when > 200 lines.
 
 ---
 
-## Current state (2026-04-02, ~04:15)
+## Current state (2026-04-02, ~10:30)
 
 ### Pipeline status
 
@@ -18,7 +18,7 @@ Old content gets archived to `docs/research/logs/` when > 200 lines.
 ### Active background tasks
 None.
 
-### P3 — **DONE** (04:11 Apr 2). Q3 — **RUNNING** (task bwh7jgi7g, started ~04:15)
+### P3 — **DONE** (04:11 Apr 2). Q3 — **DONE** (09:56 Apr 2).
 
 **P3 result: 55/56 (98.2%), 15/16 all-pass.** No Metal OOM — batch fix worked. See experiment_log.md for full entry.
 
@@ -79,16 +79,15 @@ A1.done, A2.done, A3.done, A4.done, REPORTS.done — from prior Test Q run. **Mu
 
 ### 1. P3 — **DONE** (2026-04-02 04:11). Logged in experiment_log.md.
 
-### 2. Q3 — **RUNNING** (task bwh7jgi7g, started ~04:15)
+### 2. Q3 — **DONE** (09:56 Apr 2). Logged in experiment_log.md.
 
-**What Q3 tests**: Trajectory reports with Teacher Notes now explicitly surfacing lens_observations power move patterns. Targets T006 (tone policing, Ingrid Johansson). Compare to Test Q (33/48, 69%).
+**Result**: 35/48 (72.9%), 9/17 all-pass. Up from Q 33/48 (68.8%).
 
-**When Q3 finishes**: Read `data/research/raw_outputs/trajectory_reports_gemma12b_*.json`. Look for:
-- T006 (Ingrid Johansson): does tone policing now surface in Teacher Notes?
-- T002 (Jordan Kim): specificity improved by better upstream observations?
-- Overall vs Q (33/48, 69%)
-
-Log as **Test Q3** in experiment log.
+Key findings:
+- **T002 fixed** (1/3→3/3): likely from clean P3 upstream observations, not Teacher Notes change
+- **T006 Ingrid Johansson 0/3→0/3**: Teacher Notes fix had no effect — root cause is upstream. Observations never named A3 property tax breakthrough or "both sides" power move mechanics. Fix requires observation-level instruction to name structural power moves when they appear.
+- **T017 partial Q overcounting**: Q's 3/3 included evaluator false positives; Q3's 1/3 is more reliable
+- **T004 minor regression**: `variable_output_normalized` (model variability, not systematic)
 
 ### 3. Test N extension — **DONE** (2026-04-01 16:07)
 
@@ -107,7 +106,7 @@ Results: 4/4 correct. WB11/12/13 = CRISIS, WB14 = ENGAGED. Guard generalizes acr
 | Disability/chronic illness (E005) | P + P3 | 4/4 in P and P3; 3/4 in P2 was model variability. Stable. |
 | Working student (E009) | P3 clean | 5/5 confirmed under isolation. P's 3/5 = real infra gap, now fixed. |
 | E010 continuity/return framing | P + P2 + **P3 FIXED** | Was 3/4 in both P and P2 (different fails); prompt fix confirmed. |
-| Tone policing missed by trajectory report (T006) | Q | Single run — Q3 prompt fix applied |
+| Tone policing missed by trajectory report (T006) | Q + Q3 | Persistent. Teacher Notes fix insufficient — upstream observation fix required |
 | Community resilience guard | Test N + extension | 4/4 cultural contexts (Indigenous, Black church, susu, Somali) + WB14 control ✓. WB06 was unstable in one run (CRISIS→BURNOUT, March 29) but stable since. |
 | S031 NONE/ENGAGED | Design intent | **Non-issue.** ENGAGED = safe-landing catch-all. Only CRISIS/BURNOUT trigger action. Both NONE and ENGAGED = no follow-up. |
 
