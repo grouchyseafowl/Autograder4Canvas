@@ -6629,16 +6629,16 @@ What T006 actually requires: the observation prompt must instruct the model to n
 
 **T007 Sophia Chen: 1/2 → 2/2 (fixed).** Was failing `growth_arc_named`. Now passes. Likely a downstream benefit of cleaner P3 observations.
 
-**T008 Marcus Jackson: 0/4 → 2/4 (partial improvement).** Was failing all four. Now passes 2; still fails `specific_intellectual_work_named` and `community_grounding_as_asset`. The latter is a persistent failure across both runs — the model doesn't surface Marcus's community grounding as intellectual asset even when it appears in the observations. Could be observation specificity or report framing; unclear without reading both.
+**T008 Marcus Jackson: 0/4 → 2/4 (partial improvement, but inflated by evaluator bug).** Checks `specific_intellectual_work_named` and `community_grounding_as_asset` show "Not answered by evaluator" in both Q and Q3 — these are evaluator infrastructure failures, not content judgments. The two genuine checks (`1` and `2`, which have malformed IDs) went from FAIL→PASS. Effective improvement on answerable checks: 0/2 → 2/2. The persistent "not answered" checks need evaluator debugging, not report fixes.
 
-**T004 Aisha Patel: 3/3 → 2/3 (minor regression, likely model variability).** Was all-pass in Q; fails `variable_output_normalized` in Q3. Aisha is the neurodivergent variable-output student. The check asks whether output variability is treated as non-pathological. Nothing in Q3's prompt changes would affect this direction. Most likely model variability — the model produces slightly different framing run-to-run and occasionally drifts into productivity language.
+**T004 Aisha Patel: 3/3 → 2/3 (low-confidence regression).** Was all-pass in Q; fails `variable_output_normalized` in Q3. All three Q3 checks for T004 used fallback parsing (JSON parse failed) — the evaluator couldn't parse the structured response and fell back to heuristic extraction. The FAIL may be a parsing artifact rather than a genuine content regression. Nothing in Q3's prompt changes targets this dimension.
 
 **T017 River Chen-Nakamura: 3/3 → 1/3 (partially evaluator false positive in Q, partially real).** Q's all-pass is now suspect: Q's `associative_thinking_as_discovery` showed a PASS with an explanation that said the criteria weren't met — evaluator false positive. Q3's failure on that check is the more accurate result. The `intellectual_thesis_named` failure is real: Q3's report doesn't name River's specific thesis about cultural identity as constructed through negotiation rather than inherited. This is a specificity problem — the report characterizes the deepening arc correctly but stays at the meta-level.
 
 ### Persistent failures (unchanged across Q and Q3)
 
 - **T009** (`transnational_analysis_recognized`): Rosa's transnational frame not surfaced in either run
-- **T010** (`gap_noted_without_judgment`, `present_work_quality_recognized`): missing-assignment student; report either over-focuses on the gap or underweights present-work quality
+- **T010** (`gap_noted_without_judgment`, `present_work_quality_recognized`): both show "Not answered by evaluator" in Q and Q3 — same evaluator infrastructure bug as T008. Genuine checks (2/2) pass in both runs. T010's apparent 2/4 is inflated by evaluator failure.
 - **T014** (`conceptual_work_foregrounded`): Ixchel's conceptual work not foregrounded
 - **T016** (`pattern_named_across_arc`): Connor's power move pattern not named across arc; single-run only
 
@@ -6650,7 +6650,9 @@ What T006 actually requires: the observation prompt must instruct the model to n
 
 3. **Modest overall gain is real but small.** +2 total checks, same all-pass count. Most persistent failures persist. The report generator is not the bottleneck for the cases that matter most (T006, T009, T014) — the observations are.
 
-4. **T017 Q baseline was overcounted.** Future comparisons should treat T017 in Q as 1/3 effective (the two evaluator false positives should not be credited).
+4. **T017 Q baseline was overcounted.** Q's `associative_thinking_as_discovery` was evaluator false positive (explanation contradicts PASS). Q's `intellectual_thesis_named` was genuine (report did name thesis). Effective Q score: 2/3. Q3's `intellectual_thesis_named` FAIL is a real regression — the report lost the specific thesis statement.
+
+5. **Evaluator infrastructure bugs inflate failure counts.** T008 and T010 each have 2 checks showing "Not answered by evaluator" in both runs — 4 phantom failures per run. Adjusted scores: Q = 33/44 (75.0%), Q3 = 35/44 (79.5%). The +4.5% adjusted gain is real but comes entirely from T002 and T007 (downstream P3 observation benefit), partially offset by T004 (parsing artifact) and T017 (one real regression).
 
 ### Limitations
 
@@ -6658,3 +6660,4 @@ What T006 actually requires: the observation prompt must instruct the model to n
 - Same model for generation and evaluation (self-evaluation bias)
 - T004 regression likely model variability — single run cannot distinguish from real change
 - T017 Q baseline has confirmed evaluator false positive; Q3 is the more reliable measure
+- Evaluator infrastructure: 4 checks permanently fail as "Not answered by evaluator" (T008 ×2, T010 ×2); 3 checks in Q3 used fallback parsing (T004 ×3). 7/48 checks have compromised evaluation fidelity. Raw scores should be read alongside adjusted scores.
