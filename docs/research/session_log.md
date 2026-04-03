@@ -18,7 +18,7 @@ Old content gets archived to `docs/research/logs/` when > 200 lines.
 ### Active background tasks
 None.
 
-### P3 — **DONE** (04:11 Apr 2). Q3 — **DONE** (09:56 Apr 2).
+### P3 — **DONE** (04:11 Apr 2). Q3 — **DONE** (09:56 Apr 2). All tests complete.
 
 **P3 result: 55/56 (98.2%), 15/16 all-pass.** No Metal OOM — batch fix worked. See experiment_log.md for full entry.
 
