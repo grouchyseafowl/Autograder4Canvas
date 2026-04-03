@@ -6679,3 +6679,28 @@ This means fixes to the report prompt are structurally unable to surface observa
 **The community resilience guard** (Test N extension, 4/4 cultural contexts) speaks to Tuck's (2009) "Suspending Damage" — research frameworks centered on documenting harm can reproduce the damage they describe. The guard detects crisis while not misclassifying community resilience narratives as individual distress.
 
 **Silence-after-disclosure stability** (9/9 across three runs) maps onto Tuck & Yang's (2014) "R-Words": institutional response to disclosure can replicate the original harm. The pipeline flags disclosure for the teacher without re-pathologizing the student's intellectual work.
+
+### Design principle: Don't compress the perception; pass it through
+
+The trajectory report compression bottleneck recapitulates the same structural error that binary concern detection had. Binary detection forced rich, contextual reading into a yes/no flag — and the fix was the observation layer, which preserves the LLM's qualitative perception. But the observation layer's output is then compressed back into structured tags before it reaches the trajectory report. The same information loss that binary detection imposed on raw reading, the semester_arc builder now imposes on observations.
+
+The principle: **when an LLM produces a perceptive, contextual reading, pass that reading forward — don't reduce it to structured fields first.** The observation text is the pipeline's richest artifact per student per assignment. It's already compressed from full submission text (~500-2000 words) into a dense 3-4 sentence observation (~300-500 tokens). Further compressing it into tags and labels destroys exactly the signal the downstream report needs.
+
+This connects to the binary schema findings: the observation layer was the right correction for binary classification because it preserved qualitative perception. The same logic applies at the next stage. The trajectory report generator should receive the observations themselves — not summaries of summaries — so that patterns across time (growth, regression, power move evolution, tone shifts) can be recognized by the LLM rather than pre-filtered by Python code.
+
+Token budget is feasible: 4 observations × ~350 tokens = ~1400 tokens. Current semester_arc = 800-1200 tokens. Combined = ~2600 tokens, well within Gemma 12B's 8K context. The observation passthrough doesn't require a different model or architecture — just routing the existing output through instead of around the report generator.
+
+### Pipeline-wide enumerative fragility audit
+
+Assessed all major prompts in `src/insights/prompts.py` and `src/insights/lens_templates.py` for the "rat race of typologizing" pattern — places where the system enumerates specific power dynamics rather than providing frameworks generatively.
+
+**Enumerative fragility (high risk)**:
+- **Concern detection prompt** (prompts.py lines 487-656): Lists 7 specific power-move patterns as a hard enumeration (tone policing, savior narratives, exoticizing, model minority, deficit framing, colorblind claims, essentializing). Each new pattern requires adding a new instruction. Hardcoded example passages and interpretations further entrench the list.
+- **Lens template concern fragments** (`lens_templates.py`): Each subject area includes hardcoded `concern_framing_fragment` strings listing domain-specific anti-patterns. History lists "historical inevitability framing" and "'both sides' equivalence"; Ethnic Studies explicitly says "ESPECIALLY flag: essentializing language... colorblind claims... tone policing." The system pattern-matches against a predefined list.
+
+**Generative strength (already working)**:
+- **COMPREHENSION & CODING prompts** (prompts.py lines 178-349): Pure description — "What is this student reaching for?" and "Name the form without ranking it." Zero enumeration.
+- **OBSERVATION_PROMPT** (prompts.py lines 1781-1849): After listing structural power moves, pivots to a generative frame — gives frameworks (tone = policing, abstract = false equality) and asks the LLM to observe which ones apply. More generative than enumerative, but the listed moves are still a bounded set.
+- **TRAJECTORY_REPORT_PROMPT** (prompts.py lines 2233-2314): Entirely generative. "What has this student BUILT intellectually?" Traces development relative to the student's own threads, not against external pattern categories.
+
+**The fragility concentrates in concern detection**, which is being replaced by the observation layer anyway (per pipeline architecture spec). The observation and trajectory layers are already generative — the rat race risk is contained, not systemic. The compression bottleneck (not passing observations through to reports) is a separate problem from enumerative fragility — it's information loss, not typological over-specification.
