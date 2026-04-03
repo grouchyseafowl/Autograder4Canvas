@@ -6661,3 +6661,21 @@ What T006 actually requires: the observation prompt must instruct the model to n
 - T004 regression likely model variability — single run cannot distinguish from real change
 - T017 Q baseline has confirmed evaluator false positive; Q3 is the more reliable measure
 - Evaluator infrastructure: 4 checks permanently fail as "Not answered by evaluator" (T008 ×2, T010 ×2); 3 checks in Q3 used fallback parsing (T004 ×3). 7/48 checks have compromised evaluation fidelity. Raw scores should be read alongside adjusted scores.
+
+### Cross-session synthesis: Observation bottleneck and the compression problem
+
+Across P3, Test N extension, and Q3, the single clearest finding is that **the observation layer is the bottleneck for trajectory reports — not the report generator.** The Teacher Notes prompt fix (Q3) correctly instructs the report to surface power move patterns, but the report generator never sees observation text. It receives a compressed `semester_arc` (800–1200 tokens) built by Python from structured coding fields. The observations — 3-4 rich sentences per submission — are discarded at the compression stage.
+
+The data flow is: raw student text → LLM → coding record (includes observation + lens_observations) → **Python compression** → semester_arc → LLM → trajectory report. The compression at Stage 3 is the information bottleneck. The observation might say "Ingrid's A3 breakthrough connects property tax formulas to structural racism, but A4 retreats to 'both sides' framing" — rich, contextual, specific. But the semester_arc only carries through lens_observation tags (most recent 4, one line each) and theme labels.
+
+This means fixes to the report prompt are structurally unable to surface observations it never receives. T002's improvement (1/3 → 3/3) came from cleaner P3 upstream data, not Teacher Notes. T006's persistent 0/3 is because the compression layer strips the nuance the report would need.
+
+**Targeted prompt instructions work at the observation level** (E002 ESL transfer, E010 continuity/return framing), following the same mechanism: the model has the conceptual capacity; the prompt names *what to see*, not just *what to avoid*. This maps onto Yosso's (2005) community cultural wealth framework — the contribution was naming specific forms of capital (navigational, linguistic, resistant, aspirational, familial, social) that deficit framing renders invisible. "Don't pathologize" is insufficient; the positive ontology must be named.
+
+**The observation-as-bottleneck finding** connects to Paris & Alim's (2017) culturally sustaining pedagogy. Recognition alone ("your culture is valid") slides into liberal multiculturalism unless it names what the cultural practice *does* intellectually. T006 is a concrete instance: the model recognizes Ingrid's analytical capacity but cannot name the power move mechanics embedded in "both sides" framing. Recognition without analysis reproduces the structure it claims to challenge.
+
+**Self-evaluation bias** (same model generates and evaluates) is documented in LLM-as-judge research (Zheng et al. 2023). The Q→Q3 T017 false positive — evaluator marked PASS despite its own explanation saying criteria weren't met — is a concrete instance.
+
+**The community resilience guard** (Test N extension, 4/4 cultural contexts) speaks to Tuck's (2009) "Suspending Damage" — research frameworks centered on documenting harm can reproduce the damage they describe. The guard detects crisis while not misclassifying community resilience narratives as individual distress.
+
+**Silence-after-disclosure stability** (9/9 across three runs) maps onto Tuck & Yang's (2014) "R-Words": institutional response to disclosure can replicate the original harm. The pipeline flags disclosure for the teacher without re-pathologizing the student's intellectual work.
