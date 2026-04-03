@@ -3,5 +3,20 @@
     "total": 0,
     "students": 32,
     "per_student_total": 0.0
+  },
+  "biology": {
+    "quick_analysis": 9.94,
+    "class_reading": 1241.24,
+    "coding_total": 3879.16,
+    "wellbeing": 944.56,
+    "checkin": 559.29,
+    "observations": 2833.51,
+    "themes": 1216.99,
+    "outliers": 363.38,
+    "observation_synthesis": 398.79,
+    "feedback": 1416.09,
+    "total": 12862.95,
+    "students": 25,
+    "per_student_total": 514.52
   }
 }

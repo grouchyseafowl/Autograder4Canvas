@@ -89,7 +89,7 @@ For questions or issues, please [open an issue](https://github.com/grouchyseafow
 
 ## License
 
-GNU GPL v2 - See LICENSE file for details
+GNU GPL v3 - See LICENSE file for details
 
 ## Credits
 

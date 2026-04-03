@@ -99,6 +99,9 @@ Autograder4CanvasInstallers.zip
 *.sqlite
 *.db
 
+# Trashed development artifacts
+src/Trashed/
+
 # External dev tools
 .reframe*
 

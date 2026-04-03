@@ -930,7 +930,14 @@ class RunWorker(CancellableWorker):
                 if flags:
                     reason = "; ".join(flags)
                 elif grade == "complete":
-                    reason = "Meets requirements"
+                    if word_count > 0:
+                        reason = f"Meets requirements ({word_count} words)"
+                    elif submission_type == "media_recording":
+                        reason = "Media recording submitted (content not text-verified)"
+                    elif attach_meta:
+                        reason = "File submitted (content not text-verified)"
+                    else:
+                        reason = "Meets requirements"
                 else:
                     reason = "Incomplete submission"
 
@@ -1422,7 +1429,12 @@ class RunWorker(CancellableWorker):
 
         self.surface.emit("stage", {"text": "Generating Class Insights"})
 
-        engine = InsightsEngine(api=self._api)
+        try:
+            from settings import load_settings as _ls
+            _engine_settings = _ls()
+        except Exception:
+            _engine_settings = {}
+        engine = InsightsEngine(api=self._api, settings=_engine_settings)
 
         _surface = self.surface  # capture for closures
 
