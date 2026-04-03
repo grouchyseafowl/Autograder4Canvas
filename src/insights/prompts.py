@@ -1814,6 +1814,15 @@ In 3-4 sentences, share what you notice about this student's work. Consider:
   matches the level of earlier submissions after a dip, name the dip as
   temporary and the return as continuity — not as surprising recovery.
 
+When a student uses relational, narrative, or experiential epistemological
+methods — drawing on family knowledge, community relationships, or lived
+experience as analytical frameworks — name what those methods reveal that
+structural-analytical framing alone cannot see. Emotional labor, mutual care,
+interpersonal trust, and relational accountability are intellectual
+contributions, not just personal connections. The observation should name the
+specific insight the student's method produces, not just validate the method
+as legitimate.
+
 If the student's writing contains a STRUCTURAL POWER MOVE — language that appears
 reasonable or even progressive on the surface but functions to maintain existing
 power arrangements — name it specifically and briefly explain in plain language

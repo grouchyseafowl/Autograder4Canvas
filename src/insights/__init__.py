@@ -37,7 +37,6 @@ from insights.patterns import INSIGHT_PATTERNS, signal_matrix_classify
 from insights.quick_analyzer import QuickAnalyzer
 from insights.llm_backend import auto_detect_backend, BackendConfig, send_text
 from insights.submission_coder import code_submission
-from insights.concern_detector import detect_concerns
 from insights.theme_generator import generate_themes, surface_outliers
 from insights.synthesizer import synthesize
 from insights.teacher_profile import TeacherProfileManager
@@ -60,7 +59,6 @@ __all__ = [
     "BackendConfig",
     "send_text",
     "code_submission",
-    "detect_concerns",
     "generate_themes",
     "surface_outliers",
     "synthesize",

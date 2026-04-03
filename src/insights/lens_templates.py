@@ -100,9 +100,11 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
         concern_framing_fragment=(
             "CONCERN FRAMING (Ethnic Studies):\n"
             "All default concern patterns apply with full weight.\n"
-            "ESPECIALLY flag: essentializing language about racial/ethnic groups, "
-            "colorblind claims, tone policing of anger about structural injustice, "
-            "dismissal of lived experience as 'just personal opinion.'\n"
+            "Name the structural mechanism when language flattens a group into "
+            "a single story, when universalism erases particular conditions, "
+            "when reasonableness polices the register of those most affected, "
+            "or when experiential knowledge is recast as mere opinion to "
+            "preserve analytical distance as the only legitimate mode.\n"
             "Do NOT flag passion, anger, or grief about injustice — these are "
             "appropriate engagement, not behavioral concerns."
         ),
@@ -168,15 +170,13 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
         },
         concern_framing_fragment=(
             "CONCERN FRAMING (Social Science):\n"
-            "Default patterns apply. Also flag:\n"
-            "- Student presents a demographic correlation as a causal explanation "
-            "('Group X does Y because they are naturally Z')\n"
-            "- Student treats anecdote or single case as proof of a general claim\n"
-            "- Student attributes social behavior to biology or genetics without "
-            "scientific evidence\n"
-            "Essentializing and colorblind framing remain relevant in social "
-            "science contexts — patterns about group behavior, structural "
-            "inequality, and identity deserve scrutiny."
+            "Default patterns apply. Name the structural mechanism when "
+            "correlation is presented as inherent causation, when a single "
+            "case is generalized to naturalize a group characteristic, or "
+            "when social outcomes are relocated from structural conditions "
+            "into biology or group essence. Patterns about group behavior, "
+            "structural inequality, and identity deserve scrutiny for the "
+            "move that makes contingent arrangements appear inevitable."
         ),
         default_strength_patterns=[
             "student applies theoretical frameworks to their own lived experience as evidence",
@@ -238,13 +238,12 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
         },
         concern_framing_fragment=(
             "CONCERN FRAMING (Humanities):\n"
-            "Default patterns apply. Also flag:\n"
-            "- Student presents a single interpretation as the only possible "
-            "reading ('the author definitely meant...', 'this obviously shows...')\n"
-            "- Student dismisses other students' interpretations from their "
-            "cultural or personal perspective as 'wrong' rather than different\n"
-            "Essentializing and colorblind framing apply when students discuss "
-            "characters, authors, or historical figures by identity categories."
+            "Default patterns apply. Name the structural mechanism when "
+            "interpretive certainty forecloses other readings, when one "
+            "tradition's lens is positioned as objective while another's is "
+            "dismissed as subjective or 'wrong,' or when identity categories "
+            "applied to characters, authors, or historical figures flatten "
+            "complexity into essence."
         ),
         default_strength_patterns=[
             "student brings their own cultural or religious interpretive tradition to the text",
@@ -310,8 +309,9 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "choices with deep cultural roots. Only flag language that harms "
             "other students or essentializes groups, not language that differs "
             "from dominant academic conventions.\n"
-            "Also flag: student dismisses another writer's voice or style as "
-            "'incorrect' rather than engaging with its choices."
+            "Name the structural mechanism when one register is positioned as "
+            "correct and another as deficient, or when engaging with a writer's "
+            "choices is replaced by enforcing a single standard of legitimacy."
         ),
         default_strength_patterns=[
             "student demonstrates code-switching with intentionality across registers",
@@ -374,14 +374,11 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
         },
         concern_framing_fragment=(
             "CONCERN FRAMING (History):\n"
-            "Default patterns apply. Also flag:\n"
-            "- Historical inevitability framing ('it was bound to happen', "
-            "'there was no alternative') — this removes human agency and often "
-            "naturalizes conquest, slavery, or genocide\n"
-            "- 'Both sides' framing that treats perpetrators and victims as "
-            "morally equivalent\n"
-            "- Student treats a single source's perspective as objective fact "
-            "without noting whose perspective it represents"
+            "Default patterns apply. Name the structural mechanism when "
+            "inevitability removes human agency from conquest or violence, "
+            "when false equivalence between perpetrator and victim obscures "
+            "power, or when a single source's perspective is presented as "
+            "objective fact without naming whose standpoint it represents."
         ),
         default_strength_patterns=[
             "student connects historical events to their own family or community history",
@@ -452,16 +449,12 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "tone policing) are LESS relevant for lab/science work. De-weight "
             "them unless the assignment explicitly engages with social dimensions "
             "of science.\n"
-            "INSTEAD, prioritize flagging:\n"
-            "- Student attributes a group's behavior, ability, or outcome to "
-            "biology or genetics without scientific evidence ('women are "
-            "naturally worse at spatial reasoning', 'some races are more "
-            "athletic') — this is scientific-sounding essentialism\n"
-            "- Student presents a correlation from data as direct causation "
-            "without acknowledging confounding factors\n"
-            "- Student claims a result 'proves' a hypothesis rather than "
-            "'supports' or 'is consistent with' it (misuse of scientific language)\n"
-            "- Student dismisses a counterexample or outlier without explanation\n"
+            "INSTEAD, name the structural mechanism when biological essentialism "
+            "is dressed in scientific language to naturalize group hierarchy, "
+            "when correlation is presented as causation without accounting for "
+            "confounding structure, when certainty language replaces the "
+            "tentativeness that scientific reasoning requires, or when "
+            "counterevidence is dismissed rather than explained.\n"
             "Wellbeing signals always apply regardless of subject."
         ),
         default_strength_patterns=[
@@ -539,17 +532,13 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
         },
         concern_framing_fragment=(
             "CONCERN FRAMING (Psychology):\n"
-            "Default patterns apply. Also flag:\n"
-            "- Student pathologizes a cultural practice, communication style, or "
-            "community norm as a psychological disorder\n"
-            "- Student attributes a group's behavior to inherent psychological "
-            "traits rather than structural conditions ('people in poverty have "
-            "lower impulse control' without examining systemic context)\n"
-            "- Student diagnoses a real person (peer, family member, public figure) "
-            "based on surface behavior — diagnosis requires clinical assessment, "
-            "not pattern-matching from a textbook\n"
-            "- Student treats Western psychological frameworks as universal without "
-            "acknowledging cultural specificity\n"
+            "Default patterns apply. Name the structural mechanism when "
+            "cultural practices are recast as pathology, when group behavior "
+            "is attributed to inherent psychological traits rather than "
+            "structural conditions, when textbook pattern-matching replaces "
+            "clinical assessment to diagnose real people, or when Western "
+            "psychological frameworks are applied as universal without naming "
+            "their cultural specificity.\n"
             "Neurodivergent self-description is NOT a concern — it is expertise. "
             "Wellbeing signals always apply."
         ),
@@ -626,16 +615,13 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
         },
         concern_framing_fragment=(
             "CONCERN FRAMING (Government/Civics):\n"
-            "Default patterns apply. Also flag:\n"
-            "- Student frames criminalization or incarceration as proof of "
-            "individual moral failure rather than examining institutional "
-            "structures and incentives\n"
-            "- Student treats formal legal equality as proof that structural "
-            "inequality doesn't exist ('everyone has the same rights now')\n"
-            "- Student dismisses community-based governance, mutual aid, or "
-            "protest as 'not real' civic participation\n"
-            "- Student attributes a community's political conditions to that "
-            "community's culture rather than to policy and institutional design\n"
+            "Default patterns apply. Name the structural mechanism when "
+            "criminalization is read as individual moral failure rather than "
+            "institutional design, when formal legal equality is used to deny "
+            "structural inequality, when community-based governance or mutual "
+            "aid is dismissed as illegitimate civic practice, or when a "
+            "community's political conditions are attributed to its culture "
+            "rather than to the policies acting on it.\n"
             "Do NOT flag passionate civic engagement, including anger about "
             "injustice — this is the course working as intended."
         ),
@@ -712,19 +698,14 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
         },
         concern_framing_fragment=(
             "CONCERN FRAMING (Health Sciences):\n"
-            "Default patterns apply. Also flag:\n"
-            "- Student attributes a community's health outcomes to cultural "
-            "or behavioral deficits rather than structural determinants "
-            "(housing, pollution, food access, insurance, provider bias)\n"
-            "- Student dismisses patient/community health knowledge as "
-            "'non-compliant' or 'uneducated' rather than understanding it "
-            "as a rational response to context\n"
-            "- Student frames disability as inherently negative or as a "
-            "problem requiring correction, rather than considering the social "
-            "model and built environment\n"
-            "- Student uses biological essentialism to explain health "
-            "disparities across racial groups without engaging with the "
-            "evidence on structural causation\n"
+            "Default patterns apply. Name the structural mechanism when "
+            "health outcomes are attributed to cultural or behavioral deficits "
+            "rather than structural determinants, when patient or community "
+            "health knowledge is recast as non-compliance rather than rational "
+            "response to context, when disability is framed as inherent deficit "
+            "rather than mismatch with built environment, or when biological "
+            "essentialism explains racial health disparities without engaging "
+            "structural causation.\n"
             "Wellbeing signals apply with heightened attention — students "
             "in health fields may disclose personal health experiences in "
             "the course of doing the work."
@@ -808,13 +789,11 @@ LENS_TEMPLATES: Dict[str, LensTemplate] = {
             "and social dimensions. De-weight them for purely formal or "
             "technical analysis unless it becomes a way to avoid engaging "
             "with cultural content.\n"
-            "Also flag:\n"
-            "- Student dismisses another student's cultural artistic tradition "
-            "as 'not real art' or 'primitive' or 'folk'\n"
-            "- Student uses another culture's sacred or ceremonial artistic "
-            "forms without acknowledgment of origin or significance\n"
-            "- Student frames access to formal training, materials, or "
-            "institutional spaces as proof of artistic merit\n"
+            "Name the structural mechanism when one aesthetic tradition is "
+            "positioned as legitimate art while another is diminished to "
+            "craft or curiosity, when sacred or ceremonial forms are "
+            "extracted without accountability to their origin, or when "
+            "institutional access is conflated with artistic merit.\n"
             "Do NOT flag art that expresses pain, rage, grief, or political "
             "conviction — this is what art does."
         ),
