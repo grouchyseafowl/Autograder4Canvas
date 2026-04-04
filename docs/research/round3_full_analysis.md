@@ -22,7 +22,7 @@ enhancement test, 1 replication study (5× per config), and the Gemini handoff b
 | S029 Jordan | CLEAN | **0%** | 0% | 0% |
 
 **Key findings:**
-- Gemma 12B + class context is MORE reliable than 27B + class context (100% vs 80%)
+- Gemma 12B + class context is MORE reliable than 27B + class context (100% vs 80%) // how can this be? What accounts for the difference? Is it the lightweight vs medium pipeline? 
 - S015 essentializing goes from 0% to 100% with class context — the reading primes
   the model to recognize positive stereotypes in the context of students who ARE the
   groups being stereotyped
