@@ -75,6 +75,14 @@ _MAX_QUOTES = 8
 # Maximum number of recent lens_observations to include.
 _MAX_LENS_OBS = 4
 
+# Observation arc: how many recent assignments always get full observation text.
+_OBS_RECENT_WINDOW = 3
+
+# Observation arc: approximate token ceiling for the entire observation section.
+# If exceeded, oldest full observations are compressed until under budget.
+# 250 tokens/obs × ~12 full = 3000; leaves room for compressed entries.
+_MAX_OBS_TOKENS = 3500
+
 # Engagement depth ordering for identifying peak assignments.
 _DEPTH_ORDER = {"strong": 3, "moderate": 2, "limited": 1, "minimal": 0}
 
@@ -569,6 +577,121 @@ def _build_wellbeing_arc(history: List[Dict[str, Any]]) -> str:
     return " | ".join(parts)
 
 
+def _build_observation_arc(history: List[Dict[str, Any]]) -> str:
+    """Pass observation text through to the trajectory report.
+
+    Signal-aware compression: observations at trajectory inflection points
+    (wellbeing change, theme shift, word count shift, register change) get
+    full passthrough. Stable-pattern observations are compressed to their
+    first sentence. Most recent N assignments always get full text.
+
+    Design principle: don't compress the perception; pass it through.
+    """
+    entries: List[Tuple[str, str, Dict[str, Any]]] = []  # (assignment, obs_text, cr)
+    for entry in history:
+        cr = _get_cr(entry)
+        obs = cr.get("observation") or ""
+        obs = obs.strip()
+        if not obs:
+            continue
+        assignment = entry.get("assignment_name", "?")
+        entries.append((assignment, obs, cr))
+
+    if not entries:
+        return ""
+
+    # Determine which entries are inflection points vs stable.
+    # Compare each entry to its predecessor on key signals.
+    is_inflection: List[bool] = [True]  # first entry is always full
+    for i in range(1, len(entries)):
+        prev_cr = entries[i - 1][2]
+        curr_cr = entries[i][2]
+
+        inflection = False
+
+        # Wellbeing axis changed
+        prev_wb = prev_cr.get("wellbeing_axis")
+        curr_wb = curr_cr.get("wellbeing_axis")
+        if prev_wb and curr_wb and prev_wb != curr_wb:
+            inflection = True
+
+        # Theme tags shifted (< 50% overlap)
+        prev_tags = set(prev_cr.get("theme_tags") or [])
+        curr_tags = set(curr_cr.get("theme_tags") or [])
+        if prev_tags and curr_tags:
+            overlap = len(prev_tags & curr_tags)
+            union = len(prev_tags | curr_tags)
+            if union > 0 and overlap / union < 0.5:
+                inflection = True
+
+        # Word count changed > 40% from running average
+        prior_wcs = [
+            entries[j][2].get("word_count", 0)
+            for j in range(i)
+            if entries[j][2].get("word_count", 0) > 0
+        ]
+        curr_wc = curr_cr.get("word_count", 0)
+        if prior_wcs and curr_wc > 0:
+            avg_wc = sum(prior_wcs) / len(prior_wcs)
+            if avg_wc > 0 and abs(curr_wc - avg_wc) / avg_wc > 0.4:
+                inflection = True
+
+        # Emotional register changed
+        prev_reg = prev_cr.get("emotional_register")
+        curr_reg = curr_cr.get("emotional_register")
+        if prev_reg and curr_reg and prev_reg != curr_reg:
+            inflection = True
+
+        is_inflection.append(inflection)
+
+    # Most recent N always get full text regardless of signal
+    n = len(entries)
+    for i in range(max(0, n - _OBS_RECENT_WINDOW), n):
+        is_inflection[i] = True
+
+    # Build output: full text for inflection points, first sentence for stable
+    parts = ["Observation arc (colleague's qualitative reading per assignment):"]
+    total_tokens_est = 10  # header
+
+    for i, (assignment, obs_text, _cr) in enumerate(entries):
+        if is_inflection[i]:
+            line = f"[{assignment}] {obs_text}"
+            tokens_est = len(line.split()) * 1.3  # rough token estimate
+        else:
+            # Compress to first sentence
+            first_sent = obs_text.split(". ")[0]
+            if not first_sent.endswith("."):
+                first_sent += "."
+            line = f"[{assignment}] {first_sent}"
+            tokens_est = len(line.split()) * 1.3
+
+        total_tokens_est += tokens_est
+        parts.append(line)
+
+    # Safety valve: if over budget, compress oldest full observations
+    if total_tokens_est > _MAX_OBS_TOKENS:
+        # Work backwards from oldest, compressing full entries until under budget
+        for i in range(len(entries)):
+            if total_tokens_est <= _MAX_OBS_TOKENS:
+                break
+            # Don't compress the most recent window
+            if i >= max(0, n - _OBS_RECENT_WINDOW):
+                break
+            if is_inflection[i]:
+                # Recompute this entry as compressed
+                _assignment, obs_text, _ = entries[i]
+                first_sent = obs_text.split(". ")[0]
+                if not first_sent.endswith("."):
+                    first_sent += "."
+                old_line = parts[i + 1]  # +1 for header
+                new_line = f"[{_assignment}] {first_sent}"
+                token_diff = (len(old_line.split()) - len(new_line.split())) * 1.3
+                total_tokens_est -= token_diff
+                parts[i + 1] = new_line
+
+    return "\n".join(parts) if len(parts) > 1 else ""
+
+
 def _build_lens_observations(history: List[Dict[str, Any]]) -> str:
     """Extract teacher-configured lens observations across assignments."""
     obs: List[Tuple[str, Dict[str, str]]] = []
@@ -720,6 +843,11 @@ def build_semester_arc(
     thread = _build_intellectual_thread(history)
     if thread:
         sections.append(thread)
+
+    # Observation arc (qualitative reading per assignment, signal-compressed)
+    obs_arc = _build_observation_arc(history)
+    if obs_arc:
+        sections.append(obs_arc)
 
     # Curated quotes
     quotes = _curate_key_quotes(history)

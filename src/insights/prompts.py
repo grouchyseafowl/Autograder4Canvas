@@ -2249,6 +2249,12 @@ SEMESTER ARC (structured analysis of all submissions):
 {semester_arc}
 ---
 
+The observation arc contains a colleague's qualitative reading of each
+assignment. Use these observations to ground your narrative in specific
+moments — growth, regression, voice shifts, power move evolution — rather
+than generic characterization. Patterns across observations over time are
+especially valuable.
+
 Write a narrative semester summary with these sections:
 
 ## Intellectual Arc
