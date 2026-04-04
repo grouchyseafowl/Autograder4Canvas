@@ -170,7 +170,63 @@ def ensure_dependencies():
     print("  Packages installed.")
 
 # ---------------------------------------------------------------------------
-# 7. Credential management (JSON-based, multi-profile)
+# 7. Apple Silicon extras (mlx-lm + outlines) — non-blocking
+# ---------------------------------------------------------------------------
+
+def _pip_install_silent(venv_pip_path, *packages):
+    """Install one or more packages quietly. Returns True on success."""
+    result = subprocess.run(
+        [str(venv_pip_path), "install", "--quiet"] + list(packages),
+        capture_output=True,
+    )
+    return result.returncode == 0
+
+
+def ensure_apple_silicon_extras():
+    """Install MLX inference and constrained-generation packages on arm64 Macs.
+
+    These are optional — failures print a note but never block launch.
+    The Insights setup dialog also offers these installs, but doing it here
+    means Apple Silicon users get them on first launch without any extra steps.
+    """
+    if not (platform.system() == "Darwin" and platform.machine() == "arm64"):
+        return
+
+    pip_exe = _venv_pip()
+    if not pip_exe.exists():
+        return
+
+    # Check what's already installed to avoid slow no-op pip calls
+    try:
+        result = subprocess.run(
+            [str(pip_exe), "list", "--format=freeze"],
+            capture_output=True, text=True,
+        )
+        installed = {
+            line.split("==")[0].lower()
+            for line in result.stdout.strip().splitlines()
+            if "==" in line
+        }
+    except Exception:
+        installed = set()
+
+    if "mlx-lm" not in installed:
+        print("  Apple Silicon detected — installing MLX inference framework...")
+        if _pip_install_silent(pip_exe, "mlx-lm"):
+            print("  MLX installed.")
+        else:
+            print("  Note: MLX install failed (non-critical — Ollama will be used instead).")
+
+    if "outlines" not in installed:
+        print("  Installing Outlines constrained generation...")
+        if _pip_install_silent(pip_exe, "outlines[mlxlm]"):
+            print("  Outlines installed.")
+        else:
+            print("  Note: Outlines install failed (non-critical — unconstrained generation will be used).")
+
+
+# ---------------------------------------------------------------------------
+# 9. Credential management (JSON-based, multi-profile)
 # ---------------------------------------------------------------------------
 #
 # credentials.json format:
@@ -420,7 +476,7 @@ def setup_credentials():
         os.environ["CANVAS_API_TOKEN"] = profile["canvas_api_token"]
 
 # ---------------------------------------------------------------------------
-# 8. Launch autograder
+# 10. Launch autograder
 # ---------------------------------------------------------------------------
 def launch():
     """Exec into venv python + run_autograder.py."""
@@ -460,6 +516,7 @@ def main():
 
     ensure_venv()
     ensure_dependencies()
+    ensure_apple_silicon_extras()
     setup_credentials()
     print()
     launch()

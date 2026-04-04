@@ -151,3 +151,6 @@ COMMAND_REFERENCE.txt
 
 # Prototype script (superseded by run_alt_hypothesis_tests.py)
 # scripts/prototype_synthesis_first.py
+
+# Overnight batch runner (personal/local use)
+scripts/run_overnight_insights.py

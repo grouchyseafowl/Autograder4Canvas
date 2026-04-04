@@ -55,9 +55,10 @@ class _CodingOutput(BaseModel):
     fields (student_id, engagement_signals, submitted_at, etc.) that are
     set programmatically, not by the model.
 
-    Passed as response_schema to send_text() when the Ollama backend is
-    active so constrained generation (GBNF grammar) enforces float values
-    for theme_confidence and correct object shapes for notable_quotes.
+    Passed as response_schema to send_text() for constrained generation:
+    Ollama uses GBNF grammar, MLX uses Outlines FSM (when installed).
+    Enforces float values for theme_confidence and correct object shapes
+    for notable_quotes — output is valid JSON by construction.
     """
     student_name: str = ""
     theme_tags: List[str] = []
@@ -81,6 +82,26 @@ def _coerce_str(val, default: str = "") -> str:
     if isinstance(val, list):
         return ", ".join(str(v) for v in val)
     return str(val)
+
+
+def _safe_list(val: Any, default: Optional[list] = None) -> list:
+    """Coerce a value to List[str], tolerating a bare string from LLM output.
+
+    The LLM occasionally returns a plain string instead of a list (e.g.
+    personal_connections: "connects to chapter 3" rather than [...]).
+    Pydantic raises ValidationError on the wrong type, which degrades the
+    student to a fallback record.  This helper wraps the bare string in a
+    list so the field stays populated rather than falling back.
+    """
+    if default is None:
+        default = []
+    if val is None:
+        return default
+    if isinstance(val, list):
+        return [str(v) for v in val]
+    if isinstance(val, str):
+        return [val] if val.strip() else default
+    return default
 
 
 def _safe_theme_confidence(raw: Any) -> dict:
@@ -610,14 +631,14 @@ def _code_lightweight(
         student_name=student_name,
         # From comprehension
         notable_quotes=_safe_quotes(comp.get("notable_quotes", [])),
-        readings_referenced=comp.get("readings_referenced", []),
+        readings_referenced=_safe_list(comp.get("readings_referenced")),
         concepts_applied=validated_concepts,
-        personal_connections=comp.get("personal_connections", []),
-        current_events_referenced=comp.get("current_events_referenced", []),
+        personal_connections=_safe_list(comp.get("personal_connections")),
+        current_events_referenced=_safe_list(comp.get("current_events_referenced")),
         # From interpretation
-        theme_tags=interp.get("theme_tags", []),
-        theme_confidence=interp.get("theme_confidence", {}),
-        emotional_register=interp.get("emotional_register", ""),
+        theme_tags=_safe_list(interp.get("theme_tags")),
+        theme_confidence=_safe_theme_confidence(interp.get("theme_confidence", {})),
+        emotional_register=_coerce_str(interp.get("emotional_register")),
         emotional_notes=interp.get("emotional_notes", ""),
     )
 
@@ -688,15 +709,15 @@ def _code_full(
         return SubmissionCodingRecord(
             student_id=student_id,
             student_name=student_name,
-            theme_tags=parsed.get("theme_tags", []),
+            theme_tags=_safe_list(parsed.get("theme_tags")),
             theme_confidence=_safe_theme_confidence(parsed.get("theme_confidence", {})),
             notable_quotes=_safe_quotes(parsed.get("notable_quotes", [])),
             emotional_register=_coerce_str(parsed.get("emotional_register")),
             emotional_notes=parsed.get("emotional_notes", ""),
-            readings_referenced=parsed.get("readings_referenced", []),
+            readings_referenced=_safe_list(parsed.get("readings_referenced")),
             concepts_applied=validated_concepts,
-            personal_connections=parsed.get("personal_connections", []),
-            current_events_referenced=parsed.get("current_events_referenced", []),
+            personal_connections=_safe_list(parsed.get("personal_connections")),
+            current_events_referenced=_safe_list(parsed.get("current_events_referenced")),
             lens_observations=lens_obs,
         )
     except Exception as exc:
@@ -776,6 +797,23 @@ def code_submission_reading_first(
     # For long submissions, Pass 2 gets beginning + end so the model can
     # verify quotes against actual text. The reading from Pass 1 carries
     # the full content understanding.
+    #
+    # Cap the reading injected into Pass 2 at 3000 chars.  When a submission
+    # produces multiple Pass 1 chunks (each ~1200 tokens of prose), the
+    # concatenated reading can exhaust the model's context window and leave
+    # only ~100-200 tokens for the JSON response — causing reproducible
+    # truncation at a fixed character offset (observed: char 658 for one
+    # long submission).  The reading is qualitative prose; the first 3000
+    # chars carry the key observations for extraction.
+    _MAX_READING_FOR_P2 = 3000
+    reading_for_p2 = reading
+    if len(reading) > _MAX_READING_FOR_P2:
+        reading_for_p2 = reading[:_MAX_READING_FOR_P2] + "\n[... reading truncated for context window ...]"
+        log.debug(
+            "Reading-first P2 for %s: reading truncated from %d → %d chars to preserve context window",
+            student_name, len(reading), _MAX_READING_FOR_P2,
+        )
+
     lens_fragment = _build_lens_fragment(analysis_lens)
 
     if len(submission_text) > CHUNK_SIZE:
@@ -787,13 +825,13 @@ def code_submission_reading_first(
 
     p2_prompt = CODING_READING_FIRST_P2.format(
         student_name=student_name,
-        free_form_reading=reading,
+        free_form_reading=reading_for_p2,
         submission_text=p2_text,
         lens_fragment=lens_fragment,
     )
 
-    # Pass response_schema so Ollama uses constrained generation (GBNF grammar).
-    # For MLX/cloud backends this is a no-op — schema is silently ignored.
+    # Pass response_schema for constrained generation: Ollama uses GBNF grammar,
+    # MLX uses Outlines FSM (when installed). Cloud backends silently ignore it.
     raw = send_text(backend, p2_prompt, SYSTEM_PROMPT, max_tokens=1200,
                     response_schema=_CodingOutput)
     parsed = _parse_response(raw, student_name, student_id)
@@ -856,14 +894,14 @@ def code_submission_reading_first(
         return SubmissionCodingRecord(
             student_id=student_id,
             student_name=student_name,
-            theme_tags=parsed.get("theme_tags", []),
+            theme_tags=_safe_list(parsed.get("theme_tags")),
             theme_confidence=_safe_theme_confidence(parsed.get("theme_confidence", {})),
             notable_quotes=_safe_quotes(parsed.get("notable_quotes", [])),
             emotional_register=_coerce_str(parsed.get("emotional_register")),
             emotional_notes=parsed.get("emotional_notes", ""),
-            readings_referenced=parsed.get("readings_referenced", []),
+            readings_referenced=_safe_list(parsed.get("readings_referenced")),
             concepts_applied=validated_concepts,
-            personal_connections=parsed.get("personal_connections", []),
+            personal_connections=_safe_list(parsed.get("personal_connections")),
             # Reader-not-judge specific fields
             free_form_reading=reading,
             what_student_is_reaching_for=reaching_for,

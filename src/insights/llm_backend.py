@@ -33,6 +33,29 @@ try:
 except ImportError:
     _TENACITY = False
 
+_OUTLINES = False
+
+
+def _check_outlines() -> bool:
+    """Lazy, cached check for outlines[mlxlm] availability.
+
+    Returns True only when outlines is installed AND exposes the
+    from_mlxlm API (added in outlines 0.1+).  Matches the _TENACITY
+    pattern — avoids a heavy import at module load time.
+    """
+    global _OUTLINES
+    if _OUTLINES:
+        return True
+    try:
+        import outlines  # noqa: F401
+        if not hasattr(outlines, "from_mlxlm"):
+            return False
+        _OUTLINES = True
+        return True
+    except ImportError:
+        return False
+
+
 log = logging.getLogger(__name__)
 
 
@@ -270,6 +293,15 @@ def unload_mlx_model() -> None:
     """
     if hasattr(_mlx_text_inner, "_cache") and _mlx_text_inner._cache:
         log.info("Unloading MLX model(s) to free Metal memory...")
+
+        # Clear in dependency order: generators reference outlines_model,
+        # outlines_model references raw model — innermost first.
+        if hasattr(_mlx_text_inner, "_generators"):
+            _mlx_text_inner._generators.clear()
+
+        if hasattr(_mlx_text_inner, "_outlines_model"):
+            _mlx_text_inner._outlines_model.clear()
+
         # Explicitly delete model/tokenizer references before clearing the dict.
         # This ensures Python refcounts drop to zero so Metal buffers are released
         # when gc.collect() runs, rather than lingering until the dict is reaped.
@@ -456,9 +488,9 @@ def send_text(
     response_schema : Pydantic model class, optional
         When provided and the backend supports it, enables constrained
         generation so the output is guaranteed to be valid JSON matching
-        the schema.  Currently honoured by the Ollama backend (via the
-        Ollama v0.5+ format parameter).  Ignored silently on MLX/cloud
-        — those paths still return free-form text.
+        the schema.  Honoured by Ollama (v0.5+ format parameter) and
+        MLX (Outlines FSM, when outlines[mlxlm] is installed).
+        Ignored silently on cloud — that path still returns free-form text.
 
     Raises RuntimeError if the backend is unavailable or fails.
     """
@@ -472,7 +504,8 @@ def send_text(
         return _ollama_text(effective, prompt, system_prompt,
                             response_schema=response_schema)
     elif effective.name == "mlx":
-        return _mlx_text(effective, prompt, system_prompt)
+        return _mlx_text(effective, prompt, system_prompt,
+                         response_schema=response_schema)
     elif effective.name == "cloud":
         return _cloud_text(effective, prompt, system_prompt)
     else:
@@ -545,7 +578,8 @@ _ollama_text = _with_retry(_ollama_text_impl)
 # ---------------------------------------------------------------------------
 
 def _mlx_text_impl(
-    backend: BackendConfig, prompt: str, system_prompt: str
+    backend: BackendConfig, prompt: str, system_prompt: str,
+    response_schema: Optional[type] = None,
 ) -> str:
     global _last_mlx_call
     # Serialize all MLX calls — Metal kernel doesn't support concurrent access
@@ -559,7 +593,8 @@ def _mlx_text_impl(
                 wait = _mlx_throttle_delay - elapsed
                 log.debug("MLX throttle: waiting %.1fs before next call", wait)
                 time.sleep(wait)
-        result = _mlx_text_inner(backend, prompt, system_prompt)
+        result = _mlx_text_inner(backend, prompt, system_prompt,
+                                 response_schema=response_schema)
         # Release intermediate Metal buffers after each call.
         # Without this, repeated inference fragments the unified memory pool
         # on 16 GB machines, eventually causing Metal command buffer deadlocks.
@@ -573,7 +608,8 @@ def _mlx_text_impl(
 
 
 def _mlx_text_inner(
-    backend: BackendConfig, prompt: str, system_prompt: str
+    backend: BackendConfig, prompt: str, system_prompt: str,
+    response_schema: Optional[type] = None,
 ) -> str:
     # Try mlx_lm first (text-only, simpler API), fall back to mlx_vlm
     try:
@@ -594,6 +630,20 @@ def _mlx_text_inner(
         _mlx_text_inner._cache[model_name] = (model, tokenizer)
 
     model, tokenizer = _mlx_text_inner._cache[model_name]
+
+    # Constrained generation via Outlines (optional — falls back to unconstrained)
+    if response_schema is not None and not _use_vlm and _check_outlines():
+        try:
+            return _mlx_constrained_generate(
+                model, tokenizer, model_name,
+                backend, prompt, system_prompt, response_schema,
+            )
+        except Exception as exc:
+            log.warning(
+                "Outlines constrained generation failed (%s) — "
+                "falling back to unconstrained MLX generation", exc,
+            )
+            # Fall through to existing unconstrained path
 
     # Build chat-formatted prompt
     full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
@@ -622,6 +672,87 @@ def _mlx_text_inner(
             model, tokenizer, prompt=formatted,
             max_tokens=backend.max_tokens, verbose=False,
         )
+
+
+def _mlx_constrained_generate(
+    model: object,
+    tokenizer: object,
+    model_name: str,
+    backend: BackendConfig,
+    prompt: str,
+    system_prompt: str,
+    response_schema: type,
+) -> str:
+    """Run MLX inference with Outlines FSM-constrained JSON generation.
+
+    Uses a two-tier cache on top of the raw model/tokenizer cache:
+      _mlx_text_inner._outlines_model[model_name]        — lightweight wrapper
+      _mlx_text_inner._generators[(model_name, schema)]  — compiled FSM
+
+    The FSM is compiled once per (model, schema) pair — typically <5s for
+    _CodingOutput's 13 simple fields.  Subsequent calls reuse the compiled
+    generator with zero overhead.
+
+    Returns a JSON string (the Pydantic instance serialised via
+    model_dump_json()) — preserves the send_text() -> str contract so
+    callers' parse_json_response() still works unchanged.
+    """
+    import outlines
+    import outlines.generate as og
+
+    # --- Outlines model wrapper (lightweight — same Metal buffers as raw model) ---
+    if not hasattr(_mlx_text_inner, "_outlines_model"):
+        _mlx_text_inner._outlines_model = {}
+
+    if model_name not in _mlx_text_inner._outlines_model:
+        log.info("Building Outlines mlxlm wrapper for %s", model_name)
+        _mlx_text_inner._outlines_model[model_name] = outlines.from_mlxlm(
+            model, tokenizer
+        )
+
+    outlines_model = _mlx_text_inner._outlines_model[model_name]
+
+    # --- FSM-compiled generator (compiled once per schema class) ---
+    if not hasattr(_mlx_text_inner, "_generators"):
+        _mlx_text_inner._generators = {}
+
+    gen_key = (model_name, response_schema)
+    if gen_key not in _mlx_text_inner._generators:
+        log.info(
+            "Compiling Outlines FSM for schema %s on model %s — "
+            "one-time cost, cached for subsequent calls",
+            response_schema.__name__, model_name,
+        )
+        _mlx_text_inner._generators[gen_key] = og.json(
+            outlines_model, response_schema
+        )
+
+    generator = _mlx_text_inner._generators[gen_key]
+
+    # --- Format prompt with chat template (mirrors unconstrained path) ---
+    if hasattr(tokenizer, "apply_chat_template"):
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+        formatted = tokenizer.apply_chat_template(
+            messages, add_generation_prompt=True, tokenize=False
+        )
+    else:
+        formatted = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
+
+    log.debug("MLX constrained generation via Outlines for schema %s",
+              response_schema.__name__)
+
+    result = generator(
+        formatted,
+        max_tokens=backend.max_tokens,
+        temperature=backend.temperature,
+    )
+
+    # Outlines returns a Pydantic model instance — serialise to JSON string
+    # so the send_text() -> str contract is preserved.
+    return result.model_dump_json()
 
 
 _mlx_text = _mlx_text_impl  # no retry needed for local
