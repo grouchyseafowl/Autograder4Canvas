@@ -11,7 +11,9 @@ Wellbeing classification (4-axis) runs as a separate stage on raw submissions.
 
 import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel
 
 from insights.llm_backend import BackendConfig, parse_json_response, send_text
 from insights.models import (
@@ -34,6 +36,42 @@ from insights.prompts import (
 )
 
 log = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# LLM output schema for constrained generation (Ollama format parameter)
+# ---------------------------------------------------------------------------
+
+class _QuoteOutput(BaseModel):
+    """Quote sub-object as the LLM generates it."""
+    text: str
+    significance: str = ""
+
+
+class _CodingOutput(BaseModel):
+    """Schema for the fields the LLM produces in the coding pass.
+
+    Intentionally narrower than SubmissionCodingRecord — excludes internal
+    fields (student_id, engagement_signals, submitted_at, etc.) that are
+    set programmatically, not by the model.
+
+    Passed as response_schema to send_text() when the Ollama backend is
+    active so constrained generation (GBNF grammar) enforces float values
+    for theme_confidence and correct object shapes for notable_quotes.
+    """
+    student_name: str = ""
+    theme_tags: List[str] = []
+    theme_confidence: Dict[str, float] = {}
+    what_student_is_reaching_for: Optional[str] = None
+    notable_quotes: List[_QuoteOutput] = []
+    emotional_register: str = ""
+    emotional_notes: str = ""
+    readings_referenced: List[str] = []
+    concepts_applied: List[str] = []
+    personal_connections: List[str] = []
+    current_events_referenced: List[str] = []
+    confusion_or_questions: Optional[str] = None
+    lens_observations: Optional[Dict[str, str]] = None
 
 
 def _coerce_str(val, default: str = "") -> str:
@@ -625,7 +663,7 @@ def _code_full(
         profile_fragment=profile_fragment,
     )
 
-    raw = send_text(backend, prompt, SYSTEM_PROMPT)
+    raw = send_text(backend, prompt, SYSTEM_PROMPT, response_schema=_CodingOutput)
     parsed = _parse_response(raw, student_name, student_id)
 
     if "_parse_error" in parsed:
@@ -754,11 +792,15 @@ def code_submission_reading_first(
         lens_fragment=lens_fragment,
     )
 
-    raw = send_text(backend, p2_prompt, SYSTEM_PROMPT, max_tokens=1200)
+    # Pass response_schema so Ollama uses constrained generation (GBNF grammar).
+    # For MLX/cloud backends this is a no-op — schema is silently ignored.
+    raw = send_text(backend, p2_prompt, SYSTEM_PROMPT, max_tokens=1200,
+                    response_schema=_CodingOutput)
     parsed = _parse_response(raw, student_name, student_id)
 
     if "_parse_error" in parsed:
         # Attempt 2: JSON repair prompt
+        # (Ollama users won't reach this — constrained generation prevents it)
         repair = JSON_REPAIR_PROMPT.format(
             raw_response=raw[:1500],
             expected_format='{"student_name": "...", "theme_tags": [...], ...}',
@@ -785,6 +827,7 @@ def code_submission_reading_first(
             json_only_prefix + p2_prompt,
             SYSTEM_PROMPT,
             max_tokens=1200,
+            response_schema=_CodingOutput,
         )
         parsed = _parse_response(raw, student_name, student_id)
         if "_parse_error" not in parsed:

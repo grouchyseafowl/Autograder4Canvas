@@ -443,6 +443,7 @@ def send_text(
     prompt: str,
     system_prompt: str = "",
     max_tokens: Optional[int] = None,
+    response_schema: Optional[type] = None,
 ) -> str:
     """Send a text prompt to the configured backend. Returns response text.
 
@@ -452,6 +453,12 @@ def send_text(
         Override backend.max_tokens for this call only.  Use this to set
         tighter limits for stages that don't need long responses (e.g.,
         theme generation: 1500 tokens, vs. coding: 4096).
+    response_schema : Pydantic model class, optional
+        When provided and the backend supports it, enables constrained
+        generation so the output is guaranteed to be valid JSON matching
+        the schema.  Currently honoured by the Ollama backend (via the
+        Ollama v0.5+ format parameter).  Ignored silently on MLX/cloud
+        — those paths still return free-form text.
 
     Raises RuntimeError if the backend is unavailable or fails.
     """
@@ -462,7 +469,8 @@ def send_text(
         effective = replace(backend, max_tokens=max_tokens)
 
     if effective.name == "ollama":
-        return _ollama_text(effective, prompt, system_prompt)
+        return _ollama_text(effective, prompt, system_prompt,
+                            response_schema=response_schema)
     elif effective.name == "mlx":
         return _mlx_text(effective, prompt, system_prompt)
     elif effective.name == "cloud":
@@ -476,7 +484,10 @@ def send_text(
 # ---------------------------------------------------------------------------
 
 def _ollama_text_impl(
-    backend: BackendConfig, prompt: str, system_prompt: str
+    backend: BackendConfig,
+    prompt: str,
+    system_prompt: str,
+    response_schema: Optional[type] = None,
 ) -> str:
     import requests
 
@@ -488,18 +499,38 @@ def _ollama_text_impl(
         messages.append({"role": "system", "content": system_prompt})
     messages.append({"role": "user", "content": prompt})
 
+    payload: dict = {
+        "model": model,
+        "messages": messages,
+        "stream": False,
+        "options": {
+            "temperature": backend.temperature,
+            "num_predict": backend.max_tokens,
+            "num_ctx": backend.num_ctx,
+        },
+    }
+
+    # Constrained generation: Ollama v0.5+ accepts a JSON schema via the
+    # `format` key and uses llama.cpp's GBNF grammar engine to enforce it
+    # at token-generation time.  This eliminates parse failures entirely
+    # for Ollama users — the output is valid JSON by construction.
+    if response_schema is not None:
+        try:
+            payload["format"] = response_schema.model_json_schema()
+            log.debug(
+                "Ollama constrained generation enabled for schema: %s",
+                response_schema.__name__,
+            )
+        except Exception as exc:
+            log.warning(
+                "Could not extract JSON schema from %s (%s) — "
+                "falling back to unconstrained generation",
+                response_schema, exc,
+            )
+
     r = requests.post(
         f"{base}/api/chat",
-        json={
-            "model": model,
-            "messages": messages,
-            "stream": False,
-            "options": {
-                "temperature": backend.temperature,
-                "num_predict": backend.max_tokens,
-                "num_ctx": backend.num_ctx,
-            },
-        },
+        json=payload,
         timeout=600,  # 10 min — theme generation can be slow on 8B
     )
     r.raise_for_status()
