@@ -489,11 +489,12 @@ class SettingsPanel(QWidget):
         whisper_col.addWidget(_field_label("Whisper Model (Audio Transcription)"))
         self._whisper_combo = CRTComboBox()
         self._whisper_combo.addItem("tiny — fastest, lowest quality", "tiny")
-        self._whisper_combo.addItem("base — good balance (recommended)", "base")
-        self._whisper_combo.addItem("small — better quality, ~2GB RAM", "small")
-        self._whisper_combo.addItem("medium — high quality, ~5GB RAM", "medium")
-        self._whisper_combo.addItem("large-v3 — best quality, ~10GB RAM", "large-v3")
-        self._whisper_combo.setCurrentIndex(1)  # base
+        self._whisper_combo.addItem("base — compact, ~150MB", "base")
+        self._whisper_combo.addItem("small — better quality, ~500MB", "small")
+        self._whisper_combo.addItem("medium — high quality, ~1.5GB (recommended)", "medium")
+        self._whisper_combo.addItem("large-v3 — best quality, ~3GB", "large-v3")
+        self._whisper_combo.addItem("large-v3-turbo — large quality, faster, ~1.5GB", "large-v3-turbo")
+        self._whisper_combo.setCurrentIndex(3)  # medium
         whisper_col.addWidget(self._whisper_combo)
         whisper_col.addWidget(QLabel(
             "Used for transcribing audio/video submissions.\n"
@@ -1330,7 +1331,7 @@ class SettingsPanel(QWidget):
             s["insights_cloud_model"] = self._cloud_model_edit.text().strip()
             s["insights_throttle_delay"] = self._throttle_spin.value()
             s["insights_whisper_model"] = (
-                self._whisper_combo.currentData() or "base"
+                self._whisper_combo.currentData() or "medium"
             )
             s["insights_keep_awake"] = self._keep_awake_toggle.isChecked()
             s["insights_draft_feedback"] = self._draft_feedback_toggle.isChecked()

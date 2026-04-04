@@ -36,7 +36,7 @@ _DEFAULTS = {
     "population_first_gen": "none",           # none, low, moderate, high
     "population_neurodivergent_aware": False,  # enable neurodivergent-aware scoring
     # Insights Engine
-    "insights_whisper_model": "base",
+    "insights_whisper_model": "medium",
     "insights_translation_backend": "ollama",
     "insights_translation_model": "llama3.1:8b",
     "insights_model_tier": "auto",            # persistent depth toggle default (auto/lightweight/medium/deep_thinking)

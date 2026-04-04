@@ -62,7 +62,9 @@ def _clean_html(text: str) -> str:
 
 def _extract_text_attachment(attachment: Dict, headers: Dict) -> Optional[str]:
     """
-    Extract text from a non-audio attachment (.txt, .docx, .pdf).
+    Extract text from a non-audio/image attachment.
+
+    Supported: .txt, .md, .html, .htm, .docx, .doc, .odt, .pdf, .rtf
 
     Replicates the extraction logic from the main autograder so the
     preprocessing pipeline can work independently.
@@ -80,8 +82,15 @@ def _extract_text_attachment(attachment: Dict, headers: Dict) -> Optional[str]:
         r.raise_for_status()
         content = r.content
 
-        if ext == ".txt":
+        # Plain text / Markdown — treat as-is
+        if ext in (".txt", ".md"):
             return content.decode("utf-8", errors="replace")
+
+        # HTML — strip tags
+        elif ext in (".html", ".htm"):
+            import re
+            raw = content.decode("utf-8", errors="replace")
+            return re.sub(r"<[^>]+>", " ", raw).strip()
 
         elif ext == ".docx":
             try:
@@ -93,6 +102,46 @@ def _extract_text_attachment(attachment: Dict, headers: Dict) -> Optional[str]:
                 logger.warning("python-docx not available for .docx extraction")
                 return None
 
+        elif ext == ".doc":
+            # Old binary Word format — python-docx sometimes handles simple .doc files
+            try:
+                import io
+                from docx import Document
+                doc = Document(io.BytesIO(content))
+                text = "\n".join(p.text for p in doc.paragraphs if p.text.strip())
+                if text:
+                    return text
+            except Exception:
+                pass
+            logger.warning(
+                "Could not extract text from .doc file '%s' — "
+                "old binary Word format. Convert to .docx for reliable extraction.",
+                filename,
+            )
+            return None
+
+        elif ext == ".odt":
+            try:
+                import io
+                from odf.opendocument import load as odf_load
+                from odf.text import P
+                from odf import teletype
+                doc = odf_load(io.BytesIO(content))
+                paragraphs = doc.getElementsByType(P)
+                lines = []
+                for p in paragraphs:
+                    line = teletype.extractText(p)
+                    if line.strip():
+                        lines.append(line)
+                return "\n".join(lines)
+            except ImportError:
+                logger.warning(
+                    "odfpy not installed — cannot extract text from ODT '%s'. "
+                    "Install with: pip install odfpy",
+                    filename,
+                )
+                return None
+
         elif ext == ".pdf":
             try:
                 import io
@@ -102,6 +151,18 @@ def _extract_text_attachment(attachment: Dict, headers: Dict) -> Optional[str]:
                 logger.warning(
                     "pdfminer.six not installed — cannot extract text from PDF '%s'. "
                     "Install with: pip install pdfminer.six",
+                    filename,
+                )
+                return None
+
+        elif ext == ".rtf":
+            try:
+                from striprtf.striprtf import rtf_to_text
+                return rtf_to_text(content.decode("utf-8", errors="replace"))
+            except ImportError:
+                logger.warning(
+                    "striprtf not installed — cannot extract text from RTF '%s'. "
+                    "Install with: pip install striprtf",
                     filename,
                 )
                 return None
@@ -409,16 +470,16 @@ class PreprocessingPipeline:
             lines.append("")
 
         if image_transcription_results:
-            has_transcribed = any(
-                r.success and r.transcript for r in image_transcription_results
+            has_text = any(r.success and r.transcript for r in image_transcription_results)
+            has_visual = any(
+                r.success and getattr(r, "description", "") for r in image_transcription_results
             )
-            if has_transcribed:
-                lines.append("Handwritten Notes (NEEDS VERIFICATION):")
+
+            if has_text:
+                lines.append("Image Submission — Text Content (NEEDS VERIFICATION):")
                 lines.append(
-                    "  ⚠ The following text was transcribed from handwritten "
-                    "images using AI. Please verify accuracy — handwriting "
-                    "recognition can make errors, especially with unusual "
-                    "formatting or unclear writing."
+                    "  ⚠ Text was extracted from the submitted image(s) using AI. "
+                    "Please verify accuracy before relying on this content."
                 )
                 for ir in image_transcription_results:
                     if ir.success and ir.transcript:
@@ -428,6 +489,18 @@ class PreprocessingPipeline:
                         lines.append(f"  - {ir.filename}: \"{preview}\"")
                     elif not ir.success:
                         lines.append(f"  - {ir.filename}: failed ({ir.error})")
+                lines.append("")
+
+            if has_visual:
+                lines.append("Image Submission — Visual Description (AI-generated):")
+                lines.append(
+                    "  ⚠ These are AI descriptions of visual/artistic content. "
+                    "View the original file to assess the submission fully."
+                )
+                for ir in image_transcription_results:
+                    desc = getattr(ir, "description", "")
+                    if ir.success and desc and not ir.transcript:
+                        lines.append(f"  - {ir.filename}: {desc}")
                 lines.append("")
 
         if translation_result and translation_result.success:

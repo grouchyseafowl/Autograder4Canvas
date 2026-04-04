@@ -141,41 +141,78 @@ def _find_whisper_cpp_model(model_size: str = "base") -> Optional[str]:
 
     Search order:
       1. WHISPER_CPP_MODEL environment variable
-      2. ~/whisper.cpp/models/ directory
-      3. XDG/platform cache directories
+      2. Settings-stored path (insights_whisper_cpp_model key)
+      3. Directory next to the binary (if binary is found)
+      4. ~/whisper.cpp/models/
+      5. Homebrew / common system locations
+      6. XDG / platform cache dirs (~/.cache/whisper/, etc.)
+
+    Within each directory, prefers the requested model size, falls back
+    to any available .bin model (preferring larger/higher-quality sizes).
     """
+    def _search_dir(d: Path) -> Optional[str]:
+        """Return first usable .bin model in directory d, preferred size first."""
+        if not d.is_dir():
+            return None
+        for name in (f"ggml-{model_size}.bin", f"ggml-{model_size}.en.bin"):
+            if (d / name).is_file():
+                return str(d / name)
+        preference_order = [
+            "large-v3-turbo", "large-v3", "large", "medium", "small", "base", "tiny",
+        ]
+        for size in preference_order:
+            for f in sorted(d.glob(f"*{size}*.bin")):
+                if "for-tests" not in f.name:
+                    return str(f)
+        for f in sorted(d.glob("*.bin")):
+            if "for-tests" not in f.name:
+                return str(f)
+        return None
+
+    # 1. Explicit environment variable
     env_model = os.environ.get("WHISPER_CPP_MODEL")
     if env_model and os.path.isfile(env_model):
         return env_model
 
     home = Path.home()
-    models_dir = home / "whisper.cpp" / "models"
 
-    if models_dir.is_dir():
-        # Prefer: exact match → turbo → standard
-        # e.g., for "base": ggml-base.bin, for "large-v3-turbo": ggml-large-v3-turbo.bin
-        candidates = [
-            f"ggml-{model_size}.bin",
-            f"for-tests-ggml-{model_size}.bin",
-        ]
+    # Build candidate directories to search
+    search_dirs: list[Path] = []
 
-        # Also look for any available model if preferred size not found
-        for name in candidates:
-            path = models_dir / name
-            if path.is_file():
-                return str(path)
+    # 2. Directory next to the binary (covers any install location)
+    binary = _find_whisper_cpp_binary()
+    if binary:
+        bin_dir = Path(binary).resolve().parent
+        # Check parent/models, sibling models dir, and the bin dir itself
+        for candidate in (bin_dir / "models", bin_dir.parent / "models",
+                          bin_dir.parent / "share" / "whisper.cpp" / "models",
+                          bin_dir):
+            search_dirs.append(candidate)
 
-        # Fallback: find any .bin model, preferring larger ones
-        preference_order = [
-            "large-v3-turbo", "large-v3", "large", "medium", "small", "base", "tiny",
-        ]
-        for size in preference_order:
-            for f in models_dir.glob(f"*{size}*.bin"):
-                if "en" not in f.name:  # Prefer multilingual models
-                    return str(f)
-        for f in models_dir.glob(f"*.bin"):
-            if "for-tests" not in f.name:
-                return str(f)
+    # 3. Source build default
+    search_dirs.append(home / "whisper.cpp" / "models")
+
+    # 4. Homebrew on macOS (Apple Silicon and Intel)
+    search_dirs.extend([
+        Path("/opt/homebrew/share/whisper.cpp/models"),
+        Path("/opt/homebrew/share/whisper-cpp/models"),
+        Path("/usr/local/share/whisper.cpp/models"),
+        Path("/usr/local/share/whisper-cpp/models"),
+    ])
+
+    # 5. XDG / platform cache
+    xdg_cache = Path(os.environ.get("XDG_CACHE_HOME", home / ".cache"))
+    search_dirs.extend([
+        xdg_cache / "whisper",
+        xdg_cache / "whisper.cpp",
+        home / "Library" / "Caches" / "whisper",   # macOS app convention
+        home / ".local" / "share" / "whisper",
+    ])
+
+    for d in search_dirs:
+        result = _search_dir(d)
+        if result:
+            return result
 
     return None
 
@@ -252,9 +289,9 @@ class WhisperCppBackend:
                     if os.path.exists(wav_path):
                         input_path = wav_path
                     else:
-                        log.warning("Audio conversion failed — trying original format")
+                        logger.warning("Audio conversion failed — trying original format")
                 except Exception as e:
-                    log.warning("Audio conversion error: %s — trying original format", e)
+                    logger.warning("Audio conversion error: %s — trying original format", e)
 
             cmd = [
                 self._binary,
@@ -364,13 +401,6 @@ def _parse_timestamp(ts: str) -> float:
 
 # --- faster-whisper backend (fallback) ---
 
-try:
-    from faster_whisper import WhisperModel
-    _FASTER_WHISPER_AVAILABLE = True
-except ImportError:
-    _FASTER_WHISPER_AVAILABLE = False
-
-
 class FasterWhisperBackend:
     """Transcription via faster-whisper Python library (CTranslate2)."""
 
@@ -386,7 +416,12 @@ class FasterWhisperBackend:
         self._model = None
 
     def is_available(self) -> bool:
-        return _FASTER_WHISPER_AVAILABLE
+        # Check dynamically so post-install detection works without a restart
+        try:
+            from faster_whisper import WhisperModel  # noqa: F401
+            return True
+        except ImportError:
+            return False
 
     def get_info(self) -> str:
         if not self.is_available():
@@ -396,9 +431,10 @@ class FasterWhisperBackend:
     def _get_model(self):
         if self._model is not None:
             return self._model
-        if not _FASTER_WHISPER_AVAILABLE:
+        if not self.is_available():
             return None
         try:
+            from faster_whisper import WhisperModel
             logger.info(f"Loading faster-whisper model '{self.model_size}'...")
             self._model = WhisperModel(
                 model_size_or_path=self.model_size,
@@ -525,9 +561,35 @@ class Transcriber:
                 self._active_backend = self._fw
 
         if self._active_backend:
-            logger.info(f"Transcription backend: {self._active_backend.get_info()}")
+            logger.info("Transcription backend: %s", self._active_backend.get_info())
         else:
-            logger.warning("No transcription backend available")
+            # Emit specific diagnostics so the cause is clear in logs
+            cpp_binary = self._cpp._binary
+            cpp_model  = self._cpp._model
+            if cpp_binary and not cpp_model:
+                logger.warning(
+                    "whisper.cpp binary found at %s but no GGML model file found. "
+                    "Expected location: ~/whisper.cpp/models/ggml-medium.bin "
+                    "(or set WHISPER_CPP_MODEL env var to the model path).",
+                    cpp_binary,
+                )
+            elif not cpp_binary:
+                logger.info(
+                    "whisper.cpp binary not found (searched PATH + common locations). "
+                    "Not required if faster-whisper is installed."
+                )
+
+            fw_ok = self._fw.is_available()
+            if not fw_ok:
+                import sys as _sys
+                logger.warning(
+                    "faster-whisper not importable from Python at %s. "
+                    "Install with: pip install faster-whisper  "
+                    "(make sure you use the same pip as this Python).",
+                    _sys.executable,
+                )
+
+            logger.warning("No transcription backend available — audio submissions will be skipped")
 
         return self._active_backend
 

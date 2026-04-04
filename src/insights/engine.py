@@ -50,6 +50,51 @@ def _strip_html(text: str) -> str:
     return re.sub(r"<[^>]+>", " ", text)
 
 
+# File extensions by type — used for skip-reason diagnosis
+_AUDIO_VIDEO_EXTS = {
+    ".mp3", ".m4a", ".wav", ".ogg", ".webm", ".mp4", ".mov",
+    ".flac", ".aac", ".wma", ".opus", ".oga",
+}
+_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".heic", ".heif", ".tiff", ".bmp", ".webp"}
+
+
+def _diagnose_skip(attachments: list) -> tuple[str, str]:
+    """Return (tag, reason) for a student skipped due to unextractable attachments.
+
+    Produces specific, actionable messaging for teachers based on what was submitted.
+    """
+    if not attachments:
+        return "blank submission", "blank submission (no text entered)"
+
+    exts = [os.path.splitext(a.get("filename", ""))[1].lower() for a in attachments]
+    names = [a.get("filename", "?") for a in attachments[:3]]
+    names_str = ", ".join(names)
+
+    # All audio/video → Whisper path was expected but unavailable
+    if all(e in _AUDIO_VIDEO_EXTS for e in exts if e):
+        return (
+            "audio/video submission — transcription unavailable",
+            f"audio/video file(s) ({names_str}) — Whisper transcription not available; "
+            f"check whisper-cli installation",
+        )
+
+    # All images → vision model expected but unavailable / not enabled
+    if all(e in _IMAGE_EXTS for e in exts if e):
+        return (
+            "image submission — teacher review needed",
+            f"image file(s) ({names_str}) — vision model not configured; "
+            f"teacher should review submission directly",
+        )
+
+    # Mixed or unknown formats
+    ext_list = ", ".join(sorted({e for e in exts if e})) or "unknown"
+    return (
+        f"unsupported format — teacher review needed",
+        f"file(s) ({names_str}) format not supported for text extraction "
+        f"(extensions: {ext_list}); teacher should review submission directly",
+    )
+
+
 class InsightsEngine:
     """Pipeline orchestrator for the Insights Engine.
 
@@ -90,6 +135,8 @@ class InsightsEngine:
                  in System Settings → Battery → Options)
         Windows: powercfg to disable AC standby timeout (restored on stop)
         Linux:   systemd-inhibit if available
+
+        Idempotent: if sleep prevention is already active, does nothing.
         """
         import platform
         import subprocess as _sp
@@ -97,6 +144,12 @@ class InsightsEngine:
 
         if not self._settings.get("insights_keep_awake", True):
             return
+
+        # Already running — don't spawn a second process
+        if self._caffeinate_proc is not None:
+            if self._caffeinate_proc.poll() is None:
+                return  # still alive
+            self._caffeinate_proc = None  # died; fall through to restart
 
         try:
             if system == "Darwin":
@@ -625,12 +678,7 @@ class InsightsEngine:
                     sub_type = sub_meta.get("submission_type", "")
                     attachments = sub_meta.get("attachments", [])
                     if wc == 0 and sub_type == "online_upload" and attachments:
-                        filenames = [a.get("filename", "?") for a in attachments[:3]]
-                        reason = (
-                            f"file upload ({', '.join(filenames)}) — "
-                            f"text extraction failed or unsupported format"
-                        )
-                        tag = "file upload — text not extracted"
+                        tag, reason = _diagnose_skip(attachments)
                     elif wc == 0 and not body.strip():
                         reason = "blank submission (no text entered)"
                         tag = "blank submission"
@@ -638,6 +686,7 @@ class InsightsEngine:
                         reason = f"only {wc} words"
                         tag = "insufficient text for analysis"
 
+                    log.warning("Skipping %s: %s", name, reason)
                     progress(f"  Skipping {name}: {reason}")
 
                     record = SubmissionCodingRecord(
@@ -820,6 +869,21 @@ class InsightsEngine:
 
             self._store.complete_stage(run_id, "coding")
             self._emit_timing(timing_callback, "coding_total", _stage_t0)
+
+            # Audit: surface any fallback records so trends are visible in logs.
+            _parse_error_records = [
+                r for r in coding_records
+                if r is not None
+                and "parse error — teacher review needed" in (r.theme_tags or [])
+            ]
+            if _parse_error_records:
+                names = [r.student_name for r in _parse_error_records]
+                log.warning(
+                    "Coding degraded for %d/%d students (JSON parse failures after "
+                    "3 attempts): %s. These students have a fallback record — "
+                    "teacher should review their submissions directly.",
+                    len(_parse_error_records), total, ", ".join(names),
+                )
 
             # Release MLX model between stages to prevent Metal memory
             # fragmentation on 16 GB machines.  Costs ~15-20s reload but
@@ -1779,18 +1843,14 @@ class InsightsEngine:
                         sub_type = sub_meta.get("submission_type", "")
                         attachments = sub_meta.get("attachments", [])
                         if wc == 0 and sub_type == "online_upload" and attachments:
-                            filenames = [a.get("filename", "?") for a in attachments[:3]]
-                            reason = (
-                                f"file upload ({', '.join(filenames)}) — "
-                                f"text extraction failed or unsupported format"
-                            )
-                            tag = "file upload — text not extracted"
+                            tag, reason = _diagnose_skip(attachments)
                         elif wc == 0 and not body.strip():
                             reason = "blank submission (no text entered)"
                             tag = "blank submission"
                         else:
                             reason = f"only {wc} words"
                             tag = "insufficient text for analysis"
+                        log.warning("Skipping %s: %s", name, reason)
                         progress(f"  Skipping {name}: {reason}")
                         record = SubmissionCodingRecord(
                             student_id=sid, student_name=name,
@@ -2119,7 +2179,7 @@ class InsightsEngine:
             return raw_submissions
 
         s = self._settings
-        whisper_model = s.get("insights_whisper_model", "base")
+        whisper_model = s.get("insights_whisper_model", "medium")
         translation_backend = s.get("insights_translation_backend", "ollama")
         translation_model = s.get("insights_translation_model", "llama3.1:8b")
         handwriting_enabled = s.get("insights_handwriting_enabled", False)
@@ -2127,6 +2187,25 @@ class InsightsEngine:
         canvas_headers = {}
         if self._api:
             canvas_headers = dict(self._api.headers)
+
+        # Auto-enable image transcription if a vision model is available,
+        # regardless of the handwriting toggle — we want to capture all
+        # image submissions, not just handwritten ones.
+        if not handwriting_enabled:
+            try:
+                from preprocessing.image_transcriber import ImageTranscriber
+                _it = ImageTranscriber(
+                    backend=s.get("insights_llm_backend", translation_backend),
+                    model=s.get("insights_mlx_vision_model",
+                                "mlx-community/Qwen2.5-VL-3B-Instruct-4bit"),
+                    ollama_base_url=s.get("insights_ollama_url",
+                                          "http://localhost:11434"),
+                )
+                if _it.is_available():
+                    handwriting_enabled = True
+                    log.info("Auto-enabled image analysis (vision model available)")
+            except Exception:
+                pass
 
         try:
             pipeline = PreprocessingPipeline(

@@ -1859,9 +1859,22 @@ class InsightsWizard(QDialog):
             s["insights_model_tier"] = "deep_thinking"
 
         elif self._recommended_model:
-            # Local model
-            s["insights_llm_backend"] = "ollama"
-            s["insights_translation_model"] = self._recommended_model
+            # Local model — prefer MLX on Apple Silicon when available
+            import platform as _plat
+            from insights.llm_backend import check_mlx as _check_mlx
+            _use_mlx = _plat.machine() == "arm64" and _check_mlx()
+
+            if _use_mlx:
+                s["insights_llm_backend"] = "mlx"
+                # Keep translation_model for Ollama fallback / translation use
+                s["insights_translation_model"] = self._recommended_model
+                # MLX model is already defaulted in BackendConfig;
+                # preserve any explicit setting the user may have
+                if not s.get("insights_mlx_model"):
+                    s["insights_mlx_model"] = "mlx-community/gemma-3-12b-it-4bit"
+            else:
+                s["insights_llm_backend"] = "ollama"
+                s["insights_translation_model"] = self._recommended_model
 
             if "27b" in self._recommended_model:
                 s["insights_model_tier"] = "medium"

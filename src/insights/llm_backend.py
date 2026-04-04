@@ -64,6 +64,7 @@ class BackendConfig:
     api_format: str = "openai" # "openai" or "anthropic"
     max_tokens: int = 4096
     temperature: float = 0.1   # low temp for structured output
+    num_ctx: int = 8192        # Ollama context window (ignored by MLX/cloud)
 
 
 # ---------------------------------------------------------------------------
@@ -375,8 +376,13 @@ def auto_detect_backend(
             api_format=s.get("insights_cloud_api_format", "openai"),
         )
 
-    # Determine preferred backend order
-    preferred = s.get("insights_llm_backend", "ollama")
+    # Determine preferred backend order.
+    # On Apple Silicon, default to MLX — it runs locally without Ollama and
+    # uses 128K context natively. On other platforms, Ollama is the default.
+    import platform as _platform
+    _arm = _platform.machine() == "arm64"
+    _default_backend = "mlx" if _arm else "ollama"
+    preferred = s.get("insights_llm_backend", _default_backend)
 
     ollama_model = s.get("insights_translation_model", "")
     ollama_url = s.get("insights_ollama_url", "http://localhost:11434")
@@ -491,6 +497,7 @@ def _ollama_text_impl(
             "options": {
                 "temperature": backend.temperature,
                 "num_predict": backend.max_tokens,
+                "num_ctx": backend.num_ctx,
             },
         },
         timeout=600,  # 10 min — theme generation can be slow on 8B

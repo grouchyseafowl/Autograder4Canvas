@@ -136,28 +136,43 @@ def _check_sklearn() -> bool:
 
 
 def _check_whisper() -> bool:
-    """Check for faster-whisper OR whisper.cpp."""
+    """Check if a fully-working Whisper backend is available.
+
+    Returns True only when transcription will actually work — i.e., either
+    faster-whisper is importable, OR whisper.cpp has both a binary AND a model
+    file. Checking the binary alone is a false positive (binary without model
+    = not usable).
+    """
     try:
         from faster_whisper import WhisperModel  # noqa: F401
         return True
     except ImportError:
         pass
-    # Check whisper.cpp binary
-    home = Path.home()
-    for p in [
-        home / "whisper.cpp" / "build" / "bin" / "whisper-cli",
-        home / "whisper.cpp" / "build" / "bin" / "main",
-    ]:
-        if p.exists():
-            return True
+    # Use the actual backend availability check (binary + model both required)
+    try:
+        from preprocessing.transcriber import WhisperCppBackend
+        return WhisperCppBackend().is_available()
+    except Exception:
+        pass
+    return False
+
+
+def _check_whisper_binary_only() -> bool:
+    """True if whisper.cpp binary is on PATH but model may be missing."""
+    try:
+        from preprocessing.transcriber import _find_whisper_cpp_binary
+        return _find_whisper_cpp_binary() is not None
+    except Exception:
+        pass
     return shutil.which("whisper-cli") is not None
 
 
 def _check_file_extraction() -> bool:
-    """Check if DOCX and PDF text extraction libraries are available."""
+    """Check if DOCX, PDF, and RTF text extraction libraries are available."""
     try:
         from docx import Document  # noqa: F401
         from pdfminer.high_level import extract_text  # noqa: F401
+        from striprtf.striprtf import rtf_to_text  # noqa: F401
         return True
     except ImportError:
         return False
@@ -252,7 +267,14 @@ class _InstallerWorker(QThread):
         if not _check_sklearn():
             packages.append("scikit-learn")
         if not _check_file_extraction():
-            packages.extend(["python-docx", "pdfminer.six"])
+            packages.extend(["python-docx", "pdfminer.six", "striprtf", "odfpy"])
+        # Install faster-whisper if no working whisper backend exists.
+        # This includes the case where whisper.cpp binary is installed but the
+        # GGML model file is missing — binary alone = not usable, so we need a
+        # fallback. faster-whisper is the simpler install; whisper.cpp is faster
+        # but requires a separate model download step.
+        if not _check_whisper():
+            packages.append("faster-whisper")
         try:
             import pydantic  # noqa: F401
         except ImportError:
@@ -528,12 +550,27 @@ class InsightsSetupDialog(QDialog):
                         _check_file_extraction(),
                         auto_installable=True)
 
+        whisper_ok = _check_whisper()
+        whisper_binary = _check_whisper_binary_only() if not whisper_ok else False
+        if whisper_binary and not whisper_ok:
+            # Binary found but model missing — give specific guidance
+            whisper_desc = (
+                "whisper.cpp binary found but no GGML model file located. "
+                "Download a model with: cd ~/whisper.cpp && "
+                "bash models/download-ggml-model.sh base  "
+                "— or we can install faster-whisper (Python fallback) automatically."
+            )
+        else:
+            whisper_desc = (
+                "For transcribing audio/video student submissions. "
+                "Only needed if students submit voice memos or videos. "
+                "Runs locally — no audio leaves your machine. "
+                "We can install faster-whisper automatically."
+            )
         self._add_check("Audio transcription (Whisper)",
-                        "For transcribing audio/video student submissions. "
-                        "Only needed if students submit voice memos or videos. "
-                        "Runs locally — no audio leaves your machine.",
-                        _check_whisper(),
-                        auto_installable=False,
+                        whisper_desc,
+                        whisper_ok,
+                        auto_installable=True,
                         optional=True)
 
         self._add_check("Handwriting transcription (Vision AI)",

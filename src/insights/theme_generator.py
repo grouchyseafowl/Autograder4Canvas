@@ -46,7 +46,9 @@ _GROUP_SIZES = {
 
 # Per-call timeout (seconds). If the LLM hasn't responded in this window,
 # we fall back to a non-LLM result so the pipeline doesn't stall.
-_LLM_CALL_TIMEOUT = 300  # 5 minutes
+_LLM_CALL_TIMEOUT = 300       # 5 minutes — per-group theme generation
+_META_SYNTH_TIMEOUT = 600     # 10 minutes — meta-synthesis merges all groups
+                               # and is inherently heavier on large classes
 
 # Max tokens per stage — tight limits prevent MLX from running away.
 # These are well above what a correct response needs; they guard against
@@ -484,7 +486,8 @@ def _meta_synthesize(
     """Merge multiple ThemeSets into one via meta-synthesis LLM call.
 
     Wrapped with a timeout — falls back to _manual_merge if the LLM
-    exceeds _LLM_CALL_TIMEOUT seconds.
+    exceeds _META_SYNTH_TIMEOUT seconds (longer than per-group timeout
+    because meta-synthesis prompts are larger for big classes).
     """
     _max_tok = _MAX_TOKENS_META.get(tier, 1500)
 
@@ -562,12 +565,12 @@ def _meta_synthesize(
     pool = ThreadPoolExecutor(max_workers=1)
     try:
         future = pool.submit(_inner)
-        return future.result(timeout=_LLM_CALL_TIMEOUT)
+        return future.result(timeout=_META_SYNTH_TIMEOUT)
     except FuturesTimeoutError:
         log.warning(
             "Meta-synthesis timed out after %ds for %d theme sets — "
             "falling back to manual merge",
-            _LLM_CALL_TIMEOUT, len(theme_sets),
+            _META_SYNTH_TIMEOUT, len(theme_sets),
         )
         pool.shutdown(wait=False, cancel_futures=True)
         return _manual_merge(theme_sets)

@@ -2057,7 +2057,7 @@ def get_assignments(course_id: int):
 def _extract_attachment_text(attachment: Dict[str, Any]) -> str:
     """
     Download a submission attachment and extract its text content.
-    Supports .txt, .docx, and .pdf files.
+    Supports .txt, .md, .html, .docx, .doc, .odt, .pdf, .rtf files.
     Returns empty string on failure or unsupported file type.
     """
     url = attachment.get("url")
@@ -2070,9 +2070,14 @@ def _extract_attachment_text(attachment: Dict[str, Any]) -> str:
         resp.raise_for_status()
         data = resp.content
 
-        # Plain text
-        if filename.endswith(".txt") or content_type.startswith("text/plain"):
+        # Plain text / Markdown
+        if filename.endswith((".txt", ".md")) or content_type.startswith("text/plain"):
             return data.decode("utf-8", errors="replace")
+
+        # HTML — strip tags
+        if filename.endswith((".html", ".htm")) or "text/html" in content_type:
+            import re
+            return re.sub(r"<[^>]+>", " ", data.decode("utf-8", errors="replace")).strip()
 
         # Word document (.docx)
         if filename.endswith(".docx") or "openxmlformats-officedocument.wordprocessingml" in content_type:
@@ -2081,11 +2086,42 @@ def _extract_attachment_text(attachment: Dict[str, Any]) -> str:
             doc = Document(io.BytesIO(data))
             return "\n".join(p.text for p in doc.paragraphs if p.text.strip())
 
+        # Old binary Word (.doc) — try python-docx as best-effort
+        if filename.endswith(".doc") or content_type == "application/msword":
+            try:
+                import io
+                from docx import Document
+                doc = Document(io.BytesIO(data))
+                text = "\n".join(p.text for p in doc.paragraphs if p.text.strip())
+                if text:
+                    return text
+            except Exception:
+                pass
+            return ""
+
+        # OpenDocument Text (.odt)
+        if filename.endswith(".odt") or "application/vnd.oasis.opendocument.text" in content_type:
+            import io
+            from odf.opendocument import load as odf_load
+            from odf.text import P
+            from odf import teletype
+            doc = odf_load(io.BytesIO(data))
+            return "\n".join(
+                teletype.extractText(p)
+                for p in doc.getElementsByType(P)
+                if teletype.extractText(p).strip()
+            )
+
         # PDF — extract raw text
         if filename.endswith(".pdf") or content_type.startswith("application/pdf"):
             import io
             from pdfminer.high_level import extract_text as _pdf_extract
             return _pdf_extract(io.BytesIO(data)) or ""
+
+        # RTF
+        if filename.endswith(".rtf") or content_type in ("application/rtf", "text/rtf"):
+            from striprtf.striprtf import rtf_to_text
+            return rtf_to_text(data.decode("utf-8", errors="replace"))
 
     except ImportError:
         pass  # dependency not installed — degrade gracefully

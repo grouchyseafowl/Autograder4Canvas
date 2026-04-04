@@ -490,13 +490,15 @@ class RunWorker(CancellableWorker):
                 translation_enabled=translate,
                 transcription_enabled=transcribe,
                 image_transcription_enabled=image_transcribe,
-                translation_backend=s.get("insights_llm_backend", "ollama"),
+                translation_backend=s.get("insights_llm_backend") or (
+                    "mlx" if __import__("platform").machine() == "arm64" else "ollama"
+                ),
                 translation_model=s.get("insights_translation_model", "llama3.1:8b"),
                 ollama_base_url=s.get("insights_ollama_url", "http://localhost:11434"),
                 cloud_api_key=s.get("insights_cloud_key", ""),
                 cloud_base_url=s.get("insights_cloud_url", ""),
                 cloud_model=s.get("insights_cloud_model", ""),
-                whisper_model=s.get("insights_whisper_model", "base"),
+                whisper_model=s.get("insights_whisper_model", "medium"),
                 generate_teacher_comments=False,
             )
         except ImportError:

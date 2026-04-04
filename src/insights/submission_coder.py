@@ -45,6 +45,42 @@ def _coerce_str(val, default: str = "") -> str:
     return str(val)
 
 
+def _safe_theme_confidence(raw: Any) -> dict:
+    """Coerce theme_confidence to Dict[str, float], tolerating string values.
+
+    The LLM (especially in repair responses) sometimes returns string values
+    like "high", "0.8", or "very confident" instead of floats.  Pydantic
+    raises ValidationError for non-float-coercible strings, which kills the
+    whole assignment run.  This helper converts each value:
+      - numeric strings ("0.8") → float
+      - qualitative strings ("high") → mapped to a float (0.8, etc.)
+      - anything else → 0.5 fallback
+    """
+    _QUAL_MAP = {
+        "very high": 0.9, "high": 0.8, "medium-high": 0.7,
+        "medium": 0.6, "moderate": 0.6, "low-medium": 0.5,
+        "low": 0.4, "very low": 0.2,
+    }
+    if not isinstance(raw, dict):
+        return {}
+    out = {}
+    for k, v in raw.items():
+        if isinstance(v, (int, float)):
+            out[str(k)] = float(v)
+        elif isinstance(v, str):
+            v_lower = v.strip().lower()
+            if v_lower in _QUAL_MAP:
+                out[str(k)] = _QUAL_MAP[v_lower]
+            else:
+                try:
+                    out[str(k)] = float(v_lower)
+                except ValueError:
+                    out[str(k)] = 0.5  # unknown string → neutral confidence
+        else:
+            out[str(k)] = 0.5
+    return out
+
+
 def _chunk_text(text: str, chunk_size: int, overlap: int) -> list:
     """Split text into overlapping chunks, preferring paragraph boundaries.
 
@@ -610,20 +646,33 @@ def _code_full(
         parsed.get("concepts_applied", []), submission_text,
     )
 
-    return SubmissionCodingRecord(
-        student_id=student_id,
-        student_name=student_name,
-        theme_tags=parsed.get("theme_tags", []),
-        theme_confidence=parsed.get("theme_confidence", {}),
-        notable_quotes=_safe_quotes(parsed.get("notable_quotes", [])),
-        emotional_register=_coerce_str(parsed.get("emotional_register")),
-        emotional_notes=parsed.get("emotional_notes", ""),
-        readings_referenced=parsed.get("readings_referenced", []),
-        concepts_applied=validated_concepts,
-        personal_connections=parsed.get("personal_connections", []),
-        current_events_referenced=parsed.get("current_events_referenced", []),
-        lens_observations=lens_obs,
-    )
+    try:
+        return SubmissionCodingRecord(
+            student_id=student_id,
+            student_name=student_name,
+            theme_tags=parsed.get("theme_tags", []),
+            theme_confidence=_safe_theme_confidence(parsed.get("theme_confidence", {})),
+            notable_quotes=_safe_quotes(parsed.get("notable_quotes", [])),
+            emotional_register=_coerce_str(parsed.get("emotional_register")),
+            emotional_notes=parsed.get("emotional_notes", ""),
+            readings_referenced=parsed.get("readings_referenced", []),
+            concepts_applied=validated_concepts,
+            personal_connections=parsed.get("personal_connections", []),
+            current_events_referenced=parsed.get("current_events_referenced", []),
+            lens_observations=lens_obs,
+        )
+    except Exception as exc:
+        log.warning(
+            "SubmissionCodingRecord construction failed for %s (%s) — "
+            "returning minimal fallback record. Parsed keys: %s",
+            student_name, exc, list(parsed.keys()),
+        )
+        return SubmissionCodingRecord(
+            student_id=student_id,
+            student_name=student_name,
+            theme_tags=["parse error — teacher review needed"],
+            emotional_notes=f"Coding failed: {exc}",
+        )
 
 
 def code_submission_reading_first(
@@ -705,16 +754,47 @@ def code_submission_reading_first(
         lens_fragment=lens_fragment,
     )
 
-    raw = send_text(backend, p2_prompt, SYSTEM_PROMPT, max_tokens=600)
+    raw = send_text(backend, p2_prompt, SYSTEM_PROMPT, max_tokens=1200)
     parsed = _parse_response(raw, student_name, student_id)
 
     if "_parse_error" in parsed:
+        # Attempt 2: JSON repair prompt
         repair = JSON_REPAIR_PROMPT.format(
             raw_response=raw[:1500],
             expected_format='{"student_name": "...", "theme_tags": [...], ...}',
         )
-        raw = send_text(backend, repair, SYSTEM_PROMPT)
+        raw = send_text(backend, repair, SYSTEM_PROMPT, max_tokens=1200)
         parsed = _parse_response(raw, student_name, student_id)
+
+    if "_parse_error" in parsed:
+        # Attempt 3: re-run Pass 2 with an explicit JSON-only instruction
+        # prepended. Some models (Gemma, Llama) generate preamble text even
+        # when asked not to — a fresh call with a stronger constraint often
+        # succeeds where the repair prompt failed.
+        log.warning(
+            "JSON repair failed for %s — retrying Pass 2 with JSON-only constraint",
+            student_name,
+        )
+        json_only_prefix = (
+            "Respond with ONLY a valid JSON object. "
+            "No preamble, no explanation, no markdown fences. "
+            "Start your response with { and end with }.\n\n"
+        )
+        raw = send_text(
+            backend,
+            json_only_prefix + p2_prompt,
+            SYSTEM_PROMPT,
+            max_tokens=1200,
+        )
+        parsed = _parse_response(raw, student_name, student_id)
+        if "_parse_error" not in parsed:
+            log.info("JSON-only retry succeeded for %s", student_name)
+        else:
+            log.warning(
+                "All 3 JSON attempts failed for %s — "
+                "will use fallback record. Final error: %s",
+                student_name, parsed.get("_parse_error", ""),
+            )
 
     # Validate concepts against submission text (hallucination guard)
     validated_concepts = _validate_concepts(
@@ -729,26 +809,41 @@ def code_submission_reading_first(
             student_name, list(parsed.keys()),
         )
 
-    return SubmissionCodingRecord(
-        student_id=student_id,
-        student_name=student_name,
-        theme_tags=parsed.get("theme_tags", []),
-        theme_confidence=parsed.get("theme_confidence", {}),
-        notable_quotes=_safe_quotes(parsed.get("notable_quotes", [])),
-        emotional_register=_coerce_str(parsed.get("emotional_register")),
-        emotional_notes=parsed.get("emotional_notes", ""),
-        readings_referenced=parsed.get("readings_referenced", []),
-        concepts_applied=validated_concepts,
-        personal_connections=parsed.get("personal_connections", []),
-        # Reader-not-judge specific fields
-        free_form_reading=reading,
-        what_student_is_reaching_for=reaching_for,
-        confusion_or_questions=parsed.get("confusion_or_questions") or None,
-        # Non-LLM metadata — must be set here (unlike code_submission which
-        # sets it post-return). Trajectory context depends on word_count > 0
-        # to include prior records via _is_usable().
-        word_count=len(submission_text.split()),
-    )
+    try:
+        return SubmissionCodingRecord(
+            student_id=student_id,
+            student_name=student_name,
+            theme_tags=parsed.get("theme_tags", []),
+            theme_confidence=_safe_theme_confidence(parsed.get("theme_confidence", {})),
+            notable_quotes=_safe_quotes(parsed.get("notable_quotes", [])),
+            emotional_register=_coerce_str(parsed.get("emotional_register")),
+            emotional_notes=parsed.get("emotional_notes", ""),
+            readings_referenced=parsed.get("readings_referenced", []),
+            concepts_applied=validated_concepts,
+            personal_connections=parsed.get("personal_connections", []),
+            # Reader-not-judge specific fields
+            free_form_reading=reading,
+            what_student_is_reaching_for=reaching_for,
+            confusion_or_questions=parsed.get("confusion_or_questions") or None,
+            # Non-LLM metadata — must be set here (unlike code_submission which
+            # sets it post-return). Trajectory context depends on word_count > 0
+            # to include prior records via _is_usable().
+            word_count=len(submission_text.split()),
+        )
+    except Exception as exc:
+        log.warning(
+            "SubmissionCodingRecord construction failed for %s (%s) — "
+            "returning minimal fallback record. Parsed keys: %s",
+            student_name, exc, list(parsed.keys()),
+        )
+        return SubmissionCodingRecord(
+            student_id=student_id,
+            student_name=student_name,
+            theme_tags=["parse error — teacher review needed"],
+            emotional_notes=f"Coding failed: {exc}",
+            free_form_reading=reading,
+            word_count=len(submission_text.split()),
+        )
 
 
 # ---------------------------------------------------------------------------
