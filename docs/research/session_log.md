@@ -20,6 +20,14 @@ None.
 
 ### P3 — **DONE** (04:11 Apr 2). Q3 — **DONE** (09:56 Apr 2). All tests complete.
 
+### Post-Q3 fixes implemented (Apr 3-4)
+
+1. **Observation arc passthrough** (`trajectory_report.py`): `_build_observation_arc()` adds observation text to semester_arc with signal-aware compression. Inflection points (wellbeing change, theme shift, word count delta >40%, register change) + recent 3 assignments get full text; stable entries get first sentence. Tested to 20 assignments at max volatility: 1803 tokens, under 3500 ceiling. Addresses T006 root cause.
+2. **E016 prompt fix** (`prompts.py`): observation prompt names what relational/narrative epistemology uniquely reveals (same pattern as E002).
+3. **Binary concern detector removed** from `__init__.py` re-export (deprecated in production, only research_engine uses it directly).
+4. **Lens template concern fragments** rewritten from enumerative checklists to generative frameworks across all 10 subject areas.
+5. **Test-monitor skill** revised: structured 5-step verification, anti-enumeration discipline, bounded QC pass.
+
 **P3 result: 55/56 (98.2%), 15/16 all-pass.** No Metal OOM — batch fix worked. See experiment_log.md for full entry.
 
 Key findings:
