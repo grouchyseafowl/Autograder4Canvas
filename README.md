@@ -2,9 +2,11 @@
 
 **Ethics-first pedagogical infrastructure for community college instructors.**
 
-A full-stack grading, insights, and academic integrity platform built around the Canvas LMS API — designed so educators spend less time on administrative grading and more time in meaningful conversation with students. Students are knowledge creators, not surveillance targets.
+A tool for reading your class — not scoring it. Autograder4Canvas reads student submissions to surface what students are reaching for and why that might be interesting: the intellectual moves they're making, the connections they're drawing to personal and community experience, the places they're pushing back or recentering dominant frames. It also surfaces classwide patterns — emergent themes, tensions and dialectics between students, dynamics like tone policing or colorblind reframing that are only visible when you read the whole class together.
 
-Built by a community college instructor for educators teaching humanities and social sciences, particularly at Hispanic Serving Institutions.
+The goal is to give teachers a richer picture of where students are intellectually before walking into the room — not to produce grades or verdicts. Built for complete/incomplete and contract grading, turning assignemnts into launching points for classroom discussion. Autograder provides information about classwide patterns and tensions, exceptional student insights, and concerns worth checking in on — including burnout, cricis, and power moves that foreclose minoritized students' voices. The teacher uses this system decide where to take the class next.
+
+Built by a community college Ethnic Studies instructor for other educators. AAVE, multilingual, and neurodivergent patterns are treated as signal of engagement and protected from the weight of AI algorithmic bias. Rich qualitative insights surf community knowledge and life experience as strengths, counteracting deficit-based models that dominate the distributional norm of AI training data. 
 
 ---
 
@@ -19,7 +21,11 @@ Custom retro-futurist amber terminal interface (PySide6/Qt6) with:
 - All Canvas API calls and LLM analysis run in background worker threads
 
 ### Insights Engine
-Two-phase analytical pipeline that transforms raw student submissions into layered pedagogical insights — running locally on instructor hardware via Ollama or Apple MLX, never storing student data. The architecture is designed around a set of commitments about how student work should be read:
+Two-phase analytical pipeline that reads student submissions for pedagogical insight — running locally on instructor hardware via Ollama or Apple MLX, never storing student data. The model's job is not to assess whether students got the content right. It's to figure out what a student is reaching for and why that might be interesting. This distinction matters especially for courses like Ethnic Studies and Native American Studies, where the concern that AI models lack historical or political knowledge is well-founded — but also beside the point, because the system isn't checking facts. It's reading moves.
+
+The pipeline surfaces three things: what individual students are doing intellectually (theme tags, notable verbatim quotes, emotional register, concepts applied, personal and community knowledge being used as intellectual resource); what the class is doing collectively (emergent themes, tensions and dialectics between students, power moves like recentering or re-normalization of dominant perspectives that silence marginalized voices); and who may need a check-in (burnout signals, disengagement, truncated submissions). Burnout and academic dishonesty correlate strongly — surfacing the former is often more useful than trying to detect the latter directly.
+
+The architecture is designed around a set of commitments about how student work should be read:
 
 **Community reading, not individual surveillance.** The pipeline runs a full class reading *before* per-student coding. Students are read as a community in conversation — what they're reaching for, where they connect, where they disagree — because relational harms like tone policing or essentializing are only visible in context. A student writing "I don't see race" reads differently alone than alongside classmates describing how race shaped their families.
 
@@ -31,7 +37,7 @@ Two-phase analytical pipeline that transforms raw student submissions into layer
 
 **Asset-based framing encoded in prompts.** Every prompt reframes deficit language: "engagement signals" not "concern levels," "what the student is reaching for" not "what they failed to articulate." Non-standard English, AAVE, multilingual syntax, and neurodivergent writing styles are treated as valid academic registers — assets, not deficits.
 
-**Decomposed cognition for small models.** At the lightweight tier, one submission becomes multiple focused calls — comprehension, interpretation, concerns — each asking a single cognitive skill. This prevents 8B models from making up quotes to fit a judgment or confusing content engagement with structural critique. Each pass grounds the next, preventing hallucination.
+**Decomposed cognition for small models.** The pipeline is designed to produce analysis approaching 400–700B-class quality from a 12B model running on 16GB of local RAM with no GPU. It does this by decomposing the structure of critical pedagogy into a series of small, focused operations that a smaller model can handle reliably — comprehension, interpretation, concerns — each asking a single cognitive skill. Each pass grounds the next. This prevents the model from making up quotes to fit a judgment, confusing content engagement with structural critique, or hallucinating connections. It also means runs take time (roughly 2–4 minutes per student), but the pipeline is crash-resumable and designed to run overnight.
 
 **The pipeline:**
 - **Phase 1 — Quick Analysis (instant, no LLM required):** Word frequency, VADER sentiment, embedding-based clustering, submission statistics, and pattern-based signal detection. Available in seconds.
