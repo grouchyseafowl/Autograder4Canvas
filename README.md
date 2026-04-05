@@ -4,9 +4,9 @@
 
 A tool for reading your class — not scoring it. Autograder4Canvas reads student submissions to surface what students are reaching for and why that might be interesting: the intellectual moves they're making, the connections they're drawing to personal and community experience, the places they're pushing back or recentering dominant frames. It also surfaces classwide patterns — emergent themes, tensions and dialectics between students, dynamics like tone policing or colorblind reframing that are only visible when you read the whole class together.
 
-The goal is to give teachers a richer picture of where students are intellectually before walking into the room — not to produce grades or verdicts. Built for complete/incomplete and contract grading, turning assignemnts into launching points for classroom discussion. Autograder provides information about classwide patterns and tensions, exceptional student insights, and concerns worth checking in on — including burnout, cricis, and power moves that foreclose minoritized students' voices. The teacher uses this system decide where to take the class next.
+The goal is to give teachers a richer picture of where students are intellectually before walking into the room — not to produce grades or verdicts. Built for complete/incomplete and contract grading, turning assignemnts into launching points for classroom discussion. Autograder4Canvas generates insights from student work to help teachers decide where to take the class next.
 
-Built by a community college Ethnic Studies instructor for other educators. AAVE, multilingual, and neurodivergent patterns are treated as signal of engagement and protected from the weight of AI algorithmic bias. Rich qualitative insights surf community knowledge and life experience as strengths, counteracting deficit-based models that dominate the distributional norm of AI training data. 
+Built by a community college Ethnic Studies instructor for other educators. AAVE, multilingual, and neurodivergent patterns are treated as signals of engagement and protected. Rich qualitative analysis based on critical pedagogy principles, ensuring community knowledge and life experience are presented as strengths, counteracting deficit-based models that dominate the distributional norms of AI training data. 
 
 ---
 
